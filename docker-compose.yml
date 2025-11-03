@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # FRONTEND (Next.js Dev Mode)
+  frontend:
+    build: ./frontend
+    container_name: nextjs_app
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    depends_on:
+      - nginx
+    networks:
+      - app-network
+
+  # BACKEND (Laravel + PHP-FPM)
+  server:
+    build: ./server
+    container_name: laravel_app
+    volumes:
+      - ./server:/var/www
+      - /var/www/vendor
+    networks:
+      - app-network
+
+  # NGINX (serves Laravel app)
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx_server
+    ports:
+      - "8000:80"
+    volumes:
+      - ./server:/var/www
+      - ./server/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

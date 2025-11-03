@@ -1,0 +1,33 @@
+# Node & Composer dependencies
+node_modules
+vendor
+
+# Environment and secrets
+.env
+.env.local
+.env.example
+
+# Logs and temporary files
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+bootstrap/cache
+
+# Version control
+.git
+.gitignore
+
+# OS / Editor junk
+.DS_Store
+.vscode
+.idea
+*.swp
+Thumbs.db
+
+# Composer cache
+composer.phar
+
+# Tests
+tests
+phpunit.xml

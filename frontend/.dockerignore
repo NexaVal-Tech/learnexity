@@ -1,0 +1,32 @@
+# Ignore node dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignore build output
+.next
+out
+dist
+
+# Ignore environment and secrets
+.env
+.env.local
+.env.development
+.env.production
+
+# Ignore git and editor configs
+.git
+.gitignore
+.DS_Store
+*.swp
+.vscode
+.idea
+
+# Ignore test files
+__tests__
+coverage
+*.spec.*
+*.test.*
+
+# Ignore local cache
+.cache
