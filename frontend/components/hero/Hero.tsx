@@ -6,7 +6,7 @@ import Courses from "../headercourses/HeaderCourse";
 export default function Hero() {
   return (
     <FadeUpOnScroll>
-      <section className="bg-gradient-to-br from-[#6025F5] via-[#855EEA] to-[#B2A0DD] pt-16 md:pt-20 pb-20 min-h-screen">
+      <section className="bg-gradient-to-br from-[#6025F5] via-[#855EEA] to-[#B2A0DD] pt-16 md:pt-20 pb-10 min-h-screen">
         
         {/* Course Categories Navigation */}
         <Courses variant="white" />

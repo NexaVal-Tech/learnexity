@@ -116,7 +116,6 @@ class CourseEnrollmentController extends Controller
 
         $user = auth()->user();
 
-        // 🛑 Defensive check
         if (!$user) {
             Log::warning('⚠️ Unauthenticated request to getUserEnrollments');
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -135,9 +134,8 @@ class CourseEnrollmentController extends Controller
         ]);
     }
 
-
     /**
-     * Update payment status
+     * Update payment status (called by frontend after Paystack success)
      */
     public function updatePaymentStatus(Request $request, $enrollmentId)
     {
@@ -173,6 +171,15 @@ class CourseEnrollmentController extends Controller
             ], 404);
         }
 
+        // If already completed, don't update again
+        if ($enrollment->payment_status === 'completed') {
+            Log::info('ℹ️ Payment already completed', ['enrollment_id' => $enrollmentId]);
+            return response()->json([
+                'message' => 'Payment already completed',
+                'enrollment' => $enrollment,
+            ], 200);
+        }
+
         $enrollment->update([
             'payment_status' => $request->payment_status,
             'transaction_id' => $request->transaction_id,
@@ -188,5 +195,91 @@ class CourseEnrollmentController extends Controller
             'message' => 'Payment status updated successfully',
             'enrollment' => $enrollment,
         ]);
+    }
+
+    /**
+     * Verify payment with Paystack API (fallback method)
+     */
+    public function verifyPaymentStatus(Request $request, $enrollmentId)
+    {
+        Log::info('🔹 [verifyPaymentStatus] Manual verification requested', [
+            'enrollment_id' => $enrollmentId,
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = auth()->user();
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json(['message' => 'Enrollment not found'], 404);
+        }
+
+        try {
+            $reference = $request->reference;
+            
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "https://api.paystack.co/transaction/verify/{$reference}",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
+                    "Cache-Control: no-cache",
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+
+            if ($err) {
+                Log::error('Paystack verification error', ['error' => $err]);
+                return response()->json(['error' => 'Verification failed'], 500);
+            }
+
+            $result = json_decode($response, true);
+
+            if ($result['status'] && $result['data']['status'] === 'success') {
+                // Update enrollment
+                $enrollment->update([
+                    'payment_status' => 'completed',
+                    'transaction_id' => $reference,
+                    'payment_date' => now(),
+                ]);
+
+                Log::info('✅ Payment verified and updated', [
+                    'enrollment_id' => $enrollmentId,
+                    'reference' => $reference,
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Payment verified successfully',
+                    'enrollment' => $enrollment->fresh(),
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Payment verification failed'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Payment verification exception', [
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Verification failed'], 500);
+        }
     }
 }

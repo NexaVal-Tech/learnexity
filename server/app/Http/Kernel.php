@@ -29,4 +29,10 @@ class Kernel extends HttpKernel
         'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.refresh' => \Tymon\JWTAuth\Http\Middleware\RefreshToken::class,
     ];
+
+    protected $middlewareAliases = [
+        // ... existing middleware
+        'role' => \App\Http\Middleware\CheckRole::class,
+        'jwt.auth' => \App\Http\Middleware\JWTAuthenticate::class, // Your JWT middleware
+    ];
 }

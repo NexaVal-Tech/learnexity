@@ -6,12 +6,30 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api, Course, CourseEnrollment } from "@/lib/api";
 
 export default function UserDashboardPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { tab } = router.query; // Get tab from URL query
+  
   const [activeTab, setActiveTab] = useState("catalogue");
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { user } = useAuth();
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  // Set active tab from URL query parameter and show success message
+  useEffect(() => {
+    if (tab === 'your-course') {
+      setActiveTab('your-course');
+      setShowSuccessToast(true);
+      
+      // Hide toast after 5 seconds
+      setTimeout(() => {
+        setShowSuccessToast(false);
+        // Clean up URL
+        router.replace('/user/dashboard', undefined, { shallow: true });
+      }, 5000);
+    }
+  }, [tab]);
 
   useEffect(() => {
     fetchCourses();
@@ -48,19 +66,19 @@ export default function UserDashboardPage() {
     }
   };
 
-const getEnrolledCoursesWithDetails = () => {
-  return enrollments.map((enrollment) => {
-    const courseData = courses.find(
-      (c) =>
-        c.course_id === enrollment.course_id ||
-        String(c.id) === String(enrollment.course_id)
-    );
+  const getEnrolledCoursesWithDetails = () => {
+    return enrollments.map((enrollment) => {
+      const courseData = courses.find(
+        (c) =>
+          c.course_id === enrollment.course_id ||
+          String(c.id) === String(enrollment.course_id)
+      );
 
-    return { ...enrollment, courseData };
-  });
-};
+      return { ...enrollment, courseData };
+    });
+  };
 
-const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
+  const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
 
   return (
     <UserDashboardLayout>
@@ -141,13 +159,6 @@ const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 pt-4">
                         {course.description}
                       </p>
-                      {/* {course.price > 0 && (
-                        <div className="mt-4">
-                          <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            ${course.price}
-                          </span>
-                        </div>
-                      )} */}
                     </div>
                   </div>
                 ))}
@@ -155,89 +166,89 @@ const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
             )}
           </>
         ) : (
-         <>
-        {loading ? (
-          <div className="text-center py-10">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading your courses...</p>
-          </div>
-        ) : enrolledCoursesWithDetails.length > 0 ? (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Your Enrolled Courses ({enrolledCoursesWithDetails.length})
-              </h2>
-            </div>
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+                <p className="mt-4 text-gray-600">Loading your courses...</p>
+              </div>
+            ) : enrolledCoursesWithDetails.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Your Enrolled Courses ({enrolledCoursesWithDetails.length})
+                  </h2>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCoursesWithDetails.map((enrollment) => {
-                const course = enrollment.courseData;
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {enrolledCoursesWithDetails.map((enrollment) => {
+                    const course = enrollment.courseData;
 
-                return (
-                  <div key={enrollment.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow p-2">
-                    <div className="h-40 bg-cover bg-center relative rounded-xl" style={{backgroundImage: `url(${course?.hero_image || '/images/default-course.jpg'})`,}}>
-                      <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        Enrolled
-                      </div>
-                    </div>
+                    return (
+                      <div key={enrollment.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow p-2">
+                        <div className="h-40 bg-cover bg-center relative rounded-xl" style={{backgroundImage: `url(${course?.hero_image || '/images/default-course.jpg'})`,}}>
+                          <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                            Enrolled
+                          </div>
+                        </div>
 
-                    <div className="p-2">
-                      <h3 className="text-xl font-bold text-gray-900 mb-3">
-                        {course?.title || enrollment.course_name}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
-                        {course?.description || 'No course description available.'}
-                      </p>
+                        <div className="p-2">
+                          <h3 className="text-xl font-bold text-gray-900 mb-3">
+                            {course?.title || enrollment.course_name}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+                            {course?.description || 'No course description available.'}
+                          </p>
 
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-sm text-gray-500">
-                          Enrolled:{' '}
-                          {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="text-sm text-gray-500">
+                              Enrolled:{' '}
+                              {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                            </div>
+                          </div>
+
+                          <button onClick={() => router.push(`/user/courses/${enrollment.course_id}`)} className="w-50 bg-white border-2 border-blue-600 p-2 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-3xl font-medium transition-colors">
+                            Continue Learning
+                          </button>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-10">
+                <div className="mb-4">
+                  <svg
+                    className="mx-auto h-16 w-16 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  You haven't enrolled in any courses yet
+                </h2>
+                <p className="text-gray-500 mt-1 mb-6">
+                  Start your learning journey today!
+                </p>
 
-                      <button onClick={() => router.push(`/user/courses/${enrollment.course_id}`)} className="w-50 bg-white border-2 border-blue-600 p-2 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-3xl font-medium transition-colors">
-                        Continue Learning
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-        </>
-          ) : (
-            <div className="text-center py-10">
-              <div className="mb-4">
-                <svg
-                  className="mx-auto h-16 w-16 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <button
+                  onClick={() => setActiveTab('catalogue')}
+                  className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
+                  Browse Courses
+                </button>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                You haven't enrolled in any courses yet
-              </h2>
-              <p className="text-gray-500 mt-1 mb-6">
-                Start your learning journey today!
-              </p>
-
-              <button
-                onClick={() => setActiveTab('catalogue')}
-                className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors"
-              >
-                Browse Courses
-              </button>
-            </div>
-          )}
-        </>
+            )}
+          </>
         )}
       </div>
     </UserDashboardLayout>
