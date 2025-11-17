@@ -5,28 +5,88 @@ import { api } from '@/lib/api';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 
+
+// -------------------------
+// TypeScript interfaces
+// -------------------------
+interface CourseResourceItem {
+  id: number;
+  title: string;
+  type: string;
+  file_size?: string | null;
+  download_url?: string | null;
+  completed?: boolean | null;
+}
+
+interface Sprint {
+  id: number;
+  sprint_number: number;
+  sprint_name: string;
+  progress_percentage: number;
+  items: CourseResourceItem[];
+}
+
+interface LeaderboardParticipant {
+  user_id: number;
+  user_name: string;
+  rank: number;
+  is_current_user: boolean;
+  sprint1_score: number;
+  sprint2_score: number;
+  sprint3_score: number;
+  sprint4_score: number;
+  overall_score: number;
+}
+
+interface ExternalResource {
+  id: number;
+  title: string;
+  url: string;
+  source: string;
+  duration?: string | null;
+}
+
+interface CourseResourcesData {
+  materials: Sprint[];
+  statistics: {
+    overall_progress: number;
+  };
+  course_average: number;
+  leaderboard: {
+    participants: LeaderboardParticipant[];
+  };
+  external_resources: {
+    video_tutorials: ExternalResource[];
+    industry_articles: ExternalResource[];
+    recommended_reading: ExternalResource[];
+  };
+  badges: { id: number; is_unlocked: boolean }[];
+}
+
 export default function ResourcesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { courseId: queryCourseId } = router.query;
   
-  const [courseId, setCourseId] = useState(null);
+  const [courseId, setCourseId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all-resources');
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<CourseResourcesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expandedSprints, setExpandedSprints] = useState([1]);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedSprints, setExpandedSprints] = useState<number[]>([1]);
 
   // Get courseId from query or fetch user's first enrolled course
   useEffect(() => {
     const initializeCourseId = async () => {
       if (queryCourseId) {
-        setCourseId(queryCourseId);
+        // Handle the case where queryCourseId might be an array
+        const id = Array.isArray(queryCourseId) ? queryCourseId[0] : queryCourseId;
+        setCourseId(id);
       } else {
         try {
           const enrollments = await api.enrollment.getUserEnrollments();
           if (enrollments.enrollments && enrollments.enrollments.length > 0) {
-            setCourseId(enrollments.enrollments[0].course_id);
+            setCourseId(enrollments.enrollments[0].course_id.toString());
           } else {
             setError('You are not enrolled in any courses yet.');
             setLoading(false);
@@ -52,8 +112,8 @@ export default function ResourcesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const response = await api.courseResources.getAll(courseId);
-      setData(response);
+      const response = await api.courseResources.getAll(courseId!);
+      setData(response as CourseResourcesData);
       setError(null);
     } catch (err) {
       setError('Failed to load course resources. Please try again.');
@@ -63,13 +123,13 @@ export default function ResourcesPage() {
     }
   };
 
-  const toggleSprint = (sprintId) => {
+  const toggleSprint = (sprintId: number) => {
     setExpandedSprints(prev =>
       prev.includes(sprintId) ? prev.filter(id => id !== sprintId) : [...prev, sprintId]
     );
   };
 
-  const handleItemToggle = async (itemId, currentStatus) => {
+  const handleItemToggle = async (itemId: number, currentStatus: boolean) => {
     try {
       if (currentStatus) {
         await api.courseResources.markItemIncomplete(itemId);
@@ -82,7 +142,7 @@ export default function ResourcesPage() {
     }
   };
 
-  const handleDownload = async (itemId, title) => {
+  const handleDownload = async (itemId: number, title: string) => {
     try {
       const blob = await api.courseResources.downloadMaterial(itemId);
       const url = window.URL.createObjectURL(blob);
