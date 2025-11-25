@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FadeUpOnScroll } from "../animations/Animation";
 
 export default function Footer() {
@@ -13,18 +14,23 @@ export default function Footer() {
          Choose your path and secure your spot in the next cohort strting soon
         </p>
         <div className="flex flex-row gap-4 justify-center items-center">
-          <button className="bg-white text-[#6D4AFF] px-3 py-1 text-sm md:px-4 md:py-2 md:text-lg rounded-full font-semibold hover:bg-gray-100 transition-colors">
+          <Link href="/courses/courses">
+            <button className="bg-white text-[#6D4AFF] px-3 py-1 text-sm md:px-4 md:py-2 md:text-lg rounded-full font-semibold hover:bg-gray-100 transition-colors">
               Explore Courses
-          </button>
-          <button className="text-white text-sm md:text-lg hover:no-underline transition-all">
+            </button>
+          </Link>
+
+          <Link href="/consultation">
+            <button className="text-white text-sm md:text-lg hover:no-underline transition-all">
               Book Free Consultation
-          </button>
+            </button>
+          </Link>
         </div>
       </div>
 
       {/* Footer Links Section */}
       <div className="px-6 pb-6 pt-2">
-        <div className="max-w-screen-2xl mx-auto">
+        <div className="max-w-[1505px] mx-auto">
           <div className="grid md:grid-cols-4 gap-16">
             {/* Logo and Copyright */}
             <div>
@@ -59,7 +65,7 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white opacity-80 hover:opacity-100 transition-opacity">
+                  <a href="/community" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Community
                   </a>
                 </li>
