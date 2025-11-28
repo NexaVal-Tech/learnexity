@@ -28,7 +28,7 @@ export default function Hero() {
                 </p>
 
                 {/* BUTTONS SIDE BY SIDE */}
-                <div className="flex flex-col md:flex-row items-cente gap-4">
+                <div className="flex gap-4">
                   <PrimaryButton />
                   <SignUpButton />
                 </div>
