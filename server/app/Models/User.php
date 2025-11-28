@@ -5,10 +5,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
-    use Notifiable;
+    use Notifiable, MustVerifyEmailTrait;
 
     protected $fillable = ['name','email','password','google_id'];
     protected $hidden = ['password','remember_token','twofa_secret'];
@@ -22,7 +23,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 
     public function courses()
     {
-        // User can have many courses through purchases
         return $this->belongsToMany(Course::class, 'purchases')
                     ->withTimestamps()
                     ->withPivot('purchased_at', 'stripe_session_id');

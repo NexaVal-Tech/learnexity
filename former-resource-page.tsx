@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2 } from 'lucide-react';
 import UserDashboardLayout from './UserDashboardLayout';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/router';
@@ -158,9 +158,6 @@ export default function ResourcesPage() {
     }
   };
 
-  // Check if course materials are empty
-  const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
-
   if (loading) {
     return (
       <UserDashboardLayout>
@@ -234,76 +231,60 @@ export default function ResourcesPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
                 <p className="text-sm text-gray-500 mt-1">Downloadable PDFs, templates, and presentations organized by sprint</p>
               </div>
-              
-              {/* Empty State */}
-              {isMaterialsEmpty ? (
-                <div className="p-12">
-                  <div className="text-center max-w-md mx-auto">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BookOpen className="w-10 h-10 text-gray-400" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Materials Yet</h3>
-                    <p className="text-gray-600">
-                      Your course materials will appear here when the class starts
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 space-y-4">
-                  {data.materials.map(sprint => (
-                    <div key={sprint.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => toggleSprint(sprint.id)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
-                            sprint.progress_percentage === 100 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'
-                          }`}>
-                            Sprint {sprint.sprint_number}
-                          </div>
-                          <span className="font-medium text-gray-900">{sprint.sprint_name}</span>
+              <div className="p-6 space-y-4">
+                {data.materials.map(sprint => (
+                  <div key={sprint.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSprint(sprint.id)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
+                          sprint.progress_percentage === 100 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          Sprint {sprint.sprint_number}
                         </div>
-                        {expandedSprints.includes(sprint.id) ? 
-                          <ChevronUp className="w-5 h-5 text-gray-400" /> : 
-                          <ChevronDown className="w-5 h-5 text-gray-400" />
-                        }
-                      </button>
-                      {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
-                        <div className="bg-white divide-y divide-gray-100">
-                          {sprint.items.map(item => (
-                            <div key={item.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className={`w-8 h-8 rounded flex items-center justify-center ${
-                                  item.type === 'pdf' ? 'bg-red-100' : 
-                                  item.type === 'document' ? 'bg-orange-100' : 
-                                  item.type === 'video' ? 'bg-purple-100' : 'bg-green-100'
-                                }`}>
-                                  {item.type === 'pdf' && <span className="text-red-600 text-xs font-bold">PDF</span>}
-                                  {item.type === 'document' && <span className="text-orange-600 text-xs font-bold">DOC</span>}
-                                  {item.type === 'video' && <span className="text-purple-600 text-xs font-bold">VID</span>}
-                                  {item.type === 'link' && <span className="text-green-600 text-xs font-bold">LNK</span>}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-gray-900 text-sm">{item.title}</div>
-                                  <div className="text-xs text-gray-500">{item.file_size}</div>
-                                </div>
+                        <span className="font-medium text-gray-900">{sprint.sprint_name}</span>
+                      </div>
+                      {expandedSprints.includes(sprint.id) ? 
+                        <ChevronUp className="w-5 h-5 text-gray-400" /> : 
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      }
+                    </button>
+                    {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
+                      <div className="bg-white divide-y divide-gray-100">
+                        {sprint.items.map(item => (
+                          <div key={item.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className={`w-8 h-8 rounded flex items-center justify-center ${
+                                item.type === 'pdf' ? 'bg-red-100' : 
+                                item.type === 'document' ? 'bg-orange-100' : 
+                                item.type === 'video' ? 'bg-purple-100' : 'bg-green-100'
+                              }`}>
+                                {item.type === 'pdf' && <span className="text-red-600 text-xs font-bold">PDF</span>}
+                                {item.type === 'document' && <span className="text-orange-600 text-xs font-bold">DOC</span>}
+                                {item.type === 'video' && <span className="text-purple-600 text-xs font-bold">VID</span>}
+                                {item.type === 'link' && <span className="text-green-600 text-xs font-bold">LNK</span>}
                               </div>
-                              <button 
-                                onClick={() => item.download_url && handleDownload(item.id, item.title)}
-                                className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download
-                              </button>
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 text-sm">{item.title}</div>
+                                <div className="text-xs text-gray-500">{item.file_size}</div>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                            <button 
+                              onClick={() => item.download_url && handleDownload(item.id, item.title)}
+                              className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Evaluation & Leaderboard */}

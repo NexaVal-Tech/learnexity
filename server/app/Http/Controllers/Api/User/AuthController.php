@@ -18,32 +18,49 @@ class AuthController extends Controller
 {
     public function register(Request $req)
     {
-    $v = Validator::make($req->all(), [
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|min:8|confirmed'
-    ]);
+        $v = Validator::make($req->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed'
+        ]);
 
-    if ($v->fails()) {
-        Log::error('REGISTER VALIDATION FAILED', $v->errors()->toArray());
-        return response()->json($v->errors(), 422);
-    }
+        if ($v->fails()) {
+            Log::error('REGISTER VALIDATION FAILED', $v->errors()->toArray());
+            
+            // Check if email already exists
+            if ($v->errors()->has('email')) {
+                return response()->json([
+                    'message' => 'This email is already registered. Please login instead.',
+                    'errors' => $v->errors()
+                ], 422);
+            }
+            
+            return response()->json([
+                'message' => 'Validation failed. Please check your input.',
+                'errors' => $v->errors()
+            ], 422);
+        }
 
         $user = User::create([
-            'name'=>$req->name,
-            'email'=>$req->email,
-            'password'=>Hash::make($req->password),
+            'name' => $req->name,
+            'email' => $req->email,
+            'password' => Hash::make($req->password),
         ]);
+        
         event(new Registered($user));
-
         $user->sendEmailVerificationNotification();
 
-        $token = JWTAuth::fromUser($user);
+        Log::info('✅ [REGISTER] User registered successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
+
+        // Don't log them in automatically - return success message
         return response()->json([
-            'user' => $user,
-            'token' => $token,
+            'message' => 'Registration successful! Please check your email to verify your account.',
+            'email' => $user->email,
             'email_verification_sent' => true,
-        ]); 
+        ], 201); 
     }
 
     public function login(Request $req)
@@ -55,30 +72,46 @@ class AuthController extends Controller
         try {
             if (!$token = JWTAuth::attempt($credentials)) {
                 Log::warning('⚠️ [LOGIN] Invalid credentials', ['email' => $req->input('email')]);
-                return response()->json(['error' => 'Invalid credentials'], 401);
+                return response()->json([
+                    'message' => 'Invalid email or password. Please try again.'
+                ], 401);
             }
         } catch (JWTException $e) {
             Log::error('❌ [LOGIN] JWTException while creating token', [
                 'email' => $req->input('email'),
                 'message' => $e->getMessage()
             ]);
-            return response()->json(['error' => 'Could not create token'], 500);
+            return response()->json([
+                'message' => 'Could not create token. Please try again later.'
+            ], 500);
         }
 
         $user = auth()->user();
-
-        if (!$user->hasVerifiedEmail()) {
-            return response()->json([
-                'error' => 'Your email has not been verified, Please verify your email before logging in or sign in with Google.',
-                'email_verified' => false,
-            ], 403);
-        }
 
         if (!$user) {
             Log::error('❌ [LOGIN] Token generated but no authenticated user', [
                 'email' => $req->input('email'),
             ]);
-            return response()->json(['error' => 'Authentication failed'], 500);
+            return response()->json([
+                'message' => 'Authentication failed. Please try again.'
+            ], 500);
+        }
+
+        // Check if email is verified
+        if (!$user->hasVerifiedEmail()) {
+            // Invalidate the token since we won't let them login
+            JWTAuth::invalidate($token);
+            
+            Log::warning('⚠️ [LOGIN] Email not verified', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+            
+            return response()->json([
+                'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                'email_verified' => false,
+                'email' => $user->email
+            ], 403);
         }
 
         Log::info('✅ [LOGIN] Successful login', [
@@ -98,7 +131,7 @@ class AuthController extends Controller
         $token = JWTAuth::getToken();
         if ($token) JWTAuth::invalidate($token);
         
-        return response()->json(['message'=>'logged out']);
+        return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function me()
@@ -113,11 +146,11 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $r)
     {
-        $r->validate(['email'=>'required|email']);
+        $r->validate(['email' => 'required|email']);
         $status = Password::sendResetLink($r->only('email'));
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['status'=>'reset_link_sent'])
-            : response()->json(['status'=>'error'], 422);
+            ? response()->json(['message' => 'Password reset link sent to your email.'])
+            : response()->json(['message' => 'Unable to send reset link. Please try again.'], 422);
     }
 
     public function redirectToGoogle()
@@ -158,13 +191,16 @@ class AuthController extends Controller
                 'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'User',
                 'google_id' => $googleUser->getId(),
                 'password' => null,
-                'email_verified_at' => now(),
+                'email_verified_at' => now(), // Auto-verify Google users
             ]
         );
 
         // Update google_id if not set
         if (!$user->google_id) {
-            $user->update(['google_id' => $googleUser->getId()]);
+            $user->update([
+                'google_id' => $googleUser->getId(),
+                'email_verified_at' => now() // Ensure verified
+            ]);
             Log::info('🔄 [GOOGLE AUTH] Updated existing user with google_id', ['user_id' => $user->id]);
         }
 
@@ -222,6 +258,32 @@ class AuthController extends Controller
             return response()->json(['message' => 'Password reset successfully'], 200);
         }
 
-        return response()->json(['error' => 'Invalid reset token'], 400);
+        return response()->json(['message' => 'Invalid reset token or email'], 400);
+    }
+    
+    // Resend verification email
+    public function resendVerification(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'No account found with this email address.'
+            ], 404);
+        }
+        
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'This email is already verified. You can login now.'
+            ], 200);
+        }
+        
+        $user->sendEmailVerificationNotification();
+        
+        return response()->json([
+            'message' => 'Verification email has been resent. Please check your inbox.'
+        ], 200);
     }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { PrimaryButton } from "../button/Button";
+import { PrimaryButton, SignUpButton } from "../button/Button";
 import { FadeInCard, FadeUpOnScroll,} from "../animations/Animation";
 import Courses from "../headercourses/HeaderCourse"; 
 
@@ -18,15 +18,20 @@ export default function Hero() {
             <FadeInCard>
               <div className="text-white">
                 <h1 className="text-5xl md:text-6xl font-semibold leading-tight mb-8 md:mb-12">
-                  Build and Get Hired  with 
+                  Build and Get Hired with 
                   <span className="text-white"> Learnexity</span>.
                 </h1>
+
                 <p className="text-lg md:text-xl text-white/90 mb-6 md:mb-8 leading-relaxed">
                   We provide the real-world experience and mentorship that
                   transforms your skills into a career.
                 </p>
 
-                <PrimaryButton />
+                {/* BUTTONS SIDE BY SIDE */}
+                <div className="flex flex-col md:flex-row items-cente gap-4">
+                  <PrimaryButton />
+                  <SignUpButton />
+                </div>
               </div>
             </FadeInCard>
 

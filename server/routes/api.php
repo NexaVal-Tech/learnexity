@@ -8,6 +8,44 @@ use App\Http\Controllers\Api\PaystackWebhookController;
 use App\Http\Controllers\Api\CourseResourcesController;
 use App\Http\Controllers\Api\AdminCourseResourcesController;
 use App\Http\Controllers\Api\ReferralController;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Http\Request;
+
+// =================== EMAIL VERIFICATION ROUTES =================== //
+// Custom email verification for JWT API
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
+
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    // Validate hash from email link
+    if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
+        return response()->json(['message' => 'Invalid verification link'], 403);
+    }
+
+    // If already verified
+    if ($user->hasVerifiedEmail()) {
+        return response()->json(['message' => 'Email already verified']);
+    }
+
+    // Mark email as verified
+    $user->markEmailAsVerified();
+
+    return response()->json(['message' => 'Email verified successfully']);
+})->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return response()->json(['message' => 'Verification link resent.']);
+})->middleware('jwt.auth')->name('verification.send');
+
+// Add this to PUBLIC ROUTES section
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 
 // =================== PUBLIC ROUTES =================== //
 Route::post('/register', [AuthController::class, 'register']);

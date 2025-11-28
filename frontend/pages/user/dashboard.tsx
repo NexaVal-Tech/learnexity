@@ -133,10 +133,7 @@ export default function UserDashboardPage() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Available Courses</h2>
-              <Link 
-                href="/courses/courses" 
-                className="text-indigo-600 font-medium hover:text-indigo-700"
-              >
+              <Link href="/courses/courses" className="text-indigo-600 font-bold text-xl border-2 rounded-xl px-3 hover:text-indigo-700">
                 View all
               </Link>
             </div>

@@ -76,14 +76,22 @@ export default function RegisterPage() {
         formData.phone
       );
 
-      setSuccess('Registration successful! Please check your email to verify your account.');
+      setSuccess('Registration successful! Please check your email to verify your account before logging in.');
 
+      // Redirect to login after 4 seconds
       setTimeout(() => {
-        router.push('/user/auth/login?message=verify_email');
-      }, 3000);
+        router.push('/user/auth/login?message=verify_email&email=' + encodeURIComponent(formData.email));
+      }, 4000);
 
     } catch (err: any) {
-      setError(err.message || handleApiError(err));
+      // Handle specific error messages from backend
+      if (err.message.includes('email is already registered')) {
+        setError('This email is already registered. Please login instead or use a different email.');
+      } else if (err.message.includes('Validation failed')) {
+        setError('Please check your input and try again.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -93,13 +101,13 @@ export default function RegisterPage() {
     loginWithGoogle();
   };
 
-  // Auto-hide toast after 5 seconds
+  // Auto-hide toast after 6 seconds
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
         setSuccess('');
-      }, 5000);
+      }, 6000);
       return () => clearTimeout(timer);
     }
   }, [error, success]);
@@ -149,7 +157,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="John Doe"
                     required
-                    disabled={loading}
+                    disabled={loading || !!success}
                     className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent 
                     disabled:opacity-50 disabled:cursor-not-allowed"
@@ -169,7 +177,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     placeholder="Johndoe@gmail.com"
                     required
-                    disabled={loading}
+                    disabled={loading || !!success}
                     className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent 
                     disabled:opacity-50 disabled:cursor-not-allowed"
@@ -188,7 +196,7 @@ export default function RegisterPage() {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+2348012345678"
-                    disabled={loading}
+                    disabled={loading || !!success}
                     className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent 
                     disabled:opacity-50 disabled:cursor-not-allowed"
@@ -209,7 +217,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="••••••••••••••••"
                       required
-                      disabled={loading}
+                      disabled={loading || !!success}
                       className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                       focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12 
                       disabled:opacity-50 disabled:cursor-not-allowed"
@@ -217,7 +225,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
+                      disabled={loading || !!success}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 
                       disabled:opacity-50"
                     >
@@ -240,7 +248,7 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       placeholder="••••••••••••••••"
                       required
-                      disabled={loading}
+                      disabled={loading || !!success}
                       className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                       focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12 
                       disabled:opacity-50 disabled:cursor-not-allowed"
@@ -248,7 +256,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      disabled={loading}
+                      disabled={loading || !!success}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 
                       disabled:opacity-50"
                     >
@@ -265,7 +273,7 @@ export default function RegisterPage() {
                     name="rememberMe"
                     checked={formData.rememberMe}
                     onChange={handleChange}
-                    disabled={loading}
+                    disabled={loading || !!success}
                     className="w-4 h-4 text-purple-600 border-gray-300 rounded
                     focus:ring-purple-500 disabled:opacity-50"
                   />
@@ -282,7 +290,7 @@ export default function RegisterPage() {
                   hover:bg-purple-700 transition-all duration-200 shadow-lg 
                   disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Creating account...' : success ? 'Redirecting...' : 'Sign Up'}
+                  {loading ? 'Creating account...' : success ? 'Redirecting to login...' : 'Sign Up'}
                 </button>
 
                 {/* Divider */}
@@ -303,8 +311,7 @@ export default function RegisterPage() {
                   className="w-full flex items-center justify-center gap-3 px-4 py-1.5 
                   border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors 
                   duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-
+                >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.6109C15.3727 13.3 14.6636 14.3591 13.6045 15.0682V17.5773H16.8273C18.7091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4" />
                     <path d="M10.2 20C12.9 20 15.1727 19.1045 16.8273 17.5773L13.6045 15.0682C12.7091 15.6682 11.5636 16.0227 10.2 16.0227C7.59545 16.0227 5.38182 14.2636 4.58636 11.9H1.25455V14.4909C2.90909 17.7591 6.29091 20 10.2 20Z" fill="#34A853" />
