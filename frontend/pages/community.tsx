@@ -50,16 +50,60 @@ export default function CommunityPage() {
     countryCode: '+234',
     courseOfInterest: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    // Handle form submission
-    setShowModal(false);
+  const handleSubmit = async () => {
+    // Validate form data
+    if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.courseOfInterest) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // You can optionally send this data to your backend/database first
+      // Example:
+      // await fetch('/api/community-signup', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // });
+
+      console.log('Form submitted:', formData);
+
+      // Close modal
+      setShowModal(false);
+
+      // Redirect to Discord invite link
+      window.open('https://discord.gg/acrqPJEZ', '_blank');
+
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        phoneNumber: '',
+        countryCode: '+234',
+        courseOfInterest: ''
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was an error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -111,7 +155,7 @@ export default function CommunityPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className=" fixed inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 transition-opacity duration-300 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 transition-opacity duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-md w-full p-4 shadow-2xl">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
               Join our community
@@ -120,7 +164,7 @@ export default function CommunityPage() {
             <div className="space-y-1">
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Full Name
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -128,13 +172,14 @@ export default function CommunityPage() {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="John Doe"
+                  required
                   className="w-full text-gray-800 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Email
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -142,13 +187,14 @@ export default function CommunityPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="johndoe@gmail.com"
+                  required
                   className="w-full text-gray-800 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 />
               </div>
 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Phone number
+                  Phone number <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -167,19 +213,22 @@ export default function CommunityPage() {
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
+                    placeholder="8012345678"
+                    required
                     className="flex-1 px-4 py-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                   />
                 </div>
               </div>
-
+{/* 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Course of interest
+                  Course of interest <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="courseOfInterest"
                   value={formData.courseOfInterest}
                   onChange={handleInputChange}
+                  required
                   className="w-full text-gray-800 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent appearance-none bg-white"
                 >
                   <option value="">Select a course</option>
@@ -189,19 +238,21 @@ export default function CommunityPage() {
                   <option value="ui-ux-design">UI/UX Design</option>
                   <option value="cloud-computing">Cloud Computing</option>
                 </select>
-              </div>
+              </div> */}
             </div>
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-[#6C63FF] hover:bg-gray-900 text-white font-semibold py-2 rounded-full shadow-lg transition-all duration-300 mt-8 mb-4"
+              disabled={isSubmitting}
+              className="w-full bg-[#6C63FF] hover:bg-gray-900 text-white font-semibold py-2 rounded-full shadow-lg transition-all duration-300 mt-8 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Join
+              {isSubmitting ? 'Joining...' : 'Join'}
             </button>
 
             <button
               onClick={() => setShowModal(false)}
-              className="w-full text-[#6C63FF] hover:text-purple-700 font-semibold py-2 transition-colors duration-300"
+              disabled={isSubmitting}
+              className="w-full text-[#6C63FF] hover:text-purple-700 font-semibold py-2 transition-colors duration-300 disabled:opacity-50"
             >
               Close
             </button>
@@ -209,8 +260,8 @@ export default function CommunityPage() {
         </div>
       )}
 
-            {/* footer */}
-            <Footer />
+      {/* footer */}
+      <Footer />
     </div>
   );
 }
