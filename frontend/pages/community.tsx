@@ -48,7 +48,7 @@ export default function CommunityPage() {
     email: '',
     phoneNumber: '',
     countryCode: '+234',
-    courseOfInterest: ''
+   
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,7 +59,7 @@ export default function CommunityPage() {
 
   const handleSubmit = async () => {
     // Validate form data
-    if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.courseOfInterest) {
+    if (!formData.fullName || !formData.email || !formData.phoneNumber) {
       alert('Please fill in all fields');
       return;
     }
@@ -95,8 +95,7 @@ export default function CommunityPage() {
         fullName: '',
         email: '',
         phoneNumber: '',
-        countryCode: '+234',
-        courseOfInterest: ''
+        countryCode: '+234'
       });
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -219,26 +218,6 @@ export default function CommunityPage() {
                   />
                 </div>
               </div>
-{/* 
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Course of interest <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="courseOfInterest"
-                  value={formData.courseOfInterest}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full text-gray-800 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent appearance-none bg-white"
-                >
-                  <option value="">Select a course</option>
-                  <option value="web-development">Web Development</option>
-                  <option value="data-science">Data Science</option>
-                  <option value="mobile-development">Mobile Development</option>
-                  <option value="ui-ux-design">UI/UX Design</option>
-                  <option value="cloud-computing">Cloud Computing</option>
-                </select>
-              </div> */}
             </div>
 
             <button

@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import UserLayout from './usercomponents/layout/UserLayout';
+import UserLayout from '../../components/layout/UserLayout';
 
 // Protected wrapper component - ONLY for protected pages
 function ProtectedContent({ children }: { children: React.ReactNode }) {

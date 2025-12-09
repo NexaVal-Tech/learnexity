@@ -79,17 +79,17 @@ export default function Footer() {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-white opacity-80 hover:opacity-100 transition-opacity">
+                  <a href="/privacy-policy" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white opacity-80 hover:opacity-100 transition-opacity">
+                  <a href="/terms-of-services" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Terms of Services
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white opacity-80 hover:opacity-100 transition-opacity">
+                  <a href="/refund-policy" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Refund Policy
                   </a>
                 </li>
@@ -103,8 +103,8 @@ export default function Footer() {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="mailto:info@learnexity.com" className="text-white opacity-80 hover:opacity-100 transition-opacity">
-                    info@learnexity.com
+                  <a href="mailto:info@learnexity.org" className="text-white opacity-80 hover:opacity-100 transition-opacity">
+                    info@learnexity.org
                   </a>
                 </li>
                 <li>
