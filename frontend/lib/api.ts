@@ -336,9 +336,9 @@ export const api = {
     register: async (data: RegisterData): Promise<AuthResponse> => {
       const response = await apiClient.post<AuthResponse>('/api/register', data);
       
-      // if (response.data?.token) {
-      //   localStorage.setItem('token', response.data.token);
-      // }
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
       
       return response.data;
     },
