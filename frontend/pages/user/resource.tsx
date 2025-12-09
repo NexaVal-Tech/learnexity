@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen } from 'lucide-react';
-import UserDashboardLayout from './UserDashboardLayout';
+import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';

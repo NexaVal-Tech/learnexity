@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import UserDashboardLayout from "./UserDashboardLayout";
+import UserDashboardLayout from "@/components/layout/UserDashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { api, Course, CourseEnrollment } from "@/lib/api";
 

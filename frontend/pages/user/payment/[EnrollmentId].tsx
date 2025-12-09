@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, CourseEnrollment } from '@/lib/api';
-import UserDashboardLayout from '../UserDashboardLayout';
+import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { usePaystack, PaystackResponse } from '@/hooks/usePaystack';
 
 export default function PaymentPage() {

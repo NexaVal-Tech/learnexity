@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import UserDashboardLayout from './UserDashboardLayout';
+import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api, ReferralResponse, handleApiError } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import {
