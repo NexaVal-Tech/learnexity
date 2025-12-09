@@ -17,19 +17,21 @@ class CourseSeeder extends Seeder
 
         DB::transaction(function () use ($coursesData) {
             foreach ($coursesData as $courseData) {
-                $course = Course::create([
-                    'course_id' => $courseData['id'],
-                    'title' => $courseData['title'],
-                    'project' => $courseData['project'] ?? null,
-                    'description' => $courseData['description'],
-                    'hero_image' => $courseData['heroImage'] ?? null,
-                    'secondary_image' => $courseData['secondaryImage'] ?? null,
-                    'duration' => $courseData['duration'] ?? null,
-                    'level' => $courseData['level'] ?? null,
-                    'price' => $courseData['price'] ?? 0,
-                    'is_freemium' => $courseData['is_freemium'] ?? false,
-                    'is_premium' => $courseData['is_premium'] ?? true,
-                ]);
+                $course = Course::updateOrCreate(
+                    ['course_id' => $courseData['id']], // match existing
+                    [
+                        'title' => $courseData['title'],
+                        'project' => $courseData['project'] ?? null,
+                        'description' => $courseData['description'],
+                        'hero_image' => $courseData['heroImage'] ?? null,
+                        'secondary_image' => $courseData['secondaryImage'] ?? null,
+                        'duration' => $courseData['duration'] ?? null,
+                        'level' => $courseData['level'] ?? null,
+                        'price' => $courseData['price'] ?? 0,
+                        'is_freemium' => $courseData['is_freemium'] ?? false,
+                        'is_premium' => $courseData['is_premium'] ?? true,
+                    ]
+                );
 
                 // Seed tools
                 if (isset($courseData['tools'])) {
@@ -154,6 +156,78 @@ class CourseSeeder extends Seeder
                     'entry' => 'Entry level: $30,000 - $55,000 USD annually',
                     'mid' => 'Mid level: $55,000 - $90,000 USD annually',
                     'senior' => 'Senior level: $150,000+ USD annually',
+                ],
+            ],
+
+            [
+                'id' => 'ai-machine-learning',
+                'title' => 'AI & Machine Learning',
+                'project' => 'End-to-end ML application with deployment',
+                'description' => 'Master artificial intelligence and machine learning from fundamentals to deployment. Build intelligent systems using Python, TensorFlow, and scikit-learn, and learn to develop predictive models, neural networks, and AI applications.',
+                'heroImage' => '/images/ai-1.png',
+                'secondaryImage' => '/images/a1-2.png',
+                'duration' => '16 Weeks (4 Months)',
+                'level' => 'Intermediate to Advanced',
+                'price' => 399.99, // change price if needed
+                'is_freemium' => false,
+                'is_premium' => true,
+
+                'tools' => [
+                    ['name' => 'Make', 'icon' => '/images/tools/aitool-1.png'],
+                    ['name' => 'OpenAI', 'icon' => '/images/tools/aitool-2.png'],
+                    ['name' => 'Zapier', 'icon' => '/images/tools/aitool-3.png'],
+                    ['name' => 'MidJourney', 'icon' => '/images/tools/aitool4.png'],
+                    ['name' => 'Gemini', 'icon' => '/images/tools/aitool-5.png'],
+                    ['name' => 'DALL-E', 'icon' => '/images/tools/aitool-6.png'],
+                    ['name' => 'Notion', 'icon' => '/images/tools/aitool-7.png'],
+                    ['name' => 'Synthesia', 'icon' => '/images/tools/aitool-8.png'],
+                ],
+
+                'whatYouWillLearn' => [
+                    'Machine learning algorithms and model selection',
+                    'Deep learning and neural networks',
+                    'Natural language processing (NLP)',
+                    'Computer vision and image recognition',
+                    'Model deployment and production systems',
+                    'MLOps and model monitoring',
+                ],
+
+                'keyBenefits' => [
+                    ['title' => 'Transformative Technology', 'text' => 'Build systems that learn and improve autonomously'],
+                    ['title' => 'Highest Earning Potential', 'text' => 'ML engineers command premium compensation globally'],
+                    ['title' => 'Research & Innovation', 'text' => 'Contribute to cutting-edge technological advancement'],
+                    ['title' => 'Cross-Industry Impact', 'text' => 'Apply AI solutions to virtually any field or problem'],
+                    ['title' => 'Future-Proof Expertise', 'text' => 'Stay ahead in an AI-driven world'],
+                    ['title' => 'Problem-Solving Power', 'text' => 'Tackle complex challenges with data-driven intelligence'],
+                ],
+
+                'careerPath' => [
+                    'entry' => ['Junior ML Engineer', 'AI Developer', 'Data Scientist'],
+                    'mid' => ['Senior ML Engineer', 'AI Research Scientist', 'MLOps Engineer'],
+                    'advanced' => ['Lead AI Architect', 'Head of AI/ML', 'Principal Data Scientist'],
+                    'specialized' => [
+                        'Computer Vision Engineer',
+                        'NLP Specialist',
+                        'Reinforcement Learning Engineer',
+                        'MLOps Engineer',
+                        'AI Product Manager',
+                        'AI Research Scientist',
+                    ],
+                ],
+
+                'industries' => [
+                    ['title' => 'Healthcare', 'text' => 'Diagnostics, medical imaging, predictive analysis'],
+                    ['title' => 'Finance', 'text' => 'Fraud detection, algorithmic trading, risk modeling'],
+                    ['title' => 'Retail & E-commerce', 'text' => 'Recommendation engines, demand forecasting'],
+                    ['title' => 'Manufacturing', 'text' => 'Predictive maintenance, automation intelligence'],
+                    ['title' => 'Autonomous Systems', 'text' => 'Self-driving vehicles, robotics'],
+                    ['title' => 'Research & Innovation', 'text' => 'AI labs, universities, private R&D'],
+                ],
+
+                'salary' => [
+                    'entry' => 'Entry Level: $50,000 - $85,000 USD annually',
+                    'mid' => 'Mid Level: $85,000 - $140,000 USD annually',
+                    'senior' => 'Senior Level: $140,000 - $250,000+ USD annually',
                 ],
             ],
 

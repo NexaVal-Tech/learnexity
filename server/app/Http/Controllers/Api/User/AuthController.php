@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\User;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ReferralCode;
+use App\Models\ReferralHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -21,13 +23,13 @@ class AuthController extends Controller
         $v = Validator::make($req->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed'
+            'password' => 'required|min:8|confirmed',
+            'referral_code' => 'nullable|string|exists:referral_codes,referral_code'
         ]);
 
         if ($v->fails()) {
             Log::error('REGISTER VALIDATION FAILED', $v->errors()->toArray());
             
-            // Check if email already exists
             if ($v->errors()->has('email')) {
                 return response()->json([
                     'message' => 'This email is already registered. Please login instead.',
@@ -41,21 +43,30 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Create user with referral code if provided
         $user = User::create([
             'name' => $req->name,
             'email' => $req->email,
             'password' => Hash::make($req->password),
+            'phone' => $req->phone,
+            'referred_by_code' => $req->referral_code, // Store referral code
         ]);
         
+        // Send email verification
         event(new Registered($user));
         $user->sendEmailVerificationNotification();
 
+        // Process referral if code was provided
+        if ($req->referral_code) {
+            $this->processReferral($user, $req->referral_code);
+        }
+
         Log::info('✅ [REGISTER] User registered successfully', [
             'user_id' => $user->id,
-            'email' => $user->email
+            'email' => $user->email,
+            'has_referral' => !empty($req->referral_code)
         ]);
 
-        // Don't log them in automatically - return success message
         return response()->json([
             'message' => 'Registration successful! Please check your email to verify your account.',
             'email' => $user->email,
@@ -99,7 +110,6 @@ class AuthController extends Controller
 
         // Check if email is verified
         if (!$user->hasVerifiedEmail()) {
-            // Invalidate the token since we won't let them login
             JWTAuth::invalidate($token);
             
             Log::warning('⚠️ [LOGIN] Email not verified', [
@@ -153,9 +163,16 @@ class AuthController extends Controller
             : response()->json(['message' => 'Unable to send reset link. Please try again.'], 422);
     }
 
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
         Log::info('🔗 [GOOGLE] Redirecting to Google OAuth');
+        
+        // Store referral code in session if provided
+        if ($request->has('ref')) {
+            session(['pending_referral_code' => $request->ref]);
+            Log::info('📌 [GOOGLE] Referral code stored in session', ['code' => $request->ref]);
+        }
+        
         return Socialite::driver('google')->stateless()->redirect();
     }
 
@@ -174,34 +191,48 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('❌ [GOOGLE AUTH] Failed to fetch user from Google', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
             
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-            $redirectUrl = $frontendUrl . '/user/auth/login?error=oauth_failed';
-            
-            Log::info('🔴 [GOOGLE AUTH] Redirecting to error page', ['url' => $redirectUrl]);
-            return redirect($redirectUrl);
+            return redirect($frontendUrl . '/user/auth/login?error=oauth_failed');
         }
 
+        // Get referral code from session if exists
+        $referralCode = session('pending_referral_code');
+
         // Find or create user
-        $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
+        $user = User::where('email', $googleUser->getEmail())->first();
+        
+        if ($user) {
+            // Existing user - update google_id if not set
+            if (!$user->google_id) {
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'email_verified_at' => now()
+                ]);
+                Log::info('🔄 [GOOGLE AUTH] Updated existing user with google_id', ['user_id' => $user->id]);
+            }
+        } else {
+            // New user - create with referral code if provided
+            $user = User::create([
                 'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'User',
+                'email' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
                 'password' => null,
-                'email_verified_at' => now(), // Auto-verify Google users
-            ]
-        );
-
-        // Update google_id if not set
-        if (!$user->google_id) {
-            $user->update([
-                'google_id' => $googleUser->getId(),
-                'email_verified_at' => now() // Ensure verified
+                'email_verified_at' => now(),
+                'referred_by_code' => $referralCode, // Store referral code
             ]);
-            Log::info('🔄 [GOOGLE AUTH] Updated existing user with google_id', ['user_id' => $user->id]);
+
+            // Process referral if code was provided
+            if ($referralCode) {
+                $this->processReferral($user, $referralCode);
+                session()->forget('pending_referral_code'); // Clear session
+            }
+
+            Log::info('✅ [GOOGLE AUTH] New user created', [
+                'user_id' => $user->id,
+                'has_referral' => !empty($referralCode)
+            ]);
         }
 
         // Generate JWT token
@@ -211,8 +242,6 @@ class AuthController extends Controller
             Log::info('✅ [GOOGLE AUTH] Token generated successfully', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'token_length' => strlen($token),
-                'token_preview' => substr($token, 0, 20) . '...',
             ]);
         } catch (\Exception $e) {
             Log::error('❌ [GOOGLE AUTH] Failed to generate token', [
@@ -224,13 +253,11 @@ class AuthController extends Controller
             return redirect($frontendUrl . '/user/auth/login?error=token_generation_failed');
         }
 
-        // Build redirect URL
+        // Redirect to frontend callback
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $callbackUrl = $frontendUrl . '/user/auth/callback?token=' . $token;
         
         Log::info('🟢 [GOOGLE AUTH] Redirecting to frontend callback', [
-            'frontend_url' => $frontendUrl,
-            'full_callback_url' => $callbackUrl,
             'user_id' => $user->id,
         ]);
 
@@ -261,7 +288,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Invalid reset token or email'], 400);
     }
     
-    // Resend verification email
     public function resendVerification(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -285,5 +311,38 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Verification email has been resent. Please check your inbox.'
         ], 200);
+    }
+
+    /**
+     * Process referral when user registers
+     */
+    private function processReferral(User $user, string $referralCode)
+    {
+        $referralCodeRecord = ReferralCode::where('referral_code', $referralCode)->first();
+
+        if (!$referralCodeRecord) {
+            Log::warning('⚠️ [REFERRAL] Invalid referral code', ['code' => $referralCode]);
+            return;
+        }
+
+        // Create referral history record
+        ReferralHistory::create([
+            'referrer_id' => $referralCodeRecord->user_id,
+            'referred_user_id' => $user->id,
+            'status' => 'pending',
+            'reward_amount' => 30.00,
+            'referred_at' => now(),
+        ]);
+
+        // Update referral code stats
+        $referralCodeRecord->increment('total_referrals');
+        $referralCodeRecord->increment('pending_referrals');
+        $referralCodeRecord->update(['last_referral_at' => now()]);
+
+        Log::info('✅ [REFERRAL] Referral processed', [
+            'referrer_id' => $referralCodeRecord->user_id,
+            'referred_user_id' => $user->id,
+            'code' => $referralCode
+        ]);
     }
 }

@@ -14,6 +14,7 @@ interface FormData {
   password: string;
   confirmPassword: string;
   rememberMe: boolean;
+  referralCode?: string; // Add referral code field
 }
 
 export default function RegisterPage() {
@@ -22,6 +23,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralValidated, setReferralValidated] = useState(false);
+  
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -29,9 +33,47 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     rememberMe: false,
+    referralCode: undefined,
   });
+  
   const router = useRouter();
   const { register: registerUser, loginWithGoogle } = useAuth();
+
+  // Extract and validate referral code from URL
+  useEffect(() => {
+    const { ref } = router.query;
+    
+    if (ref && typeof ref === 'string') {
+      setReferralCode(ref);
+      setFormData(prev => ({ ...prev, referralCode: ref }));
+      
+      // Validate the referral code
+      validateReferralCode(ref);
+    }
+  }, [router.query]);
+
+  const validateReferralCode = async (code: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/referrals/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.valid) {
+        setReferralValidated(true);
+        // Store in localStorage for Google Sign-In
+        localStorage.setItem('pending_referral_code', code);
+      } else {
+        setError('Invalid referral code. You can still register without it.');
+        setReferralCode(null);
+      }
+    } catch (err) {
+      console.error('Error validating referral code:', err);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -73,10 +115,14 @@ export default function RegisterPage() {
         formData.email,
         formData.password,
         formData.confirmPassword,
-        formData.phone
+        formData.phone,
+        formData.referralCode // Pass referral code to register function
       );
 
       setSuccess('Registration successful! Please check your email to verify your account before logging in.');
+
+      // Clear referral code from localStorage after successful registration
+      localStorage.removeItem('pending_referral_code');
 
       // Redirect to login after 4 seconds
       setTimeout(() => {
@@ -84,7 +130,6 @@ export default function RegisterPage() {
       }, 4000);
 
     } catch (err: any) {
-      // Handle specific error messages from backend
       if (err.message.includes('email is already registered')) {
         setError('This email is already registered. Please login instead or use a different email.');
       } else if (err.message.includes('Validation failed')) {
@@ -98,10 +143,13 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignup = () => {
+    // Store referral code in localStorage before redirecting to Google
+    if (referralCode) {
+      localStorage.setItem('pending_referral_code', referralCode);
+    }
     loginWithGoogle();
   };
 
-  // Auto-hide toast after 6 seconds
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -114,7 +162,7 @@ export default function RegisterPage() {
 
   return (
     <AppLayout>
-      {/* 🔔 Toast Notification */}
+      {/* Toast Notification */}
       {(error || success) && (
         <div className="fixed top-22 right-4 z-50 max-w-sm w-[90%] sm:w-auto animate-slide-in">
           <div
@@ -142,6 +190,15 @@ export default function RegisterPage() {
                   Log In
                 </a>
               </p>
+
+              {/* Referral Code Display */}
+              {referralCode && referralValidated && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
+                    ✓ Referral code <strong>{referralCode}</strong> applied!
+                  </p>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-2">
                 {/* Full Name */}

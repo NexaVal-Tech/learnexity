@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import AppLayout from "@/components/layouts/AppLayout";
 import { handleApiError } from '@/lib/api';
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -26,6 +27,22 @@ export default function LoginPage() {
 
   const router = useRouter();
   const { login, loginWithGoogle } = useAuth();
+
+  // Check for verification success or email verification required messages
+  useEffect(() => {
+    const { message, email, verified } = router.query;
+    
+    // Email verification success from clicking link
+    if (verified === 'success') {
+      setSuccessMessage('Email verified successfully! You can now log in with your credentials.');
+    }
+    
+    // Coming from registration - need to verify email
+    if (message === 'verify_email' && email) {
+      setSuccessMessage(`Registration successful! Please check your email (${email}) to verify your account before logging in.`);
+      setFormData(prev => ({ ...prev, email: email as string }));
+    }
+  }, [router.query]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -39,6 +56,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     try {
@@ -69,7 +87,17 @@ export default function LoginPage() {
                 </a>
               </p>
 
-              {/* ✅ Toast for errors */}
+              {/* Success Toast */}
+              {successMessage && (
+                <Toast
+                  message={successMessage}
+                  type="success"
+                  duration={8000}
+                  onClose={() => setSuccessMessage('')}
+                />
+              )}
+
+              {/* Error Toast */}
               {error && (
                 <Toast
                   message={error}

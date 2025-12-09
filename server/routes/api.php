@@ -14,29 +14,32 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 // =================== EMAIL VERIFICATION ROUTES =================== //
-// Custom email verification for JWT API
 Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
-
     $user = User::find($id);
 
     if (!$user) {
-        return response()->json(['message' => 'User not found'], 404);
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        return redirect($frontendUrl . '/user/auth/login?error=user_not_found');
     }
 
     // Validate hash from email link
-    if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
-        return response()->json(['message' => 'Invalid verification link'], 403);
+    if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        return redirect($frontendUrl . '/user/auth/login?error=invalid_verification_link');
     }
 
     // If already verified
     if ($user->hasVerifiedEmail()) {
-        return response()->json(['message' => 'Email already verified']);
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        return redirect($frontendUrl . '/user/auth/login?verified=already&email=' . urlencode($user->email));
     }
 
     // Mark email as verified
     $user->markEmailAsVerified();
 
-    return response()->json(['message' => 'Email verified successfully']);
+    // Redirect to login page with success message
+    $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+    return redirect($frontendUrl . '/user/auth/login?verified=success&email=' . urlencode($user->email));
 })->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
@@ -44,7 +47,7 @@ Route::post('/email/verification-notification', function (Request $request) {
     return response()->json(['message' => 'Verification link resent.']);
 })->middleware('jwt.auth')->name('verification.send');
 
-// Add this to PUBLIC ROUTES section
+// Resend verification email (public route)
 Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 
 // =================== PUBLIC ROUTES =================== //
@@ -53,7 +56,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/email', [AuthController::class, 'sendResetLink']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
-// Validate a referral code (can be public)
+// Google OAuth routes
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+// Validate a referral code (public)
 Route::post('/referrals/validate', [ReferralController::class, 'validateReferralCode']);
 
 // Paystack webhook (MUST be public)

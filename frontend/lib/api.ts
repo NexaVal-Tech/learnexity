@@ -86,6 +86,7 @@ export interface RegisterData {
   password: string;
   password_confirmation: string;
   phone?: string;
+  referral_code?: string;
 }
 
 export interface LoginData {
@@ -335,9 +336,9 @@ export const api = {
     register: async (data: RegisterData): Promise<AuthResponse> => {
       const response = await apiClient.post<AuthResponse>('/api/register', data);
       
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-      }
+      // if (response.data?.token) {
+      //   localStorage.setItem('token', response.data.token);
+      // }
       
       return response.data;
     },
@@ -384,7 +385,22 @@ export const api = {
     },
 
     googleRedirect: () => {
-      window.location.href = `${API_URL}/auth/google/redirect`;
+      // Get referral code from localStorage if it exists
+      const referralCode = localStorage.getItem('pending_referral_code');
+      
+      let redirectUrl = `${API_URL}/api/auth/google/redirect`;
+      
+      // Add referral code as query parameter if it exists
+      if (referralCode) {
+        redirectUrl += `?ref=${encodeURIComponent(referralCode)}`;
+      }
+      
+      window.location.href = redirectUrl;
+    },
+
+    resendVerification: async (email: string): Promise<{ message: string }> => {
+      const response = await apiClient.post('/api/email/resend-verification', { email });
+      return response.data;
     },
   },
 

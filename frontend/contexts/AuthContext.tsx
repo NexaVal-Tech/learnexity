@@ -14,13 +14,14 @@ interface AuthContextType {
     email: string,
     password: string,
     passwordConfirmation: string,
-    phone?: string
+    phone?: string,
+    referralCode?: string // ✨ Added here
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   loginWithGoogle: () => void;
   clearError: () => void;
-   setUserFromToken: (token: string) => Promise<void>;
+  setUserFromToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,24 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  // Clear error helper
   const clearError = () => setError(null);
 
-  // ✅ Login function (with refreshUser)
+  // LOGIN
   const login = async (email: string, password: string) => {
     try {
       setError(null);
       const response = await api.auth.login({ email, password });
 
-      // ✅ Store token if available
       if (response.token) {
         localStorage.setItem('token', response.token);
       }
 
-      // ✅ Immediately refresh user data to update context
       await refreshUser();
 
-      // Check if there's an intended course to redirect to
       const intendedCourse = sessionStorage.getItem('intended_course');
       const intendedCourseName = sessionStorage.getItem('intended_course_name');
 
@@ -83,16 +80,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Default redirect based on user role
-      if (response.user?.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/user/dashboard');
-      }
+      response.user?.role === 'admin'
+        ? router.push('/admin/dashboard')
+        : router.push('/user/dashboard');
     } catch (error) {
-      const errorMessage = handleApiError(error);
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
     }
   };
 
@@ -108,22 +102,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Register function (same improvement)
+  // REGISTER (UPDATED WITH referralCode)
   const register = async (
     name: string,
     email: string,
     password: string,
     passwordConfirmation: string,
-    phone?: string
+    phone?: string,
+    referralCode?: string // 📌 Added referral code param
   ) => {
     try {
       setError(null);
+
       const response = await api.auth.register({
         name,
         email,
         password,
         password_confirmation: passwordConfirmation,
         phone,
+        referral_code: referralCode, // 👈 sent to API
       });
 
       if (response.token) {
@@ -142,19 +139,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (response.user?.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/user/dashboard');
-      }
+      response.user?.role === 'admin'
+        ? router.push('/admin/dashboard')
+        : router.push('/user/dashboard');
     } catch (error) {
-      const errorMessage = handleApiError(error);
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
       await api.auth.logout();
@@ -168,7 +162,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Refresh user data (used by login, register, callback)
   const refreshUser = async () => {
     try {
       const userData = await api.auth.me();
@@ -179,9 +172,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Google login
   const loginWithGoogle = () => {
-    api.auth.googleRedirect();
+    api.auth.googleRedirect(); 
   };
 
   return (
@@ -204,11 +196,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to use auth context
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  return ctx;
 };
