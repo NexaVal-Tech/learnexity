@@ -39,17 +39,17 @@ export default function Pathways() {
               Access a library of courses with live expert tutors to master in-demand skills and accelerate your learning.
             </p>
             
-            <div className="flex justify-start">
+            {/* <div className="flex justify-start">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}  d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Card 02 */}
-          <div className="bg-gray-100 rounded-4xl p-4">
+          <div className="bg-gray-100 rounded-4xl p-8">
             <div className="mb-6">
               <span className="text-red-400 text-sm font-mono">[ 02 ]</span>
             </div>
@@ -62,7 +62,7 @@ export default function Pathways() {
               Get personalized tutoring on your schedule. Perfect for busy professionals who need flexible learning to fit their life.
             </p>
             
-            <div className="flex justify-start">
+            {/* <div className="flex justify-start">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
                 <svg 
                   className="w-5 h-5 text-blue-600" 
@@ -78,11 +78,11 @@ export default function Pathways() {
                   />
                 </svg>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Card 03 */}
-          <div className="bg-gray-100 rounded-4xl p-4">
+          <div className="bg-gray-100 rounded-4xl p-8">
             <div className="mb-6">
               <span className="text-red-400 text-sm font-mono">[ 03 ]</span>
             </div>
@@ -95,7 +95,7 @@ export default function Pathways() {
               We offer exclusive Discord access, a 5,000+ member alumni network, ongoing mentorship, and industry networking opportunities.
             </p>
             
-            <div className="flex justify-start">
+            {/* <div className="flex justify-start">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
                 <svg 
                   className="w-5 h-5 text-blue-600" 
@@ -111,7 +111,7 @@ export default function Pathways() {
                   />
                 </svg>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         </FadeUpOnScroll>

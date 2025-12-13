@@ -159,6 +159,10 @@ export default function UserDashboardPage() {
                     </div>
                   </div>
                 ))}
+
+                <Link href="/courses/courses" className="text-indigo-600 font-bold text-xl text-center border-2 rounded-xl px-3 hover:text-indigo-700">
+                  View all
+                </Link>
               </div>
             )}
           </>

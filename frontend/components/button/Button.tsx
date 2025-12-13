@@ -43,7 +43,7 @@ export const SecondaryButton = ({ label = "Join Community", href = "#" }) => {
 };
 
 // talk to an expert button
-export const ExpertButton = ({ label = "talk to an expert", href = "#"}) => {
+export const ExpertButton = ({ label = "talk to an expert", href = "https://calendly.com/nexavaltech/30min"}) => {
   return (
     <Link href={href}>
         <button className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors tes-xl p-2">

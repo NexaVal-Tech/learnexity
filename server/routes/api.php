@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\User\CourseEnrollmentController;
 use App\Http\Controllers\Api\PaystackWebhookController;
 use App\Http\Controllers\Api\CourseResourcesController;
 use App\Http\Controllers\Api\AdminCourseResourcesController;
+use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AdminStudentController;
+use App\Http\Controllers\Api\AdminCourseController;
 use App\Http\Controllers\Api\ReferralController;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
@@ -112,23 +115,73 @@ Route::prefix('courses')->group(function () {
 });
 
 // =================== ADMIN ROUTES =================== //
-Route::middleware('role:admin')->prefix('admin/courses/{courseId}/resources')->group(function () {
-    Route::post('/materials', [AdminCourseResourcesController::class, 'createMaterial']);
-    Route::put('/materials/{materialId}', [AdminCourseResourcesController::class, 'updateMaterial']);
-    Route::delete('/materials/{materialId}', [AdminCourseResourcesController::class, 'deleteMaterial']);
-    Route::post('/materials/{materialId}/items', [AdminCourseResourcesController::class, 'addMaterialItem']);
-    Route::put('/items/{itemId}', [AdminCourseResourcesController::class, 'updateMaterialItem']);
-    Route::delete('/items/{itemId}', [AdminCourseResourcesController::class, 'deleteMaterialItem']);
-    Route::post('/items/{itemId}/upload', [AdminCourseResourcesController::class, 'uploadMaterialFile']);
-    Route::post('/external-resources', [AdminCourseResourcesController::class, 'createExternalResource']);
-    Route::put('/external-resources/{resourceId}', [AdminCourseResourcesController::class, 'updateExternalResource']);
-    Route::delete('/external-resources/{resourceId}', [AdminCourseResourcesController::class, 'deleteExternalResource']);
-    Route::post('/badges', [AdminCourseResourcesController::class, 'createBadge']);
-    Route::put('/badges/{badgeId}', [AdminCourseResourcesController::class, 'updateBadge']);
-    Route::delete('/badges/{badgeId}', [AdminCourseResourcesController::class, 'deleteBadge']);
-    Route::post('/cohort', [AdminCourseResourcesController::class, 'createCohort']);
-    Route::put('/cohort/{cohortId}', [AdminCourseResourcesController::class, 'updateCohort']);
-    Route::post('/cohort/{cohortId}/participants', [AdminCourseResourcesController::class, 'addParticipant']);
-    Route::put('/cohort/participants/{participantId}', [AdminCourseResourcesController::class, 'updateParticipant']);
-    Route::delete('/cohort/participants/{participantId}', [AdminCourseResourcesController::class, 'removeParticipant']);
+
+// =================== ADMIN ROUTES =================== //
+
+// Public admin routes (no authentication required)
+Route::prefix('admin')->group(function () {
+    Route::post('/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login']);
+    Route::post('/forgot-password', [App\Http\Controllers\Api\AdminAuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [App\Http\Controllers\Api\AdminAuthController::class, 'resetPassword']);
+});
+
+// Protected admin routes (authentication required)
+Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
+    
+    // Auth routes
+    Route::post('/logout', [App\Http\Controllers\Api\AdminAuthController::class, 'logout']);
+    Route::post('/refresh', [App\Http\Controllers\Api\AdminAuthController::class, 'refresh']);
+    Route::get('/me', [App\Http\Controllers\Api\AdminAuthController::class, 'me']);
+
+    // Dashboard
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+    
+    // Students Management
+    Route::prefix('students')->group(function () {
+        Route::get('/', [AdminStudentController::class, 'index']);
+        Route::get('/statistics', [AdminStudentController::class, 'getStatistics']);
+        Route::get('/{id}', [AdminStudentController::class, 'show']);
+        Route::post('/send-message', [AdminStudentController::class, 'sendMessage']);
+    });
+    
+    // Courses Management
+    Route::prefix('courses')->group(function () {
+        Route::get('/', [AdminCourseController::class, 'index']);
+        Route::get('/statistics', [AdminCourseController::class, 'getStatistics']);
+        Route::post('/', [AdminCourseController::class, 'store']);
+        Route::get('/{courseId}', [AdminCourseController::class, 'show']);
+        Route::put('/{courseId}', [AdminCourseController::class, 'update']);
+        Route::delete('/{courseId}', [AdminCourseController::class, 'destroy']);
+        
+        // Course Resources Management
+        Route::prefix('{courseId}/resources')->group(function () {
+            // Materials
+            Route::post('/materials', [AdminCourseResourcesController::class, 'createMaterial']);
+            Route::put('/materials/{materialId}', [AdminCourseResourcesController::class, 'updateMaterial']);
+            Route::delete('/materials/{materialId}', [AdminCourseResourcesController::class, 'deleteMaterial']);
+            
+            // Material Items
+            Route::post('/materials/{materialId}/items', [AdminCourseResourcesController::class, 'addMaterialItem']);
+            Route::put('/items/{itemId}', [AdminCourseResourcesController::class, 'updateMaterialItem']);
+            Route::delete('/items/{itemId}', [AdminCourseResourcesController::class, 'deleteMaterialItem']);
+            Route::post('/items/{itemId}/upload', [AdminCourseResourcesController::class, 'uploadMaterialFile']);
+            
+            // External Resources
+            Route::post('/external-resources', [AdminCourseResourcesController::class, 'createExternalResource']);
+            Route::put('/external-resources/{resourceId}', [AdminCourseResourcesController::class, 'updateExternalResource']);
+            Route::delete('/external-resources/{resourceId}', [AdminCourseResourcesController::class, 'deleteExternalResource']);
+            
+            // Badges
+            Route::post('/badges', [AdminCourseResourcesController::class, 'createBadge']);
+            Route::put('/badges/{badgeId}', [AdminCourseResourcesController::class, 'updateBadge']);
+            Route::delete('/badges/{badgeId}', [AdminCourseResourcesController::class, 'deleteBadge']);
+            
+            // Cohort & Leaderboard
+            Route::post('/cohort', [AdminCourseResourcesController::class, 'createCohort']);
+            Route::put('/cohort/{cohortId}', [AdminCourseResourcesController::class, 'updateCohort']);
+            Route::post('/cohort/{cohortId}/participants', [AdminCourseResourcesController::class, 'addParticipant']);
+            Route::put('/cohort/participants/{participantId}', [AdminCourseResourcesController::class, 'updateParticipant']);
+            Route::delete('/cohort/participants/{participantId}', [AdminCourseResourcesController::class, 'removeParticipant']);
+        });
+    });
 });

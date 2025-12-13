@@ -52,7 +52,7 @@ export default function Contact() {
               <p className="mb-6 text-purple-100">
                 Book a free consultation call with our team.
               </p>
-              <a href="https://calendly.com" className="text-white font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+              <a href="https://calendly.com/nexavaltech/30min" className="text-white font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                 Book Now <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -79,8 +79,8 @@ export default function Contact() {
               <h3 className="text-2xl font-bold mb-3 text-gray-900">Email Us</h3>
               <p className="mb-6 text-gray-600">
                 For detailed enquiries, send an email to{' '}
-                <a href="mailto:learnexity@nexavaluable.com" className="text-[#6C63FF] hover:underline">
-                  learnexity@nexavaluable.com
+                <a href="mailto:info@learnexity.org" className="text-[#6C63FF] hover:underline">
+                  info@learnexity.org
                 </a>
               </p>
               <a href="mailto:hello@learnexity.com" className="text-[#6C63FF] font-semibold flex items-center gap-2 hover:gap-3 transition-all">

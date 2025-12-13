@@ -20,7 +20,7 @@ export default function Footer() {
             </button>
           </Link>
 
-          <Link href="/consultation">
+          <Link href="https://calendly.com/nexavaltech/30min">
             <button className="text-white text-sm md:text-lg hover:no-underline transition-all">
               Book Free Consultation
             </button>
@@ -59,11 +59,11 @@ export default function Footer() {
                     About Us
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a href="#" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Career Services
                   </a>
-                </li>
+                </li> */}
                 <li>
                   <a href="/community" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Community

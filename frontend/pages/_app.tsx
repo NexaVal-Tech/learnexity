@@ -6,6 +6,7 @@ import { GeistSans } from "geist/font/sans";
 import { useRouter } from "next/router";
 import useAuthTokenSync from "@/hooks/useAuthTokenSync";
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
 
 export default function App({ Component, pageProps }: AppProps) {
   useAuthTokenSync(); 
@@ -14,17 +15,19 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <main className={GeistSans.variable}>
-      {/* Wrap EVERYTHING with AuthProvider */}
+      {/* Nest BOTH providers - order matters! */}
       <AuthProvider>
-        {isUserRoute ? (
-          // User routes handle their own layout (UserDashboardLayout handles protection)
-          <Component {...pageProps} />
-        ) : (
-          // Public routes use default layout
-          <AppLayout>
+        <AdminAuthProvider>
+          {isUserRoute ? (
+            // User routes handle their own layout
             <Component {...pageProps} />
-          </AppLayout>
-        )}
+          ) : (
+            // Public and admin routes use default layout
+            <AppLayout>
+              <Component {...pageProps} />
+            </AppLayout>
+          )}
+        </AdminAuthProvider>
       </AuthProvider>
     </main>
   );

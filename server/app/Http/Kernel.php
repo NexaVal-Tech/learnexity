@@ -13,26 +13,20 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'api' => [
-            \Illuminate\Http\Middleware\HandleCors::class, // ✅ built-in CORS middleware
+            \Illuminate\Http\Middleware\HandleCors::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
     /**
-     * The application's route middleware.
+     * The application's route middleware aliases.
      *
      * @var array
      */
-    protected $routeMiddleware = [
-        // other middlewares...
-        'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
-        'jwt.refresh' => \Tymon\JWTAuth\Http\Middleware\RefreshToken::class,
-    ];
-
     protected $middlewareAliases = [
-        // ... existing middleware
         'role' => \App\Http\Middleware\CheckRole::class,
-        'jwt.auth' => \App\Http\Middleware\JWTAuthenticate::class, // Your JWT middleware
+        'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
+        'admin.auth' => \App\Http\Middleware\AdminAuthMiddleware::class,
     ];
 }

@@ -72,7 +72,7 @@ export default function Method() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Job Placement
+                  Career Support
                 </h3>
                 <p className="text-gray-600 text-base">
                   Our ultimate goal is your success. We connect our best candidates 

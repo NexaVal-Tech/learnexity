@@ -35,6 +35,7 @@ export default function UserHeader() {
   };
 
   const navItems = [
+    { href: "/", label: "Home" },
     { href: "/user/dashboard", label: "Dashboard" }, // 👈 Fixed href
     { href: "/user/resource", label: "Resource" }, // 👈 Fixed href
     { href: "/user/referrals", label: "Referrals" }, // 👈 Fixed href
