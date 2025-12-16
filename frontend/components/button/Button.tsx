@@ -35,7 +35,7 @@ export const SecondaryButton = ({ label = "Join Community", href = "#" }) => {
       <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
         <span>{label}</span>
         <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
-          <img src="/icons/arrow_right_line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
+          <img src="/icons/arrow_right_Line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
         </span>
       </button>
     </Link>
