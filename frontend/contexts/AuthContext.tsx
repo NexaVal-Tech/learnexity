@@ -80,9 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      response.user?.role === 'admin'
-        ? router.push('/admin/dashboard')
-        : router.push('/user/dashboard');
+      router.push('/user/dashboard');
+      
     } catch (error) {
       const err = handleApiError(error);
       setError(err);

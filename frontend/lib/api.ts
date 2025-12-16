@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 
+import { adminApi } from './adminApi'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Create axios instance
@@ -932,11 +934,10 @@ export const api = {
     },
   },
 
-  admin: {
-    // Dashboard
+ admin: {
+    // Dashboard - NOW USES adminApi client
     getDashboard: async (): Promise<DashboardData> => {
-      const response = await apiClient.get<DashboardData>('/api/admin/dashboard');
-      return response.data;
+      return await adminApi.get<DashboardData>('/api/admin/dashboard');
     },
 
     // Students
@@ -949,13 +950,11 @@ export const api = {
         per_page?: number;
         page?: number;
       }): Promise<{ data: StudentListItem[]; meta: any }> => {
-        const response = await apiClient.get('/api/admin/students', { params });
-        return response.data;
+        return await adminApi.get('/api/admin/students', { params } as any);
       },
 
       getById: async (id: number): Promise<StudentDetail> => {
-        const response = await apiClient.get<StudentDetail>(`/api/admin/students/${id}`);
-        return response.data;
+        return await adminApi.get<StudentDetail>(`/api/admin/students/${id}`);
       },
 
       getStatistics: async (): Promise<{
@@ -965,8 +964,7 @@ export const api = {
         unpaid_students: number;
         new_this_month: number;
       }> => {
-        const response = await apiClient.get('/api/admin/students/statistics');
-        return response.data;
+        return await adminApi.get('/api/admin/students/statistics');
       },
 
       sendMessage: async (data: {
@@ -974,8 +972,7 @@ export const api = {
         subject: string;
         message: string;
       }): Promise<{ message: string }> => {
-        const response = await apiClient.post('/api/admin/students/send-message', data);
-        return response.data;
+        return await adminApi.post('/api/admin/students/send-message', data);
       },
     },
 
@@ -987,13 +984,11 @@ export const api = {
         per_page?: number;
         page?: number;
       }): Promise<{ data: AdminCourseListItem[]; meta: any }> => {
-        const response = await apiClient.get('/api/admin/courses', { params });
-        return response.data;
+        return await adminApi.get('/api/admin/courses', { params } as any);
       },
 
       getById: async (courseId: string): Promise<AdminCourseDetail> => {
-        const response = await apiClient.get<AdminCourseDetail>(`/api/admin/courses/${courseId}`);
-        return response.data;
+        return await adminApi.get<AdminCourseDetail>(`/api/admin/courses/${courseId}`);
       },
 
       getStatistics: async (): Promise<{
@@ -1002,8 +997,7 @@ export const api = {
         total_enrollments: number;
         average_completion_rate: number;
       }> => {
-        const response = await apiClient.get('/api/admin/courses/statistics');
-        return response.data;
+        return await adminApi.get('/api/admin/courses/statistics');
       },
 
       create: async (data: {
@@ -1016,8 +1010,7 @@ export const api = {
         is_freemium?: boolean;
         is_premium?: boolean;
       }): Promise<{ message: string; course: Course }> => {
-        const response = await apiClient.post('/api/admin/courses', data);
-        return response.data;
+        return await adminApi.post('/api/admin/courses', data);
       },
 
       update: async (courseId: string, data: Partial<{
@@ -1029,13 +1022,11 @@ export const api = {
         is_freemium: boolean;
         is_premium: boolean;
       }>): Promise<{ message: string; course: Course }> => {
-        const response = await apiClient.put(`/api/admin/courses/${courseId}`, data);
-        return response.data;
+        return await adminApi.put(`/api/admin/courses/${courseId}`, data);
       },
 
       delete: async (courseId: string): Promise<{ message: string }> => {
-        const response = await apiClient.delete(`/api/admin/courses/${courseId}`);
-        return response.data;
+        return await adminApi.delete(`/api/admin/courses/${courseId}`);
       },
 
       // Sprints Management
@@ -1044,11 +1035,10 @@ export const api = {
         sprint_number: number;
         order?: number;
       }) => {
-        const response = await apiClient.post(
+        return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials`,
           data
         );
-        return response.data;
       },
 
       updateSprint: async (courseId: string, sprintId: number, data: {
@@ -1056,18 +1046,16 @@ export const api = {
         sprint_number?: number;
         order?: number;
       }) => {
-        const response = await apiClient.put(
+        return await adminApi.put(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}`,
           data
         );
-        return response.data;
       },
 
       deleteSprint: async (courseId: string, sprintId: number) => {
-        const response = await apiClient.delete(
+        return await adminApi.delete(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}`
         );
-        return response.data;
       },
 
       // Topics Management
@@ -1078,11 +1066,10 @@ export const api = {
         file_size?: string;
         order?: number;
       }) => {
-        const response = await apiClient.post(
+        return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}/items`,
           data
         );
-        return response.data;
       },
 
       updateTopic: async (courseId: string, topicId: number, data: Partial<{
@@ -1092,23 +1079,21 @@ export const api = {
         file_size: string;
         order: number;
       }>) => {
-        const response = await apiClient.put(
+        return await adminApi.put(
           `/api/admin/courses/${courseId}/resources/items/${topicId}`,
           data
         );
-        return response.data;
       },
 
       deleteTopic: async (courseId: string, topicId: number) => {
-        const response = await apiClient.delete(
+        return await adminApi.delete(
           `/api/admin/courses/${courseId}/resources/items/${topicId}`
         );
-        return response.data;
       },
     },
   },
 
-  // Generic methods
+  // Generic methods - keep as is for regular user routes
   get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await apiClient.get<T>(url, config);
     return response.data;
@@ -1133,9 +1118,7 @@ export const api = {
     const response = await apiClient.delete<T>(url, config);
     return response.data;
   },
-};
-
-// Legacy export for backward compatibility
+};// Legacy export for backward compatibility
 export const coursesApi = {
   getAll: api.courses.getAll,
   getById: api.courses.getById,

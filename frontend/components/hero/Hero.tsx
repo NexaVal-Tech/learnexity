@@ -18,7 +18,7 @@ export default function Hero() {
             <FadeInCard>
               <div className="text-white">
                 <h1 className="text-5xl md:text-6xl font-semibold leading-tight mb-8 md:mb-12">
-                  Build and Get Hired with 
+                  Launch Your Tech Career with 
                   <span className="text-white"> Learnexity</span>.
                 </h1>
 

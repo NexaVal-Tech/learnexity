@@ -31,6 +31,12 @@ class Course extends Model
         'is_premium' => 'boolean',
     ];
 
+    // ✅ ADD THIS - Enrollment relationship
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class, 'course_id', 'course_id');
+    }
+
     public function tools(): HasMany
     {
         return $this->hasMany(CourseTool::class)->orderBy('order');

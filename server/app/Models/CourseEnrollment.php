@@ -31,6 +31,12 @@ class CourseEnrollment extends Model
         return $this->belongsTo(User::class);
     }
 
+    // ✅ ADD THIS - Course relationship
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id', 'course_id');
+    }
+
     public function isPaymentCompleted()
     {
         return $this->payment_status === 'completed';

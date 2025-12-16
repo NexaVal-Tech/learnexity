@@ -11,80 +11,174 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class AdminAuthController extends Controller
 {
     public function login(Request $request)
     {
+        Log::info('ADMIN LOGIN ATTEMPT', [
+            'ip' => $request->ip(),
+            'payload' => $request->except('password'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('ADMIN LOGIN VALIDATION FAILED', [
+                'errors' => $validator->errors(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        $credentials = $request->only('email', 'password');
+        try {
+            auth()->shouldUse('admin');
+            Log::info('ADMIN GUARD SET');
 
-        // Set guard to admin
-        auth()->shouldUse('admin');
+            $credentials = $request->only('email', 'password');
 
-        if (!$token = auth()->attempt($credentials)) {
+            if (!$token = auth()->attempt($credentials)) {
+                Log::warning('ADMIN LOGIN FAILED - INVALID CREDENTIALS', [
+                    'email' => $request->email,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid email or password'
+                ], 401);
+            }
+
+            $admin = auth()->user();
+
+            Log::info('ADMIN LOGIN SUCCESS', [
+                'admin_id' => $admin->id,
+                'email' => $admin->email,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin logged in successfully',
+                'data' => [
+                    'admin' => $admin,
+                    'token' => $token,
+                    'token_type' => 'bearer',
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('ADMIN LOGIN EXCEPTION', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid email or password'
-            ], 401);
+                'message' => 'Internal server error'
+            ], 500);
         }
-
-        $admin = auth()->user();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Admin logged in successfully',
-            'data' => [
-                'admin' => $admin,
-                'token' => $token,
-                'token_type' => 'bearer',
-            ]
-        ]);
     }
 
     public function me()
     {
-        auth()->shouldUse('admin');
-        
-        return response()->json([
-            'success' => true,
-            'data' => auth()->user()
-        ]);
+        Log::info('ADMIN ME REQUEST');
+
+        try {
+            auth()->shouldUse('admin');
+            $admin = auth()->user();
+
+            if (!$admin) {
+                Log::warning('ADMIN ME FAILED - NOT AUTHENTICATED');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            Log::info('ADMIN ME SUCCESS', [
+                'admin_id' => $admin->id,
+                'email' => $admin->email,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $admin
+            ]);
+        } catch (Exception $e) {
+            Log::error('ADMIN ME EXCEPTION', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
     }
 
     public function logout()
     {
-        auth()->shouldUse('admin');
-        auth()->logout();
+        Log::info('ADMIN LOGOUT REQUEST');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Admin logged out successfully'
-        ]);
+        try {
+            auth()->shouldUse('admin');
+            $admin = auth()->user();
+
+            auth()->logout();
+
+            Log::info('ADMIN LOGOUT SUCCESS', [
+                'admin_id' => optional($admin)->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin logged out successfully'
+            ]);
+        } catch (Exception $e) {
+            Log::error('ADMIN LOGOUT EXCEPTION', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
     }
 
     public function refresh()
     {
-        auth()->shouldUse('admin');
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'token' => auth()->refresh(),
-                'token_type' => 'bearer',
-            ]
-        ]);
+        Log::info('ADMIN TOKEN REFRESH REQUEST');
+
+        try {
+            auth()->shouldUse('admin');
+            $newToken = auth()->refresh();
+
+            Log::info('ADMIN TOKEN REFRESH SUCCESS');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'token' => $newToken,
+                    'token_type' => 'bearer',
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('ADMIN TOKEN REFRESH FAILED', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Token refresh failed'
+            ], 401);
+        }
     }
 
     /**
@@ -92,38 +186,56 @@ class AdminAuthController extends Controller
      */
     public function forgotPassword(Request $request)
     {
+        Log::info('ADMIN FORGOT PASSWORD REQUEST', [
+            'email' => $request->email,
+        ]);
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('ADMIN FORGOT PASSWORD VALIDATION FAILED', [
+                'errors' => $validator->errors(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        // Check if admin exists
         $admin = Admin::where('email', $request->email)->first();
-        
+
         if (!$admin) {
+            Log::warning('ADMIN FORGOT PASSWORD EMAIL NOT FOUND', [
+                'email' => $request->email,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'We could not find an admin with that email address.'
             ], 404);
         }
 
-        // Send password reset link using admin broker
         $status = Password::broker('admins')->sendResetLink(
             $request->only('email')
         );
 
         if ($status === Password::RESET_LINK_SENT) {
+            Log::info('ADMIN RESET LINK SENT', [
+                'email' => $request->email,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Password reset link sent to your email.'
             ]);
         }
+
+        Log::error('ADMIN RESET LINK FAILED', [
+            'status' => $status,
+        ]);
 
         return response()->json([
             'success' => false,
@@ -136,6 +248,10 @@ class AdminAuthController extends Controller
      */
     public function resetPassword(Request $request)
     {
+        Log::info('ADMIN RESET PASSWORD REQUEST', [
+            'email' => $request->email,
+        ]);
+
         $validator = Validator::make($request->all(), [
             'token' => 'required',
             'email' => 'required|email',
@@ -143,16 +259,23 @@ class AdminAuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('ADMIN RESET PASSWORD VALIDATION FAILED', [
+                'errors' => $validator->errors(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        // Reset password using admin broker
         $status = Password::broker('admins')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($admin, $password) {
+                Log::info('ADMIN PASSWORD RESETTING', [
+                    'admin_id' => $admin->id,
+                ]);
+
                 $admin->forceFill([
                     'password' => Hash::make($password)
                 ])->setRememberToken(Str::random(60));
@@ -164,11 +287,19 @@ class AdminAuthController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
+            Log::info('ADMIN PASSWORD RESET SUCCESS', [
+                'email' => $request->email,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Your password has been reset successfully!'
             ]);
         }
+
+        Log::error('ADMIN PASSWORD RESET FAILED', [
+            'status' => $status,
+        ]);
 
         return response()->json([
             'success' => false,

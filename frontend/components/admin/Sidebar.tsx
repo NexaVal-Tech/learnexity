@@ -12,11 +12,11 @@ import {
   LogOut,
   ChevronsUpDown
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const Sidebar = () => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout } = useAdminAuth();
 
   const menuItems = [
     { icon: Home, label: 'Dashboard Overview', href: '/admin/dashboard' },
@@ -29,7 +29,7 @@ const Sidebar = () => {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/user/auth/login');
+    router.push('/admin/auth/login');
   };
 
   return (

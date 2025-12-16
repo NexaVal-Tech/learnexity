@@ -50,23 +50,32 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const clearError = () => setError(null);
 
-  const login = async (email: string, password: string) => {
-    try {
-      setError(null);
-      const response = await adminApi.auth.login({ email, password });
+const login = async (email: string, password: string) => {
+  try {
+    setError(null);
 
-      if (response.success && response.data) {
-        setAdmin(response.data.admin);
-        router.push('/admin/dashboard');
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
-    } catch (error) {
-      const err = handleAdminApiError(error);
-      setError(err);
-      throw new Error(err);
+    const response = await adminApi.auth.login({ email, password });
+
+    if (response.success && response.data) {
+      localStorage.setItem('admin_token', response.data.token);
+      setAdmin(response.data.admin);
+
+      const intended =
+        sessionStorage.getItem('admin_intended_route') || '/admin/dashboard';
+
+      sessionStorage.removeItem('admin_intended_route');
+
+      router.replace(intended);
+    } else {
+      throw new Error(response.message || 'Login failed');
     }
-  };
+  } catch (error) {
+    const err = handleAdminApiError(error);
+    setError(err);
+    throw new Error(err);
+  }
+};
+
 
   const logout = async () => {
     try {

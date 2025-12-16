@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -12,11 +12,17 @@ const adminApiClient: AxiosInstance = axios.create({
   withCredentials: false,
 });
 
-// Request interceptor — attach admin JWT token
+// Add logging to the request interceptor
 adminApiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('admin_token');
+      console.log('🔑 Admin Token Check:', {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'NO TOKEN',
+        url: config.url
+      });
+      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -45,17 +51,13 @@ adminApiClient.interceptors.response.use(
     }
 
     // Handle unauthorized admin token
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname;
-        const isAdminAuthPage = currentPath.includes('/admin/auth/');
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        if (!isAdminAuthPage) {
-          window.location.href = '/admin/auth/login';
-        }
-      }
-    }
+if (error.response?.status === 401) {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+  }
+}
+
 
     return Promise.reject(error);
   }
@@ -153,28 +155,27 @@ export const adminApi = {
     },
   },
 
-  // Generic methods for admin routes
-  get: async <T = any>(url: string): Promise<T> => {
-    const response = await adminApiClient.get<T>(url);
+  // ⚠️ UPDATED: Generic methods with proper config support
+  get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await adminApiClient.get<T>(url, config);
     return response.data;
   },
 
-  post: async <T = any>(url: string, data?: any): Promise<T> => {
-    const response = await adminApiClient.post<T>(url, data);
+  post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await adminApiClient.post<T>(url, data, config);
     return response.data;
   },
 
-  put: async <T = any>(url: string, data?: any): Promise<T> => {
-    const response = await adminApiClient.put<T>(url, data);
+  put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await adminApiClient.put<T>(url, data, config);
     return response.data;
   },
 
-  delete: async <T = any>(url: string): Promise<T> => {
-    const response = await adminApiClient.delete<T>(url);
+  delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await adminApiClient.delete<T>(url, config);
     return response.data;
   },
 };
-
 // ===============================
 // Error Handler
 // ===============================

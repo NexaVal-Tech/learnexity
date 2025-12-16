@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminDashboardController extends Controller
 {
@@ -16,17 +17,52 @@ class AdminDashboardController extends Controller
      */
     public function index(): JsonResponse
     {
-        return response()->json([
-            'stats' => $this->getStats(),
-            'enrollment_chart' => $this->getEnrollmentChartData(),
-            'distribution_chart' => $this->getDistributionChartData(),
-            'performance_chart' => $this->getPerformanceChartData(),
-            'recent_activity' => $this->getRecentActivity(),
-            'top_courses' => $this->getTopCourses(),
-            'new_enrollments' => $this->getNewEnrollments(),
-            'upcoming_consultations' => $this->getUpcomingConsultations(),
-            'recent_milestones' => $this->getRecentMilestones(),
-        ]);
+        Log::info('📊 DASHBOARD REQUEST START');
+        
+        try {
+            // ✅ SET THE ADMIN GUARD
+            auth()->shouldUse('admin');
+            
+            // ✅ CHECK IF ADMIN IS AUTHENTICATED
+            $admin = auth()->user();
+            
+            if (!$admin) {
+                Log::error('🚫 DASHBOARD - No admin authenticated');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            Log::info('✅ DASHBOARD - Admin authenticated', [
+                'admin_id' => $admin->id,
+                'email' => $admin->email
+            ]);
+
+            // Return dashboard data
+            return response()->json([
+                'stats' => $this->getStats(),
+                'enrollment_chart' => $this->getEnrollmentChartData(),
+                'distribution_chart' => $this->getDistributionChartData(),
+                'performance_chart' => $this->getPerformanceChartData(),
+                'recent_activity' => $this->getRecentActivity(),
+                'top_courses' => $this->getTopCourses(),
+                'new_enrollments' => $this->getNewEnrollments(),
+                'upcoming_consultations' => $this->getUpcomingConsultations(),
+                'recent_milestones' => $this->getRecentMilestones(),
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ DASHBOARD ERROR', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
     }
 
     /**

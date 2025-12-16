@@ -27,4 +27,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
                     ->withTimestamps()
                     ->withPivot('purchased_at', 'stripe_session_id');
     }
+
+    // ✅ ADD THIS - Enrollments relationship
+    public function enrollments()
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
 }

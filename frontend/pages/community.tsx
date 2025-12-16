@@ -87,8 +87,8 @@ export default function CommunityPage() {
       // Close modal
       setShowModal(false);
 
-      // Redirect to Discord invite link
-      window.open('https://discord.gg/acrqPJEZ', '_blank');
+      // Redirect to whatsapp invite link
+      window.open('https://chat.whatsapp.com/INag8dBLGnS9KBANu87Jlm', '_blank');
 
       // Reset form
       setFormData({

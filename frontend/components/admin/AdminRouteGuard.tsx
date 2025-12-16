@@ -12,16 +12,14 @@ export default function AdminRouteGuard({ children }: AdminRouteGuardProps) {
 
   useEffect(() => {
     if (!loading && !admin) {
-      // Store the intended destination
       const currentPath = router.asPath;
       sessionStorage.setItem('admin_intended_route', currentPath);
-      
-      // Redirect to admin login
-      router.push('/admin/auth/login');
+
+      // ✅ IMPORTANT: replace, not push
+      router.replace('/admin/auth/login');
     }
   }, [admin, loading, router]);
 
-  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -33,11 +31,7 @@ export default function AdminRouteGuard({ children }: AdminRouteGuardProps) {
     );
   }
 
-  // If not authenticated, don't render anything (redirect is happening)
-  if (!admin) {
-    return null;
-  }
+  if (!admin) return null;
 
-  // User is authenticated, render the protected content
   return <>{children}</>;
 }
