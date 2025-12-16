@@ -12,7 +12,7 @@ export default function Method() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-4">
-            What Makes Us Dofferent
+            What Makes Us Different
           </h2>
           <p className="text-xl text-gray-900 max-w-2xl mx-auto">
             We provide the structure and support you need to build a portfolio that gets 

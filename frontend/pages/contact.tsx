@@ -66,7 +66,7 @@ export default function Contact() {
               <p className="mb-6 text-gray-600">
                 Get instant responses to your questions
               </p>
-              <a href="https://wa.me/+1 (276) 252-8415" className="text-purple-600 font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+              <a href="https://wa.me/+12762528415" className="text-purple-600 font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                 Chat <ArrowRight className="w-5 h-5" />
               </a>
             </div>

@@ -88,11 +88,12 @@ export default function Pathways() {
             </div>
             
             <h3 className="text-2xl font-semibold text-black mb-4 sub-component-headers">
-              Join Our Learning Community
+              Join Our One-on-One Coaching
             </h3>
             
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              We offer exclusive Discord access, a 5,000+ member alumni network, ongoing mentorship, and industry networking opportunities.
+                Our most personalized learning experience.
+                You’ll work directly with an instructor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.
             </p>
             
             {/* <div className="flex justify-start">

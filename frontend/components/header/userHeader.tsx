@@ -39,7 +39,7 @@ export default function UserHeader() {
     { href: "/user/dashboard", label: "Dashboard" }, // 👈 Fixed href
     { href: "/user/resource", label: "Resource" }, // 👈 Fixed href
     { href: "/user/referrals", label: "Referrals" }, // 👈 Fixed href
-    { href: "/consultation", label: "Free Consultation" },
+    { href: "https://calendly.com/nexavaltech/30min", label: "Free Consultation" },
     { href: "/community", label: "Join our community" },
   ];
 
