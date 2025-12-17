@@ -69,14 +69,13 @@ export default function UserDashboardPage() {
   const getEnrolledCoursesWithDetails = () => {
     return enrollments.map((enrollment) => {
       const courseData = courses.find(
-        (c) =>
-          c.course_id === enrollment.course_id ||
-          String(c.id) === String(enrollment.course_id)
+        (c) => String(c.course_id ?? c.id) === String(enrollment.course_id)
       );
 
       return { ...enrollment, courseData };
     });
   };
+
 
   const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
 
