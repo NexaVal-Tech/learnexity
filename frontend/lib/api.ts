@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { adminApi } from './adminApi'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -156,6 +157,19 @@ export interface Course {
   price: number;
   is_freemium: boolean;
   is_premium: boolean;
+  // Learning tracks
+  offers_one_on_one: boolean;
+  offers_group_mentorship: boolean;
+  offers_self_paced: boolean;
+  one_on_one_price: number | null;
+  group_mentorship_price: number | null;
+  self_paced_price: number | null;
+  available_tracks: LearningTrack[];
+  track_pricing: {
+    one_on_one: number;
+    group_mentorship: number;
+    self_paced: number;
+  };
   created_at: string;
   updated_at: string;
   tools?: Tool[];
@@ -176,9 +190,10 @@ export interface ApiError {
 export interface CourseEnrollment {
   id: number;
   user_id: number;
-  course_id: string;
+  course_id: number;
   course_name: string;
   course_price: number;
+  learning_track: LearningTrack;
   payment_status: 'pending' | 'completed' | 'failed';
   transaction_id: string | null;
   enrollment_date: string;
@@ -622,16 +637,22 @@ export const api = {
       return response.data;
     },
 
-    enroll: async (courseId: string, courseName: string, coursePrice: number): Promise<EnrollmentResponse> => {
-      const response = await apiClient.post<EnrollmentResponse>(
-        `/api/courses/${courseId}/enroll`,
-        {
-          course_name: courseName,
-          course_price: coursePrice,
-        }
-      );
-      return response.data;
-    },
+  enroll: async (
+    courseId: string, 
+    courseName: string, 
+    coursePrice: number,
+    learningTrack?: LearningTrack
+  ): Promise<EnrollmentResponse> => {
+    const response = await apiClient.post<EnrollmentResponse>(
+      `/api/courses/${courseId}/enroll`,
+      {
+        course_name: courseName,
+        course_price: coursePrice,
+        learning_track: learningTrack,
+      }
+    );
+    return response.data;
+  },
 
     getUserEnrollments: async (): Promise<UserEnrollmentsResponse> => {
       const response = await apiClient.get<UserEnrollmentsResponse>('/api/courses/enrollments');
@@ -641,13 +662,15 @@ export const api = {
     updatePayment: async (
       enrollmentId: number,
       paymentStatus: 'pending' | 'completed' | 'failed',
-      transactionId?: string
+      transactionId?: string,
+      learningTrack?: LearningTrack
     ): Promise<{ message: string; enrollment: CourseEnrollment }> => {
       const response = await apiClient.patch(
         `/api/enrollments/${enrollmentId}/payment`,
         {
           payment_status: paymentStatus,
           transaction_id: transactionId,
+          learning_track: learningTrack,
         }
       );
       return response.data;

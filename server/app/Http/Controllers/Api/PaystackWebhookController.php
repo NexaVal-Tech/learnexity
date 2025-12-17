@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaystackWebhookController extends Controller
 {
@@ -42,34 +43,99 @@ class PaystackWebhookController extends Controller
             $reference = $data['reference'];
             $metadata = $data['metadata'] ?? [];
 
-            // ⚡ Fix: decode metadata if it's a string
-            if (is_string($metadata)) {
-                $metadata = json_decode($metadata, true);
-            }
-
             Log::info('💳 Processing charge.success', [
                 'reference' => $reference,
-                'metadata' => $metadata
+                'metadata' => $metadata,
+                'metadata_type' => gettype($metadata)
             ]);
 
-            if (isset($metadata['enrollment_id'])) {
-                $enrollmentId = $metadata['enrollment_id'];
+            // Extract enrollment_id from metadata
+            $enrollmentId = null;
+            $learningTrack = null;
+
+            if (is_array($metadata)) {
+                $enrollmentId = $metadata['enrollment_id'] ?? null;
+                $learningTrack = $metadata['learning_track'] ?? null;
+
+                // Also check custom_fields array
+                if (!$learningTrack && isset($metadata['custom_fields'])) {
+                    foreach ($metadata['custom_fields'] as $field) {
+                        if ($field['variable_name'] === 'learning_track') {
+                            // Extract the track ID from the display name
+                            $trackName = $field['value'];
+                            if (strpos($trackName, 'One-on-One') !== false) {
+                                $learningTrack = 'one_on_one';
+                            } elseif (strpos($trackName, 'Group Mentorship') !== false) {
+                                $learningTrack = 'group_mentorship';
+                            } elseif (strpos($trackName, 'Self-Paced') !== false) {
+                                $learningTrack = 'self_paced';
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Also try to extract from reference (format: ENR-{id}-{track}-{timestamp})
+            if (!$learningTrack && preg_match('/ENR-(\d+)-(one_on_one|group_mentorship|self_paced)-/', $reference, $matches)) {
+                $learningTrack = $matches[2];
+                Log::info('🔍 Extracted learning track from reference', [
+                    'learning_track' => $learningTrack
+                ]);
+            }
+
+            if ($enrollmentId) {
                 $enrollment = CourseEnrollment::find($enrollmentId);
 
                 if ($enrollment) {
                     if ($enrollment->payment_status !== 'completed') {
-                        $enrollment->update([
+                        $updateData = [
                             'payment_status' => 'completed',
                             'transaction_id' => $reference,
                             'payment_date' => now(),
-                        ]);
+                        ];
+
+                        // Update learning track if we found it
+                        if ($learningTrack && in_array($learningTrack, ['one_on_one', 'group_mentorship', 'self_paced'])) {
+                            $updateData['learning_track'] = $learningTrack;
+                            Log::info('📚 Learning track found and validated', [
+                                'learning_track' => $learningTrack
+                            ]);
+                        } else {
+                            Log::warning('⚠️ Learning track not found or invalid', [
+                                'learning_track' => $learningTrack,
+                                'metadata' => $metadata
+                            ]);
+                        }
+
+                        $enrollment->update($updateData);
 
                         Log::info('✅ Payment completed via webhook', [
                             'enrollment_id' => $enrollmentId,
                             'reference' => $reference,
                             'course_name' => $enrollment->course_name,
-                            'user_id' => $enrollment->user_id
+                            'user_id' => $enrollment->user_id,
+                            'learning_track' => $enrollment->learning_track,
+                            'amount' => $data['amount'] ?? 'N/A'
                         ]);
+
+                        // Optional: Send confirmation email
+                        try {
+                            $user = $enrollment->user;
+                            if ($user && $user->email) {
+                                // You can send email here
+                                Log::info('📧 Sending confirmation email', [
+                                    'user_email' => $user->email,
+                                    'course_name' => $enrollment->course_name
+                                ]);
+                                
+                                // TODO: Implement email sending
+                                // Mail::to($user->email)->send(new PaymentConfirmation($enrollment));
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('❌ Failed to send confirmation email', [
+                                'error' => $e->getMessage()
+                            ]);
+                        }
                     } else {
                         Log::info('ℹ️ Payment already completed', [
                             'enrollment_id' => $enrollmentId

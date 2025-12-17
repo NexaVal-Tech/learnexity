@@ -14,6 +14,7 @@ class CourseEnrollment extends Model
         'course_id',
         'course_name',
         'course_price',
+         'learning_track',
         'payment_status',
         'transaction_id',
         'enrollment_date',
@@ -50,5 +51,14 @@ class CourseEnrollment extends Model
     public function scopePending($query)
     {
         return $query->where('payment_status', 'pending');
+    }
+    public function getLearningTrackNameAttribute(): string
+    {
+        return match($this->learning_track) {
+            'one_on_one' => 'One-on-One Coaching',
+            'group_mentorship' => 'Group Mentorship Program',
+            'self_paced' => 'Self-Paced Learning + Community Support',
+            default => 'Self-Paced Learning',
+        };
     }
 }

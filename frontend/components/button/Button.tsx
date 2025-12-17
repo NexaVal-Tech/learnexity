@@ -29,7 +29,7 @@ export const SignUpButton = ({ label = "Sign Up", href = "/user/auth/register" }
 };
 
 // Secondary Button → Purple background, white text, arrow bg white + purple arrow
-export const SecondaryButton = ({ label = "Join Community", href = "#" }) => {
+export const SecondaryButton = ({ label = "Join Community", href = "/community" }) => {
   return (
     <Link href={href}>
       <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
