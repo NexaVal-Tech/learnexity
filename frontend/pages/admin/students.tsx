@@ -3,17 +3,19 @@ import AdminLayout from '@/components/layouts/AdminLayout';
 import StudentFilters from '@/components/admin/students/StudentFilters';
 import StudentsTable from '@/components/admin/students/StudentsTable';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
-// import DebugPanel from '@/components/admin/DebugPanel';
+
+type FilterType = {
+  search?: string;
+  activity_status?: 'active' | 'inactive';
+  payment_status?: 'completed' | 'pending' | 'failed';
+  course_id?: string;
+};
 
 const StudentsPage = () => {
-  const [filters, setFilters] = useState({
-    search: '',
-    activity_status: undefined as 'active' | 'inactive' | undefined,
-    payment_status: undefined as 'completed' | 'pending' | 'failed' | undefined,
-    course_id: undefined as string | undefined,
-  });
+  const [filters, setFilters] = useState<FilterType>({ search: '' });
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
 
-  const handleFilterChange = (newFilters: typeof filters) => {
+  const handleFilterChange = (newFilters: FilterType) => {
     setFilters(newFilters);
   };
 
@@ -21,9 +23,16 @@ const StudentsPage = () => {
     <AdminRouteGuard>
       <AdminLayout>
         <div className="min-h-screen bg-white rounded-2xl p-6">
-          {/* <DebugPanel />  */}
-          <StudentFilters onFilterChange={handleFilterChange} />
-          <StudentsTable filters={filters} />
+          <StudentFilters
+            onFilterChange={handleFilterChange}
+            selectedCount={selectedStudents.length}
+            onMessageClick={() => console.log('Message clicked')}
+          />
+          <StudentsTable
+            filters={filters}
+            selectedStudents={selectedStudents}
+            onSelectionChange={setSelectedStudents}
+          />
         </div>
       </AdminLayout>
     </AdminRouteGuard>
