@@ -68,39 +68,39 @@ class AdminDashboardController extends Controller
     /**
      * Get statistics cards data
      */
+
     private function getStats(): array
     {
-        $totalStudents = User::where('role', 'user')->count();
-        $lastMonthStudents = User::where('role', 'user')
-            ->where('created_at', '>=', now()->subMonth())
-            ->where('created_at', '<', now())
-            ->count();
-        $twoMonthsAgoStudents = User::where('role', 'user')
-            ->where('created_at', '>=', now()->subMonths(2))
-            ->where('created_at', '<', now()->subMonth())
-            ->count();
-        
-        $studentTrend = $twoMonthsAgoStudents > 0 
+        $totalStudents = User::count();
+
+        $lastMonthStudents = User::whereBetween('created_at', [
+            now()->subMonth(),
+            now()
+        ])->count();
+
+        $twoMonthsAgoStudents = User::whereBetween('created_at', [
+            now()->subMonths(2),
+            now()->subMonth()
+        ])->count();
+
+        $studentTrend = $twoMonthsAgoStudents > 0
             ? round((($lastMonthStudents - $twoMonthsAgoStudents) / $twoMonthsAgoStudents) * 100, 1)
             : 0;
 
-        $activeCourses = Course::whereHas('enrollments', function($q) {
+        $activeCourses = Course::whereHas('enrollments', function ($q) {
             $q->where('payment_status', 'completed');
         })->count();
 
-        $pendingConsultations = 12; // Implement consultation tracking
-
         $completedEnrollments = CourseEnrollment::where('payment_status', 'completed')->count();
         $totalEnrollments = CourseEnrollment::count();
-        $completionRate = $totalEnrollments > 0 
+
+        $completionRate = $totalEnrollments > 0
             ? round(($completedEnrollments / $totalEnrollments) * 100, 1)
             : 0;
 
-        $paidUsers = User::where('role', 'user')
-            ->whereHas('enrollments', function($q) {
-                $q->where('payment_status', 'completed');
-            })
-            ->count();
+        $paidUsers = User::whereHas('enrollments', function ($q) {
+            $q->where('payment_status', 'completed');
+        })->count();
 
         $unpaidUsers = $totalStudents - $paidUsers;
 
@@ -118,7 +118,7 @@ class AdminDashboardController extends Controller
                 'label' => 'New courses added',
             ],
             'pending_consultations' => [
-                'value' => number_format($pendingConsultations),
+                'value' => 12,
                 'trend' => 'up',
                 'percentage' => '+8%',
                 'label' => 'Scheduled this week',
@@ -143,6 +143,7 @@ class AdminDashboardController extends Controller
             ],
         ];
     }
+
 
     /**
      * Get enrollment trend data for chart
