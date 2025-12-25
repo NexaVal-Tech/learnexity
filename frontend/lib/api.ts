@@ -743,7 +743,7 @@ export const coursesApi = {
   },
 };
 
-export type { ReferralResponse, CreateReferralResponse, ReferralCode, ReferralHistory, ReferralStats, Course, CourseEnrollment, DashboardData  };
+export type { ReferralResponse, CreateReferralResponse, ReferralCode, ReferralHistory, ReferralStats, Course, CourseEnrollment, DashboardData, StudentDetail   };
 
 // ===============================
 // Error Handler

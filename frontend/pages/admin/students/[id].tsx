@@ -386,7 +386,16 @@ const StudentDetail = () => {
           isOpen={isMessageModalOpen} 
           onClose={() => setIsMessageModalOpen(false)}
           recipientCount={1}
-          recipients={[student.name]}
+          recipients={[{ id: student.id, name: student.name, email: student.email }]}  // ✅ Correct
+          onSend={async (data) => {
+            try {
+              await api.admin.students.sendMessage(data);
+              alert('Message sent successfully!');
+              setIsMessageModalOpen(false);
+            } catch (error) {
+              console.error('Error:', error);
+            }
+          }}
         />
       </AdminLayout>
     </AdminRouteGuard>
