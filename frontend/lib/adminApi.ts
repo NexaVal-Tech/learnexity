@@ -51,12 +51,12 @@ adminApiClient.interceptors.response.use(
     }
 
     // Handle unauthorized admin token
-if (error.response?.status === 401) {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-  }
-}
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+      }
+    }
 
 
     return Promise.reject(error);

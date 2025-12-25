@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen, Check } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
 
 
 // -------------------------
@@ -15,7 +16,7 @@ interface CourseResourceItem {
   type: string;
   file_size?: string | null;
   download_url?: string | null;
-  completed?: boolean | null;
+  is_completed?: boolean;
 }
 
 interface Sprint {
@@ -23,6 +24,8 @@ interface Sprint {
   sprint_number: number;
   sprint_name: string;
   progress_percentage: number;
+  completed_items?: number;
+  total_items?: number;
   items: CourseResourceItem[];
 }
 
@@ -63,17 +66,25 @@ interface CourseResourcesData {
   badges: { id: number; is_unlocked: boolean }[];
 }
 
+interface EnrolledCourse {
+  course_id: number;
+  course_title: string;
+  course_name?: string;
+}
+
 export default function ResourcesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { courseId: queryCourseId } = router.query;
   
   const [courseId, setCourseId] = useState<string | null>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [activeTab, setActiveTab] = useState('all-resources');
   const [data, setData] = useState<CourseResourcesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSprints, setExpandedSprints] = useState<number[]>([1]);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Get courseId from query or fetch user's first enrolled course
   useEffect(() => {
@@ -86,7 +97,16 @@ export default function ResourcesPage() {
         try {
           const enrollments = await api.enrollment.getUserEnrollments();
           if (enrollments.enrollments && enrollments.enrollments.length > 0) {
-            setCourseId(enrollments.enrollments[0].course_id.toString());
+            // Store all enrolled courses
+            const courses = enrollments.enrollments.map((e: any) => ({
+              course_id: e.course_id,
+              course_title: e.course_title || e.course_name || `Course ${e.course_id}`,
+              course_name: e.course_name
+            }));
+            setEnrolledCourses(courses);
+            
+            // Set the first course as active
+            setCourseId(courses[0].course_id.toString());
           } else {
             setError('You are not enrolled in any courses yet.');
             setLoading(false);
@@ -133,12 +153,17 @@ export default function ResourcesPage() {
     try {
       if (currentStatus) {
         await api.courseResources.markItemIncomplete(itemId);
+        setToast({ message: 'Item marked as incomplete', type: 'success' });
       } else {
         await api.courseResources.markItemCompleted(itemId);
+        setToast({ message: '✓ Item completed! Great progress!', type: 'success' });
       }
       await loadData();
+      setTimeout(() => setToast(null), 3000);
     } catch (error) {
       console.error('Failed to update item:', error);
+      setToast({ message: 'Failed to update progress. Please try again.', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -148,20 +173,55 @@ export default function ResourcesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = title;
+      
+      // Extract file extension from title or use a default
+      const extension = title.split('.').pop() || 'pdf';
+      a.download = title.endsWith(`.${extension}`) ? title : `${title}.${extension}`;
+      
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
+      setToast({ message: '✓ Download started!', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
     } catch (error) {
       console.error('Failed to download:', error);
+      setToast({ message: 'Failed to download file. Please try again.', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
+  const handleCourseSwitch = (newCourseId: number) => {
+    setCourseId(newCourseId.toString());
+    setActiveTab('all-resources'); // Reset to all-resources tab when switching courses
+    setExpandedSprints([1]); // Reset expanded sprints
+  };
+
+  // course resources preview
+  const [preview, setPreview] = useState<{
+      url: string;
+      title: string;
+    } | null>(null);
+
+  // adding an open click
+  const handlePreview = async (itemId: number, title: string) => {
+    try {
+      const blob = await api.courseResources.downloadMaterial(itemId);
+      const url = window.URL.createObjectURL(blob);
+
+      setPreview({ url, title });
+    } catch (err) {
+      console.error('Failed to preview file', err);
+      setToast({ message: 'Unable to open file', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
   // Check if course materials are empty
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <UserDashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -189,9 +249,10 @@ export default function ResourcesPage() {
   return (
     <UserDashboardLayout>
       <div className="max-w-[1541px] mx-auto px-6 py-8 pt-25">
+
         {/* Tab Navigation */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6 w-120">
-          <div className="flex border-b border-gray-200">
+        <div className="bg-white rounded-lg border border-gray-200 mb-6 inline-block">
+          <div className="inline-flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('all-resources')}
               className={`px-6 py-3 text-sm font-medium transition ${
@@ -224,6 +285,29 @@ export default function ResourcesPage() {
             </button>
           </div>
         </div>
+
+         {/* Course Switcher - Horizontal Tabs */}
+        {enrolledCourses.length > 1 && (
+          <div className="block mb-6">
+            <div className="bg-white rounded-lg overflow-x-auto inline-block">
+              <div className="inline-flex border-b-2 border-gray-400 min-w-max">
+                {enrolledCourses.map((course) => (
+                  <button
+                    key={course.course_id}
+                    onClick={() => handleCourseSwitch(course.course_id)}
+                    className={`px-6 py-4 text-sm font-medium transition whitespace-nowrap ${
+                      courseId === course.course_id.toString()
+                        ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {course.course_title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* All Resources Tab */}
         {activeTab === 'all-resources' && data && (
@@ -258,22 +342,57 @@ export default function ResourcesPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
-                            sprint.progress_percentage === 100 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'
+                            sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
                           }`}>
-                            Sprint {sprint.sprint_number}
+                            {sprint.progress_percentage === 100 ? (
+                              <Check className="w-6 h-6" />
+                            ) : (
+                              `S${sprint.sprint_number}`
+                            )}
                           </div>
-                          <span className="font-medium text-gray-900">{sprint.sprint_name}</span>
+                          <div className="text-left">
+                            <div className="font-medium text-gray-900">{sprint.sprint_name}</div>
+                            <div className="text-xs text-gray-500">
+                              {sprint.completed_items || 0} of {sprint.total_items || sprint.items.length} completed ({sprint.progress_percentage}%)
+                            </div>
+                          </div>
                         </div>
-                        {expandedSprints.includes(sprint.id) ? 
-                          <ChevronUp className="w-5 h-5 text-gray-400" /> : 
-                          <ChevronDown className="w-5 h-5 text-gray-400" />
-                        }
+                        <div className="flex items-center gap-3">
+                          {/* Progress bar */}
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all ${
+                                sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'
+                              }`}
+                              style={{ width: `${sprint.progress_percentage}%` }}
+                            ></div>
+                          </div>
+                          {expandedSprints.includes(sprint.id) ? 
+                            <ChevronUp className="w-5 h-5 text-gray-400" /> : 
+                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                          }
+                        </div>
                       </button>
                       {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
                         <div className="bg-white divide-y divide-gray-100">
                           {sprint.items.map(item => (
                             <div key={item.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
                               <div className="flex items-center gap-3 flex-1">
+                                {/* Completion Checkbox */}
+                                <button
+                                  onClick={() => handleItemToggle(item.id, item.is_completed || false)}
+                                  className={`w-6 h-6 rounded border-2 flex items-center justify-center transition flex-shrink-0 ${
+                                    item.is_completed 
+                                      ? 'bg-green-500 border-green-500' 
+                                      : 'border-gray-300 hover:border-green-500'
+                                  }`}
+                                  title={item.is_completed ? 'Mark as incomplete' : 'Mark as complete'}
+                                >
+                                  {item.is_completed && (
+                                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                                  )}
+                                </button>
+
                                 <div className={`w-8 h-8 rounded flex items-center justify-center ${
                                   item.type === 'pdf' ? 'bg-red-100' : 
                                   item.type === 'document' ? 'bg-orange-100' : 
@@ -285,17 +404,33 @@ export default function ResourcesPage() {
                                   {item.type === 'link' && <span className="text-green-600 text-xs font-bold">LNK</span>}
                                 </div>
                                 <div className="flex-1">
-                                  <div className="font-medium text-gray-900 text-sm">{item.title}</div>
+                                  <button
+                                    onClick={() => handlePreview(item.id, item.title)}
+                                    className={`font-medium text-sm text-left hover:underline ${
+                                      item.is_completed
+                                        ? 'text-gray-500 line-through'
+                                        : 'text-purple-600'
+                                    }`}
+                                  >
+                                    {item.title}
+                                  </button>
                                   <div className="text-xs text-gray-500">{item.file_size}</div>
                                 </div>
                               </div>
-                              <button 
-                                onClick={() => item.download_url && handleDownload(item.id, item.title)}
-                                className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download
-                              </button>
+                              <div className="flex items-center gap-2">
+                                {item.is_completed && (
+                                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                                    Completed
+                                  </span>
+                                )}
+                                <button 
+                                  onClick={() => item.download_url && handleDownload(item.id, item.title)}
+                                  className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
+                                >
+                                  <Download className="w-4 h-4" />
+                                  Download
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -562,6 +697,28 @@ export default function ResourcesPage() {
             )}
           </div>
         )}
+
+        {/* Toast Notification */}
+        {toast && (
+          <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+            toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          } text-white`}>
+            {toast.message}
+          </div>
+        )}
+
+        {/* preview component */}
+
+        <ResourcePreviewModal
+          url={preview?.url || null}
+          title={preview?.title}
+          onClose={() => {
+            if (preview?.url) {
+              window.URL.revokeObjectURL(preview.url);
+            }
+            setPreview(null);
+          }}
+        />
       </div>
     </UserDashboardLayout>
   );

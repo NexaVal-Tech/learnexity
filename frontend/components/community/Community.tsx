@@ -1,15 +1,14 @@
 import React from 'react';
 import { SecondaryButton } from "../button/Button";
-import {
-  ScrollFadeIn,
-  FadeInCard,
-  FadeUpOnScroll,
-  ZoomAnimation,
-} from "../animations/Animation";
+// import {
+//   ScrollFadeIn,
+//   FadeInCard,
+//   ZoomAnimation,
+// } from "../animations/Animation";
 
 export default function Community() {
   return (
-    <FadeUpOnScroll>
+   
     <div className="relative max-w-[1480px] mx-auto min-h-96 bg-gradient-to-r from-purple-100 to-pink-50 overflow-hidden rounded-4xl w-[95%] sm:w-[90%] md:w-full">
       {/* Main Content */}
       <div className="relative z-10 max-w-screen2xl mx-auto px-8 py-16 ">
@@ -103,6 +102,6 @@ export default function Community() {
         </div>
       </div>
     </div>
-    </FadeUpOnScroll>
+   
   );
 }

@@ -1,7 +1,7 @@
 import {
   ScrollFadeIn,
   FadeInCard,
-  FadeUpOnScroll,
+  // FadeUpOnScroll,
   ZoomAnimation,
 } from "../animations/Animation";
 
@@ -10,7 +10,7 @@ export default function Pathways() {
     
     <section className="pt-2 py-20 bg-white">
       <div className="max-w-screen-2xl mx-auto px-6">
-        <FadeUpOnScroll>
+        {/* <FadeUpOnScroll> */}
         <div className="mb-16 text-center md:text-left">
           <h2 className="text-4xl font-semibold text-black mb-4 component-headers">
             Our Pathways
@@ -115,7 +115,7 @@ export default function Pathways() {
             </div> */}
           </div>
         </div>
-        </FadeUpOnScroll>
+        {/* </FadeUpOnScroll> */}
       </div>
       
     </section>

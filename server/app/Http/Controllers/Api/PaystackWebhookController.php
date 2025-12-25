@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentConfirmation;
 use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -42,11 +43,13 @@ class PaystackWebhookController extends Controller
             $data = $event['data'];
             $reference = $data['reference'];
             $metadata = $data['metadata'] ?? [];
+            $amount = $data['amount'] ?? null;
 
             Log::info('💳 Processing charge.success', [
                 'reference' => $reference,
                 'metadata' => $metadata,
-                'metadata_type' => gettype($metadata)
+                'metadata_type' => gettype($metadata),
+                'amount' => $amount
             ]);
 
             // Extract enrollment_id from metadata
@@ -115,25 +118,28 @@ class PaystackWebhookController extends Controller
                             'course_name' => $enrollment->course_name,
                             'user_id' => $enrollment->user_id,
                             'learning_track' => $enrollment->learning_track,
-                            'amount' => $data['amount'] ?? 'N/A'
+                            'amount' => $amount
                         ]);
 
-                        // Optional: Send confirmation email
+                        // Send confirmation email
                         try {
                             $user = $enrollment->user;
                             if ($user && $user->email) {
-                                // You can send email here
                                 Log::info('📧 Sending confirmation email', [
                                     'user_email' => $user->email,
                                     'course_name' => $enrollment->course_name
                                 ]);
                                 
-                                // TODO: Implement email sending
-                                // Mail::to($user->email)->send(new PaymentConfirmation($enrollment));
+                                Mail::to($user->email)->send(new PaymentConfirmation($enrollment, $amount));
+                                
+                                Log::info('✅ Confirmation email sent successfully', [
+                                    'user_email' => $user->email
+                                ]);
                             }
                         } catch (\Exception $e) {
                             Log::error('❌ Failed to send confirmation email', [
-                                'error' => $e->getMessage()
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
                             ]);
                         }
                     } else {

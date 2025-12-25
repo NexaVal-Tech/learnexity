@@ -144,7 +144,7 @@ class AdminCourseController extends Controller
                 ->where('course_materials.course_id', $courseId)
                 ->count();
             
-            $completedTopics = DB::table('user_material_progress')
+            $completedTopics = DB::table('material_item_progress')
                 ->where('user_id', $enrollment->user_id)
                 ->whereIn('material_item_id', function($query) use ($courseId) {
                     $query->select('material_items.id')

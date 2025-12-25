@@ -14,7 +14,7 @@ interface FormData {
   password: string;
   confirmPassword: string;
   rememberMe: boolean;
-  referralCode?: string; // Add referral code field
+  referralCode?: string;
 }
 
 export default function RegisterPage() {
@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState('');
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralValidated, setReferralValidated] = useState(false);
+  const [validatingReferral, setValidatingReferral] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -44,8 +45,13 @@ export default function RegisterPage() {
     const { ref } = router.query;
     
     if (ref && typeof ref === 'string') {
+      console.log('📌 Referral code detected in URL:', ref);
       setReferralCode(ref);
       setFormData(prev => ({ ...prev, referralCode: ref }));
+      
+      // Store in localStorage immediately for Google Sign-In
+      localStorage.setItem('pending_referral_code', ref);
+      console.log('💾 Stored referral code in localStorage:', ref);
       
       // Validate the referral code
       validateReferralCode(ref);
@@ -53,6 +59,7 @@ export default function RegisterPage() {
   }, [router.query]);
 
   const validateReferralCode = async (code: string) => {
+    setValidatingReferral(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/referrals/validate`, {
         method: 'POST',
@@ -62,16 +69,22 @@ export default function RegisterPage() {
       
       const data = await response.json();
       
-      if (data.valid) {
+      if (response.ok && data.valid) {
         setReferralValidated(true);
-        // Store in localStorage for Google Sign-In
-        localStorage.setItem('pending_referral_code', code);
+        console.log('✅ Referral code validated successfully');
       } else {
         setError('Invalid referral code. You can still register without it.');
         setReferralCode(null);
+        setReferralValidated(false);
+        // Clear from localStorage if invalid
+        localStorage.removeItem('pending_referral_code');
+        console.log('❌ Invalid referral code');
       }
     } catch (err) {
       console.error('Error validating referral code:', err);
+      setError('Could not validate referral code. You can still register.');
+    } finally {
+      setValidatingReferral(false);
     }
   };
 
@@ -110,6 +123,8 @@ export default function RegisterPage() {
     }
 
     try {
+      console.log('📝 Registering user with referral code:', formData.referralCode);
+      
       await registerUser(
         formData.fullName,
         formData.email,
@@ -123,6 +138,7 @@ export default function RegisterPage() {
 
       // Clear referral code from localStorage after successful registration
       localStorage.removeItem('pending_referral_code');
+      console.log('✅ Registration successful, cleared referral code from localStorage');
 
       // Redirect to login after 4 seconds
       setTimeout(() => {
@@ -130,6 +146,7 @@ export default function RegisterPage() {
       }, 4000);
 
     } catch (err: any) {
+      console.error('❌ Registration error:', err);
       if (err.message.includes('email is already registered')) {
         setError('This email is already registered. Please login instead or use a different email.');
       } else if (err.message.includes('Validation failed')) {
@@ -143,10 +160,14 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignup = () => {
-    // Store referral code in localStorage before redirecting to Google
-    if (referralCode) {
+    console.log('🔵 Google Sign-Up clicked');
+    
+    // Ensure referral code is stored in localStorage before redirecting
+    if (referralCode && referralValidated) {
       localStorage.setItem('pending_referral_code', referralCode);
+      console.log('💾 Stored referral code before Google redirect:', referralCode);
     }
+    
     loginWithGoogle();
   };
 
@@ -192,10 +213,18 @@ export default function RegisterPage() {
               </p>
 
               {/* Referral Code Display */}
-              {referralCode && referralValidated && (
+              {validatingReferral && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    ⏳ Validating referral code...
+                  </p>
+                </div>
+              )}
+
+              {referralCode && referralValidated && !validatingReferral && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700">
-                    ✓ Referral code <strong>{referralCode}</strong> applied!
+                    ✓ Referral code <strong>{referralCode}</strong> applied! You'll receive benefits once you complete registration.
                   </p>
                 </div>
               )}

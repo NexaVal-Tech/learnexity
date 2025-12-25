@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { api, CourseEnrollment } from '@/lib/api';
+import { api } from '@/lib/api';
+import type { CourseEnrollment } from '@/lib/types';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { usePaystack, PaystackResponse } from '@/hooks/usePaystack';
 

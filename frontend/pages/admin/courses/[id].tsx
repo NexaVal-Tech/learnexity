@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
-import { 
-  ArrowLeft, Plus, Edit, Trash, GripVertical, 
-  ChevronDown, X, Upload, Download, Eye, Users, Mail, Filter, Loader2
-} from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
-} from 'recharts';
+import { ArrowLeft, Plus, Edit, Trash, GripVertical, X, Upload, Loader2, AlertCircle} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,  PieChart, Pie, Cell } from 'recharts';
 import ComposeMessageModal from '@/components/admin/students/ComposeMessageModal';
-import { api, AdminCourseDetail } from '@/lib/api';
+import { api, handleApiError } from '@/lib/api';
+import type { 
+  AdminCourseDetail,
+  AdminCourseSprint,
+  AdminCourseTopic
+} from '@/lib/types';
 
 const CourseDetail = () => {
   const router = useRouter();
@@ -19,11 +18,23 @@ const CourseDetail = () => {
   const [activeTab, setActiveTab] = useState('Sprints');
   const [courseData, setCourseData] = useState<AdminCourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Modal states
   const [isEditSprintModalOpen, setIsEditSprintModalOpen] = useState(false);
   const [isAddSprintModalOpen, setIsAddSprintModalOpen] = useState(false);
+  const [isAddTopicModalOpen, setIsAddTopicModalOpen] = useState(false);
+  const [isEditTopicModalOpen, setIsEditTopicModalOpen] = useState(false);
+  const [isUploadMaterialModalOpen, setIsUploadMaterialModalOpen] = useState(false);
+  const [isAddResourceModalOpen, setIsAddResourceModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+
+  // Form states
   const [selectedSprint, setSelectedSprint] = useState<any>(null);
+  const [selectedTopic, setSelectedTopic] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -34,110 +45,608 @@ const CourseDetail = () => {
   const fetchCourseDetails = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await api.admin.courses.getById(id as string);
       setCourseData(data);
     } catch (error) {
       console.error('Error fetching course details:', error);
+      setError(handleApiError(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditSprint = (sprint: any) => {
-    setSelectedSprint(sprint);
-    setIsEditSprintModalOpen(true);
+  // Sprint Management
+  const handleAddSprint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await api.admin.courses.createSprint(id as string, {
+        sprint_name: formData.sprint_name,
+        sprint_number: parseInt(formData.sprint_number),
+        order: parseInt(formData.order || '0'),
+      });
+      setIsAddSprintModalOpen(false);
+      setFormData({});
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditSprint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSprint) return;
+    
+    try {
+      setSubmitting(true);
+      await api.admin.courses.updateSprint(id as string, selectedSprint.id, {
+        sprint_name: formData.sprint_name,
+        sprint_number: parseInt(formData.sprint_number),
+      });
+      setIsEditSprintModalOpen(false);
+      setSelectedSprint(null);
+      setFormData({});
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDeleteSprint = async (sprintId: number) => {
-    if (!confirm('Are you sure you want to delete this sprint?')) return;
+    if (!confirm('Are you sure you want to delete this sprint? This will also delete all associated topics.')) return;
     
     try {
       await api.admin.courses.deleteSprint(id as string, sprintId);
       fetchCourseDetails();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to delete sprint');
+      alert(handleApiError(error));
     }
   };
 
-  const EditSprintModal = () => (
+  // Topic Management
+  const handleAddTopic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSprint) return;
+    
+    try {
+      setSubmitting(true);
+      await api.admin.courses.createTopic(id as string, selectedSprint.id, {
+        title: formData.title,
+        type: formData.type || 'document',
+        file_url: formData.file_url || '',
+        order: parseInt(formData.order || '0'),
+      });
+      setIsAddTopicModalOpen(false);
+      setSelectedSprint(null);
+      setFormData({});
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditTopic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTopic) return;
+    
+    try {
+      setSubmitting(true);
+      await api.admin.courses.updateTopic(id as string, selectedTopic.id, {
+        title: formData.title,
+        type: formData.type,
+      });
+      setIsEditTopicModalOpen(false);
+      setSelectedTopic(null);
+      setFormData({});
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteTopic = async (topicId: number) => {
+    if (!confirm('Are you sure you want to delete this topic?')) return;
+    
+    try {
+      await api.admin.courses.deleteTopic(id as string, topicId);
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    }
+  };
+
+  // File handling
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setFormData({...formData, file: file});
+    }
+  };
+
+  // Material Upload
+const handleUploadMaterial = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!selectedTopic || !selectedFile) return;
+
+  try {
+    setSubmitting(true);
+    await api.adminResources.uploadMaterialFile(
+      id as string,
+      selectedTopic.id,
+      selectedFile
+    );
+    setIsUploadMaterialModalOpen(false);
+    setSelectedTopic(null);
+    setFormData({});
+    setSelectedFile(null);
+    fetchCourseDetails();
+  } catch (error: any) {
+    alert(handleApiError(error));
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+
+  // External Resource Management
+  const handleAddExternalResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setSubmitting(true);
+      await api.adminResources.createExternalResource(id as string, {
+        category: formData.category || 'video_tutorials',
+        title: formData.title,
+        description: formData.description || '',
+        url: formData.url,
+        source: formData.source,
+        duration: formData.duration || '',
+      });
+      setIsAddResourceModalOpen(false);
+      setFormData({});
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteExternalResource = async (resourceId: number) => {
+    if (!confirm('Are you sure you want to delete this resource?')) return;
+    
+    try {
+      await api.adminResources.deleteExternalResource(id as string, resourceId);
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    }
+  };
+
+  // Modals
+  const AddSprintModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Sprint</h2>
-          <button 
-            onClick={() => setIsEditSprintModalOpen(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Add New Sprint</h2>
+          <button onClick={() => setIsAddSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
         </div>
-        <p className="text-sm text-gray-500 mb-6">Update sprint information</p>
         
-        <div className="space-y-4">
+        <form onSubmit={handleAddSprint} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
             <input 
               type="text" 
-              defaultValue={selectedSprint?.title}
+              required
+              value={formData.sprint_name || ''}
+              onChange={(e) => setFormData({...formData, sprint_name: e.target.value})}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               placeholder="e.g. Introduction to Product Management"
             />
           </div>
           
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              onClick={() => setIsEditSprintModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2">
-              <Plus size={16} />
-              Save Changes
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const AddSprintModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Sprint</h2>
-          <button 
-            onClick={() => setIsAddSprintModalOpen(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <p className="text-sm text-gray-500 mb-6">Create a new sprint for this course</p>
-        
-        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
             <input 
-              type="text" 
+              type="number" 
+              required
+              min="1"
+              value={formData.sprint_number || ''}
+              onChange={(e) => setFormData({...formData, sprint_number: e.target.value})}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="e.g. Advanced Patterns"
+              placeholder="1"
             />
           </div>
           
           <div className="flex items-center gap-3 pt-2">
             <button 
+              type="button"
               onClick={() => setIsAddSprintModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
             >
               Cancel
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2">
-              <Plus size={16} />
-              Create Sprint
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              {submitting ? 'Creating...' : 'Create Sprint'}
             </button>
           </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const EditSprintModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Sprint</h2>
+          <button onClick={() => setIsEditSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
         </div>
+        
+        <form onSubmit={handleEditSprint} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
+            <input 
+              type="text" 
+              required
+              value={formData.sprint_name || ''}
+              onChange={(e) => setFormData({...formData, sprint_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
+            <input 
+              type="number" 
+              required
+              min="1"
+              value={formData.sprint_number || ''}
+              onChange={(e) => setFormData({...formData, sprint_number: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 pt-2">
+            <button 
+              type="button"
+              onClick={() => setIsEditSprintModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+              {submitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const AddTopicModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
+          <button onClick={() => setIsAddTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleAddTopic} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+            <input 
+              type="text" 
+              required
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="e.g. Introduction to User Research"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
+            <select 
+              value={formData.type || 'document'}
+              onChange={(e) => setFormData({...formData, type: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="document">Document</option>
+              <option value="pdf">PDF</option>
+              <option value="video">Video</option>
+              <option value="link">Link</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">URL (Optional)</label>
+            <input 
+              type="url"
+              value={formData.file_url || ''}
+              onChange={(e) => setFormData({...formData, file_url: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="https://..."
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 pt-2">
+            <button 
+              type="button"
+              onClick={() => setIsAddTopicModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              {submitting ? 'Adding...' : 'Add Topic'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const EditTopicModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Topic</h2>
+          <button onClick={() => setIsEditTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleEditTopic} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+            <input 
+              type="text" 
+              required
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
+            <select 
+              value={formData.type || 'document'}
+              onChange={(e) => setFormData({...formData, type: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="document">Document</option>
+              <option value="pdf">PDF</option>
+              <option value="video">Video</option>
+              <option value="link">Link</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-3 pt-2">
+            <button 
+              type="button"
+              onClick={() => setIsEditTopicModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+              {submitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const UploadMaterialModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Upload Material</h2>
+          <button 
+            onClick={() => {
+              setIsUploadMaterialModalOpen(false);
+              setSelectedFile(null);
+              setFormData({});
+            }} 
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleUploadMaterial} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">
+              Select File
+            </label>
+            
+            {/* Hidden file input */}
+            <input  type="file" id="file-upload"onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx"/>
+            
+            {/* Custom file input button */}
+            <label 
+              htmlFor="file-upload"
+              className="w-full block px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors min-h-[100px]"
+            >
+              <div className="flex flex-col items-center justify-center h-full gap-2">
+                {selectedFile ? (
+                  <>
+                    <Upload size={24} className="text-green-500" />
+                    <span className="text-gray-700 font-medium text-center break-all px-2">
+                      {selectedFile.name}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </span>
+                    <span className="text-xs text-blue-600">Click to change file</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={24} className="text-gray-400" />
+                    <span className="text-gray-600">Click to select file</span>
+                    <span className="text-xs text-gray-500">PDF, DOC, DOCX, PPT, PPTX</span>
+                  </>
+                )}
+              </div>
+            </label>
+            
+            <p className="text-xs text-gray-500 mt-1">Max file size: 50MB</p>
+          </div>
+          
+          <div className="flex items-center gap-3 pt-2">
+            <button 
+              type="button"
+              onClick={() => {
+                setIsUploadMaterialModalOpen(false);
+                setSelectedFile(null);
+                setFormData({});
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={submitting || !selectedFile}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {submitting ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const AddResourceModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 my-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Add External Resource</h2>
+          <button onClick={() => setIsAddResourceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleAddExternalResource} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Category</label>
+            <select 
+              value={formData.category || 'video_tutorials'}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="video_tutorials">Video Tutorials</option>
+              <option value="industry_articles">Industry Articles</option>
+              <option value="recommended_reading">Recommended Reading</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Title</label>
+            <input 
+              type="text" 
+              required
+              value={formData.title || ''}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="Resource title"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">URL</label>
+            <input 
+              type="url" 
+              required
+              value={formData.url || ''}
+              onChange={(e) => setFormData({...formData, url: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="https://..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Source/Platform</label>
+            <input 
+              type="text" 
+              required
+              value={formData.source || ''}
+              onChange={(e) => setFormData({...formData, source: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="e.g. YouTube, Medium, etc."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Description (Optional)</label>
+            <textarea 
+              value={formData.description || ''}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              rows={3}
+              placeholder="Brief description..."
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 pt-2">
+            <button 
+              type="button"
+              onClick={() => setIsAddResourceModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              {submitting ? 'Adding...' : 'Add Resource'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -154,12 +663,13 @@ const CourseDetail = () => {
     );
   }
 
-  if (!courseData) {
+  if (error || !courseData) {
     return (
       <AdminRouteGuard>
         <AdminLayout>
           <div className="flex flex-col items-center justify-center h-96">
-            <p className="text-red-500 mb-4">Course not found</p>
+            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+            <p className="text-red-500 mb-4">{error || 'Course not found'}</p>
             <button 
               onClick={() => router.back()}
               className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
@@ -257,7 +767,14 @@ const CourseDetail = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <button 
-                          onClick={() => handleEditSprint(sprint)}
+                          onClick={() => {
+                            setSelectedSprint(sprint);
+                            setFormData({
+                              sprint_name: sprint.title,
+                              sprint_number: sprint.number,
+                            });
+                            setIsEditSprintModalOpen(true);
+                          }}
                           className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
                         >
                           <Edit size={16} />
@@ -281,19 +798,52 @@ const CourseDetail = () => {
                             </div>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                             <span className="text-sm text-gray-700">{topic.title}</span>
+                            <span className="text-xs text-gray-500">({topic.type})</span>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded">
+                            <button 
+                              onClick={() => {
+                                setSelectedTopic(topic);
+                                setFormData({});
+                                setSelectedFile(null);
+                                setIsUploadMaterialModalOpen(true);
+                              }}
+                              className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              title="Upload file"
+                            >
+                              <Upload size={14} />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setSelectedTopic(topic);
+                                setFormData({
+                                  title: topic.title,
+                                  type: topic.type,
+                                });
+                                setIsEditTopicModalOpen(true);
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
+                            >
                               <Edit size={14} />
                             </button>
-                            <button className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
+                            <button 
+                              onClick={() => handleDeleteTopic(topic.id)}
+                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                            >
                               <Trash size={14} />
                             </button>
                           </div>
                         </div>
                       ))}
                       
-                      <button className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-dashed border-gray-300 hover:border-gray-400 mt-4">
+                      <button 
+                        onClick={() => {
+                          setSelectedSprint(sprint);
+                          setFormData({});
+                          setIsAddTopicModalOpen(true);
+                        }}
+                        className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-dashed border-gray-300 hover:border-gray-400 mt-4"
+                      >
                         <Plus size={16} />
                         Add Topic
                       </button>
@@ -309,11 +859,8 @@ const CourseDetail = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Course Materials Management</h2>
+                  <p className="text-sm text-gray-500 mt-1">View and manage all uploaded materials</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-                  <Upload size={18} />
-                  Upload Material
-                </button>
               </div>
 
               {/* Materials Table */}
@@ -327,34 +874,31 @@ const CourseDetail = () => {
                       <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase">Size</th>
                       <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase">Access</th>
                       <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase">Upload Date</th>
-                      <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {materials.map((material) => (
-                      <tr key={material.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900">{material.name}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
-                            {material.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.sprint}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.size}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.access}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.upload_date}</td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded">
-                              <Edit size={16} />
-                            </button>
-                            <button className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
-                              <Trash size={16} />
-                            </button>
-                          </div>
+                    {materials.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-gray-500">
+                          No materials uploaded yet
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      materials.map((material) => (
+                        <tr key={material.id} className="hover:bg-gray-50">
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900">{material.name}</td>
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                              {material.type}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600">{material.sprint}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600">{material.size}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600">{material.access}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600">{material.upload_date}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -366,45 +910,58 @@ const CourseDetail = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">External Resources Management</h2>
+                  <p className="text-sm text-gray-500 mt-1">Add external learning resources</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                <button 
+                  onClick={() => {
+                    setFormData({});
+                    setIsAddResourceModalOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
                   <Plus size={18} />
                   Add Resource
                 </button>
               </div>
 
               <div className="space-y-4">
-                {external_resources.map((resource) => (
-                  <div key={resource.id} className="border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-start justify-between gap-4 hover:border-gray-300 transition-colors">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
-                        {resource.type === 'video' ? '🎥' : '📄'}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-sm font-semibold text-gray-900">{resource.title}</h3>
-                          {resource.platform && (
-                            <span className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-medium text-gray-600">
-                              {resource.platform}
-                            </span>
-                          )}
-                        </div>
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mb-1">
-                          🔗 {resource.url}
-                        </a>
-                        <p className="text-xs text-gray-500">Added: {resource.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 self-end md:self-start">
-                      <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded">
-                        <Edit size={16} />
-                      </button>
-                      <button className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
-                        <Trash size={16} />
-                      </button>
-                    </div>
+                {external_resources.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    No external resources added yet
                   </div>
-                ))}
+                ) : (
+                  external_resources.map((resource) => (
+                    <div key={resource.id} className="border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-start justify-between gap-4 hover:border-gray-300 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
+                          {resource.type === 'video' ? '🎥' : '📄'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-sm font-semibold text-gray-900">{resource.title}</h3>
+                            {resource.platform && (
+                              <span className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-medium text-gray-600">
+                                {resource.platform}
+                              </span>
+                            )}
+                          </div>
+                          <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mb-1">
+                            🔗 {resource.url}
+                          </a>
+                          <p className="text-xs text-gray-500">Added: {resource.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 self-end md:self-start">
+                        <button 
+                          onClick={() => handleDeleteExternalResource(resource.id)}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -416,9 +973,6 @@ const CourseDetail = () => {
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <span className="text-sm text-gray-500 font-medium">Total Enrollments</span>
-                    <div className="p-2 rounded-lg bg-blue-50">
-                      <Users size={20} className="text-blue-600" />
-                    </div>
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{statistics.total_enrollments}</div>
                 </div>
@@ -426,9 +980,6 @@ const CourseDetail = () => {
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <span className="text-sm text-gray-500 font-medium">Active Students</span>
-                    <div className="p-2 rounded-lg bg-green-50">
-                      <Users size={20} className="text-green-600" />
-                    </div>
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{statistics.active_students}</div>
                 </div>
@@ -436,9 +987,6 @@ const CourseDetail = () => {
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <span className="text-sm text-gray-500 font-medium">Avg. Progress</span>
-                    <div className="p-2 rounded-lg bg-purple-50">
-                      <Users size={20} className="text-purple-600" />
-                    </div>
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{statistics.avg_progress}%</div>
                 </div>
@@ -446,9 +994,6 @@ const CourseDetail = () => {
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <span className="text-sm text-gray-500 font-medium">Payment Rate</span>
-                    <div className="p-2 rounded-lg bg-orange-50">
-                      <Users size={20} className="text-orange-600" />
-                    </div>
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{statistics.payment_rate}%</div>
                 </div>
@@ -456,72 +1001,36 @@ const CourseDetail = () => {
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Sprint Completion Rates */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">Sprint Completion Rates</h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chart_data.sprint_completion} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <BarChart data={chart_data.sprint_completion}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                        <XAxis 
-                          dataKey="sprint" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: '#6B7280', fontSize: 12 }} 
-                          dy={10}
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fill: '#6B7280', fontSize: 12 }} 
-                        />
-                        <RechartsTooltip 
-                          cursor={{ fill: '#F3F4F6' }}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                        />
-                        <Bar dataKey="completion" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={40} />
+                        <XAxis dataKey="sprint" axisLine={false} tickLine={false} />
+                        <YAxis axisLine={false} tickLine={false} />
+                        <RechartsTooltip />
+                        <Bar dataKey="completion" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                {/* Progress Distribution */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">Progress Distribution</h3>
-                  <div className="h-[300px] w-full relative">
+                  <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={chart_data.progress_distribution}
                           cx="50%"
                           cy="50%"
-                          innerRadius={0}
                           outerRadius={80}
-                          paddingAngle={0}
                           dataKey="value"
-                          label={({ cx, cy, midAngle, outerRadius, name, value, color }) => {
-                            const RADIAN = Math.PI / 180;
-                            const radius = outerRadius + 25;
-                            const angle = midAngle ?? 0;
-                            const x = cx + radius * Math.cos(-angle * RADIAN);
-                            const y = cy + radius * Math.sin(-angle * RADIAN);
-                            
-                            return (
-                              <text 
-                                x={x} 
-                                y={y} 
-                                fill={color} 
-                                textAnchor={x > cx ? 'start' : 'end'} 
-                                dominantBaseline="central"
-                                className="text-xs font-medium"
-                              >
-                                {`${name}: ${value}`}
-                              </text>
-                            );
-                          }}
+                          label
                         >
                           {chart_data.progress_distribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                            <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
                       </PieChart>
@@ -533,19 +1042,15 @@ const CourseDetail = () => {
               {/* Student List */}
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Student List</h3>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
-                      onClick={() => setIsMessageModalOpen(true)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                    >
-                      <Mail size={18} />
-                      Send Message
-                    </button>
-                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Enrolled Students ({students.length})</h3>
+                  <button 
+                    onClick={() => setIsMessageModalOpen(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    Send Message
+                  </button>
                 </div>
 
-                {/* Desktop Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -597,13 +1102,31 @@ const CourseDetail = () => {
             </div>
           )}
 
+          {/* Modals */}
           {isEditSprintModalOpen && <EditSprintModal />}
           {isAddSprintModalOpen && <AddSprintModal />}
+          {isAddTopicModalOpen && <AddTopicModal />}
+          {isEditTopicModalOpen && <EditTopicModal />}
+          {isUploadMaterialModalOpen && <UploadMaterialModal />}
+          {isAddResourceModalOpen && <AddResourceModal />}
           <ComposeMessageModal 
-            isOpen={isMessageModalOpen}
+            isOpen={isMessageModalOpen} 
             onClose={() => setIsMessageModalOpen(false)}
             recipientCount={students.length}
-            recipients={students.map(s => s.name).slice(0, 3)}
+            recipients={students.map(student => ({ 
+              id: student.id, 
+              name: student.name, 
+              email: student.email 
+            }))}
+            onSend={async (data) => {
+              try {
+                await api.admin.students.sendMessage(data);
+                alert('Message sent successfully!');
+                setIsMessageModalOpen(false);
+              } catch (error) {
+                console.error('Error sending message:', error);
+              }
+            }}
           />
         </div>
       </AdminLayout>

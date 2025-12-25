@@ -33,16 +33,23 @@ interface StudentsTableProps {
     payment_status?: 'completed' | 'pending' | 'failed';
     course_id?: string;
   };
+  selectedStudents: number[];
+  onSelectionChange: (selected: number[]) => void;
+  onStudentsLoaded?: (students: Student[]) => void; // ADD THIS
 }
 
-const StudentsTable: React.FC<StudentsTableProps> = ({ filters }) => {
+const StudentsTable: React.FC<StudentsTableProps> = ({ 
+  filters, 
+  selectedStudents, 
+  onSelectionChange,
+  onStudentsLoaded // ADD THIS
+}) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
 
   useEffect(() => {
     fetchStudents();
@@ -58,6 +65,11 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ filters }) => {
       });
       setStudents(response.data);
       setTotalPages(response.meta?.last_page || 1);
+      
+      // ADD THIS: Pass students data to parent
+      if (onStudentsLoaded) {
+        onStudentsLoaded(response.data);
+      }
     } catch (error) {
       console.error('Error fetching students:', error);
     } finally {
@@ -70,16 +82,18 @@ const StudentsTable: React.FC<StudentsTableProps> = ({ filters }) => {
   };
 
   const toggleSelectStudent = (id: number) => {
-    setSelectedStudents(prev => 
-      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    onSelectionChange(
+      selectedStudents.includes(id) 
+        ? selectedStudents.filter(sid => sid !== id) 
+        : [...selectedStudents, id]
     );
   };
 
   const toggleSelectAll = () => {
     if (selectedStudents.length === students.length) {
-      setSelectedStudents([]);
+      onSelectionChange([]);
     } else {
-      setSelectedStudents(students.map(s => s.id));
+      onSelectionChange(students.map(s => s.id));
     }
   };
 

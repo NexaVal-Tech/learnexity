@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import CourseStats from '@/components/admin/courses/CourseStats';
 import CourseFilters from '@/components/admin/courses/CourseFilters';
@@ -7,6 +7,11 @@ import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
 import { Plus } from 'lucide-react';
 
 const CoursesPage = () => {
+  const [filters, setFilters] = useState<{
+    search?: string;
+    status?: 'active' | 'inactive';
+  }>({});
+
   return (
     <AdminRouteGuard>
       <AdminLayout>
@@ -23,8 +28,8 @@ const CoursesPage = () => {
           </div>
 
           <CourseStats />
-          <CourseFilters />
-          <CoursesTable />
+          <CourseFilters onFilterChange={setFilters} />
+          <CoursesTable filters={filters} />
         </div>
       </AdminLayout>
     </AdminRouteGuard>

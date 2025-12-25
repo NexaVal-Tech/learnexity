@@ -57,12 +57,24 @@ class CourseResourcesController extends Controller
                             ->where('material_item_id', $item->id)
                             ->first();
 
+                        // Fix: Check if file exists and generate proper URL
+                        $downloadUrl = null;
+                        if ($item->file_path) {
+                            // Check if file exists in storage
+                            if (Storage::disk('public')->exists($item->file_path)) {
+                                $downloadUrl = Storage::url($item->file_path);
+                            }
+                        } elseif ($item->file_url) {
+                            // Use external URL if provided
+                            $downloadUrl = $item->file_url;
+                        }
+
                         return [
                             'id' => $item->id,
                             'title' => $item->title,
                             'type' => $item->type,
                             'file_size' => $item->file_size,
-                            'download_url' => $item->file_path ? Storage::url($item->file_path) : null,
+                            'download_url' => $downloadUrl,
                             'is_completed' => $itemProgress ? $itemProgress->is_completed : false,
                         ];
                     }),
@@ -242,15 +254,50 @@ class CourseResourcesController extends Controller
     /**
      * Download course material file
      */
+    /**
+     * Download course material file
+     */
     public function downloadMaterial(Request $request, int $itemId): mixed
     {
         $materialItem = MaterialItem::findOrFail($itemId);
 
-        if (!$materialItem->file_path || !Storage::exists($materialItem->file_path)) {
-            return response()->json(['error' => 'File not found'], 404);
+        // Check if file_path exists
+        if (!$materialItem->file_path) {
+            return response()->json([
+                'error' => 'No file available for download'
+            ], 404);
         }
 
-        return Storage::download($materialItem->file_path, $materialItem->title);
+        // Check if file exists in public disk
+        if (!Storage::disk('public')->exists($materialItem->file_path)) {
+            \Log::error('File not found in storage', [
+                'item_id' => $itemId,
+                'file_path' => $materialItem->file_path,
+                'title' => $materialItem->title,
+            ]);
+            
+            return response()->json([
+                'error' => 'File not found in storage',
+                'debug' => [
+                    'file_path' => $materialItem->file_path,
+                    'storage_path' => Storage::disk('public')->path($materialItem->file_path),
+                ]
+            ], 404);
+        }
+
+        // Get the file extension
+        $extension = pathinfo($materialItem->file_path, PATHINFO_EXTENSION);
+        
+        // Generate download filename
+        $downloadName = $materialItem->title;
+        if (!str_ends_with(strtolower($downloadName), '.' . strtolower($extension))) {
+            $downloadName .= '.' . $extension;
+        }
+
+        return Storage::disk('public')->download(
+            $materialItem->file_path,
+            $downloadName
+        );
     }
 
     /**

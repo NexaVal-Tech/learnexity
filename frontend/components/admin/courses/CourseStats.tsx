@@ -1,45 +1,78 @@
-import React from 'react';
-import { BookOpen, TrendingUp, Users, BarChart2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BookOpen, TrendingUp, Users, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const CourseStats = () => {
-  const stats = [
+  const [stats, setStats] = useState({
+    total_courses: 0,
+    active_courses: 0,
+    total_enrollments: 0,
+    average_completion_rate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const data = await api.admin.courses.getStatistics();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching course statistics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statsCards = [
     {
       label: 'Total Courses',
-      value: '6',
+      value: stats.total_courses,
       icon: BookOpen,
-      color: 'bg-blue-500',
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-600',
     },
     {
       label: 'Active Courses',
-      value: '5',
+      value: stats.active_courses,
       icon: TrendingUp,
-      color: 'bg-green-500',
       bgColor: 'bg-green-100',
       textColor: 'text-green-600',
     },
     {
-      label: 'Total Students',
-      value: '190',
+      label: 'Total Enrollments',
+      value: stats.total_enrollments,
       icon: Users,
-      color: 'bg-purple-500',
       bgColor: 'bg-purple-100',
       textColor: 'text-purple-600',
     },
     {
       label: 'Avg. Completion',
-      value: '63%',
+      value: `${stats.average_completion_rate}%`,
       icon: TrendingUp,
-      color: 'bg-yellow-500',
       bgColor: 'bg-yellow-100',
       textColor: 'text-yellow-600',
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center justify-center h-24">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat, index) => (
+      {statsCards.map((stat, index) => (
         <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500 mb-1">{stat.label}</p>

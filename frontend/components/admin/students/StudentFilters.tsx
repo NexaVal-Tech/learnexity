@@ -2,9 +2,31 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, MessageSquare, Download, Filter, ExternalLink } from 'lucide-react';
 import ComposeMessageModal from './ComposeMessageModal';
 
-const StudentFilters = () => {
+interface StudentFiltersProps {
+  onFilterChange: (filters: {
+    search?: string;
+    activity_status?: 'active' | 'inactive';
+    payment_status?: 'completed' | 'pending' | 'failed';
+    course_id?: string;
+  }) => void;
+  selectedCount: number;
+  onMessageClick: () => void;
+}
+
+const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  selectedCount,  onMessageClick }) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  // const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<{
+    courseEnrolled?: string;
+    monthsEnrolled?: string;
+    country?: string;
+    paymentStatus?: 'completed' | 'pending' | 'failed';
+    activityStatus?: 'active' | 'inactive';
+    enrolmentStatus?: string;
+    multipleCourse?: string;
+  }>({});
+  
   const filterRef = useRef<HTMLDivElement>(null);
 
   const filters: { [key: string]: string[] } = {
@@ -15,7 +37,6 @@ const StudentFilters = () => {
       'Data Science',
       'Digital Marketing'
     ],
-    // Placeholders for other filters to be implemented later
     'Months Enrolled': [
       '1 month',
       '3 months',
@@ -32,7 +53,8 @@ const StudentFilters = () => {
     ],
     'Payment Status': [
       'Paid',
-      'Unpaid'
+      'Unpaid',
+      'Pending'
     ],
     'Activity Status': [
       'Active',
@@ -65,6 +87,61 @@ const StudentFilters = () => {
   const toggleFilter = (filterName: string) => {
     setActiveFilter(activeFilter === filterName ? null : filterName);
   };
+
+  const handleFilterSelect = (filterType: string, option: string) => {
+    const filterKey = filterType.replace(/\s+/g, '').replace(/^./, str => str.toLowerCase());
+    
+    setSelectedFilters(prev => ({
+      ...prev,
+      [filterKey]: option
+    }));
+    
+    setActiveFilter(null);
+  };
+
+  const applyFilters = () => {
+    const filters: any = {};
+    
+    if (searchTerm) {
+      filters.search = searchTerm;
+    }
+    
+    if (selectedFilters.activityStatus) {
+      filters.activity_status = selectedFilters.activityStatus.toLowerCase();
+    }
+    
+    if (selectedFilters.paymentStatus) {
+      const statusMap: any = {
+        'Paid': 'completed',
+        'Unpaid': 'failed',
+        'Pending': 'pending'
+      };
+      filters.payment_status = statusMap[selectedFilters.paymentStatus] || selectedFilters.paymentStatus.toLowerCase();
+    }
+    
+    // Add course_id mapping if you have course IDs
+    if (selectedFilters.courseEnrolled) {
+      // You'll need to map course names to IDs
+      // filters.course_id = courseNameToIdMap[selectedFilters.courseEnrolled];
+    }
+    
+    onFilterChange(filters);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedFilters({});
+    onFilterChange({});
+  };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
   return (
     <div className="space-y-4 mb-6">
       {/* Mobile Header & Search */}
@@ -73,6 +150,8 @@ const StudentFilters = () => {
           <input
             type="text"
             placeholder="Search for a student"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm"
           />
         </div>
@@ -92,6 +171,8 @@ const StudentFilters = () => {
           <input
             type="text"
             placeholder="Search for a student"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm"
           />
         </div>
@@ -110,6 +191,9 @@ const StudentFilters = () => {
               }`}
             >
               {filter}
+              {selectedFilters[filter.replace(/\s+/g, '').replace(/^./, str => str.toLowerCase()) as keyof typeof selectedFilters] && (
+                <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">1</span>
+              )}
               <ChevronDown size={14} className={`text-gray-400 transition-transform ${activeFilter === filter ? 'rotate-180' : ''}`} />
             </button>
             
@@ -119,6 +203,7 @@ const StudentFilters = () => {
                 {filters[filter].map((option) => (
                   <button
                     key={option}
+                    onClick={() => handleFilterSelect(filter, option)}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     {option}
@@ -128,10 +213,16 @@ const StudentFilters = () => {
             )}
           </div>
         ))}
-        <button className="hidden md:block px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 ml-auto">
+        <button 
+          onClick={applyFilters}
+          className="hidden md:block px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 ml-auto"
+        >
           Apply filters
         </button>
-        <button className="hidden md:block px-4 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50">
+        <button 
+          onClick={clearFilters}
+          className="hidden md:block px-4 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50"
+        >
           Clear
         </button>
       </div>
@@ -140,15 +231,16 @@ const StudentFilters = () => {
       <div className="hidden md:flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
           <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
-          <span className="text-sm text-gray-600">Select all <span className="font-medium text-gray-900">5 students selected</span></span>
+          <span className="text-sm text-gray-600">Select all <span className="font-medium text-gray-900">{selectedCount} students selected</span></span>
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsMessageModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            onClick={onMessageClick}
+            disabled={selectedCount === 0}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MessageSquare size={16} />
-            Message Selected (5)
+            Message Selected ({selectedCount})
           </button>
           <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
             <Download size={16} />
@@ -157,12 +249,12 @@ const StudentFilters = () => {
         </div>
       </div>
 
-      <ComposeMessageModal 
+      {/* <ComposeMessageModal 
         isOpen={isMessageModalOpen}
         onClose={() => setIsMessageModalOpen(false)}
-        recipientCount={3}
-        recipients={['Alice Johnson', 'Carol White', 'Henry Taylor']}
-      />
+        recipientCount={0}
+        recipients={[]}
+      /> */}
     </div>
   );
 };

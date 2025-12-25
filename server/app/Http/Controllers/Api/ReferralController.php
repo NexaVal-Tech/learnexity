@@ -82,13 +82,14 @@ class ReferralController extends Controller
                     'id' => $ref->id,
                     'referrer_id' => $ref->referrer_id,
                     'referred_user_id' => $ref->referred_user_id,
-                    'referred_user_name' => $ref->referredUser->name,
+                    'referred_user_name' => $ref->referredUser?->name ?? 'Unknown User',
                     'status' => $ref->status,
                     'reward_amount' => $ref->reward_amount,
                     'referred_at' => $ref->referred_at,
                     'completed_at' => $ref->completed_at,
                 ];
             });
+
 
         // Update streak calculation
         $this->updateStreak($referralCode);

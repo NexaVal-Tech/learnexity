@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook'],
+    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'http://localhost:3000',

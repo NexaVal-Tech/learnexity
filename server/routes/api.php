@@ -125,6 +125,57 @@ Route::prefix('admin')->group(function () {
     Route::post('/reset-password', [App\Http\Controllers\Api\AdminAuthController::class, 'resetPassword']);
 });
 
+
+
+// Add this temporary route to your api.php for debugging
+// Place it BEFORE the middleware group
+
+Route::get('/debug/students', function() {
+    try {
+        $totalUsers = User::count();
+        $usersWithEnrollments = User::has('enrollments')->count();
+        $totalEnrollments = \App\Models\CourseEnrollment::count();
+        
+        $sampleUser = User::with('enrollments')->first();
+        
+        $tables = \Illuminate\Support\Facades\Schema::getTableListing();
+        
+        return response()->json([
+            'status' => 'success',
+            'database_info' => [
+                'total_users' => $totalUsers,
+                'users_with_enrollments' => $usersWithEnrollments,
+                'total_enrollments' => $totalEnrollments,
+            ],
+            'sample_user' => $sampleUser ? [
+                'id' => $sampleUser->id,
+                'name' => $sampleUser->name,
+                'email' => $sampleUser->email,
+                'has_enrollments' => $sampleUser->enrollments->count() > 0,
+                'enrollments_count' => $sampleUser->enrollments->count(),
+            ] : null,
+            'tables_in_database' => $tables,
+            'user_columns' => \Illuminate\Support\Facades\Schema::getColumnListing('users'),
+            'enrollment_columns' => \Illuminate\Support\Facades\Schema::getColumnListing('course_enrollments'),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Also add a debug route to check authentication
+Route::middleware(['admin.auth'])->get('/debug/auth', function() {
+    return response()->json([
+        'authenticated' => true,
+        'user' => auth()->user(),
+        'token' => request()->bearerToken() ? 'Token present' : 'No token',
+    ]);
+});
+
 // Protected admin routes (authentication required)
 Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
     
@@ -155,12 +206,12 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         
         // Course Resources Management
         Route::prefix('{courseId}/resources')->group(function () {
-            // Materials
+            // Materials (Sprints)
             Route::post('/materials', [AdminCourseResourcesController::class, 'createMaterial']);
             Route::put('/materials/{materialId}', [AdminCourseResourcesController::class, 'updateMaterial']);
             Route::delete('/materials/{materialId}', [AdminCourseResourcesController::class, 'deleteMaterial']);
             
-            // Material Items
+            // Material Items (Topics)
             Route::post('/materials/{materialId}/items', [AdminCourseResourcesController::class, 'addMaterialItem']);
             Route::put('/items/{itemId}', [AdminCourseResourcesController::class, 'updateMaterialItem']);
             Route::delete('/items/{itemId}', [AdminCourseResourcesController::class, 'deleteMaterialItem']);

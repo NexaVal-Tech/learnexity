@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api, User, handleApiError } from '@/lib/api';
+import { api, handleApiError } from '@/lib/api';
+import type { User } from '@/lib/types';
 import { useRouter } from 'next/router';
 
 interface AuthContextType {
@@ -15,7 +16,7 @@ interface AuthContextType {
     password: string,
     passwordConfirmation: string,
     phone?: string,
-    referralCode?: string // ✨ Added here
+    referralCode?: string
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -32,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Fetch user on mount - NO REDIRECT LOGIC HERE
+  // Fetch user on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const userData = await api.auth.me();
         setUser(userData);
-      } catch (error) {
+      } catch {
         setUser(null);
         localStorage.removeItem('token');
       } finally {
@@ -81,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       router.push('/user/dashboard');
-      
     } catch (error) {
       const err = handleApiError(error);
       setError(err);
@@ -101,26 +101,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // REGISTER (UPDATED WITH referralCode)
+  // REGISTER (with logging + referral support)
   const register = async (
     name: string,
     email: string,
     password: string,
     passwordConfirmation: string,
     phone?: string,
-    referralCode?: string // 📌 Added referral code param
+    referralCode?: string
   ) => {
     try {
       setError(null);
 
-      const response = await api.auth.register({
+      console.log('📝 [AUTH CONTEXT] Registering user', {
+        name,
+        email,
+        has_phone: !!phone,
+        has_referral: !!referralCode,
+        referral_code: referralCode,
+      });
+
+      const payload: any = {
         name,
         email,
         password,
         password_confirmation: passwordConfirmation,
-        phone,
-        referral_code: referralCode, // 👈 sent to API
-      });
+      };
+
+      if (phone) {
+        payload.phone = phone;
+      }
+
+      if (referralCode) {
+        payload.referral_code = referralCode;
+        console.log('📌 [AUTH CONTEXT] Including referral code:', referralCode);
+      }
+
+      const response = await api.auth.register(payload);
 
       if (response.token) {
         localStorage.setItem('token', response.token);
@@ -141,7 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       response.user?.role === 'admin'
         ? router.push('/admin/dashboard')
         : router.push('/user/dashboard');
-    } catch (error) {
+
+      console.log('✅ [AUTH CONTEXT] Registration successful:', email);
+    } catch (error: any) {
+      console.error('❌ [AUTH CONTEXT] Registration failed:', error);
       const err = handleApiError(error);
       setError(err);
       throw new Error(err);
@@ -165,14 +185,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const userData = await api.auth.me();
       setUser(userData);
-    } catch (error) {
+    } catch {
       setUser(null);
       localStorage.removeItem('token');
     }
   };
 
+  // GOOGLE LOGIN (with referral awareness)
   const loginWithGoogle = () => {
-    api.auth.googleRedirect(); 
+    console.log('🔵 [AUTH CONTEXT] Initiating Google login');
+
+    const referralCode = localStorage.getItem('pending_referral_code');
+    if (referralCode) {
+      console.log('📌 [AUTH CONTEXT] Found referral code in localStorage:', referralCode);
+    }
+
+    api.auth.googleRedirect();
   };
 
   return (

@@ -12,6 +12,7 @@ use App\Models\AchievementBadge;
 use App\Models\CohortLeaderboard;
 use App\Models\CohortParticipant;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AdminCourseResourcesController extends Controller
 {
@@ -106,8 +107,8 @@ class AdminCourseResourcesController extends Controller
         ], 201);
     }
 
-    public function updateMaterialItem(Request $request, int $itemId): JsonResponse
-    {
+    public function updateMaterialItem( Request $request, string $courseId, int $itemId ): JsonResponse {
+
         $validated = $request->validate([
             'title' => 'string|max:255',
             'type' => 'in:pdf,video,document,link',
@@ -125,11 +126,11 @@ class AdminCourseResourcesController extends Controller
         ]);
     }
 
-    public function deleteMaterialItem(int $itemId): JsonResponse
-    {
+
+    public function deleteMaterialItem( string $courseId, int $itemId  ): JsonResponse {
+        
         $item = MaterialItem::findOrFail($itemId);
 
-        // Delete associated file
         if ($item->file_path && Storage::exists($item->file_path)) {
             Storage::delete($item->file_path);
         }
@@ -141,28 +142,61 @@ class AdminCourseResourcesController extends Controller
         ]);
     }
 
-    public function uploadMaterialFile(Request $request, int $itemId): JsonResponse
-    {
+
+    public function uploadMaterialFile(Request $request, string $courseId, int $itemId ): JsonResponse {
+
+        Log::info('Material file upload started', [
+            'course_id' => $courseId,
+            'item_id' => $itemId,
+            'has_file' => $request->hasFile('file'),
+        ]);
+
         $request->validate([
-            'file' => 'required|file|max:51200', // Max 50MB
+            'file' => 'required|file|max:51200',
         ]);
 
         $item = MaterialItem::findOrFail($itemId);
+        
+        // Get the course material to organize files by sprint
+        $courseMaterial = $item->courseMaterial;
+
+        Log::info('Material item found', [
+            'item_id' => $item->id,
+            'existing_file' => $item->file_path,
+            'sprint_name' => $courseMaterial->sprint_name,
+        ]);
 
         // Delete old file if exists
-        if ($item->file_path && Storage::exists($item->file_path)) {
-            Storage::delete($item->file_path);
+        if ($item->file_path && Storage::disk('public')->exists($item->file_path)) {
+            Storage::disk('public')->delete($item->file_path);
+            Log::info('Old material file deleted', ['path' => $item->file_path]);
         }
 
-        // Store new file
+        // Store new file with organized path structure
         $file = $request->file('file');
-        $path = $file->store('courses/materials', 'public');
+        $originalName = $file->getClientOriginalName();
         
+        // Create organized path: courses/{course_id}/sprint{number}/{filename}
+        $sprintFolder = 'sprint' . $courseMaterial->sprint_number;
+        $path = $file->storeAs(
+            "courses/{$courseId}/{$sprintFolder}",
+            $originalName,
+            'public'
+        );
+
+        Log::info('New material file stored', ['path' => $path]);
+
         // Get file size in readable format
         $fileSize = $this->formatBytes($file->getSize());
 
         $item->update([
             'file_path' => $path,
+            'file_size' => $fileSize,
+            'file_url' => Storage::url($path), // Store the full URL
+        ]);
+
+        Log::info('Material item updated successfully', [
+            'item_id' => $item->id,
             'file_size' => $fileSize,
         ]);
 
@@ -173,6 +207,7 @@ class AdminCourseResourcesController extends Controller
             'download_url' => Storage::url($path),
         ]);
     }
+
 
     // ===== EXTERNAL RESOURCES =====
     
