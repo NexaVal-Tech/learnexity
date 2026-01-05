@@ -120,13 +120,13 @@ export default function Courses() {
                         </div>
 
                         {/* Optional: Display price */}
-                        {course.price > 0 && (
+                        {/* {course.price > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-700">
                             <span className="text-green-400 font-bold text-xl">
                               ${course.price}
                             </span>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </Link>
                   ))}

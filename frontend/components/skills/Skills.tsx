@@ -4,6 +4,7 @@ import {
   FadeUpOnScroll,
   ZoomAnimation,
 } from "../animations/Animation";
+import { SignUpButton2 } from "../button/Button";
 
 export default function Skills() {
   const skills = [
@@ -21,23 +22,31 @@ export default function Skills() {
 
   return (
     <FadeUpOnScroll>
-    <section className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-6 text-center">
-        <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8">
-          In - Demand Tech Skills We Support
-        </h2>
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8">
+            In - Demand Tech Skills We Support
+          </h2>
 
-        <FadeInCard>
-        <div className="flex flex-wrap justify-center items-center gap-4">
-          {skills.map((skill, index) => (
-            <div key={skill} className="bg-gray-100 px-2 py-1 rounded-lg text-gray-800 font-medium text-sm md:text-base hover:bg-gray-100 transition-colors duration-200">
-              {skill}
+          <FadeInCard>
+            <div className="flex flex-wrap justify-center items-center gap-4">
+              {skills.map((skill) => (
+                <div
+                  key={skill}
+                  className="bg-gray-100 px-2 py-1 rounded-lg text-gray-800 font-medium text-sm md:text-base"
+                >
+                  {skill}
+                </div>
+              ))}
             </div>
-          ))}
+          </FadeInCard>
         </div>
-        </FadeInCard>
-      </div>
-    </section>
+
+        {/* ✅ Centered button */}
+        <div className="mt-10 flex justify-center">
+          <SignUpButton2 />
+        </div>
+      </section>
     </FadeUpOnScroll>
   );
 }

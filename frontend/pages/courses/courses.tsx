@@ -3,6 +3,7 @@ import Link from "next/link";
 import { api, Course } from "@/lib/api";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
+// import { SignUpButton2 } from "@/components/button/Button";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -122,11 +123,12 @@ export default function CoursesPage() {
                       </div>
                     )}   */}
 
-                    {/* View Details Button */}
-                    <div className="mt-6">
+                    {/* Buttons Container */}
+                    <div className="mt-6 flex items-center gap-3">
                       <span className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-full shadow hover:bg-indigo-700 transition">
                         View Details →
                       </span>
+                      {/* <SignUpButton2 /> */}
                     </div>
                   </div>
                 </Link>

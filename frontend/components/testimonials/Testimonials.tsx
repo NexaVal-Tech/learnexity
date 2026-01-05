@@ -1,39 +1,53 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import {
-  ScrollFadeIn,
-  FadeInCard,
-  FadeUpOnScroll,
-  ZoomAnimation,
-} from "../animations/Animation";
+import { useState, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+// Placeholder animation components
+const FadeUpOnScroll = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
 
 export default function Testimonials() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
 
   const data = [
     {
       name: "Jennifer A.",
       role: "Product Manager",
-      text: "Landed a Product Manager role at a fintech startup 2 months after completing the program. The hands-on approach and career support made all the difference.",
-      avatar: "/images/Ellipse 12.png"
+      video: "/videos/testimonial-1.mp4"
     },
     {
-      name: "Michael R.",
-      role: "Cybersecurity Analyst", 
-      text: "Transitioned from retail to cybersecurity analyst with a 60% salary increase. The instructors really know the industry.",
-      avatar: "/images/ELLipse 9.png"
+      name: "Design Sprint.",
+      role: "project", 
+      video:  "/videos/testimonial-2.mp4"
     },
     {
-      name: "Priya S.",
-      role: "Full Stack Developer",
-      text: "The portfolio I built through the program impressed everyone I interviewed with. Now I'm at a fast-growing startup doing work I love.",
-      avatar: "/images/Ellipse 11.png"
+      name: "Isreal Obinna.",
+      role: "Video Editing and Content Creation",
+      video:  "/videos/testimonial-3.mp4"
     },
     {
-      name: "Priya S.",
-      role: "Full Stack Developer",
-      text: "The portfolio I built through the program impressed everyone I interviewed with. Now I'm at a fast-growing startup doing work I love.",
-      avatar: "/images/Ellipse 12.png"
+      name: "Benedict.",
+      role: "Video Editing and Content Creation",
+      video: "/videos/testimonial-4.mp4"
+    },
+    {
+      name: "Lilian Anekwe.",
+      role: "Cybersecurity",
+      video: "/videos/testimonial-5.mp4"
+    },
+    {
+      name: "Mrs Lilian.",
+      role: "AI Automation",
+      video: "/videos/testimoial-6.mp4"
+    },
+    {
+      name: "Benedict.",
+      role: "Video Editing and Content Creation",
+      video: "/videos/testimonial-8.mp4"
     }
   ];
 
@@ -43,6 +57,75 @@ export default function Testimonials() {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + data.length) % data.length);
+  };
+
+  // Handle touch events for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeThreshold = 50;
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+  };
+
+  // Handle mouse drag for desktop
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - scrollContainerRef.current.offsetLeft;
+    scrollLeft.current = scrollContainerRef.current.scrollLeft;
+    scrollContainerRef.current.style.cursor = 'grabbing';
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX.current) * 2;
+    scrollContainerRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleMouseUp = () => {
+    if (!scrollContainerRef.current) return;
+    isDragging.current = false;
+    scrollContainerRef.current.style.cursor = 'grab';
+    
+    // Snap to nearest slide
+    const container = scrollContainerRef.current;
+    const cardWidth = 384 + 24; // w-96 + gap
+    const newSlide = Math.round(container.scrollLeft / cardWidth);
+    setCurrentSlide(Math.max(0, Math.min(newSlide, data.length - 1)));
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging.current) {
+      handleMouseUp();
+    }
+  };
+
+  // Handle wheel scroll for desktop
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    e.preventDefault();
+    
+    if (e.deltaY > 0 || e.deltaX > 0) {
+      nextSlide();
+    } else if (e.deltaY < 0 || e.deltaX < 0) {
+      prevSlide();
+    }
   };
 
   return (
@@ -86,30 +169,33 @@ export default function Testimonials() {
             
 
             {/* Right Side - Testimonials Container with overflow */}
-            <div className="flex-1 relative overflow-x-clip pl-6 -ml-6">
+            <div 
+              ref={scrollContainerRef}
+              className="flex-1 relative overflow-x-clip pl-6 -ml-6 cursor-grab select-none"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onWheel={handleWheel}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <div 
                   className="flex gap-6 transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 384}px)` }} // match w-96
+                  style={{ transform: `translateX(-${currentSlide * 384}px)` }}
                 >
                 {data.map((testimonial, index) => (
-                  <div key={index} className="flex-shrink-0 w-[32rem] p-12 bg-gray-200 rounded-4xl">
-                    {/* 5 Stars */}
-                    <div className="flex gap-1 mb-6">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-black text-black" />
-                      ))}
-                    </div>
+                  <div key={index} className="flex-shrink-0 w-[32rem] p-6 bg-gray-200 rounded-4xl">
+                    <video 
+                      src={testimonial.video} 
+                      controls 
+                      className="w-full h-84 rounded-2xl mb-8 object-cover pointer-events-auto" 
+                      preload="metadata"
+                      onMouseDown={(e) => e.stopPropagation()}
+                    />
 
-                    {/* Testimonial Text */}
-                    <p className="text-gray-800 text-xl leading-relaxed mb-12">
-                      {testimonial.text}
-                    </p>
-
-                    {/* Author Info */}
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
-                        <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover"/>
-                      </div>
                       <div>
                         <p className="text-base text-gray-900 text-sm">
                           {testimonial.name}, {testimonial.role}
@@ -119,7 +205,6 @@ export default function Testimonials() {
                   </div>
                 ))}
               </div>
-            
             </div>
           </div>
         </div>
@@ -147,36 +232,31 @@ export default function Testimonials() {
             </div>
           </div>
 
-          {/* Horizontal scrolling container with gray border */}
-          <div className="relative overflow-hidde p-4 bg-white">
-            <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 260}px)` }}>
+          {/* Horizontal scrolling container */}
+          <div 
+            className="relative overflow-hidden p-4 bg-white"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div 
+              className="flex transition-transform duration-500 ease-in-out" 
+              style={{ transform: `translateX(-${currentSlide * 260}px)` }}
+            >
               {data.map((testimonial, index) => (
                 <div 
                   key={index} 
-                  className="flex-shrink-0 w-78 p-8 bg-white rounded-4xl shadow-2xl"
+                  className="flex-shrink-0 w-78 p-8 bg-white rounded-4xl shadow-2xl" 
                   style={{ marginLeft: index > 0 ? '-20px' : '0' }}
                 >
-                  {/* 5 Stars for first card, 3 for others */}
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(index === 0 ? 5 : 5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-black text-black" />
-                    ))}
-                  </div>
+                  <video 
+                    src={testimonial.video} 
+                    controls 
+                    className="w-full h-64 rounded-2xl mb-8 object-cover" 
+                    preload="metadata"
+                  />
 
-                  {/* Testimonial Text */}
-                  <p className="text-gray-800 text-sm leading-relaxed mb-4">
-                    {testimonial.text}
-                  </p>
-
-                  {/* Author Info */}
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full overflow-hidden">
-                      <img 
-                        src={testimonial.avatar} 
-                        alt={testimonial.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
                     <div>
                       <p className="font-medium text-gray-900 text-xs">
                         {testimonial.name}, {testimonial.role}

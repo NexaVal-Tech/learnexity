@@ -1,5 +1,5 @@
 import React from 'react';
-import { SecondaryButton } from "../button/Button";
+import { SecondaryButton, SignUpButton } from "../button/Button";
 // import {
 //   ScrollFadeIn,
 //   FadeInCard,
@@ -21,8 +21,9 @@ export default function Community() {
             Join a community that offers exclusive Discord access, a 5,000+ member alumni network, ongoing mentorship, and industry networking opportunities.
           </p>
 
-          <div className="flex justify-center md:justify-start">
+          <div className="flex item-center justify-center md:justify-start gap-4">
             <SecondaryButton />
+            <SignUpButton />
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mt-8 md:hidden">

@@ -14,7 +14,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     use Notifiable, MustVerifyEmailTrait;
 
-    protected $fillable = ['name','email','password','google_id', 'referred_by_code',];
+    protected $fillable = ['name','email','password','google_id', 'phone', 'referred_by_code',];
     protected $hidden = ['password','remember_token','twofa_secret'];
 
     // JWTSubject methods

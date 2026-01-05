@@ -4,6 +4,7 @@ import {
   // FadeUpOnScroll,
   ZoomAnimation,
 } from "../animations/Animation";
+import { SignUpButton2 } from "../button/Button";
 
 export default function Pathways() {
   return (
@@ -11,16 +12,25 @@ export default function Pathways() {
     <section className="pt-2 py-20 bg-white">
       <div className="max-w-screen-2xl mx-auto px-6">
         {/* <FadeUpOnScroll> */}
-        <div className="mb-16 text-center md:text-left">
-          <h2 className="text-4xl font-semibold text-black mb-4 component-headers">
-            Our Pathways
-          </h2>
-          <p className="text-xl text-gray-600">
-            Proven curriculum with measurable outcomes
-          </p>
+        <div className="mb-16 flex flex-col gap-6 text-center md:text-left lg:flex-row lg:items-center lg:justify-between">
+          
+          {/* Left: Title + description */}
+          <div>
+            <h2 className="text-4xl font-semibold text-black mb-4 component-headers">
+              Our Pathways
+            </h2>
+            <p className="text-xl text-gray-600">
+              Proven curriculum with measurable outcomes
+            </p>
+          </div>
+
+          {/* Right: Button */}
+          <div className="flex justify-center md:justify-start lg:justify-end">
+            <SignUpButton2 />
+          </div>
+
         </div>
-        
-        
+
         <div className="grid lg:grid-cols-3 gap-4">
           {/* Card 01 - Gradient Card */}
           <div className="relative overflow-hidden rounded-4xl p-8 h-100" style={{ background:"linear-gradient(163.36deg, #5B1EF6 -33.94%, #F59E0B 18.93%, #5B1EF6 48.37%, #DE492B 97.22%)",
