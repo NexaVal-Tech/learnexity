@@ -41,7 +41,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         $frontendUrl = config('app.frontend_url');
 
-        $url = $frontendUrl . '/user/auth/reset-password?token=' . $token . '&email=' . urlencode($this->email);
+        $url = $frontendUrl . '/user/auth/resetpassword?token=' . $token . '&email=' . urlencode($this->email);
 
         $this->notify(new ApiResetPasswordNotification($token, $url));
 }
