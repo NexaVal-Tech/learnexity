@@ -17,11 +17,17 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
 
-  // Guard: missing token or email
+  // Guard: missing token or email - only check after router is ready
   useEffect(() => {
-    if (router.isReady && (!token || !email)) {
-      setError('Invalid or expired password reset link.');
+    if (router.isReady) {
+      if (!token || !email) {
+        setIsValidLink(false);
+        setError('Invalid or expired password reset link.');
+      } else {
+        setIsValidLink(true);
+      }
     }
   }, [router.isReady, token, email]);
 
@@ -67,6 +73,23 @@ export default function ResetPassword() {
     }
   };
 
+  // Show loading state while router is initializing
+  if (!router.isReady || isValidLink === null) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl">
+            <div className="bg-white rounded-lg p-6 md:p-12 shadow-lg">
+              <div className="text-center">
+                <p className="text-gray-500">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -101,7 +124,7 @@ export default function ResetPassword() {
               </div>
             )}
 
-            {!error && (
+            {isValidLink && !success && (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -157,6 +180,20 @@ export default function ResetPassword() {
                   {loading ? 'Resetting Password...' : 'Reset Password'}
                 </button>
               </form>
+            )}
+
+            {!isValidLink && (
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  This password reset link is invalid or has expired.
+                </p>
+                <button
+                  onClick={() => router.push('/user/auth/forgot-password')}
+                  className="text-purple-600 hover:underline font-medium"
+                >
+                  Request a new reset link
+                </button>
+              </div>
             )}
           </div>
         </div>
