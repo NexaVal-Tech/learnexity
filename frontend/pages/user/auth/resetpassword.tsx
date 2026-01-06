@@ -8,8 +8,10 @@ import { useRouter } from 'next/router';
 
 export default function ResetPassword() {
   const router = useRouter();
-  const { token, email } = router.query;
-
+  
+  // Store token and email in state to persist across renders
+  const [storedToken, setStoredToken] = useState<string>('');
+  const [storedEmail, setStoredEmail] = useState<string>('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -19,9 +21,11 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
 
-  // Guard: missing token or email - only check after router is ready
+  // Extract and store token/email from URL once when router is ready
   useEffect(() => {
-    if (router.isReady) {
+    if (router.isReady && !storedToken && !storedEmail) {
+      const { token, email } = router.query;
+      
       console.log('🔍 Reset Password Debug:', {
         hasToken: !!token,
         hasEmail: !!email,
@@ -31,14 +35,16 @@ export default function ResetPassword() {
         emailType: typeof email
       });
 
-      if (!token || !email) {
+      if (token && email) {
+        setStoredToken(String(token));
+        setStoredEmail(String(email));
+        setIsValidLink(true);
+      } else {
         setIsValidLink(false);
         setError('Invalid or expired password reset link.');
-      } else {
-        setIsValidLink(true);
       }
     }
-  }, [router.isReady, token, email]);
+  }, [router.isReady, router.query, storedToken, storedEmail]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,8 +70,8 @@ export default function ResetPassword() {
 
     try {
       await api.auth.resetPassword({
-        email: String(email),
-        token: String(token),
+        email: storedEmail,
+        token: storedToken,
         password: newPassword,
         password_confirmation: confirmPassword,
       });
