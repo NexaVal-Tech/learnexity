@@ -22,6 +22,15 @@ export default function ResetPassword() {
   // Guard: missing token or email - only check after router is ready
   useEffect(() => {
     if (router.isReady) {
+      console.log('🔍 Reset Password Debug:', {
+        hasToken: !!token,
+        hasEmail: !!email,
+        token: token,
+        email: email,
+        tokenType: typeof token,
+        emailType: typeof email
+      });
+
       if (!token || !email) {
         setIsValidLink(false);
         setError('Invalid or expired password reset link.');
