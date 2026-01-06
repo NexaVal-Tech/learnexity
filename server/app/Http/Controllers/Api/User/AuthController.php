@@ -182,11 +182,57 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $r)
     {
+        Log::info('🔐 [PASSWORD RESET] Reset link request', ['email' => $r->email]);
+        
         $r->validate(['email' => 'required|email']);
-        $status = Password::sendResetLink($r->only('email'));
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Password reset link sent to your email.'])
-            : response()->json(['message' => 'Unable to send reset link.'], 422);
+        
+        // Check if user exists
+        $user = User::where('email', $r->email)->first();
+        if (!$user) {
+            Log::warning('⚠️ [PASSWORD RESET] Email not found', ['email' => $r->email]);
+            return response()->json([
+                'message' => 'If an account exists with this email, you will receive a password reset link.'
+            ], 200);
+        }
+        
+        Log::info('✅ [PASSWORD RESET] User found, sending reset link', [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
+        
+        try {
+            $status = Password::sendResetLink($r->only('email'));
+            
+            Log::info('📧 [PASSWORD RESET] Password facade response', [
+                'status' => $status,
+                'is_sent' => $status === Password::RESET_LINK_SENT
+            ]);
+            
+            if ($status === Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'message' => 'Password reset link sent to your email.'
+                ], 200);
+            }
+            
+            Log::error('❌ [PASSWORD RESET] Failed to send', [
+                'status' => $status,
+                'email' => $r->email
+            ]);
+            
+            return response()->json([
+                'message' => 'Unable to send reset link. Please try again later.'
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ [PASSWORD RESET] Exception occurred', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'An error occurred. Please try again later.'
+            ], 500);
+        }
     }
 
     public function redirectToGoogle(Request $request)
