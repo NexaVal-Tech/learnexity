@@ -30,6 +30,23 @@ class Course extends Model
         'one_on_one_price',
         'group_mentorship_price',
         'self_paced_price',
+        // Currency-based base prices
+        'price_usd',
+        'price_ngn',
+
+        // Track pricing (USD)
+        'one_on_one_price_usd',
+        'group_mentorship_price_usd',
+        'self_paced_price_usd',
+
+        // Track pricing (NGN)
+        'one_on_one_price_ngn',
+        'group_mentorship_price_ngn',
+        'self_paced_price_ngn',
+
+        // One-time payment discounts
+        'onetime_discount_usd',
+        'onetime_discount_ngn',
     ];
 
     protected $casts = [
@@ -42,6 +59,19 @@ class Course extends Model
         'one_on_one_price' => 'decimal:2',
         'group_mentorship_price' => 'decimal:2',
         'self_paced_price' => 'decimal:2',
+        'price_usd' => 'decimal:2',
+        'price_ngn' => 'decimal:2',
+
+        'one_on_one_price_usd' => 'decimal:2',
+        'group_mentorship_price_usd' => 'decimal:2',
+        'self_paced_price_usd' => 'decimal:2',
+
+        'one_on_one_price_ngn' => 'decimal:2',
+        'group_mentorship_price_ngn' => 'decimal:2',
+        'self_paced_price_ngn' => 'decimal:2',
+
+        'onetime_discount_usd' => 'decimal:2',
+        'onetime_discount_ngn' => 'decimal:2',
     ];
 
     // Append learning tracks info to JSON responses
@@ -134,5 +164,29 @@ class Course extends Model
             default:
                 return (float) $this->price;
         }
+    }
+
+    public function getTrackPriceByCurrency(string $track, string $currency = 'USD'): float
+    {
+        $trackPriceField = match($track) {
+            'one_on_one' => $currency === 'NGN' ? 'one_on_one_price_ngn' : 'one_on_one_price_usd',
+            'group_mentorship' => $currency === 'NGN' ? 'group_mentorship_price_ngn' : 'group_mentorship_price_usd',
+            'self_paced' => $currency === 'NGN' ? 'self_paced_price_ngn' : 'self_paced_price_usd',
+            default => $currency === 'NGN' ? 'price_ngn' : 'price_usd',
+        };
+
+        // Get track-specific price first, fallback to base price
+        $price = $this->$trackPriceField ?? ($currency === 'NGN' ? $this->price_ngn : $this->price_usd) ?? $this->price;
+
+        return (float) $price;
+    }
+
+    /**
+     * Get one-time discounted price by currency
+     */
+    public function getOneTimeDiscountByCurrency(string $currency = 'USD'): float
+    {
+        $discountField = $currency === 'NGN' ? 'onetime_discount_ngn' : 'onetime_discount_usd';
+        return (float) ($this->$discountField ?? 0);
     }
 }

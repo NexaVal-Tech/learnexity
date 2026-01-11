@@ -326,4 +326,42 @@ class AdminCourseController extends Controller
         }
         return null;
     }
+
+
+    public function updatePricingAndSettings(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            // Track availability
+            'offers_one_on_one' => 'boolean',
+            'offers_group_mentorship' => 'boolean',
+            'offers_self_paced' => 'boolean',
+
+            // Base prices
+            'price_usd' => 'nullable|numeric|min:0',
+            'price_ngn' => 'nullable|numeric|min:0',
+
+            // Track prices (USD)
+            'one_on_one_price_usd' => 'nullable|numeric|min:0',
+            'group_mentorship_price_usd' => 'nullable|numeric|min:0',
+            'self_paced_price_usd' => 'nullable|numeric|min:0',
+
+            // Track prices (NGN)
+            'one_on_one_price_ngn' => 'nullable|numeric|min:0',
+            'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
+            'self_paced_price_ngn' => 'nullable|numeric|min:0',
+
+            // One-time discounts
+            'onetime_discount_usd' => 'nullable|numeric|min:0',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0',
+        ]);
+
+        $course->update($validated);
+
+        return response()->json([
+            'message' => 'Course pricing and settings updated successfully',
+            'course' => $course->fresh(),
+        ]);
+    }
 }

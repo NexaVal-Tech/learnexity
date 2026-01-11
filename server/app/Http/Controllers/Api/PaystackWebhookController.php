@@ -43,25 +43,33 @@ class PaystackWebhookController extends Controller
             $data = $event['data'];
             $reference = $data['reference'];
             $metadata = $data['metadata'] ?? [];
-            $amount = $data['amount'] ?? null;
+            $amountInKobo = $data['amount'] ?? null;
+            $currency = $data['currency'] ?? 'NGN';
+
+            // Convert amount from kobo/cents to main currency unit
+            $amount = $amountInKobo / 100;
 
             Log::info('💳 Processing charge.success', [
                 'reference' => $reference,
+                'amount_kobo' => $amountInKobo,
+                'amount' => $amount,
+                'currency' => $currency,
                 'metadata' => $metadata,
                 'metadata_type' => gettype($metadata),
-                'amount' => $amount
             ]);
 
-            // Extract enrollment_id from metadata
+            // Extract enrollment_id, learning_track, and payment_type from metadata
             $enrollmentId = null;
             $learningTrack = null;
+            $paymentType = null;
 
             if (is_array($metadata)) {
                 $enrollmentId = $metadata['enrollment_id'] ?? null;
                 $learningTrack = $metadata['learning_track'] ?? null;
+                $paymentType = $metadata['payment_type'] ?? null;
 
                 // Also check custom_fields array
-                if (!$learningTrack && isset($metadata['custom_fields'])) {
+                if (isset($metadata['custom_fields'])) {
                     foreach ($metadata['custom_fields'] as $field) {
                         if ($field['variable_name'] === 'learning_track') {
                             // Extract the track ID from the display name
@@ -74,27 +82,41 @@ class PaystackWebhookController extends Controller
                                 $learningTrack = 'self_paced';
                             }
                         }
+                        if ($field['variable_name'] === 'payment_type') {
+                            $paymentTypeName = $field['value'];
+                            if (strpos($paymentTypeName, 'One-Time') !== false) {
+                                $paymentType = 'onetime';
+                            } elseif (strpos($paymentTypeName, 'Installment') !== false) {
+                                $paymentType = 'installment';
+                            }
+                        }
                     }
                 }
             }
 
-            // Also try to extract from reference (format: ENR-{id}-{track}-{timestamp})
-            if (!$learningTrack && preg_match('/ENR-(\d+)-(one_on_one|group_mentorship|self_paced)-/', $reference, $matches)) {
-                $learningTrack = $matches[2];
-                Log::info('🔍 Extracted learning track from reference', [
-                    'learning_track' => $learningTrack
-                ]);
+            // Also try to extract from reference (format: ENR-{id}-{track}-{payment_type}-{timestamp})
+            if (!$learningTrack || !$paymentType) {
+                if (preg_match('/ENR-(\d+)-(one_on_one|group_mentorship|self_paced)-(onetime|installment)-/', $reference, $matches)) {
+                    if (!$learningTrack) {
+                        $learningTrack = $matches[2];
+                    }
+                    if (!$paymentType) {
+                        $paymentType = $matches[3];
+                    }
+                    Log::info('🔍 Extracted from reference', [
+                        'learning_track' => $learningTrack,
+                        'payment_type' => $paymentType
+                    ]);
+                }
             }
 
             if ($enrollmentId) {
                 $enrollment = CourseEnrollment::find($enrollmentId);
 
                 if ($enrollment) {
-                    if ($enrollment->payment_status !== 'completed') {
+                    if ($enrollment->payment_status !== 'completed' || $enrollment->payment_type === 'installment') {
                         $updateData = [
-                            'payment_status' => 'completed',
                             'transaction_id' => $reference,
-                            'payment_date' => now(),
                         ];
 
                         // Update learning track if we found it
@@ -103,10 +125,53 @@ class PaystackWebhookController extends Controller
                             Log::info('📚 Learning track found and validated', [
                                 'learning_track' => $learningTrack
                             ]);
+                        }
+
+                        // Handle payment based on type
+                        if ($paymentType === 'onetime' || $enrollment->payment_type === 'onetime') {
+                            // One-time payment
+                            $updateData['payment_status'] = 'completed';
+                            $updateData['payment_date'] = now();
+                            $updateData['amount_paid'] = $amount;
+                            $updateData['has_access'] = true;
+                            
+                            Log::info('💰 Processing one-time payment', [
+                                'amount' => $amount,
+                                'currency' => $currency
+                            ]);
                         } else {
-                            Log::warning('⚠️ Learning track not found or invalid', [
-                                'learning_track' => $learningTrack,
-                                'metadata' => $metadata
+                            // Installment payment
+                            $updateData['installments_paid'] = ($enrollment->installments_paid ?? 0) + 1;
+                            $updateData['amount_paid'] = ($enrollment->amount_paid ?? 0) + $amount;
+                            $updateData['has_access'] = true;
+                            $updateData['last_installment_paid_at'] = now();
+
+                            // Check if all installments are paid
+                            if ($updateData['installments_paid'] >= $enrollment->total_installments) {
+                                $updateData['payment_status'] = 'completed';
+                                $updateData['next_payment_due'] = null;
+                            } else {
+                                $updateData['next_payment_due'] = now()->addWeeks(4);
+                            }
+
+                            Log::info('📅 Processing installment payment', [
+                                'installment_number' => $updateData['installments_paid'],
+                                'total_installments' => $enrollment->total_installments,
+                                'amount' => $amount,
+                                'currency' => $currency
+                            ]);
+
+                            // Record installment payment
+                            \DB::table('installment_payments')->insert([
+                                'enrollment_id' => $enrollment->id,
+                                'installment_number' => $updateData['installments_paid'],
+                                'amount' => $amount,
+                                'currency' => $currency,
+                                'status' => 'completed',
+                                'transaction_id' => $reference,
+                                'paid_at' => now(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ]);
                         }
 
@@ -118,7 +183,9 @@ class PaystackWebhookController extends Controller
                             'course_name' => $enrollment->course_name,
                             'user_id' => $enrollment->user_id,
                             'learning_track' => $enrollment->learning_track,
-                            'amount' => $amount
+                            'payment_type' => $enrollment->payment_type,
+                            'amount' => $amount,
+                            'currency' => $currency
                         ]);
 
                         // Send confirmation email

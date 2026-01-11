@@ -5,16 +5,36 @@ use App\Http\Controllers\Api\User\AuthController;
 use App\Http\Controllers\Api\User\CourseController;
 use App\Http\Controllers\Api\User\CourseEnrollmentController;
 use App\Http\Controllers\Api\PaystackWebhookController;
+use App\Http\Controllers\Api\StripeController;
 use App\Http\Controllers\Api\CourseResourcesController;
 use App\Http\Controllers\Api\AdminCourseResourcesController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminStudentController;
 use App\Http\Controllers\Api\AdminCourseController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Services\LocationService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Http\Request;
+
+// Currency Detection (Public Route)
+
+// Currency Detection (Public Route)
+Route::get('/detect-currency', function() {
+    // Get comprehensive location info
+    $locationInfo = App\Services\LocationService::getLocationInfo();
+    
+    return response()->json([
+        'currency' => $locationInfo['currency'],
+        'symbol' => $locationInfo['symbol'],
+        'country' => $locationInfo['country'],
+        'country_code' => $locationInfo['country_code'],
+        'ip' => $locationInfo['ip'],
+        'city' => $locationInfo['city'] ?? null,
+        'region' => $locationInfo['region'] ?? null,
+    ]);
+});
 
 // =================== EMAIL VERIFICATION ROUTES =================== //
 Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
@@ -69,6 +89,11 @@ Route::post('/referrals/validate', [ReferralController::class, 'validateReferral
 // Paystack webhook (MUST be public)
 Route::post('/paystack/webhook', [PaystackWebhookController::class, 'handleWebhook']);
 
+// stripe route 
+Route::post('/create-stripe-checkout', [StripeController::class, 'createCheckoutSession'])->middleware('auth:sanctum');
+Route::post('/stripe/webhook', [StripeController::class, 'handleWebhook']);
+Route::post('/stripe/verify-session', [StripeController::class, 'verifySession'])->middleware('auth:sanctum');
+
 // =================== PROTECTED ROUTES =================== //
 Route::middleware(['jwt.auth'])->group(function () {
 
@@ -90,6 +115,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/{courseId}/enroll', [CourseEnrollmentController::class, 'enroll']);
         Route::patch('/enrollments/{enrollmentId}/payment', [CourseEnrollmentController::class, 'updatePaymentStatus']);
         Route::post('/enrollments/{enrollmentId}/verify-payment', [CourseEnrollmentController::class, 'verifyPaymentStatus']);
+        Route::get('/{courseId}/check-access', [CourseEnrollmentController::class, 'checkAccess']);
 
         Route::prefix('{courseId}/resources')->group(function () {
             Route::get('/', [CourseResourcesController::class, 'getCourseResources']);
@@ -203,6 +229,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/{courseId}', [AdminCourseController::class, 'show']);
         Route::put('/{courseId}', [AdminCourseController::class, 'update']);
         Route::delete('/{courseId}', [AdminCourseController::class, 'destroy']);
+        Route::put('/{courseId}/pricing', [AdminCourseController::class, 'updatePricingAndSettings']);
         
         // Course Resources Management
         Route::prefix('{courseId}/resources')->group(function () {

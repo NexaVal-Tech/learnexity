@@ -1,301 +1,468 @@
 <?php
 
-    namespace App\Http\Controllers\Api\User;
+namespace App\Http\Controllers\Api\User;
 
-    use App\Http\Controllers\Controller;
-    use App\Models\CourseEnrollment;
-    use App\Models\Course;
-    use Illuminate\Http\Request;
-    use Illuminate\Support\Facades\Validator;
-    use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Models\CourseEnrollment;
+use App\Models\Course;
+use App\Services\LocationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
-    class CourseEnrollmentController extends Controller
+class CourseEnrollmentController extends Controller
+{
+    /**
+     * Check if user is enrolled in a course
+     */
+    public function checkEnrollmentStatus($courseId)
     {
-        /**
-         * Check if user is enrolled in a course
-         */
-        public function checkEnrollmentStatus($courseId)
-        {
-            Log::info('🔹 [checkEnrollmentStatus] Endpoint hit', ['course_id' => $courseId]);
+        Log::info('🔹 [checkEnrollmentStatus] Endpoint hit', ['course_id' => $courseId]);
 
-            $user = auth()->user();
-            Log::info('Authenticated user', ['user_id' => $user->id]);
+        $user = auth()->user();
+        Log::info('Authenticated user', ['user_id' => $user->id]);
 
-            $enrollment = CourseEnrollment::where('user_id', $user->id)
-                ->where('course_id', $courseId)
-                ->first();
+        $enrollment = CourseEnrollment::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
 
-            Log::info('Enrollment lookup result', [
-                'found' => $enrollment !== null,
-                'payment_status' => $enrollment->payment_status ?? null,
-            ]);
-
-            return response()->json([
-                'isEnrolled' => $enrollment !== null && $enrollment->payment_status === 'completed',
-                'enrollment' => $enrollment,
-            ]);
+        // Update access status if enrollment exists
+        if ($enrollment) {
+            $enrollment->updateAccessStatus();
         }
 
-        /**
-         * Enroll user in a course
-         */
-        public function enroll(Request $request, $courseId)
-        {
-            Log::info('🔹 [enroll] Endpoint hit', ['course_id' => $courseId, 'request' => $request->all()]);
+        Log::info('Enrollment lookup result', [
+            'found' => $enrollment !== null,
+            'payment_status' => $enrollment->payment_status ?? null,
+            'has_access' => $enrollment->has_access ?? null,
+        ]);
 
-            $validator = Validator::make($request->all(), [
-                'course_name' => 'required|string|max:255',
-                'course_price' => 'required|numeric|min:0',
-                'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
-            ]);
+        return response()->json([
+            'isEnrolled' => $enrollment !== null && $enrollment->payment_status === 'completed',
+            'has_access' => $enrollment ? $enrollment->has_access : false,
+            'enrollment' => $enrollment,
+        ]);
+    }
 
-            if ($validator->fails()) {
-                Log::warning('⚠️ Validation failed', ['errors' => $validator->errors()]);
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
+    /**
+     * Enroll user in a course with location-based pricing
+     */
 
-            $user = auth()->user();
-            Log::info('Authenticated user', ['user_id' => $user->id]);
+public function enroll(Request $request, $courseId)
+{
+    $user = auth()->user();
+    
+    // Log incoming request for debugging
+    Log::info('📥 Enrollment request received', [
+        'user_id' => $user->id,
+        'course_id' => $courseId,
+        'request_data' => $request->all()
+    ]);
 
-            // Check if already enrolled
-            $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
-                ->where('course_id', $courseId)
-                ->first();
+    $validator = Validator::make($request->all(), [
+        'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
+        'payment_type' => 'required|in:onetime,installment',
+    ]);
 
-            if ($existingEnrollment) {
-                Log::info('Existing enrollment found', [
-                    'enrollment_id' => $existingEnrollment->id,
-                    'payment_status' => $existingEnrollment->payment_status,
-                ]);
+    if ($validator->fails()) {
+        Log::error('❌ Validation failed', [
+            'errors' => $validator->errors()->toArray()
+        ]);
+        
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
-                if ($existingEnrollment->payment_status === 'completed') {
-                    Log::info('User already fully enrolled');
-                    return response()->json([
-                        'message' => 'Already enrolled in this course',
-                        'enrollment_id' => $existingEnrollment->id,
-                    ], 409);
-                }
+    $course = Course::where('course_id', $courseId)->firstOrFail();
+    $currency = LocationService::detectCurrency();
+    
+    $learningTrack = $request->input('learning_track', 'self_paced');
+    $paymentType = $request->input('payment_type');
+    
+    Log::info('📊 Enrollment data', [
+        'learning_track' => $learningTrack,
+        'payment_type' => $paymentType,
+        'currency' => $currency
+    ]);
 
-                Log::info('User has pending enrollment');
-                return response()->json([
-                    'message' => 'Enrollment already exists with pending payment',
-                    'enrollment_id' => $existingEnrollment->id,
-                    'course_id' => $courseId,
-                ], 200);
-            }
+    // FIXED: Check for existing enrollment
+    $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
+        ->where('course_id', $courseId)
+        ->first();
 
-            // Get the learning track, default to self_paced if not provided
-            $learningTrack = $request->input('learning_track', 'self_paced');
-
-            // Create new enrollment
-            $enrollment = CourseEnrollment::create([
-                'user_id' => $user->id,
-                'course_id' => $courseId,
-                'course_name' => $request->course_name,
-                'course_price' => $request->course_price,
-                'learning_track' => $learningTrack,
-                'payment_status' => 'pending',
-                'enrollment_date' => now(),
-            ]);
-
-            Log::info('✅ Enrollment created successfully', [
-                'enrollment_id' => $enrollment->id,
-                'course_id' => $courseId,
-                'learning_track' => $learningTrack,
-            ]);
-
+    if ($existingEnrollment) {
+        // If payment is completed, prevent re-enrollment
+        if ($existingEnrollment->payment_status === 'completed') {
             return response()->json([
-                'message' => 'Successfully enrolled in course',
-                'enrollment_id' => $enrollment->id,
-                'course_id' => $courseId,
-            ], 201);
+                'message' => 'You are already enrolled in this course',
+                'enrollment_id' => $existingEnrollment->id,
+            ], 409);
         }
+        
+        // If payment is pending, return the existing enrollment
+        Log::info('✅ Returning existing pending enrollment', [
+            'enrollment_id' => $existingEnrollment->id,
+            'payment_status' => $existingEnrollment->payment_status
+        ]);
 
-        /**
-         * Get user's enrolled courses
-         */
-        public function getUserEnrollments()
-        {
-            Log::info('🔹 [getUserEnrollments] Endpoint hit');
+        return response()->json([
+            'message' => 'Enrollment already exists. Please complete your payment.',
+            'enrollment_id' => $existingEnrollment->id,
+            'total_amount' => $existingEnrollment->total_amount,
+            'installment_amount' => $existingEnrollment->installment_amount,
+            'total_installments' => $existingEnrollment->total_installments,
+            'currency' => $existingEnrollment->currency,
+            'payment_type' => $existingEnrollment->payment_type,
+        ], 200);
+    }
 
-            $user = auth()->user();
+    // Get price for selected track and currency
+    $trackPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
 
-            if (!$user) {
-                Log::warning('⚠️ Unauthenticated request to getUserEnrollments');
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
+    // Validate that price exists
+    if ($trackPrice <= 0) {
+        Log::error('❌ Invalid price for track', [
+            'track' => $learningTrack,
+            'currency' => $currency,
+            'price' => $trackPrice
+        ]);
+        
+        return response()->json([
+            'message' => 'Pricing not configured for this course and currency combination',
+        ], 400);
+    }
 
-            Log::info('Authenticated user', ['user_id' => $user->id]);
-
-            $enrollments = CourseEnrollment::where('user_id', $user->id)
-                ->orderBy('enrollment_date', 'desc')
-                ->get();
-
-            Log::info('Enrollments retrieved', ['count' => $enrollments->count()]);
-
-            return response()->json([
-                'enrollments' => $enrollments,
-            ]);
-        }
-
-        /**
-         * Update payment status (called by frontend after Paystack success)
-         */
-        public function updatePaymentStatus(Request $request, $enrollmentId)
-        {
-            Log::info('🔹 [updatePaymentStatus] Endpoint hit', [
-                'enrollment_id' => $enrollmentId,
-                'request' => $request->all(),
-            ]);
-
-            $validator = Validator::make($request->all(), [
-                'payment_status' => 'required|in:pending,completed,failed',
-                'transaction_id' => 'nullable|string',
-                'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
-            ]);
-
-            if ($validator->fails()) {
-                Log::warning('⚠️ Validation failed', ['errors' => $validator->errors()]);
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $user = auth()->user();
-            Log::info('Authenticated user', ['user_id' => $user->id]);
-
-            $enrollment = CourseEnrollment::where('id', $enrollmentId)
-                ->where('user_id', $user->id)
-                ->first();
-
-            if (!$enrollment) {
-                Log::error('❌ Enrollment not found', ['enrollment_id' => $enrollmentId]);
-                return response()->json([
-                    'message' => 'Enrollment not found',
-                ], 404);
-            }
-
-            // If already completed, don't update again
-            if ($enrollment->payment_status === 'completed') {
-                Log::info('ℹ️ Payment already completed', ['enrollment_id' => $enrollmentId]);
-                return response()->json([
-                    'message' => 'Payment already completed',
-                    'enrollment' => $enrollment,
-                ], 200);
-            }
-
-            $updateData = [
-                'payment_status' => $request->payment_status,
-                'transaction_id' => $request->transaction_id,
-                'payment_date' => $request->payment_status === 'completed' ? now() : null,
-            ];
-
-            // Update learning track if provided
-            if ($request->has('learning_track')) {
-                $updateData['learning_track'] = $request->learning_track;
-            }
-
-            $enrollment->update($updateData);
-
-            Log::info('✅ Payment status updated', [
-                'enrollment_id' => $enrollmentId,
-                'new_status' => $request->payment_status,
-                'learning_track' => $enrollment->learning_track,
-            ]);
-
-            return response()->json([
-                'message' => 'Payment status updated successfully',
-                'enrollment' => $enrollment,
-            ]);
-        }
-
-        /**
-         * Verify payment with Paystack API (fallback method)
-         */
-        public function verifyPaymentStatus(Request $request, $enrollmentId)
-        {
-            Log::info('🔹 [verifyPaymentStatus] Manual verification requested', [
-                'enrollment_id' => $enrollmentId,
-            ]);
-
-            $validator = Validator::make($request->all(), [
-                'reference' => 'required|string',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $user = auth()->user();
-            $enrollment = CourseEnrollment::where('id', $enrollmentId)
-                ->where('user_id', $user->id)
-                ->first();
-
-            if (!$enrollment) {
-                return response()->json(['message' => 'Enrollment not found'], 404);
-            }
-
-            try {
-                $reference = $request->reference;
-                
-                $curl = curl_init();
-                curl_setopt_array($curl, [
-                    CURLOPT_URL => "https://api.paystack.co/transaction/verify/{$reference}",
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HTTPHEADER => [
-                        "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
-                        "Cache-Control: no-cache",
-                    ],
-                ]);
-
-                $response = curl_exec($curl);
-                $err = curl_error($curl);
-                curl_close($curl);
-
-                if ($err) {
-                    Log::error('Paystack verification error', ['error' => $err]);
-                    return response()->json(['error' => 'Verification failed'], 500);
-                }
-
-                $result = json_decode($response, true);
-
-                if ($result['status'] && $result['data']['status'] === 'success') {
-                    // Update enrollment
-                    $enrollment->update([
-                        'payment_status' => 'completed',
-                        'transaction_id' => $reference,
-                        'payment_date' => now(),
-                    ]);
-
-                    Log::info('✅ Payment verified and updated', [
-                        'enrollment_id' => $enrollmentId,
-                        'reference' => $reference,
-                    ]);
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Payment verified successfully',
-                        'enrollment' => $enrollment->fresh(),
-                    ]);
-                }
-
-                return response()->json([
-                    'status' => 'failed',
-                    'message' => 'Payment verification failed'
-                ], 400);
-
-            } catch (\Exception $e) {
-                Log::error('Payment verification exception', [
-                    'error' => $e->getMessage()
-                ]);
-                return response()->json(['error' => 'Verification failed'], 500);
-            }
+    // Apply one-time discount if applicable
+    if ($paymentType === 'onetime') {
+        $discount = $course->getOneTimeDiscountByCurrency($currency);
+        if ($discount > 0) {
+            $trackPrice -= $discount;
         }
     }
+
+    $totalInstallments = $paymentType === 'installment' ? 4 : 1;
+    $installmentAmount = $paymentType === 'installment' 
+        ? round($trackPrice / 4, 2) 
+        : $trackPrice;
+
+    $enrollment = CourseEnrollment::create([
+        'user_id' => $user->id,
+        'course_id' => $courseId,
+        'course_name' => $course->title,
+        'learning_track' => $learningTrack,
+        'payment_type' => $paymentType,
+        'currency' => $currency,
+        'total_amount' => $trackPrice,
+        'amount_paid' => 0,
+        'total_installments' => $totalInstallments,
+        'installments_paid' => 0,
+        'installment_amount' => $installmentAmount,
+        'payment_status' => 'pending',
+        'has_access' => false,
+        'next_payment_due' => $paymentType === 'installment' ? now()->addWeeks(4) : null,
+        'enrollment_date' => now(),
+    ]);
+    
+    Log::info('✅ Enrollment created successfully', [
+        'enrollment_id' => $enrollment->id
+    ]);
+
+    return response()->json([
+        'message' => 'Enrollment created successfully',
+        'enrollment_id' => $enrollment->id,
+        'total_amount' => $trackPrice,
+        'installment_amount' => $installmentAmount,
+        'total_installments' => $totalInstallments,
+        'currency' => $currency,
+        'payment_type' => $paymentType,
+    ], 201);
+}
+    /**
+     * Get user's enrolled courses with access status
+     */
+    public function getUserEnrollments()
+    {
+        Log::info('🔹 [getUserEnrollments] Endpoint hit');
+
+        $user = auth()->user();
+
+        if (!$user) {
+            Log::warning('⚠️ Unauthenticated request to getUserEnrollments');
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        Log::info('Authenticated user', ['user_id' => $user->id]);
+
+        $enrollments = CourseEnrollment::where('user_id', $user->id)
+            ->orderBy('enrollment_date', 'desc')
+            ->get();
+
+        // Update access status for all enrollments
+        foreach ($enrollments as $enrollment) {
+            $enrollment->updateAccessStatus();
+        }
+
+        Log::info('Enrollments retrieved', ['count' => $enrollments->count()]);
+
+        return response()->json([
+            'enrollments' => $enrollments->fresh(),
+        ]);
+    }
+
+    /**
+     * Update payment status (used by frontend after Paystack success)
+     */
+    public function updatePaymentStatus(Request $request, $enrollmentId)
+    {
+        Log::info('🔹 [updatePaymentStatus] Manual update requested', [
+            'enrollment_id' => $enrollmentId,
+            'request_data' => $request->all(),
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'payment_status' => 'required|in:pending,completed,failed',
+            'transaction_id' => 'nullable|string',
+            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = auth()->user();
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $updateData = [
+            'payment_status' => $request->payment_status,
+        ];
+
+        if ($request->transaction_id) {
+            $updateData['transaction_id'] = $request->transaction_id;
+        }
+
+        if ($request->learning_track) {
+            $updateData['learning_track'] = $request->learning_track;
+        }
+
+        // If payment is completed
+        if ($request->payment_status === 'completed') {
+            if ($enrollment->payment_type === 'onetime') {
+                // One-time payment: full access, fully paid
+                $updateData['amount_paid'] = $enrollment->total_amount;
+                $updateData['has_access'] = true;
+                $updateData['payment_date'] = now();
+            } else {
+                // Installment: first payment
+                $updateData['installments_paid'] = 1;
+                $updateData['amount_paid'] = $enrollment->installment_amount;
+                $updateData['has_access'] = true;
+                $updateData['last_installment_paid_at'] = now();
+                $updateData['next_payment_due'] = now()->addWeeks(4);
+            }
+        }
+
+        $enrollment->update($updateData);
+
+        Log::info('✅ Payment status updated manually', [
+            'enrollment_id' => $enrollmentId,
+            'payment_status' => $request->payment_status,
+            'has_access' => $enrollment->has_access,
+        ]);
+
+        return response()->json([
+            'message' => 'Payment status updated successfully',
+            'enrollment' => $enrollment->fresh(),
+        ]);
+    }
+
+    /**
+     * Process payment (called after Paystack verification)
+     */
+    public function processPayment(Request $request, $enrollmentId)
+    {
+        $validator = Validator::make($request->all(), [
+            'transaction_id' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = auth()->user();
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $amountPaid = $request->input('amount');
+
+        // One-time payment
+        if ($enrollment->payment_type === 'onetime') {
+            $enrollment->update([
+                'amount_paid' => $amountPaid,
+                'payment_status' => 'completed',
+                'has_access' => true,
+                'transaction_id' => $request->transaction_id,
+                'payment_date' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Payment completed successfully',
+                'enrollment' => $enrollment->fresh(),
+            ]);
+        }
+
+        // Installment payment
+        $enrollment->installments_paid += 1;
+        $enrollment->amount_paid += $amountPaid;
+        $enrollment->last_installment_paid_at = now();
+        $enrollment->transaction_id = $request->transaction_id;
+
+        // Grant access after first payment
+        $enrollment->has_access = true;
+
+        // Calculate next payment due (4 weeks from now)
+        if ($enrollment->installments_paid < $enrollment->total_installments) {
+            $enrollment->next_payment_due = now()->addWeeks(4);
+        } else {
+            // All installments paid
+            $enrollment->payment_status = 'completed';
+            $enrollment->next_payment_due = null;
+        }
+
+        $enrollment->save();
+
+        // Record installment payment
+        \DB::table('installment_payments')->insert([
+            'enrollment_id' => $enrollment->id,
+            'installment_number' => $enrollment->installments_paid,
+            'amount' => $amountPaid,
+            'currency' => $enrollment->currency,
+            'status' => 'completed',
+            'transaction_id' => $request->transaction_id,
+            'paid_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Installment payment processed successfully',
+            'enrollment' => $enrollment->fresh(),
+            'installments_remaining' => $enrollment->total_installments - $enrollment->installments_paid,
+            'next_payment_due' => $enrollment->next_payment_due,
+        ]);
+    }
+
+    /**
+     * Verify payment with Paystack API
+     */
+    public function verifyPaymentStatus(Request $request, $enrollmentId)
+    {
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = auth()->user();
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json(['message' => 'Enrollment not found'], 404);
+        }
+
+        try {
+            $reference = $request->reference;
+
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "https://api.paystack.co/transaction/verify/{$reference}",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
+                    "Cache-Control: no-cache",
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+
+            if ($err) {
+                return response()->json(['error' => 'Verification failed: ' . $err], 500);
+            }
+
+            $result = json_decode($response, true);
+
+            if ($result['status'] && $result['data']['status'] === 'success') {
+                $amountPaidKobo = $result['data']['amount'];
+                $amountPaid = $amountPaidKobo / 100;
+
+                // Process the payment
+                return $this->processPayment(
+                    new Request([
+                        'transaction_id' => $reference,
+                        'amount' => $amountPaid,
+                    ]),
+                    $enrollmentId
+                );
+            }
+
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Payment verification failed',
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Verification failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Check if user can access course (for frontend)
+     */
+    public function checkAccess($courseId)
+    {
+        $user = auth()->user();
+        
+        $enrollment = CourseEnrollment::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json([
+                'has_access' => false,
+                'reason' => 'not_enrolled',
+                'message' => 'You are not enrolled in this course.',
+            ]);
+        }
+
+        $enrollment->updateAccessStatus();
+
+        return response()->json([
+            'has_access' => $enrollment->has_access,
+            'reason' => !$enrollment->has_access ? 'payment_required' : null,
+            'message' => $enrollment->access_blocked_reason,
+            'next_payment_due' => $enrollment->next_payment_due,
+            'installments_paid' => $enrollment->installments_paid,
+            'total_installments' => $enrollment->total_installments,
+        ]);
+    }
+}
