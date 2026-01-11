@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,6 +7,10 @@ import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { usePaystack, PaystackResponse } from '@/hooks/usePaystack';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Initialize Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 // Learning track type definitions
 type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced';
@@ -17,6 +23,12 @@ interface TrackOption {
   features: string[];
   icon: string;
   popular?: boolean;
+}
+
+interface StripeCheckoutSession {
+  id?: string;
+  url?: string;
+  error?: string;
 }
 
 const TRACK_OPTIONS: TrackOption[] = [
@@ -84,6 +96,46 @@ export default function PaymentPage() {
     self_paced: 0
   });
 
+  const [paymentType, setPaymentType] = useState<'onetime' | 'installment'>('onetime');
+  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD');
+  const [currencyDetected, setCurrencyDetected] = useState(false); // NEW STATE
+  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+  const [course, setCourse] = useState<any>(null);
+  const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'paystack'>('paystack');
+
+  // Detect currency and set payment gateway
+  useEffect(() => {
+    const detectCurrency = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`);
+        const data = await response.json();
+        
+        console.log('💱 Currency detected:', data);
+        
+        setCurrency(data.currency);
+        setDetectedLocation(data.country);
+        setCurrencyDetected(true); // ADDED
+        
+        // Set payment gateway based on currency
+        if (data.currency === 'NGN') {
+          setPaymentGateway('paystack');
+          console.log('✅ Using Paystack for NGN payments');
+        } else {
+          setPaymentGateway('stripe');
+          console.log('✅ Using Stripe for international payments');
+        }
+      } catch (error) {
+        console.error('Failed to detect currency:', error);
+        setCurrency('USD');
+        setPaymentGateway('stripe');
+        setDetectedLocation('Unknown');
+        setCurrencyDetected(true); // ADDED (even on error)
+      }
+    };
+
+    detectCurrency();
+  }, []);
+
   useEffect(() => {
     console.log('🔍 Debug Info:', {
       enrollmentId,
@@ -95,9 +147,13 @@ export default function PaymentPage() {
       routerReady: router.isReady,
       selectedTrack,
       availableTracks,
+      currency,
+      currencyDetected, // ADDED
+      trackPrices,
+      paymentGateway,
       routerQuery: router.query
     });
-  }, [enrollmentId, user, enrollment, loading, router.isReady, selectedTrack, availableTracks, router.query]);
+  }, [enrollmentId, user, enrollment, loading, router.isReady, selectedTrack, availableTracks, currency, currencyDetected, trackPrices, paymentGateway, router.query]);
 
   useEffect(() => {
     if (!user) {
@@ -111,10 +167,14 @@ export default function PaymentPage() {
       return;
     }
 
-    // Check if enrollmentId exists and is valid
+    // WAIT FOR CURRENCY DETECTION
+    if (!currencyDetected) {
+      console.log('⏳ Waiting for currency detection...');
+      return;
+    }
+
     if (!enrollmentId) {
       console.log('⚠️ No enrollmentId in URL, checking for pending enrollment...');
-      // Try to find a pending enrollment for the user
       fetchPendingEnrollment();
       return;
     }
@@ -127,7 +187,15 @@ export default function PaymentPage() {
       setError('Invalid enrollment ID');
       setLoading(false);
     }
-  }, [router.isReady, enrollmentId, user]);
+  }, [router.isReady, enrollmentId, user, currencyDetected]); // ADDED currencyDetected
+
+  // Refetch course details when currency changes
+  useEffect(() => {
+    if (enrollment && currency && currencyDetected) {
+      console.log('🔄 Currency changed, refetching course details');
+      fetchCourseTrackDetails(enrollment.course_id);
+    }
+  }, [currency, currencyDetected]);
 
   const fetchPendingEnrollment = async () => {
     try {
@@ -138,7 +206,6 @@ export default function PaymentPage() {
       const response = await api.enrollment.getUserEnrollments();
       console.log('📦 Received enrollments:', response.enrollments);
       
-      // Find the most recent pending enrollment
       const pendingEnrollments = response.enrollments.filter(
         (e: CourseEnrollment) => e.payment_status === 'pending'
       );
@@ -151,14 +218,12 @@ export default function PaymentPage() {
         return;
       }
 
-      // Get the most recent pending enrollment
       const recentPending = pendingEnrollments.sort((a: CourseEnrollment, b: CourseEnrollment) => 
         new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       )[0];
 
       console.log('✅ Found pending enrollment:', recentPending);
       
-      // Update URL with the enrollment ID
       router.replace(`/user/payment/${recentPending.id}`, undefined, { shallow: true });
       
       setEnrollment(recentPending);
@@ -205,8 +270,6 @@ export default function PaymentPage() {
       }
 
       setEnrollment(found);
-      
-      // Fetch course details to get available learning tracks
       await fetchCourseTrackDetails(found.course_id);
       
       console.log('✅ Enrollment set successfully');
@@ -220,15 +283,16 @@ export default function PaymentPage() {
     }
   };
 
+  
   const fetchCourseTrackDetails = async (courseId: number) => {
     try {
-      console.log('📚 Fetching course details for ID:', courseId);
-      // Fetch course details from your API
-      const course = await api.courses.getById(courseId);
+      console.log('📚 Fetching course details for ID:', courseId, 'Currency:', currency);
+      const courseData = await api.courses.getById(courseId);
 
-      console.log('📚 Course details:', course);
+      console.log('📚 Course details:', courseData);
+      
+      setCourse(courseData);
 
-      // Extract available tracks and their prices
       const tracks: LearningTrack[] = [];
       const prices: Record<LearningTrack, number> = {
         one_on_one: 0,
@@ -236,24 +300,55 @@ export default function PaymentPage() {
         self_paced: 0
       };
 
-      if (course.offers_one_on_one) {
+      // FIXED: Parse string prices to numbers
+      if (courseData.offers_one_on_one) {
         tracks.push('one_on_one');
-        prices.one_on_one = course.one_on_one_price || course.price;
+        const priceValue = currency === 'NGN' 
+          ? courseData.one_on_one_price_ngn
+          : courseData.one_on_one_price_usd;
+        prices.one_on_one = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
       }
-      if (course.offers_group_mentorship) {
+      
+      if (courseData.offers_group_mentorship) {
         tracks.push('group_mentorship');
-        prices.group_mentorship = course.group_mentorship_price || course.price * 0.7;
+        const priceValue = currency === 'NGN'
+          ? courseData.group_mentorship_price_ngn
+          : courseData.group_mentorship_price_usd;
+        prices.group_mentorship = priceValue ? parseFloat(priceValue.toString()) : 0; // Parse to float
       }
-      if (course.offers_self_paced) {
+      
+      if (courseData.offers_self_paced) {
         tracks.push('self_paced');
-        prices.self_paced = course.self_paced_price || course.price * 0.5;
+        const priceValue = currency === 'NGN'
+          ? courseData.self_paced_price_ngn
+          : courseData.self_paced_price_usd;
+        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
       }
 
       // If no tracks are specified, default to self-paced
       if (tracks.length === 0) {
         console.log('⚠️ No tracks specified, defaulting to self-paced');
         tracks.push('self_paced');
-        prices.self_paced = course.price;
+        const priceValue = currency === 'NGN' 
+          ? courseData.price_ngn
+          : courseData.price_usd;
+        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
+      }
+
+      console.log('✅ Track prices calculated:', prices, 'Currency:', currency);
+
+      // Validate that prices are set
+      const hasValidPrices = Object.values(prices).some(price => price > 0);
+      if (!hasValidPrices) {
+        console.error('⚠️ No valid prices found for currency:', currency);
+        console.log('Course data:', {
+          one_on_one_ngn: courseData.one_on_one_price_ngn,
+          one_on_one_usd: courseData.one_on_one_price_usd,
+          group_ngn: courseData.group_mentorship_price_ngn,
+          group_usd: courseData.group_mentorship_price_usd,
+          self_paced_ngn: courseData.self_paced_price_ngn,
+          self_paced_usd: courseData.self_paced_price_usd,
+        });
       }
 
       setAvailableTracks(tracks);
@@ -265,110 +360,175 @@ export default function PaymentPage() {
         setSelectedTrack(tracks[0]);
       }
 
-      console.log('✅ Available tracks:', tracks, 'Prices:', prices);
     } catch (error) {
       console.error('💥 Failed to fetch course track details:', error);
-      // Fallback to self-paced if API fails
-      console.log('⚠️ Falling back to default self-paced track');
-      setAvailableTracks(['self_paced']);
-      setTrackPrices({
-        one_on_one: enrollment?.course_price || 0,
-        group_mentorship: enrollment?.course_price || 0,
-        self_paced: enrollment?.course_price || 0
-      });
-      setSelectedTrack('self_paced');
+      setError('Failed to load course pricing. Please refresh the page.');
     }
   };
 
+  // Get current price based on track, payment type, and currency
   const getCurrentPrice = (): number => {
-    if (!selectedTrack) return enrollment?.course_price || 0;
-    return trackPrices[selectedTrack] || enrollment?.course_price || 0;
+    if (!selectedTrack) return 0;
+    
+    let price = trackPrices[selectedTrack] || 0;
+    
+    console.log('💰 Calculating price:', {
+      selectedTrack,
+      basePrice: price,
+      currency,
+      paymentType
+    });
+    
+    // Apply one-time payment discount if applicable
+    if (paymentType === 'onetime' && course) {
+      const discountValue = currency === 'NGN' 
+        ? course.onetime_discount_ngn
+        : course.onetime_discount_usd;
+      const discount = parseFloat(discountValue) || 0; // Parse discount
+      
+      if (discount > 0) {
+        price = Math.max(0, price - discount);
+        console.log('💰 Applied discount:', discount, 'New price:', price);
+      }
+    }
+    
+    // If installment, divide by 4
+    if (paymentType === 'installment') {
+      price = Math.round(price / 4);
+      console.log('💰 Installment price (1/4):', price);
+    }
+    
+    return price;
   };
 
-// Replace the onSuccess function in your [EnrollmentId].tsx
+  // Stripe payment handler
+  const handleStripePayment = async () => {
+    console.log('🚀 Stripe payment button clicked');
 
-const onSuccess = async (response: PaystackResponse) => {
-  console.log('✅ Payment successful:', response);
-  
-  // IMPORTANT: Set processing BEFORE any async operations
-  setProcessing(true);
-
-  try {
-    // Wait a bit for webhook to process
-    console.log('⏳ Waiting for webhook to process...');
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3 seconds
-
-    console.log('🔍 Verifying payment with backend...');
-    
-    // Fetch updated enrollments
-    const enrollmentsResponse = await api.enrollment.getUserEnrollments();
-    const updatedEnrollment = enrollmentsResponse.enrollments.find(
-      (e: CourseEnrollment) => e.id === enrollment!.id
-    );
-
-    console.log('📦 Updated enrollment:', updatedEnrollment);
-
-    if (updatedEnrollment?.payment_status === 'completed') {
-      console.log('✅ Webhook already processed payment');
-      
-      // Show success message
-      alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
-      
-      // Redirect to dashboard
-      await router.push('/user/dashboard?tab=your-course&payment=success');
+    if (!selectedTrack) {
+      alert('Please select a learning track before proceeding with payment.');
       return;
     }
 
-    // If webhook hasn't processed yet, update manually
-    console.log('⏳ Webhook not processed yet, updating manually...');
-    
-    const updateResult = await api.enrollment.updatePayment(
-      enrollment!.id,
-      'completed',
-      response.reference,
-      selectedTrack! // Pass selected track to backend
-    );
+    if (!user?.email || !enrollment) {
+      alert('Missing payment information. Please try again.');
+      return;
+    }
 
-    console.log('✅ Manual update successful:', updateResult);
+    setProcessing(true);
 
-    // Show success message
-    alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
-    
-    // Redirect to dashboard
-    await router.push('/user/dashboard?tab=your-course&payment=success');
+    try {
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
 
-  } catch (error: any) {
-    console.error('❌ Failed to verify payment:', error);
-    
-    // Even if verification fails, payment was successful
-    // Show success message and redirect
-    alert(`Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`);
-    
-    // Still redirect even on error
-    await router.push('/user/dashboard?tab=your-course&payment=pending');
-  } finally {
-    // Don't set processing to false here - let the redirect handle it
-    console.log('🏁 Payment processing complete');
-  }
-};
+      // Create checkout session on your backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          enrollment_id: enrollment.id,
+          course_id: enrollment.course_id,
+          course_name: enrollment.course_name,
+          learning_track: selectedTrack,
+          payment_type: paymentType,
+          amount: getCurrentPrice(),
+          currency: 'usd',
+          user_email: user.email,
+          user_name: user.name,
+        }),
+      });
 
-const onClose = () => {
-  console.log('❌ Payment popup closed by user');
-  setProcessing(false); // Only set to false if user closes modal
-};
+      const session: StripeCheckoutSession = await response.json();
+
+      if (session.error) {
+        throw new Error(session.error);
+      }
+
+      // Modern approach: redirect to the checkout URL returned by backend
+      // Modern approach: redirect to the checkout URL returned by backend
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        throw new Error('No checkout URL received from server');
+      }
+      } catch (error: any) {
+        console.error('❌ Stripe payment failed:', error);
+        alert('Failed to initialize payment. Please try again.');
+        setProcessing(false);
+      }
+    };
+
+  // Paystack success handler
+  const onSuccess = async (response: PaystackResponse) => {
+    console.log('✅ Payment successful:', response);
+    setProcessing(true);
+
+    try {
+      console.log('⏳ Waiting for webhook to process...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      console.log('🔍 Verifying payment with backend...');
+      
+      const enrollmentsResponse = await api.enrollment.getUserEnrollments();
+      const updatedEnrollment = enrollmentsResponse.enrollments.find(
+        (e: CourseEnrollment) => e.id === enrollment!.id
+      );
+
+      console.log('📦 Updated enrollment:', updatedEnrollment);
+
+      if (updatedEnrollment?.payment_status === 'completed') {
+        console.log('✅ Webhook already processed payment');
+        alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
+        await router.push('/user/dashboard?tab=your-course&payment=success');
+        return;
+      }
+
+      console.log('⏳ Webhook not processed yet, updating manually...');
+      
+      const updateResult = await api.enrollment.updatePayment(
+        enrollment!.id,
+        'completed',
+        response.reference,
+        selectedTrack!
+      );
+
+      console.log('✅ Manual update successful:', updateResult);
+      alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
+      await router.push('/user/dashboard?tab=your-course&payment=success');
+
+    } catch (error: any) {
+      console.error('❌ Failed to verify payment:', error);
+      alert(`Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`);
+      await router.push('/user/dashboard?tab=your-course&payment=pending');
+    } finally {
+      console.log('🏁 Payment processing complete');
+    }
+  };
+
+  const onClose = () => {
+    console.log('❌ Payment popup closed by user');
+    setProcessing(false);
+  };
 
   const paystackConfig = enrollment && user && selectedTrack ? {
     key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
     email: user.email,
     amount: Math.round(getCurrentPrice() * 100),
-    ref: `ENR-${enrollment.id}-${selectedTrack}-${Date.now()}`,
-    currency: 'NGN',
+    ref: `ENR-${enrollment.id}-${selectedTrack}-${paymentType}-${Date.now()}`,
+    currency: currency === 'NGN' ? 'NGN' : 'USD',
     metadata: {
       enrollment_id: enrollment.id,
       course_id: enrollment.course_id,
       course_name: enrollment.course_name,
       user_id: user.id,
       learning_track: selectedTrack,
+      payment_type: paymentType,
+      currency: currency,
       custom_fields: [
         {
           display_name: "Course Name",
@@ -384,6 +544,11 @@ const onClose = () => {
           display_name: "Learning Track",
           variable_name: "learning_track",
           value: TRACK_OPTIONS.find(t => t.id === selectedTrack)?.name || selectedTrack
+        },
+        {
+          display_name: "Payment Type",
+          variable_name: "payment_type",
+          value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)'
         }
       ]
     },
@@ -393,72 +558,80 @@ const onClose = () => {
 
   const { initializePayment } = usePaystack(paystackConfig || {} as any);
 
-// Replace the handlePaystackPayment function in your [EnrollmentId].tsx
+  const handlePaystackPayment = () => {
+    console.log('🚀 Paystack payment button clicked');
 
-const handlePaystackPayment = () => {
-  console.log('🚀 Payment button clicked');
+    if (!selectedTrack) {
+      alert('Please select a learning track before proceeding with payment.');
+      return;
+    }
 
-  // Validation checks
-  if (!selectedTrack) {
-    alert('Please select a learning track before proceeding with payment.');
-    return;
-  }
+    if (!paystackConfig) {
+      console.error('❌ Payment configuration missing');
+      alert('Payment configuration error. Please try again.');
+      return;
+    }
 
-  if (!paystackConfig) {
-    console.error('❌ Payment configuration missing');
-    alert('Payment configuration error. Please try again.');
-    return;
-  }
+    if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
+      console.error('❌ Paystack public key missing');
+      alert('Paystack is not configured. Please contact support.');
+      return;
+    }
 
-  if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-    console.error('❌ Paystack public key missing');
-    alert('Paystack is not configured. Please contact support.');
-    return;
-  }
+    if (!user?.email) {
+      console.error('❌ User email missing');
+      alert('User email is required for payment. Please log in again.');
+      router.push('/user/auth/login');
+      return;
+    }
 
-  if (!user?.email) {
-    console.error('❌ User email missing');
-    alert('User email is required for payment. Please log in again.');
-    router.push('/user/auth/login');
-    return;
-  }
+    if (!enrollment) {
+      console.error('❌ Enrollment missing');
+      alert('Enrollment information missing. Please try again.');
+      router.push('/user/dashboard');
+      return;
+    }
 
-  if (!enrollment) {
-    console.error('❌ Enrollment missing');
-    alert('Enrollment information missing. Please try again.');
-    router.push('/user/dashboard');
-    return;
-  }
+    console.log('💳 Initializing Paystack payment', {
+      email: user.email,
+      amount: paystackConfig.amount,
+      enrollmentId: enrollment.id,
+      courseId: enrollment.course_id,
+      learningTrack: selectedTrack,
+      paymentType: paymentType,
+      currency: currency,
+      reference: paystackConfig.ref,
+    });
 
-  // Log payment config (without sensitive data)
-  console.log('💳 Initializing Paystack payment', {
-    email: user.email,
-    amount: paystackConfig.amount,
-    enrollmentId: enrollment.id,
-    courseId: enrollment.course_id,
-    learningTrack: selectedTrack,
-    reference: paystackConfig.ref,
-  });
+    try {
+      initializePayment();
+      console.log('✅ Payment popup should be opening...');
+    } catch (error) {
+      console.error('❌ Failed to initialize payment:', error);
+      alert('Failed to open payment window. Please try again.');
+      setProcessing(false);
+    }
+  };
 
-  try {
-    // Initialize payment
-    initializePayment();
-    
-    console.log('✅ Payment popup should be opening...');
-  } catch (error) {
-    console.error('❌ Failed to initialize payment:', error);
-    alert('Failed to open payment window. Please try again.');
-    setProcessing(false);
-  }
-};
+  // Main payment handler that routes to correct gateway
+  const handlePayment = () => {
+    if (paymentGateway === 'stripe') {
+      handleStripePayment();
+    } else {
+      handlePaystackPayment();
+    }
+  };
 
-  if (loading) {
+  // IMPROVED LOADING STATE
+  if (!currencyDetected || loading) {
     return (
       <UserDashboardLayout>
         <div className="max-w-2xl mx-auto p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
-            <p className="text-gray-600">Loading payment details...</p>
+            <p className="text-gray-600">
+              {!currencyDetected ? 'Detecting your location...' : 'Loading payment details...'}
+            </p>
           </div>
         </div>
       </UserDashboardLayout>
@@ -514,76 +687,211 @@ const handlePaystackPayment = () => {
         </button>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Payment</h1>
-        <p className="text-gray-600 mb-8">Choose your learning track and proceed with payment</p>
+        <p className="text-gray-600 mb-8">Select your learning track and payment method</p>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Learning Tracks */}
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Your Learning Track</h2>
+          {/* Left Column - Learning Tracks & Payment Type */}
+          <div className="lg:col-span-2 space-y-8">
             
-            {availableTracks.length > 0 ? (
-              <div className="space-y-4">
-                {TRACK_OPTIONS.filter(track => availableTracks.includes(track.id)).map((track) => (
-                  <div
-                    key={track.id}
-                    onClick={() => setSelectedTrack(track.id)}
-                    className={`relative border-2 rounded-2xl p-6 cursor-pointer transition-all ${
-                      selectedTrack === track.id
+            {/* STEP 1: Learning Track Selection */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  1
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Choose Your Learning Track</h2>
+              </div>
+              
+              {availableTracks.length > 0 ? (
+                <div className="space-y-4">
+                  {TRACK_OPTIONS.filter(track => availableTracks.includes(track.id)).map((track) => (
+                    <div
+                      key={track.id}
+                      onClick={() => setSelectedTrack(track.id)}
+                      className={`relative border-2 rounded-2xl p-6 cursor-pointer transition-all ${
+                        selectedTrack === track.id
+                          ? 'border-indigo-600 bg-indigo-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
+                      }`}
+                    >
+                      {track.popular && (
+                        <div className="absolute -top-3 left-6 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          MOST POPULAR
+                        </div>
+                      )}
+                      
+                      <div className="flex items-start gap-4">
+                        <div className="text-4xl">{track.icon}</div>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{track.name}</h3>
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-indigo-600">
+                                {currency === 'NGN' ? '₦' : '$'}{trackPrices[track.id]?.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm font-semibold text-indigo-600 mb-2">{track.title}</p>
+                          <p className="text-gray-600 text-sm mb-4">{track.description}</p>
+                          
+                          <div className="space-y-2">
+                            {track.features.map((feature, idx) => (
+                              <div key={idx} className="flex items-start gap-2 text-sm">
+                                <span className="text-green-600 mt-0.5">✓</span>
+                                <span className="text-gray-700">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                          selectedTrack === track.id
+                            ? 'border-indigo-600 bg-indigo-600'
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedTrack === track.id && (
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                  <div className="text-5xl mb-4">📚</div>
+                  <p className="text-gray-600">Loading learning tracks...</p>
+                </div>
+              )}
+            </div>
+
+            {/* STEP 2: Payment Method Selection */}
+            {selectedTrack && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    2
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Choose Payment Method</h2>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* One-Time Payment */}
+                  <button
+                    onClick={() => setPaymentType('onetime')}
+                    className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
+                      paymentType === 'onetime'
                         ? 'border-indigo-600 bg-indigo-50 shadow-lg'
                         : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
                     }`}
                   >
-                    {track.popular && (
-                      <div className="absolute -top-3 left-6 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        MOST POPULAR
+                    {paymentType === 'onetime' && (
+                      <div className="absolute -top-3 right-6 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        SAVE MORE
                       </div>
                     )}
-                    
                     <div className="flex items-start gap-4">
-                      <div className="text-4xl">{track.icon}</div>
-                      
+                      <div className="text-4xl">💰</div>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">{track.name}</h3>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-indigo-600">
-                              ₦{trackPrices[track.id].toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">One-Time Payment</h3>
+                        <p className="text-gray-600 text-sm mb-3">
+                          Pay the full amount upfront and get a discount
+                        </p>
                         
-                        <p className="text-sm font-semibold text-indigo-600 mb-2">{track.title}</p>
-                        <p className="text-gray-600 text-sm mb-4">{track.description}</p>
-                        
-                        <div className="space-y-2">
-                          {track.features.map((feature, idx) => (
-                            <div key={idx} className="flex items-start gap-2 text-sm">
-                              <span className="text-green-600 mt-0.5">✓</span>
-                              <span className="text-gray-700">{feature}</span>
+                        {(() => {
+                          const originalPrice = trackPrices[selectedTrack] || 0;
+                          const discount = currency === 'NGN' 
+                            ? (course?.onetime_discount_ngn || 0)
+                            : (course?.onetime_discount_usd || 0);
+                          const finalPrice = originalPrice - discount;
+                          
+                          return (
+                            <div className="space-y-1">
+                              {discount > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-500 line-through">
+                                    {currency === 'NGN' ? '₦' : ''}{originalPrice.toLocaleString()}
+                                  </span>
+                                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                                    SAVE {currency === 'NGN' ? '₦' : ''}{discount.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="text-2xl font-bold text-green-600">
+                                {currency === 'NGN' ? '₦' : ''}{finalPrice.toLocaleString()}
+                              </div>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })()}
                       </div>
-                      
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        selectedTrack === track.id
-                          ? 'border-indigo-600 bg-indigo-600'
-                          : 'border-gray-300'
+                        paymentType === 'onetime' ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
                       }`}>
-                        {selectedTrack === track.id && (
+                        {paymentType === 'onetime' && (
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </button>
+
+                  {/* Installment Payment */}
+                  <button
+                    onClick={() => setPaymentType('installment')}
+                    className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
+                      paymentType === 'installment'
+                        ? 'border-indigo-600 bg-indigo-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="text-4xl">📅</div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Installment Payment</h3>
+                        <p className="text-gray-600 text-sm mb-3">
+                          Split payment across 4 months
+                        </p>
+                        <div className="text-2xl font-bold text-blue-600 mb-2">
+                          {currency === 'NGN' ? '₦' : ''}
+                          {selectedTrack && trackPrices[selectedTrack]
+                            ? Math.round(trackPrices[selectedTrack] / 4).toLocaleString()
+                            : '0'}
+                          <span className="text-sm font-normal text-gray-600">/month × 4</span>
+                        </div>
+                        <p className="text-xs text-gray-500 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+                          ⚠️ Must pay on time each month to maintain access
+                        </p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        paymentType === 'installment' ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
+                      }`}>
+                        {paymentType === 'installment' && (
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                <div className="text-5xl mb-4">📚</div>
-                <p className="text-gray-600">Loading learning tracks...</p>
+            )}
+
+            {/* Currency Display */}
+            {detectedLocation && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+                <div className="text-2xl">🌍</div>
+                <div>
+                  <div className="font-semibold text-blue-900">Location Detected: {detectedLocation}</div>
+                  <div className="text-sm text-blue-700">
+                    Prices shown in {currency === 'NGN' ? 'Nigerian Naira (₦)' : 'US Dollars ($)'}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -610,20 +918,29 @@ const handlePaystackPayment = () => {
                   </div>
                 )}
                 
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Price:</span>
-                  <span className="font-semibold text-gray-900">
-                    ₦{getCurrentPrice().toLocaleString()}
-                  </span>
-                </div>
+                {paymentType === 'installment' && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Payment Type:</span>
+                    <span className="font-semibold text-gray-900">
+                      Installment (1 of 4)
+                    </span>
+                  </div>
+                )}
                 
                 <div className="border-t border-gray-300 pt-3 mt-3">
                   <div className="flex justify-between">
-                    <span className="text-lg font-bold text-gray-900">Total:</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {paymentType === 'installment' ? 'Pay Now:' : 'Total:'}
+                    </span>
                     <span className="text-lg font-bold text-indigo-600">
-                      ₦{getCurrentPrice().toLocaleString()}
+                      {currency === 'NGN' ? '₦' : ''}{getCurrentPrice().toLocaleString()}
                     </span>
                   </div>
+                  {paymentType === 'installment' && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Full price: {currency === 'NGN' ? '₦' : ''}{selectedTrack ? trackPrices[selectedTrack].toLocaleString() : '0'}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -631,10 +948,23 @@ const handlePaystackPayment = () => {
                 <p className="font-semibold mb-1">✓ Lifetime Access</p>
                 <p>Get unlimited access to all course materials</p>
               </div>
+              
+              {/* Payment Gateway Indicator */}
+              {detectedLocation && (
+                <div className="mb-4 text-center">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm">
+                    <span>{paymentGateway === 'stripe' ? '💳' : '🇳🇬'}</span>
+                    <span className="font-medium">
+                      Payment via {paymentGateway === 'stripe' ? 'Stripe' : 'Paystack'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
+              {/* Payment Button */}
               <button
-                onClick={handlePaystackPayment}
-                disabled={processing || !paystackConfig || !selectedTrack}
+                onClick={handlePayment}
+                disabled={processing || !selectedTrack}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processing ? (
@@ -645,14 +975,19 @@ const handlePaystackPayment = () => {
                 ) : !selectedTrack ? (
                   <span>Select a Track</span>
                 ) : (
-                  <span>Pay ₦{getCurrentPrice().toLocaleString()}</span>
+                  <>
+                    <span>Pay {currency === 'NGN' ? '₦' : ''}{getCurrentPrice().toLocaleString()}</span>
+                    <span className="text-xs opacity-75">
+                      via {paymentGateway === 'stripe' ? 'Stripe' : 'Paystack'}
+                    </span>
+                  </>
                 )}
               </button>
 
               <div className="mt-4 space-y-2 text-xs text-gray-600">
                 <div className="flex items-center gap-2">
                   <span>🔒</span>
-                  <span>Secure payment with Paystack</span>
+                  <span>Secure payment with {paymentGateway === 'stripe' ? 'Stripe' : 'Paystack'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🛡️</span>

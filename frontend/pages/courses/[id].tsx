@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { api, Course } from "@/lib/api";
+import { api, Course, handleApiError } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
@@ -15,6 +15,8 @@ export default function CoursePage() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [enrollmentStatus, setEnrollmentStatus] = useState<{
     isEnrolled: boolean;
     enrollment: any;
@@ -65,22 +67,44 @@ export default function CoursePage() {
     }
 
     try {
+      setEnrolling(true);
+      setError(null);
+
+      console.log('🚀 Enrolling in course:', id);
+
+      // ✅ FIXED: Pass correct learning_track and payment_type
       const response = await api.enrollment.enroll(
         id as string,
-        course?.title || '',
-        course?.price || 0
+        'self_paced',  // ✅ Valid learning track - user will select actual track on payment page
+        'onetime'      // ✅ Valid payment type - user will select actual type on payment page
       );
+
+      console.log('✅ Enrollment successful:', response);
+
+      // Redirect to payment page where user selects their preferences
       router.push(`/user/payment/${response.enrollment_id}`);
+      
     } catch (error: any) {
+      console.error('❌ Enrollment failed:', error);
+      
+      // Handle already enrolled (409) or existing pending enrollment (200)
       if (error.response?.status === 409) {
         alert('You are already enrolled in this course!');
-        router.push('/user/dashboard');
+        router.push('/user/dashboard?tab=your-course');
+      } else if (error.response?.status === 200 && error.response?.data?.enrollment_id) {
+        // Existing pending enrollment - redirect to payment
+        console.log('📋 Redirecting to existing enrollment payment');
+        router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else if (error.response?.data?.enrollment_id) {
+        // Other cases with enrollment_id
         router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else {
-        console.error('Enrollment failed:', error);
-        alert('Failed to enroll. Please try again.');
+        const errorMessage = handleApiError(error);
+        setError(errorMessage);
+        alert(errorMessage || 'Failed to enroll. Please try again.');
       }
+    } finally {
+      setEnrolling(false);
     }
   };
 
@@ -132,14 +156,37 @@ export default function CoursePage() {
                 </div>
               )}
 
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+
               <div className="flex flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                 {enrollmentStatus?.isEnrolled ? (
-                  <button onClick={() => router.push(`/user/courses/${course.course_id}`)} className="bg-green-600 hover:bg-green-700 text-white px-6 py-1 rounded-full font-semibold transition-colors">
+                  <button 
+                    onClick={() => router.push(`/user/courses/${course.course_id}`)} 
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-semibold transition-colors"
+                  >
                     Continue Learning 
                   </button>
                 ) : (
-                  <button onClick={handleEnrollClick} disabled={checkingEnrollment} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold transition-colors disabled:opacity-50">
-                    {user ? 'Purchase Course' : 'Get Started'}
+                  <button 
+                    onClick={handleEnrollClick} 
+                    disabled={checkingEnrollment || enrolling} 
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {enrolling ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        Enrolling...
+                      </span>
+                    ) : user ? (
+                      'Purchase Course'
+                    ) : (
+                      'Get Started'
+                    )}
                   </button>
                 )}
                 <ExpertButton />
@@ -161,7 +208,7 @@ export default function CoursePage() {
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-8 bg-white py-4">
             {course.tools.map((tool) => (
-              <img src={tool.icon} alt={tool.name} className="w-16 h-16 md:w-24 md:h-22 object-contain"/>
+              <img key={tool.id} src={tool.icon} alt={tool.name} className="w-16 h-16 md:w-24 md:h-22 object-contain"/>
             ))}
           </div>
         </section>

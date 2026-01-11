@@ -208,22 +208,31 @@ export const api = {
       return response.data;
     },
 
-    enroll: async (
-      courseId: string, 
-      courseName: string, 
-      coursePrice: number,
-      learningTrack?: LearningTrack
-    ): Promise<EnrollmentResponse> => {
-      const response = await apiClient.post<EnrollmentResponse>(
-        `/api/courses/${courseId}/enroll`,
-        {
-          course_name: courseName,
-          course_price: coursePrice,
-          learning_track: learningTrack,
-        }
-      );
-      return response.data;
-    },
+ enroll: async (
+  courseId: string, 
+  learningTrack?: LearningTrack,
+  paymentType?: 'onetime' | 'installment'
+): Promise<EnrollmentResponse> => {
+  // Log what we're sending
+  const payload = {
+    learning_track: learningTrack || 'self_paced',
+    payment_type: paymentType || 'onetime',
+  };
+  
+  console.log('📤 Sending enrollment request:', {
+    url: `/api/courses/${courseId}/enroll`,
+    payload
+  });
+
+  const response = await apiClient.post<EnrollmentResponse>(
+    `/api/courses/${courseId}/enroll`,
+    payload
+  );
+  
+  console.log('📥 Enrollment response:', response.data);
+  
+  return response.data;
+},
 
     getUserEnrollments: async (): Promise<UserEnrollmentsResponse> => {
       const response = await apiClient.get<UserEnrollmentsResponse>('/api/courses/enrollments');
@@ -391,26 +400,24 @@ export const api = {
       return response.data;
     },
 
-uploadMaterialFile: async (
-  courseId: string,
-  itemId: number,
-  file: File
-) => {
-  const formData = new FormData();
-  formData.append('file', file);
+    uploadMaterialFile: async (
+      courseId: string,
+      itemId: number,
+      file: File
+    ) => {
+      const formData = new FormData();
+      formData.append('file', file);
 
-  const response = await adminApi.post(
-    `/api/admin/courses/${courseId}/resources/items/${itemId}/upload`,
-    formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }
-  );
+      const response = await adminApi.post(
+        `/api/admin/courses/${courseId}/resources/items/${itemId}/upload`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
 
-  return response.data;
-},
-
-
+      return response.data;
+    },
 
     createExternalResource: async (
       courseId: string,

@@ -22,9 +22,9 @@ const Sidebar = () => {
     { icon: Home, label: 'Dashboard Overview', href: '/admin/dashboard' },
     { icon: GraduationCap, label: 'Students Management', href: '/admin/students' },
     { icon: BookCopy, label: 'Course Management', href: '/admin/courses' },
-    { icon: Calendar, label: 'Consultations', href: '/admin/consultations' },
-    { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics' },
-    { icon: SlidersHorizontal, label: 'Settings', href: '/admin/settings' },
+    // { icon: Calendar, label: 'Consultations', href: '/admin/consultations' },
+    // { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics' },
+    { icon: SlidersHorizontal, label: 'Course Settings', href: '/admin/settings/courses' },
   ];
 
   const handleLogout = async () => {

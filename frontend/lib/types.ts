@@ -104,6 +104,7 @@ export interface Course {
   offers_one_on_one: boolean;
   offers_group_mentorship: boolean;
   offers_self_paced: boolean;
+  offers_real_world_exposure: boolean;
   one_on_one_price: number | null;
   group_mentorship_price: number | null;
   self_paced_price: number | null;
@@ -113,6 +114,19 @@ export interface Course {
     group_mentorship: number;
     self_paced: number;
   };
+    // USD Pricing
+  price_usd?: number;
+  one_on_one_price_usd?: number;
+  group_mentorship_price_usd?: number;
+  self_paced_price_usd?: number;
+  onetime_discount_usd?: number;
+    // NGN Pricing
+  price_ngn?: number;
+  one_on_one_price_ngn?: number;
+  group_mentorship_price_ngn?: number;
+  self_paced_price_ngn?: number;
+  onetime_discount_ngn?: number;
+
   created_at: string;
   updated_at: string;
   tools?: Tool[];
