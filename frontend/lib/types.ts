@@ -146,12 +146,29 @@ export interface CourseEnrollment {
   user_id: number;
   course_id: number;
   course_name: string;
-  course_price: number;
-  learning_track: LearningTrack;
+  course_price?: number;
+  learning_track: 'one_on_one' | 'group_mentorship' | 'self_paced';
+  
+  // Payment fields
+  payment_type: 'onetime' | 'installment';
+  currency: 'USD' | 'NGN';
+  total_amount: number;
+  amount_paid: number;
+  total_installments: number;
+  installments_paid: number;
+  installment_amount: number;
   payment_status: 'pending' | 'completed' | 'failed';
-  transaction_id: string | null;
+  
+  // Access fields
+  has_access: boolean;
+  access_blocked_reason?: string | null;
+  next_payment_due?: string | null;
+  
+  // Timestamps
+  transaction_id?: string;
   enrollment_date: string;
-  payment_date: string | null;
+  payment_date?: string | null;
+  last_installment_paid_at?: string | null;
   created_at: string;
   updated_at: string;
 }

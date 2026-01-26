@@ -54,11 +54,8 @@ export default function UserDashboardPage() {
       const data = await api.enrollment.getUserEnrollments();
       console.log('Fetched enrollments:', data.enrollments);
 
-      // Filter only completed payments
-      const paidEnrollments = data.enrollments.filter(
-        (e: CourseEnrollment) => e.payment_status === 'completed'
-      );
-      setEnrollments(paidEnrollments);
+      // Show ALL enrollments, not just completed ones
+      setEnrollments(data.enrollments);
     } catch (error) {
       console.error('Failed to fetch enrollments:', error);
     } finally {
@@ -187,9 +184,22 @@ export default function UserDashboardPage() {
                     return (
                       <div key={enrollment.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow p-2">
                         <div className="h-40 bg-cover bg-center relative rounded-xl" style={{backgroundImage: `url(${course?.hero_image || '/images/default-course.jpg'})`,}}>
-                          <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                            Enrolled
-                          </div>
+                          {/* Status Badge */}
+                          {enrollment.payment_status === 'completed' ? (
+                            <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              Enrolled
+                            </div>
+                          ) : (
+                            <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              </svg>
+                              Payment Pending
+                            </div>
+                          )}
                         </div>
 
                         <div className="p-2">
@@ -200,16 +210,46 @@ export default function UserDashboardPage() {
                             {course?.description || 'No course description available.'}
                           </p>
 
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="text-sm text-gray-500">
-                              Enrolled:{' '}
-                              {new Date(enrollment.enrollment_date).toLocaleDateString()}
-                            </div>
+                          {/* Payment Status Info */}
+                          <div className="mb-4">
+                            {enrollment.payment_status === 'completed' ? (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">
+                                  Enrolled: {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                                </span>
+                                <span className="text-green-600 font-semibold">✓ Paid</span>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-500">Status:</span>
+                                  <span className="text-yellow-600 font-semibold">Payment Required</span>
+                                </div>
+                                {enrollment.payment_type === 'installment' && enrollment.next_payment_due && (
+                                  <div className="text-xs text-gray-500">
+                                    Next payment: {new Date(enrollment.next_payment_due).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
 
-                          <button onClick={() => router.push(`/user/courses/${enrollment.course_id}`)} className="w-50 bg-white border-2 border-blue-600 p-2 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-3xl font-medium transition-colors">
-                            Continue Learning
-                          </button>
+                          {/* Action Button */}
+                          {enrollment.payment_status === 'completed' ? (
+                            <button 
+                              onClick={() => router.push(`/user/resource/${enrollment.course_id}`)} 
+                              className="w-full bg-white border-2 border-blue-600 p-2 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-3xl font-medium transition-colors"
+                            >
+                              Continue Learning
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => router.push(`/user/payment/${enrollment.id}`)} 
+                              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-3xl font-medium transition-colors"
+                            >
+                              Complete Payment
+                            </button>
+                          )}
                         </div>
                       </div>
                     );

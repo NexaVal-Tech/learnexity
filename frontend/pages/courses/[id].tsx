@@ -22,6 +22,34 @@ export default function CoursePage() {
     enrollment: any;
   } | null>(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  
+  // Currency detection states
+  const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD');
+  const [currencyDetected, setCurrencyDetected] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+
+  // Detect currency on component mount
+  useEffect(() => {
+    const detectCurrency = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`);
+        const data = await response.json();
+        
+        console.log('💱 Currency detected:', data);
+        
+        setCurrency(data.currency);
+        setDetectedLocation(data.country);
+        setCurrencyDetected(true);
+      } catch (error) {
+        console.error('Failed to detect currency:', error);
+        setCurrency('USD');
+        setDetectedLocation('Unknown');
+        setCurrencyDetected(true);
+      }
+    };
+
+    detectCurrency();
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -72,31 +100,25 @@ export default function CoursePage() {
 
       console.log('🚀 Enrolling in course:', id);
 
-      // ✅ FIXED: Pass correct learning_track and payment_type
       const response = await api.enrollment.enroll(
         id as string,
-        'self_paced',  // ✅ Valid learning track - user will select actual track on payment page
-        'onetime'      // ✅ Valid payment type - user will select actual type on payment page
+        'self_paced',
+        'onetime'
       );
 
       console.log('✅ Enrollment successful:', response);
-
-      // Redirect to payment page where user selects their preferences
       router.push(`/user/payment/${response.enrollment_id}`);
       
     } catch (error: any) {
       console.error('❌ Enrollment failed:', error);
       
-      // Handle already enrolled (409) or existing pending enrollment (200)
       if (error.response?.status === 409) {
         alert('You are already enrolled in this course!');
         router.push('/user/dashboard?tab=your-course');
       } else if (error.response?.status === 200 && error.response?.data?.enrollment_id) {
-        // Existing pending enrollment - redirect to payment
         console.log('📋 Redirecting to existing enrollment payment');
         router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else if (error.response?.data?.enrollment_id) {
-        // Other cases with enrollment_id
         router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else {
         const errorMessage = handleApiError(error);
@@ -108,13 +130,26 @@ export default function CoursePage() {
     }
   };
 
-  if (loading) {
+  // Get the appropriate price based on currency
+  const getDisplayPrice = () => {
+    if (!course) return 0;
+    
+    const price = currency === 'NGN' 
+      ? course.self_paced_price_ngn 
+      : course.self_paced_price_usd;
+    
+    return parseFloat(price?.toString() || '0');
+  };
+
+  if (!currencyDetected || loading) {
     return (
       <AppLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading course...</p>
+            <p className="text-gray-600 text-lg">
+              {!currencyDetected ? 'Detecting your location...' : 'Loading course...'}
+            </p>
           </div>
         </div>
       </AppLayout>
@@ -134,6 +169,8 @@ export default function CoursePage() {
     );
   }
 
+  const displayPrice = getDisplayPrice();
+
   return (
     <AppLayout>
       <div className="background pt-16 md:pt-20">
@@ -149,10 +186,18 @@ export default function CoursePage() {
                 {course.description}
               </p>
               
-              {/* Price Display */}
-              {course.price > 0 && (
-                <div className="text-3xl font-bold text-indigo-600">
-                  ${course.price}
+              {/* Price Display with Currency */}
+              {displayPrice > 0 && (
+                <div className="space-y-2">
+                  <div className="text-3xl font-bold text-indigo-600">
+                    {currency === 'NGN' ? '₦' : '$'}{displayPrice.toLocaleString()}
+                  </div>
+                  {detectedLocation && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span>🌍</span>
+                      <span>Price for {detectedLocation} ({currency})</span>
+                    </div>
+                  )}
                 </div>
               )}
 

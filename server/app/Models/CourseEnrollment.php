@@ -35,6 +35,8 @@ class CourseEnrollment extends Model
         'enrollment_date',
         'payment_date',
         'last_installment_paid_at',
+        'access_blocked_reason',
+        'last_reminder_sent_at',
     ];
 
     protected $casts = [
@@ -46,6 +48,7 @@ class CourseEnrollment extends Model
         'enrollment_date' => 'datetime',
         'payment_date' => 'datetime',
         'last_installment_paid_at' => 'datetime',
+        'last_reminder_sent_at' => 'datetime',
     ];
 
     protected $appends = ['payment_overdue', 'days_overdue', 'access_blocked_reason'];
@@ -84,7 +87,7 @@ class CourseEnrollment extends Model
             default => 'Self-Paced Learning',
         };
     }
-      public function installmentPayments()
+    public function installmentPayments()
     {
         return $this->hasMany(InstallmentPayment::class, 'enrollment_id');
     }
@@ -178,14 +181,66 @@ class CourseEnrollment extends Model
     /**
      * Update access status based on payment
      */
-    public function updateAccessStatus(): void
+    public function updateAccessStatus()
     {
-        $shouldHaveAccess = $this->shouldHaveAccess();
+        // Skip if not installment payment
+        if ($this->payment_type !== 'installment') {
+            return;
+        }
 
-        if ($shouldHaveAccess !== $this->has_access) {
-            $this->has_access = $shouldHaveAccess;
+        // Skip if payment is already completed
+        if ($this->payment_status === 'completed') {
+            $this->has_access = true;
+            $this->access_blocked_reason = null;
+            $this->save();
+            return;
+        }
+
+        // Check if payment is overdue
+        if ($this->next_payment_due && Carbon::now()->isAfter($this->next_payment_due)) {
+            $daysOverdue = Carbon::now()->diffInDays($this->next_payment_due);
+            
+            // Block access after 7 days grace period
+            if ($daysOverdue > 7) {
+                $this->has_access = false;
+                $this->access_blocked_reason = "Your installment payment is overdue by {$daysOverdue} days. Please complete your payment to regain access.";
+                $this->save();
+            } else {
+                // Still have access but show warning
+                $this->has_access = true;
+                $this->access_blocked_reason = "Payment due soon! You have " . (7 - $daysOverdue) . " days remaining before access is suspended.";
+                $this->save();
+            }
+        } else {
+            // Payment is not overdue, ensure access
+            $this->has_access = true;
+            $this->access_blocked_reason = null;
             $this->save();
         }
+    }
+
+        /**
+     * Check if payment is overdue
+     */
+    public function isPaymentOverdue(): bool
+    {
+        if ($this->payment_type !== 'installment' || $this->payment_status === 'completed') {
+            return false;
+        }
+
+        return $this->next_payment_due && Carbon::now()->isAfter($this->next_payment_due);
+    }
+
+        /**
+     * Get days until next payment or days overdue
+     */
+    public function getDaysUntilPayment(): int
+    {
+        if (!$this->next_payment_due) {
+            return 0;
+        }
+
+        return Carbon::now()->diffInDays($this->next_payment_due, false);
     }
 
     /**

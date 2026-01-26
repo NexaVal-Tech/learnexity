@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen, Check } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
+import type { CourseEnrollment } from '@/lib/types';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
+import { AccessBlockedBanner, PaymentWarningBanner } from '@/components/user/AccessBlockedBanner';
 
 
 // -------------------------
@@ -85,6 +87,7 @@ export default function ResourcesPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedSprints, setExpandedSprints] = useState<number[]>([1]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
 
   // Get courseId from query or fetch user's first enrolled course
   useEffect(() => {
@@ -123,15 +126,68 @@ export default function ResourcesPage() {
     }
   }, [queryCourseId, user]);
 
+  // Add this useEffect to fetch enrollment status
   useEffect(() => {
-    if (courseId) {
+    const fetchEnrollmentStatus = async () => {
+      if (!courseId) return;
+      
+      try {
+        const response = await api.enrollment.checkStatus(courseId);
+        
+        if (response.enrollment) {
+          setCurrentEnrollment(response.enrollment);
+          
+          console.log('📊 Enrollment Status:', {
+            courseId,
+            payment_status: response.enrollment.payment_status,
+            payment_type: response.enrollment.payment_type,
+            has_access: response.enrollment.has_access,
+            next_payment_due: response.enrollment.next_payment_due,
+            access_blocked_reason: response.enrollment.access_blocked_reason
+          });
+          
+          // Check if user has access
+          if (!response.enrollment.has_access) {
+            console.log('❌ Access blocked - user cannot view resources');
+          } else if (response.enrollment.payment_status === 'pending' && response.enrollment.payment_type === 'onetime') {
+            // One-time payment not completed - block access
+            setCurrentEnrollment({
+              ...response.enrollment,
+              has_access: false,
+              access_blocked_reason: 'Please complete your payment to access course materials.'
+            });
+          } else {
+            console.log('✅ Access granted');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch enrollment status:', error);
+      }
+    };
+
+    fetchEnrollmentStatus();
+  }, [courseId]);
+
+  // Update useEffect for loading data
+  useEffect(() => {
+    if (courseId && currentEnrollment) {
       loadData();
     }
-  }, [courseId]);
+  }, [courseId, currentEnrollment]);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // First check if user has access
+      if (currentEnrollment && !currentEnrollment.has_access) {
+        console.log('❌ User does not have access to this course');
+        setData(null);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      
       const response = await api.courseResources.getAll(courseId!);
       setData(response as CourseResourcesData);
       setError(null);
@@ -248,7 +304,21 @@ export default function ResourcesPage() {
 
   return (
     <UserDashboardLayout>
+
+      {/* Access Blocked Overlay - Shows when access is suspended */}
+      {currentEnrollment && !currentEnrollment.has_access && (
+        <AccessBlockedBanner 
+          enrollment={currentEnrollment}
+          onPayNow={() => router.push(`/user/payment/${currentEnrollment.id}`)}
+        />
+      )}
+
       <div className="max-w-[1541px] mx-auto px-6 py-8 pt-25">
+
+        {/* Payment Warning Banner - Shows during grace period */}
+        {currentEnrollment && currentEnrollment.has_access && currentEnrollment.access_blocked_reason && (
+          <PaymentWarningBanner enrollment={currentEnrollment} />
+        )}
 
         {/* Tab Navigation */}
         <div className="bg-white rounded-lg border border-gray-200 mb-6 inline-block">

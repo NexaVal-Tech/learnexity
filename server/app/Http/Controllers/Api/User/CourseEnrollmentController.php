@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
+
 class CourseEnrollmentController extends Controller
 {
     /**
@@ -451,10 +452,15 @@ public function enroll(Request $request, $courseId)
                 'has_access' => false,
                 'reason' => 'not_enrolled',
                 'message' => 'You are not enrolled in this course.',
+                'enrollment' => null,
             ]);
         }
 
+        // Update access status based on payment deadlines
         $enrollment->updateAccessStatus();
+        
+        // Refresh the model to get updated values
+        $enrollment->refresh();
 
         return response()->json([
             'has_access' => $enrollment->has_access,
@@ -463,6 +469,12 @@ public function enroll(Request $request, $courseId)
             'next_payment_due' => $enrollment->next_payment_due,
             'installments_paid' => $enrollment->installments_paid,
             'total_installments' => $enrollment->total_installments,
+            'payment_type' => $enrollment->payment_type,
+            'is_overdue' => $enrollment->isPaymentOverdue(),
+            'days_until_payment' => $enrollment->getDaysUntilPayment(),
+            'enrollment' => $enrollment,
         ]);
     }
+
+    
 }
