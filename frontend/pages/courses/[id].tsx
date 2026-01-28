@@ -192,12 +192,12 @@ export default function CoursePage() {
                   <div className="text-3xl font-bold text-indigo-600">
                     {currency === 'NGN' ? '₦' : '$'}{displayPrice.toLocaleString()}
                   </div>
-                  {detectedLocation && (
+                  {/* {detectedLocation && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <span>🌍</span>
                       <span>Price for {detectedLocation} ({currency})</span>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
 

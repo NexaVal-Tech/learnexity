@@ -157,7 +157,7 @@
                 <div class="info-row">
                     <span class="info-label">Amount Paid:</span>
                     <span class="info-value">
-                        {{ $enrollment->currency === 'NGN' ? '₦' : '$' }}{{ number_format($amount ? $amount / 100 : $enrollment->amount_paid, 2) }}
+                        {{ $enrollment->currency === 'NGN' ? '₦' : '$' }}{{ number_format($amount ?? $enrollment->amount_paid, 2) }}
                     </span>
                 </div>
                 <div class="info-row">

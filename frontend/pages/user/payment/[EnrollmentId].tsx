@@ -44,8 +44,7 @@ const TRACK_OPTIONS: TrackOption[] = [
       'Direct feedback and mentorship',
       'Accelerated progress tracking'
     ],
-    icon: '👤',
-    popular: true
+    icon: '👤'
   },
   {
     id: 'group_mentorship',
@@ -59,7 +58,8 @@ const TRACK_OPTIONS: TrackOption[] = [
       'Community support network',
       'Group Q&A sessions'
     ],
-    icon: '👥'
+    icon: '👥',
+    popular: true
   },
   {
     id: 'self_paced',
@@ -883,7 +883,7 @@ export default function PaymentPage() {
             )}
 
             {/* Currency Display */}
-            {detectedLocation && (
+            {/* {detectedLocation && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
                 <div className="text-2xl">🌍</div>
                 <div>
@@ -893,7 +893,7 @@ export default function PaymentPage() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Right Column - Order Summary */}
