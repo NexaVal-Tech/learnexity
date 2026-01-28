@@ -8,13 +8,13 @@ export default function Experience() {
     
           <div className="md:w-1/2 mb-8 md:mb-0">
             <h2 className="text-4xl font-semibold text-gray-900 component-headers ">
-              The <span className="text-[#F59E0B]">Experience</span> <br />Paradox Solved
+              End The <span className="text-[#F59E0B]">Strugle</span> <br />Fragmented Learning
             </h2>
           </div>
 
           <div className="md:w-[35%] md:ml-4">
             <p className="text-lg text-gray-900">
-                You have the skills. The market wants experience. Learnexity bridges the gap with real projects, expert mentorship, and career pathways that turn knowledge into hire-ready confidence.
+               End the strugle of frangmented learning. Get mentorship, real projects, career support and guaranteed mini intenships, all in one platform.
             </p>
           </div>
         </div>

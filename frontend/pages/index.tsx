@@ -5,7 +5,7 @@ import Experience from "@/components/experience/Experience";
 import Pathways from "@/components/pathways/Pathways";
 import Courses from "@/components/courses/Courses";
 // import Skills from "@/components/skills/Skills";
-// import Method from "@/components/method/Method";
+import Method from "@/components/method/Method";
 import Testimonials from "@/components/testimonials/Testimonials";
 import FAQs from "@/components/FAQs/FAQs";
 import TechCompany from "@/components/techcompany/TechCompany";
@@ -22,7 +22,7 @@ export default function Home() {
       <Courses />
       {/* <Skills /> */}
       <TechCompany />
-      {/* <Method /> */}
+      <Method />
       <Community />
       <FAQs />
       <Footer />

@@ -102,8 +102,7 @@ export default function Pathways() {
             </h3>
             
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Our most personalized learning experience.
-                You’ll work directly with an instructor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.
+                Work directly with a mentor in private , focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.
             </p>
             
             {/* <div className="flex justify-start">
