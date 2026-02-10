@@ -8,7 +8,7 @@ export default function Experience() {
     
           <div className="md:w-1/2 mb-8 md:mb-0">
             <h2 className="text-4xl font-semibold text-gray-900 component-headers ">
-              End The <span className="text-[#F59E0B]">Strugle</span> <br />Fragmented Learning
+              Tired Of <span className="text-[#F59E0B]">Learning</span> <br />With No Results ?
             </h2>
           </div>
 

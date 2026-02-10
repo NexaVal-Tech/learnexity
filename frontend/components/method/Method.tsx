@@ -108,10 +108,7 @@ export default function Method() {
                     International Certification Readiness
                   </h3>
                   <p className="text-gray-600 text-base">
-                    Our curriculum is designed to align with global tech leaders 
-                    (Microsoft, AWS, Google Cloud, Cisco, CompTIA, Oracle, IBM, 
-                    Coursera, and more), preparing you for internationally recognized 
-                    certifications.
+                      Earn credential that strengthen your credibility worldwide. Our curriculum aligns with leading technology organizations and prepares you for globally recognized certifications. We guide you through the process.
                   </p>
                 </div>
               </div>

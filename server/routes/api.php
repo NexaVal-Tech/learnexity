@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AdminCourseResourcesController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminStudentController;
 use App\Http\Controllers\Api\AdminCourseController;
+use App\Http\Controllers\Api\AdminCourseDetailsController; // ⭐ ADD THIS LINE
 use App\Http\Controllers\Api\ReferralController;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\URL;
@@ -142,16 +143,12 @@ Route::prefix('courses')->group(function () {
 
 // =================== ADMIN ROUTES =================== //
 
-// =================== ADMIN ROUTES =================== //
-
 // Public admin routes (no authentication required)
 Route::prefix('admin')->group(function () {
     Route::post('/login', [App\Http\Controllers\Api\AdminAuthController::class, 'login']);
     Route::post('/forgot-password', [App\Http\Controllers\Api\AdminAuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [App\Http\Controllers\Api\AdminAuthController::class, 'resetPassword']);
 });
-
-
 
 // Add this temporary route to your api.php for debugging
 // Place it BEFORE the middleware group
@@ -230,6 +227,28 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::put('/{courseId}', [AdminCourseController::class, 'update']);
         Route::delete('/{courseId}', [AdminCourseController::class, 'destroy']);
         Route::put('/{courseId}/pricing', [AdminCourseController::class, 'updatePricingAndSettings']);
+        
+        // ⭐⭐⭐ NEW: Course Details Routes (ADD THIS SECTION) ⭐⭐⭐
+        Route::prefix('{courseId}/details')->group(function () {
+            // Add course details
+            Route::post('/tools', [AdminCourseDetailsController::class, 'addTool']);
+            Route::post('/learnings', [AdminCourseDetailsController::class, 'addLearning']);
+            Route::post('/benefits', [AdminCourseDetailsController::class, 'addBenefit']);
+            Route::post('/career-paths', [AdminCourseDetailsController::class, 'addCareerPath']);
+            Route::post('/industries', [AdminCourseDetailsController::class, 'addIndustry']);
+            Route::post('/salary', [AdminCourseDetailsController::class, 'addSalary']);
+            
+            // Get all course details
+            Route::get('/', [AdminCourseDetailsController::class, 'getCourseDetails']);
+            
+            // Delete course details
+            Route::delete('/tools/{toolId}', [AdminCourseDetailsController::class, 'deleteTool']);
+            Route::delete('/learnings/{learningId}', [AdminCourseDetailsController::class, 'deleteLearning']);
+            Route::delete('/benefits/{benefitId}', [AdminCourseDetailsController::class, 'deleteBenefit']);
+            Route::delete('/career-paths/{careerPathId}', [AdminCourseDetailsController::class, 'deleteCareerPath']);
+            Route::delete('/industries/{industryId}', [AdminCourseDetailsController::class, 'deleteIndustry']);
+        });
+        // ⭐⭐⭐ END OF NEW SECTION ⭐⭐⭐
         
         // Course Resources Management
         Route::prefix('{courseId}/resources')->group(function () {
