@@ -5,25 +5,29 @@ import Experience from "@/components/experience/Experience";
 import Pathways from "@/components/pathways/Pathways";
 import Courses from "@/components/courses/Courses";
 // import Skills from "@/components/skills/Skills";
+// import Navbar from "@/components/navbar/Navbar";
 import Method from "@/components/method/Method";
 import Testimonials from "@/components/testimonials/Testimonials";
 import FAQs from "@/components/FAQs/FAQs";
 import TechCompany from "@/components/techcompany/TechCompany";
-import Community from "@/components/community/Community";
+// import Community from "@/components/community/Community";
 import Footer from "@/components/footer/Footer";
+import InstallmentBanner from "@/components/installment/InstallmentBanner";
 
 export default function Home() {
   return (
     <AppLayout>
+      {/* <Navbar /> */}
       <Hero />
       <Experience />
       <Testimonials />
       <Pathways />
+      <InstallmentBanner />
       <Courses />
       {/* <Skills /> */}
       <TechCompany />
       <Method />
-      <Community />
+      {/* <Community /> */}
       <FAQs />
       <Footer />
     </AppLayout>

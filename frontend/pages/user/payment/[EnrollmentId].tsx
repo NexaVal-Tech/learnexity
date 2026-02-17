@@ -381,14 +381,14 @@ export default function PaymentPage() {
     
     // Apply one-time payment discount if applicable
     if (paymentType === 'onetime' && course) {
-      const discountValue = currency === 'NGN' 
+      const discountValue = currency === 'NGN'
         ? course.onetime_discount_ngn
         : course.onetime_discount_usd;
-      const discount = parseFloat(discountValue) || 0; // Parse discount
-      
-      if (discount > 0) {
-        price = Math.max(0, price - discount);
-        console.log('💰 Applied discount:', discount, 'New price:', price);
+      const discountPercent = parseFloat(discountValue) || 0;
+
+      if (discountPercent > 0) {
+        price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
+        console.log('💰 Applied discount:', discountPercent + '%', 'New price:', price);
       }
     }
     
@@ -804,26 +804,34 @@ export default function PaymentPage() {
                         
                         {(() => {
                           const originalPrice = trackPrices[selectedTrack] || 0;
-                          const discount = currency === 'NGN' 
-                            ? (course?.onetime_discount_ngn || 0)
-                            : (course?.onetime_discount_usd || 0);
-                          const finalPrice = originalPrice - discount;
-                          
+                          const discountPercent = parseFloat(
+                            currency === 'NGN'
+                              ? course?.onetime_discount_ngn
+                              : course?.onetime_discount_usd
+                          ) || 0;
+                          const savings = Math.round(originalPrice * (discountPercent / 100));
+                          const finalPrice = Math.max(0, originalPrice - savings);
+
                           return (
                             <div className="space-y-1">
-                              {discount > 0 && (
+                              {discountPercent > 0 && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-gray-500 line-through">
-                                    {currency === 'NGN' ? '₦' : ''}{originalPrice.toLocaleString()}
+                                    {currency === 'NGN' ? '₦' : '$'}{originalPrice.toLocaleString()}
                                   </span>
                                   <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
-                                    SAVE {currency === 'NGN' ? '₦' : ''}{discount.toLocaleString()}
+                                    {discountPercent}% OFF
                                   </span>
                                 </div>
                               )}
                               <div className="text-2xl font-bold text-green-600">
-                                {currency === 'NGN' ? '₦' : ''}{finalPrice.toLocaleString()}
+                                {currency === 'NGN' ? '₦' : '$'}{finalPrice.toLocaleString()}
                               </div>
+                              {discountPercent > 0 && (
+                                <p className="text-xs text-green-700">
+                                  You save {currency === 'NGN' ? '₦' : '$'}{savings.toLocaleString()}
+                                </p>
+                              )}
                             </div>
                           );
                         })()}

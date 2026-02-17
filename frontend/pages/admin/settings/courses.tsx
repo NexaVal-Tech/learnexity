@@ -28,7 +28,8 @@ const CourseSettingsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.admin.courses.getAll();
+      // ✅ FIX: Add per_page parameter to fetch all courses
+      const response = await api.admin.courses.getAll({ per_page: 100 });
       setCourses(response.data);
     } catch (err) {
       console.error('Failed to fetch courses:', err);

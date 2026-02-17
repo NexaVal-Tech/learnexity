@@ -18,7 +18,7 @@ export default function Community() {
           </h1>
           
           <p className="text-base md:text-lg text-gray-700 mb-8 leading-relaxed text-center md:text-left">
-            Join a community that offers exclusive Discord access, a 5,000+ member alumni network, ongoing mentorship, and industry networking opportunities.
+            Join a community that offers exclusive Discord access, an alumni network, ongoing mentorship, and industry networking opportunities.
           </p>
 
           <div className="flex item-center justify-center md:justify-start gap-4">

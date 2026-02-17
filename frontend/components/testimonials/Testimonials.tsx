@@ -17,38 +17,38 @@ export default function Testimonials() {
     {
       name: "Jennifer A.",
       role: "Product Manager",
-      video: "/videos/testimonial-1.mp4"
+      video: "/videos/learnexity review video.mp4"
     },
     {
       name: "Design Sprint.",
       role: "project", 
-      video:  "/videos/testimonial-2.mp4"
+      video:  "/videos/testimonial-video.mp4"
     },
-    {
-      name: "Isreal Obinna.",
-      role: "Video Editing and Content Creation",
-      video:  "/videos/testimonial-3.mp4"
-    },
-    {
-      name: "Benedict.",
-      role: "Video Editing and Content Creation",
-      video: "/videos/testimonial-4.mp4"
-    },
+    // {
+    //   name: "Isreal Obinna.",
+    //   role: "Video Editing and Content Creation",
+    //   video:  "/videos/testimonial-3.mp4"
+    // },
+    // {
+    //   name: "Benedict.",
+    //   role: "Video Editing and Content Creation",
+    //   video: "/videos/testimonial-4.mp4"
+    // },
     {
       name: "Lilian Anekwe.",
       role: "Cybersecurity",
       video: "/videos/testimonial-5.mp4"
     },
-    {
-      name: "Mrs Lilian.",
-      role: "AI Automation",
-      video: "/videos/testimoial-6.mp4"
-    },
-    {
-      name: "Benedict.",
-      role: "Video Editing and Content Creation",
-      video: "/videos/testimonial-8.mp4"
-    }
+    // {
+    //   name: "Mrs Lilian.",
+    //   role: "AI Automation",
+    //   video: "/videos/testimoial-6.mp4"
+    // },
+    // {
+    //   name: "Benedict.",
+    //   role: "Video Editing and Content Creation",
+    //   video: "/videos/testimonial-8.mp4"
+    // }
   ];
 
   const nextSlide = () => {
@@ -129,7 +129,7 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-20 bg-white overflow-x-hidden">
+    <section className="py-10 bg-white overflow-x-hidden">
       <FadeUpOnScroll>
       <div className="max-w-screen-2xl mx-auto">
         {/* Header */}
@@ -137,16 +137,13 @@ export default function Testimonials() {
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Student Transformations
           </h2>
-          <p className="text-xl text-gray-600 max-w-sm mx-auto">
-            Stories of growth, resilience, and landing the right opportunities.
-          </p>
         </div>
 
         {/* Desktop/Tablet View */}
         <div className="hidden md:block relative">
           <div className="flex items-start gap-12">
             {/* Left Side - Title and Navigation - Fixed */}
-            <div className="bg-white flex-shrink-0 relative z-10 w-96 p-6">
+            {/* <div className="bg-white flex-shrink-0 relative z-10 w-96 p-6">
               <h3 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">
                 What our students<br />are saying
               </h3>
@@ -165,7 +162,7 @@ export default function Testimonials() {
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
-            </div>
+            </div> */}
             
 
             {/* Right Side - Testimonials Container with overflow */}
@@ -211,7 +208,7 @@ export default function Testimonials() {
 
         {/* Mobile View - Horizontal scrolling cards */}
         <div className="md:hidden px-6">
-          <div className="text-center mb-8">
+          {/* <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">
               What our students<br />are saying
             </h3>
@@ -223,14 +220,14 @@ export default function Testimonials() {
               >
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <button
+              <button 
                 onClick={nextSlide}
                 className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Horizontal scrolling container */}
           <div 

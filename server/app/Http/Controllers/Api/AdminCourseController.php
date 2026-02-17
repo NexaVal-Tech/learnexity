@@ -10,6 +10,7 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseMaterial;
 use App\Models\MaterialItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminCourseController extends Controller
 {
@@ -55,7 +56,7 @@ class AdminCourseController extends Controller
                 'active_students' => $activeEnrollments,
                 'completion_rate' => $totalEnrollments > 0 ? round(($activeEnrollments / $totalEnrollments) * 100) : 0,
                 'sprint_count' => $sprintCount,
-                'week_count' => $sprintCount, // Assuming 1 sprint = 1 week
+                'week_count' => $sprintCount,
             ];
             
             return $course;
@@ -170,7 +171,6 @@ class AdminCourseController extends Controller
 
         // Sprint completion data for chart
         $sprintCompletionData = $sprints->map(function($sprint, $index) use ($courseId) {
-            // Calculate completion percentage for this sprint
             $totalStudents = CourseEnrollment::where('course_id', $courseId)
                 ->where('payment_status', 'completed')
                 ->count();
@@ -182,12 +182,11 @@ class AdminCourseController extends Controller
                 ];
             }
             
-            // Count students who completed this sprint
-            $completedStudents = 0; // Implement actual calculation
+            $completedStudents = 0;
             
             return [
                 'sprint' => (string)($index + 1),
-                'completion' => rand(15, 85), // Replace with actual data
+                'completion' => rand(15, 85),
             ];
         });
 
@@ -196,7 +195,7 @@ class AdminCourseController extends Controller
                 'id' => $course->id,
                 'course_id' => $course->course_id,
                 'name' => $course->title,
-                'instructor' => 'Sarah Chen', // Add instructor field to course table
+                'instructor' => 'Sarah Chen',
                 'sprints_count' => $sprints->count(),
                 'weeks_count' => $sprints->count(),
             ],
@@ -233,7 +232,7 @@ class AdminCourseController extends Controller
         })->count();
         
         $totalEnrollments = CourseEnrollment::count();
-        $completionRate = 0; // Implement calculation
+        $completionRate = 0;
 
         return response()->json([
             'total_courses' => $totalCourses,
@@ -244,27 +243,86 @@ class AdminCourseController extends Controller
     }
 
     /**
-     * Create a new course
+     * Create a new course with full pricing support
      */
     public function store(Request $request): JsonResponse
     {
+        Log::info('📝 Course creation request received', [
+            'data' => $request->all()
+        ]);
+
         $validated = $request->validate([
+            // Basic Information
             'title' => 'required|string|max:255',
             'course_id' => 'required|string|unique:courses,course_id',
             'description' => 'required|string',
+            'project' => 'nullable|string',
             'duration' => 'nullable|string',
             'level' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
             'is_freemium' => 'boolean',
             'is_premium' => 'boolean',
+            
+            // Images
+            'hero_image' => 'nullable|string',
+            'secondary_image' => 'nullable|string',
+            
+            // Base Prices (Currency-specific)
+            'price_usd' => 'required|numeric|min:0',
+            'price_ngn' => 'required|numeric|min:0',
+            
+            // Track Availability
+            'offers_one_on_one' => 'boolean',
+            'offers_group_mentorship' => 'boolean',
+            'offers_self_paced' => 'boolean',
+            
+            // Track Prices (USD)
+            'one_on_one_price_usd' => 'nullable|numeric|min:0',
+            'group_mentorship_price_usd' => 'nullable|numeric|min:0',
+            'self_paced_price_usd' => 'nullable|numeric|min:0',
+            
+            // Track Prices (NGN)
+            'one_on_one_price_ngn' => 'nullable|numeric|min:0',
+            'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
+            'self_paced_price_ngn' => 'nullable|numeric|min:0',
+            
+            // One-time Discounts
+           'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $course = Course::create($validated);
+        // Set default values for track availability if not provided
+        $validated['offers_one_on_one'] = $validated['offers_one_on_one'] ?? true;
+        $validated['offers_group_mentorship'] = $validated['offers_group_mentorship'] ?? true;
+        $validated['offers_self_paced'] = $validated['offers_self_paced'] ?? true;
 
-        return response()->json([
-            'message' => 'Course created successfully',
-            'course' => $course,
-        ], 201);
+        // Also set the legacy 'price' field to match price_usd for backwards compatibility
+        $validated['price'] = $validated['price_usd'];
+
+        try {
+            $course = Course::create($validated);
+
+            Log::info('✅ Course created successfully', [
+                'course_id' => $course->course_id,
+                'id' => $course->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course created successfully',
+                'course' => $course->load(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary']),
+            ], 201);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Course creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create course: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -277,18 +335,46 @@ class AdminCourseController extends Controller
         $validated = $request->validate([
             'title' => 'string|max:255',
             'description' => 'string',
+            'project' => 'nullable|string',
             'duration' => 'nullable|string',
             'level' => 'nullable|string',
-            'price' => 'numeric|min:0',
             'is_freemium' => 'boolean',
             'is_premium' => 'boolean',
+            'hero_image' => 'nullable|string',
+            'secondary_image' => 'nullable|string',
+            
+            // Prices
+            'price_usd' => 'nullable|numeric|min:0',
+            'price_ngn' => 'nullable|numeric|min:0',
+            
+            // Track availability
+            'offers_one_on_one' => 'boolean',
+            'offers_group_mentorship' => 'boolean',
+            'offers_self_paced' => 'boolean',
+            
+            // Track prices
+            'one_on_one_price_usd' => 'nullable|numeric|min:0',
+            'group_mentorship_price_usd' => 'nullable|numeric|min:0',
+            'self_paced_price_usd' => 'nullable|numeric|min:0',
+            'one_on_one_price_ngn' => 'nullable|numeric|min:0',
+            'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
+            'self_paced_price_ngn' => 'nullable|numeric|min:0',
+            
+            // Discounts
+            'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Update legacy price field if price_usd is provided
+        if (isset($validated['price_usd'])) {
+            $validated['price'] = $validated['price_usd'];
+        }
 
         $course->update($validated);
 
         return response()->json([
             'message' => 'Course updated successfully',
-            'course' => $course,
+            'course' => $course->fresh()->load(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary']),
         ]);
     }
 
@@ -327,7 +413,9 @@ class AdminCourseController extends Controller
         return null;
     }
 
-
+    /**
+     * Update pricing and settings (backward compatibility)
+     */
     public function updatePricingAndSettings(Request $request, string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
@@ -353,9 +441,14 @@ class AdminCourseController extends Controller
             'self_paced_price_ngn' => 'nullable|numeric|min:0',
 
             // One-time discounts
-            'onetime_discount_usd' => 'nullable|numeric|min:0',
-            'onetime_discount_ngn' => 'nullable|numeric|min:0',
+            'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Update legacy price if price_usd is set
+        if (isset($validated['price_usd'])) {
+            $validated['price'] = $validated['price_usd'];
+        }
 
         $course->update($validated);
 

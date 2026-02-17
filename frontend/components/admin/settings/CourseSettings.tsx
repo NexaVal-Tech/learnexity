@@ -83,11 +83,13 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
   // FIXED: Handle number input with commas and large numbers
   const handleNumberChange = (field: string, value: string) => {
-    // Remove all non-digit characters except decimal point
     const cleanValue = value.replace(/[^\d.]/g, '');
-    
-    // Validate: allow empty string or valid numbers
     if (cleanValue === '' || /^\d*\.?\d*$/.test(cleanValue)) {
+      // Cap discount fields at 100
+      if (field.includes('discount')) {
+        const num = parseFloat(cleanValue);
+        if (!isNaN(num) && num > 100) return;
+      }
       setSettings({ ...settings, [field]: cleanValue });
     }
   };
@@ -338,16 +340,37 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                 One-Time Payment Discount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">$</span>
                 <input
                   type="text"
                   value={settings.onetime_discount_usd}
                   onChange={(e) => handleNumberChange('onetime_discount_usd', e.target.value)}
-                  className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
                   placeholder="0"
                 />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">%</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Discount applied when paying full amount upfront</p>
+              <p className="text-xs text-gray-500 mt-1">
+                % off each track price when paying upfront (0–100)
+              </p>
+              {settings.onetime_discount_usd && (() => {
+                const pct = parseFloat(settings.onetime_discount_usd);
+                const tracks = [
+                  { label: '1-on-1', price: parseFloat(settings.one_on_one_price_usd || '0') },
+                  { label: 'Group', price: parseFloat(settings.group_mentorship_price_usd || '0') },
+                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_usd || '0') },
+                ].filter(t => t.price > 0);
+                if (!pct || !tracks.length) return null;
+                return (
+                  <div className="mt-2 space-y-1">
+                    {tracks.map(t => (
+                      <p key={t.label} className="text-xs text-green-700 font-medium">
+                        {t.label}: ${t.price.toLocaleString()} → ${(t.price * (1 - pct / 100)).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                        <span className="text-gray-400 ml-1">(saves ${(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                      </p>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -433,16 +456,37 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                 One-Time Payment Discount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">₦</span>
                 <input
                   type="text"
                   value={settings.onetime_discount_ngn}
                   onChange={(e) => handleNumberChange('onetime_discount_ngn', e.target.value)}
-                  className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
                   placeholder="0"
                 />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">%</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Discount applied when paying full amount upfront</p>
+              <p className="text-xs text-gray-500 mt-1">
+                % off each track price when paying upfront (0–100)
+              </p>
+              {settings.onetime_discount_ngn && (() => {
+                const pct = parseFloat(settings.onetime_discount_ngn);
+                const tracks = [
+                  { label: '1-on-1', price: parseFloat(settings.one_on_one_price_ngn || '0') },
+                  { label: 'Group', price: parseFloat(settings.group_mentorship_price_ngn || '0') },
+                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_ngn || '0') },
+                ].filter(t => t.price > 0);
+                if (!pct || !tracks.length) return null;
+                return (
+                  <div className="mt-2 space-y-1">
+                    {tracks.map(t => (
+                      <p key={t.label} className="text-xs text-green-700 font-medium">
+                        {t.label}: ₦{t.price.toLocaleString()} → ₦{(t.price * (1 - pct / 100)).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                        <span className="text-gray-400 ml-1">(saves ₦{(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                      </p>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -456,7 +500,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
           <li>• International users will see USD pricing and pay via Stripe</li>
           <li>• Installment payments are split across 4 months (16 weeks)</li>
           <li>• Users must pay on time each month to maintain course access</li>
-          <li>• One-time payment discount is applied automatically when full payment is made upfront</li>
+          <li>• One-time discount is a <strong>percentage</strong> applied to each track's price when paying upfront in full</li>
         </ul>
       </div>
     </div>

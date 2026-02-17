@@ -208,31 +208,31 @@ export const api = {
       return response.data;
     },
 
- enroll: async (
-  courseId: string, 
-  learningTrack?: LearningTrack,
-  paymentType?: 'onetime' | 'installment'
-): Promise<EnrollmentResponse> => {
-  // Log what we're sending
-  const payload = {
-    learning_track: learningTrack || 'self_paced',
-    payment_type: paymentType || 'onetime',
-  };
-  
-  console.log('📤 Sending enrollment request:', {
-    url: `/api/courses/${courseId}/enroll`,
-    payload
-  });
+  enroll: async (
+    courseId: string, 
+    learningTrack?: LearningTrack,
+    paymentType?: 'onetime' | 'installment'
+  ): Promise<EnrollmentResponse> => {
+    // Log what we're sending
+    const payload = {
+      learning_track: learningTrack || 'self_paced',
+      payment_type: paymentType || 'onetime',
+    };
+    
+    console.log('📤 Sending enrollment request:', {
+      url: `/api/courses/${courseId}/enroll`,
+      payload
+    });
 
-  const response = await apiClient.post<EnrollmentResponse>(
-    `/api/courses/${courseId}/enroll`,
-    payload
-  );
-  
-  console.log('📥 Enrollment response:', response.data);
-  
-  return response.data;
-},
+    const response = await apiClient.post<EnrollmentResponse>(
+      `/api/courses/${courseId}/enroll`,
+      payload
+    );
+    
+    console.log('📥 Enrollment response:', response.data);
+    
+    return response.data;
+  },
 
     getUserEnrollments: async (): Promise<UserEnrollmentsResponse> => {
       const response = await apiClient.get<UserEnrollmentsResponse>('/api/courses/enrollments');
@@ -714,6 +714,60 @@ export const api = {
     },
   },
 
+  adminCourseDetails: {
+    addTool: async (courseId: string, formData: FormData) => {
+      return await adminApi.post(
+        `/api/admin/courses/${courseId}/details/tools`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+    },
+
+    addLearning: async (courseId: string, data: { learning_point: string; order: number }) => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/details/learnings`, data);
+    },
+
+    addBenefit: async (courseId: string, data: { title: string; text: string; order: number }) => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/details/benefits`, data);
+    },
+
+    addCareerPath: async (courseId: string, data: { level: string; position: string; order: number }) => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/details/career-paths`, data);
+    },
+
+    addIndustry: async (courseId: string, data: { title: string; text: string; order: number }) => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/details/industries`, data);
+    },
+
+    addSalary: async (courseId: string, data: { entry_level?: string; mid_level?: string; senior_level?: string }) => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/details/salary`, data);
+    },
+
+    deleteTool: async (courseId: string, toolId: number) => {
+      return await adminApi.delete(`/api/admin/courses/${courseId}/details/tools/${toolId}`);
+    },
+
+    deleteLearning: async (courseId: string, learningId: number) => {
+      return await adminApi.delete(`/api/admin/courses/${courseId}/details/learnings/${learningId}`);
+    },
+
+    deleteBenefit: async (courseId: string, benefitId: number) => {
+      return await adminApi.delete(`/api/admin/courses/${courseId}/details/benefits/${benefitId}`);
+    },
+
+    deleteCareerPath: async (courseId: string, careerPathId: number) => {
+      return await adminApi.delete(`/api/admin/courses/${courseId}/details/career-paths/${careerPathId}`);
+    },
+
+    deleteIndustry: async (courseId: string, industryId: number) => {
+      return await adminApi.delete(`/api/admin/courses/${courseId}/details/industries/${industryId}`);
+    },
+  },
+
   get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await apiClient.get<T>(url, config);
     return response.data;
@@ -740,62 +794,62 @@ export const api = {
   },
 };
 
-// Legacy export for backward compatibility
-export const coursesApi = {
-  getAll: api.courses.getAll,
-  getById: api.courses.getById,
-  getFeatured: async (limit: number = 4): Promise<Course[]> => {
-    const response = await apiClient.get(`/api/courses?limit=${limit}`);
-    return response.data;
-  },
-};
+  // Legacy export for backward compatibility
+  export const coursesApi = {
+    getAll: api.courses.getAll,
+    getById: api.courses.getById,
+    getFeatured: async (limit: number = 4): Promise<Course[]> => {
+      const response = await apiClient.get(`/api/courses?limit=${limit}`);
+      return response.data;
+    },
+  };
 
-export type { ReferralResponse, CreateReferralResponse, ReferralCode, ReferralHistory, ReferralStats, Course, CourseEnrollment, DashboardData, StudentDetail   };
+  export type { ReferralResponse, CreateReferralResponse, ReferralCode, ReferralHistory, ReferralStats, Course, CourseEnrollment, DashboardData, StudentDetail   };
 
 // ===============================
 // Error Handler
 // ===============================
 
-export const handleApiError = (error: unknown): string => {
-  if (axios.isAxiosError(error)) {
-    if (!error.response) {
-      if (error.code === 'ECONNABORTED') {
-        return 'Request timeout. Please check your connection and try again.';
+  export const handleApiError = (error: unknown): string => {
+    if (axios.isAxiosError(error)) {
+      if (!error.response) {
+        if (error.code === 'ECONNABORTED') {
+          return 'Request timeout. Please check your connection and try again.';
+        }
+        return 'Unable to connect to server. Please check your internet connection.';
       }
-      return 'Unable to connect to server. Please check your internet connection.';
+
+      const apiError = error.response?.data as ApiError;
+
+      if (error.response.status === 422 && apiError?.errors) {
+        const firstError = Object.values(apiError.errors)[0];
+        return Array.isArray(firstError) ? firstError[0] : 'Validation error';
+      }
+
+      if (error.response.status === 401) {
+        return 'Invalid credentials. Please try again.';
+      }
+
+      if (error.response.status >= 500) {
+        return 'Server error. Please try again later.';
+      }
+
+      if (apiError?.error) {
+        return apiError.error;
+      }
+
+      if (apiError?.message) {
+        return apiError.message;
+      }
+
+      return error.message || 'An error occurred';
     }
 
-    const apiError = error.response?.data as ApiError;
-
-    if (error.response.status === 422 && apiError?.errors) {
-      const firstError = Object.values(apiError.errors)[0];
-      return Array.isArray(firstError) ? firstError[0] : 'Validation error';
+    if (error instanceof Error) {
+      return error.message;
     }
 
-    if (error.response.status === 401) {
-      return 'Invalid credentials. Please try again.';
-    }
-
-    if (error.response.status >= 500) {
-      return 'Server error. Please try again later.';
-    }
-
-    if (apiError?.error) {
-      return apiError.error;
-    }
-
-    if (apiError?.message) {
-      return apiError.message;
-    }
-
-    return error.message || 'An error occurred';
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'An unexpected error occurred';
-};
+    return 'An unexpected error occurred';
+  };
 
 export default api;

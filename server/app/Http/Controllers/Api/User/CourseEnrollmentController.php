@@ -135,11 +135,18 @@ public function enroll(Request $request, $courseId)
         ], 400);
     }
 
-    // Apply one-time discount if applicable
+    // Apply one-time discount if applicable (percentage-based)
     if ($paymentType === 'onetime') {
-        $discount = $course->getOneTimeDiscountByCurrency($currency);
-        if ($discount > 0) {
-            $trackPrice -= $discount;
+        $discountPercent = $course->getOneTimeDiscountByCurrency($currency);
+        if ($discountPercent > 0) {
+            $trackPrice = max(0, round($trackPrice * (1 - ($discountPercent / 100)), 2));
+            
+            Log::info('💰 One-time discount applied', [
+                'discount_percent' => $discountPercent,
+                'original_price'   => $course->getTrackPriceByCurrency($learningTrack, $currency),
+                'discounted_price' => $trackPrice,
+                'currency'         => $currency,
+            ]);
         }
     }
 

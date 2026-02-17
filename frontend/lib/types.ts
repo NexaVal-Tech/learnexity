@@ -6,6 +6,32 @@ export type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced';
 // Auth Types
 // ===============================
 
+export interface CourseCreateInput {
+  title: string;
+  course_id: string;
+  description: string;
+  project?: string;
+  duration?: string;
+  level?: string;
+  is_freemium: boolean;
+  is_premium: boolean;
+  hero_image?: string;
+  secondary_image?: string;
+  price_usd: number;
+  price_ngn: number;
+  offers_one_on_one: boolean;
+  offers_group_mentorship: boolean;
+  offers_self_paced: boolean;
+  one_on_one_price_usd?: number;
+  group_mentorship_price_usd?: number;
+  self_paced_price_usd?: number;
+  one_on_one_price_ngn?: number;
+  group_mentorship_price_ngn?: number;
+  self_paced_price_ngn?: number;
+  onetime_discount_usd?: number;
+  onetime_discount_ngn?: number;
+}
+
 export interface User {
   id: number;
   name: string;

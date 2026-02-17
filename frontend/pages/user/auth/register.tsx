@@ -281,7 +281,7 @@ export default function RegisterPage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="+2348012345678"
+                    placeholder="Phone/Whatsapp Number"
                     disabled={loading || !!success}
                     className="w-full px-4 py-1 text-purple-900 border border-gray-300 rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent 

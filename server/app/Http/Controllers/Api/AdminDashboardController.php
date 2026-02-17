@@ -221,9 +221,11 @@ class AdminDashboardController extends Controller
             ->get();
 
         foreach ($recentEnrollments as $enrollment) {
+            $userName = $enrollment->user?->name ?? 'Unknown User';
+
             $activities[] = [
                 'type' => 'enrollment',
-                'title' => $enrollment->user->name . ' enrolled in ' . $enrollment->course_name,
+                'title' => $userName . ' enrolled in ' . $enrollment->course_name,
                 'time' => $enrollment->created_at->diffForHumans(),
                 'icon' => 'BookOpen',
                 'color' => 'text-blue-600',
@@ -239,16 +241,18 @@ class AdminDashboardController extends Controller
             ->take(5)
             ->get();
 
-        foreach ($recentPayments as $payment) {
-            $activities[] = [
-                'type' => 'payment',
-                'title' => $payment->user->name . ' completed payment for ' . $payment->course_name,
-                'time' => \Carbon\Carbon::parse($payment->payment_date)->diffForHumans(),
-                'icon' => 'DollarSign',
-                'color' => 'text-green-600',
-                'bg' => 'bg-green-50',
-            ];
-        }
+            foreach ($recentPayments as $payment) {
+                $userName = $payment->user?->name ?? 'Unknown User';
+
+                $activities[] = [
+                    'type' => 'payment',
+                    'title' => $userName . ' completed payment for ' . $payment->course_name,
+                    'time' => \Carbon\Carbon::parse($payment->payment_date)->diffForHumans(),
+                    'icon' => 'DollarSign',
+                    'color' => 'text-green-600',
+                    'bg' => 'bg-green-50',
+                ];
+            }
 
         // Sort by time
         usort($activities, function($a, $b) {
@@ -302,7 +306,7 @@ class AdminDashboardController extends Controller
                 ->get()
                 ->map(function($enrollment) {
                     return [
-                        'student_name' => $enrollment->user->name,
+                        'student_name' => $enrollment->user?->name ?? 'Unknown User',
                         'course_name' => $enrollment->course_name,
                         'time' => $enrollment->created_at->diffForHumans(),
                     ];

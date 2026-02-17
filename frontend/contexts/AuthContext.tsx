@@ -102,6 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // REGISTER (with logging + referral support)
+  // REGISTER
   const register = async (
     name: string,
     email: string,
@@ -128,10 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password_confirmation: passwordConfirmation,
       };
 
-      if (phone) {
-        payload.phone = phone;
-      }
-
+      if (phone) payload.phone = phone;
       if (referralCode) {
         payload.referral_code = referralCode;
         console.log('📌 [AUTH CONTEXT] Including referral code:', referralCode);
@@ -139,27 +137,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await api.auth.register(payload);
 
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-      }
-
-      await refreshUser();
-
-      const intendedCourse = sessionStorage.getItem('intended_course');
-      const intendedCourseName = sessionStorage.getItem('intended_course_name');
-
-      if (intendedCourse && intendedCourseName) {
-        sessionStorage.removeItem('intended_course');
-        sessionStorage.removeItem('intended_course_name');
-        router.push(`/courses/${intendedCourse}`);
-        return;
-      }
-
-      response.user?.role === 'admin'
-        ? router.push('/admin/dashboard')
-        : router.push('/user/dashboard');
-
+      // ✅ Laravel returns 201 with NO token on registration —
+      // the user must verify their email first, so we never
+      // try to refresh the user or redirect to dashboard here.
       console.log('✅ [AUTH CONTEXT] Registration successful:', email);
+
+      // Redirect to a "check your email" page, passing the email
+      // so the page can show it and offer a resend button.
+      router.push(
+        `/user/auth/verify-email?email=${encodeURIComponent(email)}`
+      );
+
     } catch (error: any) {
       console.error('❌ [AUTH CONTEXT] Registration failed:', error);
       const err = handleApiError(error);

@@ -17,6 +17,19 @@ export const PrimaryButton = ({ label = "Explore courses", href = "/courses/cour
   );
 };
 
+// primary button 2
+export const PrimaryButton2 = ({ label = "Explore Courses", href = "/courses/courses" }) => {
+  return (
+    <Link href={href}>
+      <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
+        <span>{label}</span>
+        <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
+          <img src="/icons/arrow_right_Line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
+        </span>
+      </button>
+    </Link>
+  );
+};
 // Sign up button
 export const SignUpButton = ({ label = "Sign Up", href = "/user/auth/register" }) => {
   return (
