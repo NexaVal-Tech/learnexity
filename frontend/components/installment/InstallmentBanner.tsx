@@ -40,7 +40,7 @@ export default function InstallmentBanner() {
     return () => clearInterval(interval);
   }, [isVisible, isHovered]);
 
-  const progressPercent = (activeStep / (installmentSteps.length - 1)) * 100;
+  // const progressPercent = (activeStep / (installmentSteps.length - 1)) * 100;
 
   return (
     <section
@@ -84,157 +84,160 @@ export default function InstallmentBanner() {
           </div>
 
           <div className="p-6 sm:p-8 md:p-12">
-            <div className="grid lg:grid-cols-2 gap-10 items-center">
 
-              {/* Left */}
-              <div className={`space-y-6 transition-all duration-700 delay-200 ease-out ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
-                <div className="inline-flex items-center gap-3 rounded-2xl px-5 py-3 border" style={{ background: BRAND_LIGHT, borderColor: BRAND_BORDER }}>
-                  <span className="text-3xl">💡</span>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Available on all courses</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-900">Installment Payment Plan</p>
-                  </div>
+            {/* Content — centered single column now that "How it works" is hidden */}
+            <div className={`max-w-2xl mx-auto flex flex-col items-center text-center space-y-6 transition-all duration-700 delay-200 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+
+              <div className="inline-flex items-center gap-3 rounded-2xl px-5 py-3 border" style={{ background: BRAND_LIGHT, borderColor: BRAND_BORDER }}>
+                <span className="text-3xl">💡</span>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Available on all courses</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900">Installment Payment Plan</p>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                  We believe cost should never be a barrier to education. Pay in flexible installments spread over your course duration, start learning immediately and settle the balance as you progress.
-                </p>
-                <ul className="space-y-3">
-                  {[
-                    { icon: "✅", text: "No hidden fees or interest charges", delay: "delay-300" },
-                    { icon: "📅", text: "Payments timed to your course milestones", delay: "delay-400" },
-                    // { icon: "🔒", text: "Full course access from day one", delay: "delay-500" },
-                    { icon: "🤝", text: "Flexible plans tailored per course", delay: "delay-600" },
-                  ].map(({ icon, text, delay }) => (
-                    <li key={text} className={`flex items-start gap-3 text-gray-700 transition-all duration-700 ${delay} ease-out ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
-                      <span className="text-lg mt-0.5 shrink-0">{icon}</span>
-                      <span className="text-sm font-medium">{text}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <PrimaryButton2 />
               </div>
 
-              {/* Right */}
-              <div className={`transition-all duration-700 delay-400 ease-out ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6 text-center">How it works</p>
+              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                We believe cost should never be a barrier to education. Pay in flexible installments spread over your course duration, start learning immediately and settle the balance as you progress.
+              </p>
 
-                {/* Desktop stepper — hidden on mobile */}
-                <div className="relative hidden sm:block">
-                  <div className="absolute top-8 left-8 right-8 h-0.5 bg-gray-200 z-0" />
-                  <div
-                    className="absolute top-8 left-8 h-0.5 z-0 transition-all duration-700 ease-out"
-                    style={{
-                      width: `calc(${progressPercent}% * (100% - 4rem) / 100)`,
-                      background: `linear-gradient(to right, ${BRAND_SOFT}, ${BRAND})`,
-                    }}
-                  />
-                  <div className="relative z-10 flex justify-between">
-                    {installmentSteps.map((step, i) => (
-                      <button key={step.label} onClick={() => setActiveStep(i)} className="flex flex-col items-center gap-2 focus:outline-none">
-                        <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-500 ${i <= activeStep ? "shadow-lg scale-110" : "bg-gray-100 scale-100"}`}
-                          style={i <= activeStep ? {
-                            background: BRAND,
-                            outline: i === activeStep ? `4px solid ${BRAND_BORDER}` : undefined,
-                            outlineOffset: "2px",
-                          } : {}}
-                        >
-                          {step.icon}
-                        </div>
-                        <span className={`text-xs font-semibold transition-colors duration-300 ${i <= activeStep ? "text-gray-900" : "text-gray-400"}`}>{step.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <ul className="space-y-3 w-full max-w-md">
+                {[
+                  { icon: "✅", text: "No hidden fees or interest charges", delay: "delay-300" },
+                  { icon: "📅", text: "Payments timed to your course milestones", delay: "delay-400" },
+                  // { icon: "🔒", text: "Full course access from day one", delay: "delay-500" },
+                  { icon: "🤝", text: "Flexible plans tailored per course", delay: "delay-600" },
+                ].map(({ icon, text, delay }) => (
+                  <li key={text} className={`flex items-center justify-center gap-3 text-gray-700 transition-all duration-700 ${delay} ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+                    <span className="text-lg shrink-0">{icon}</span>
+                    <span className="text-sm font-medium">{text}</span>
+                  </li>
+                ))}
+              </ul>
 
-                {/* Mobile stepper — vertical */}
-                <div className="sm:hidden space-y-3">
+              <PrimaryButton2 />
+
+            </div>
+
+            {/* ── "How it works" section — commented out ──
+            <div className={`transition-all duration-700 delay-400 ease-out ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6 text-center">How it works</p>
+
+              // Desktop stepper — hidden on mobile
+              <div className="relative hidden sm:block">
+                <div className="absolute top-8 left-8 right-8 h-0.5 bg-gray-200 z-0" />
+                <div
+                  className="absolute top-8 left-8 h-0.5 z-0 transition-all duration-700 ease-out"
+                  style={{
+                    width: `calc(${progressPercent}% * (100% - 4rem) / 100)`,
+                    background: `linear-gradient(to right, ${BRAND_SOFT}, ${BRAND})`,
+                  }}
+                />
+                <div className="relative z-10 flex justify-between">
                   {installmentSteps.map((step, i) => (
-                    <button
-                      key={step.label}
-                      onClick={() => setActiveStep(i)}
-                      className="w-full flex items-center gap-4 focus:outline-none"
-                    >
+                    <button key={step.label} onClick={() => setActiveStep(i)} className="flex flex-col items-center gap-2 focus:outline-none">
                       <div
-                        className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-lg transition-all duration-500 ${i <= activeStep ? "shadow-md" : "bg-gray-100"}`}
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-500 ${i <= activeStep ? "shadow-lg scale-110" : "bg-gray-100 scale-100"}`}
                         style={i <= activeStep ? {
                           background: BRAND,
-                          outline: i === activeStep ? `3px solid ${BRAND_BORDER}` : undefined,
-                          outlineOffset: "1px",
+                          outline: i === activeStep ? `4px solid ${BRAND_BORDER}` : undefined,
+                          outlineOffset: "2px",
                         } : {}}
                       >
                         {step.icon}
                       </div>
-                      <div className="flex-1 text-left">
-                        <p className={`text-xs font-bold leading-tight ${i <= activeStep ? "text-gray-900" : "text-gray-400"}`}>{step.label}</p>
-                        {i === activeStep && (
-                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{step.description}</p>
-                        )}
-                      </div>
-                      <div
-                        className="w-2 h-2 rounded-full shrink-0 transition-all duration-300"
-                        style={{
-                          background: i === activeStep ? BRAND : i < activeStep ? BRAND_SOFT : "#e5e7eb",
-                          transform: i === activeStep ? "scale(1.25)" : "scale(1)",
-                        }}
-                      />
+                      <span className={`text-xs font-semibold transition-colors duration-300 ${i <= activeStep ? "text-gray-900" : "text-gray-400"}`}>{step.label}</span>
                     </button>
-                  ))}
-                </div>
-
-                {/* Step detail card */}
-                <div
-                  key={activeStep}
-                  className="mt-6 p-5 rounded-2xl border relative overflow-hidden"
-                  style={{
-                    background: `linear-gradient(135deg, ${BRAND_LIGHT}, #eeedff)`,
-                    borderColor: BRAND_BORDER,
-                    animation: "installment-fadeSlideUp 0.4s ease-out",
-                  }}
-                >
-                  <div className="absolute inset-0 opacity-40" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)", animation: "installment-shimmer 3s infinite" }} />
-                  <p className="text-sm font-bold mb-1 relative z-10" style={{ color: BRAND_DARK }}>
-                    Step {activeStep + 1}: {installmentSteps[activeStep].label}
-                  </p>
-                  <p className="text-sm relative z-10" style={{ color: BRAND }}>
-                    {installmentSteps[activeStep].description}
-                  </p>
-                  <div className="mt-3 flex gap-1.5 relative z-10">
-                    {installmentSteps.map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-1 rounded-full transition-all duration-500"
-                        style={{
-                          width: i === activeStep ? "1.5rem" : "0.75rem",
-                          background: i === activeStep ? BRAND : i < activeStep ? BRAND_SOFT : BRAND_BORDER,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-2 justify-center">
-                  {["Pay 25% upfront", "Rest over course duration", "0% interest"].map((pill) => (
-                    <span
-                      key={pill}
-                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-full shadow-sm cursor-default transition-colors duration-200"
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = BRAND;
-                        (e.currentTarget as HTMLElement).style.color = BRAND;
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = "";
-                        (e.currentTarget as HTMLElement).style.color = "";
-                      }}
-                    >
-                      {pill}
-                    </span>
                   ))}
                 </div>
               </div>
 
+              // Mobile stepper — vertical
+              <div className="sm:hidden space-y-3">
+                {installmentSteps.map((step, i) => (
+                  <button
+                    key={step.label}
+                    onClick={() => setActiveStep(i)}
+                    className="w-full flex items-center gap-4 focus:outline-none"
+                  >
+                    <div
+                      className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-lg transition-all duration-500 ${i <= activeStep ? "shadow-md" : "bg-gray-100"}`}
+                      style={i <= activeStep ? {
+                        background: BRAND,
+                        outline: i === activeStep ? `3px solid ${BRAND_BORDER}` : undefined,
+                        outlineOffset: "1px",
+                      } : {}}
+                    >
+                      {step.icon}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className={`text-xs font-bold leading-tight ${i <= activeStep ? "text-gray-900" : "text-gray-400"}`}>{step.label}</p>
+                      {i === activeStep && (
+                        <p className="text-xs text-gray-500 mt-0.5 leading-snug">{step.description}</p>
+                      )}
+                    </div>
+                    <div
+                      className="w-2 h-2 rounded-full shrink-0 transition-all duration-300"
+                      style={{
+                        background: i === activeStep ? BRAND : i < activeStep ? BRAND_SOFT : "#e5e7eb",
+                        transform: i === activeStep ? "scale(1.25)" : "scale(1)",
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              // Step detail card
+              <div
+                key={activeStep}
+                className="mt-6 p-5 rounded-2xl border relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${BRAND_LIGHT}, #eeedff)`,
+                  borderColor: BRAND_BORDER,
+                  animation: "installment-fadeSlideUp 0.4s ease-out",
+                }}
+              >
+                <div className="absolute inset-0 opacity-40" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)", animation: "installment-shimmer 3s infinite" }} />
+                <p className="text-sm font-bold mb-1 relative z-10" style={{ color: BRAND_DARK }}>
+                  Step {activeStep + 1}: {installmentSteps[activeStep].label}
+                </p>
+                <p className="text-sm relative z-10" style={{ color: BRAND }}>
+                  {installmentSteps[activeStep].description}
+                </p>
+                <div className="mt-3 flex gap-1.5 relative z-10">
+                  {installmentSteps.map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-1 rounded-full transition-all duration-500"
+                      style={{
+                        width: i === activeStep ? "1.5rem" : "0.75rem",
+                        background: i === activeStep ? BRAND : i < activeStep ? BRAND_SOFT : BRAND_BORDER,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2 justify-center">
+                {["Pay 25% upfront", "Rest over course duration", "0% interest"].map((pill) => (
+                  <span
+                    key={pill}
+                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-full shadow-sm cursor-default transition-colors duration-200"
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = BRAND;
+                      (e.currentTarget as HTMLElement).style.color = BRAND;
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "";
+                      (e.currentTarget as HTMLElement).style.color = "";
+                    }}
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
             </div>
+            ── end "How it works" ── */}
+
           </div>
         </div>
       </div>

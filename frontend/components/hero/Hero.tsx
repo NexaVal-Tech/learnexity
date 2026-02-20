@@ -108,96 +108,96 @@ function Particles() {
 }
 
 /** Floating payment offer card */
-function PaymentCard({ visible }: { visible: boolean }) {
-  const [tab, setTab] = useState<"installment" | "full">("installment");
-  return (
-    <div
-      className="w-full rounded-3xl overflow-hidden"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.95)",
-        transition: "opacity 0.7s ease 0.5s, transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s",
-        background: "rgba(10,8,30,0.82)",
-        border: "1px solid rgba(74,58,255,0.35)",
-        backdropFilter: "blur(18px)",
-        WebkitBackdropFilter: "blur(18px)",
-        boxShadow: `0 8px 40px rgba(74,58,255,0.18), 0 2px 12px rgba(0,0,0,0.5)`,
-      }}
-    >
-      {/* Card top glow strip */}
-      <div className="h-[6px] w-full" style={{ background: `linear-gradient(to right, transparent, ${BRAND}, transparent)` }} />
+// function PaymentCard({ visible }: { visible: boolean }) {
+//   const [tab, setTab] = useState<"installment" | "full">("installment");
+//   return (
+//     <div
+//       className="w-full rounded-3xl overflow-hidden"
+//       style={{
+//         opacity: visible ? 1 : 0,
+//         transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.95)",
+//         transition: "opacity 0.7s ease 0.5s, transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s",
+//         background: "rgba(10,8,30,0.82)",
+//         border: "1px solid rgba(74,58,255,0.35)",
+//         backdropFilter: "blur(18px)",
+//         WebkitBackdropFilter: "blur(18px)",
+//         boxShadow: `0 8px 40px rgba(74,58,255,0.18), 0 2px 12px rgba(0,0,0,0.5)`,
+//       }}
+//     >
+//       {/* Card top glow strip */}
+//       <div className="h-[6px] w-full" style={{ background: `linear-gradient(to right, transparent, ${BRAND}, transparent)` }} />
 
-      <div className="p-4 sm:p-5 lg:p-6">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">💳</span>
-          <p className="text-white text-xl font-bold tracking-wide">Flexible Payment Options</p>
-          <span className="ml-auto relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: BRAND }} />
-            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: BRAND }} />
-          </span>
-        </div>
+//       <div className="p-4 sm:p-5 lg:p-6">
+//         {/* Header */}
+//         <div className="flex items-center gap-2 mb-3">
+//           <span className="text-lg">💳</span>
+//           <p className="text-white text-xl font-bold tracking-wide">Flexible Payment Options</p>
+//           <span className="ml-auto relative flex h-2 w-2">
+//             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: BRAND }} />
+//             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: BRAND }} />
+//           </span>
+//         </div>
 
-        {/* Tab switcher */}
-        <div className="flex rounded-xl overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
-          {(["installment", "full"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="flex-1 py-1.5 text-xl font-semibold transition-all duration-300 rounded-xl focus:outline-none"
-              style={{
-                background: tab === t ? BRAND : "transparent",
-                color: tab === t ? "white" : "rgba(255,255,255,0.45)",
-                boxShadow: tab === t ? `0 0 12px ${BRAND}66` : undefined,
-              }}
-            >
-              {t === "installment" ? "Installment" : "Pay Once"}
-            </button>
-          ))}
-        </div>
+//         {/* Tab switcher */}
+//         <div className="flex rounded-xl overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
+//           {(["installment", "full"] as const).map((t) => (
+//             <button
+//               key={t}
+//               onClick={() => setTab(t)}
+//               className="flex-1 py-1.5 text-xl font-semibold transition-all duration-300 rounded-xl focus:outline-none"
+//               style={{
+//                 background: tab === t ? BRAND : "transparent",
+//                 color: tab === t ? "white" : "rgba(255,255,255,0.45)",
+//                 boxShadow: tab === t ? `0 0 12px ${BRAND}66` : undefined,
+//               }}
+//             >
+//               {t === "installment" ? "Installment" : "Pay Once"}
+//             </button>
+//           ))}
+//         </div>
 
-        {/* Tab content */}
-        {tab === "installment" ? (
-          <div className="space-y-2" key="installment" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
-            <div className="flex items-start gap-2">
-              <span className="text-base mt-0.5">📅</span>
-              <div>
-                <p className="text-white text-lg font-semibold">Split into easy payments</p>
-                <p className="text-white/50 text-[13px] mt-0.5">Pay 25% upfront, rest over your course duration</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
-              <span className="text-xs">✅</span>
-              <p className="text-white/80 text-[12px]">0% interest · No hidden fees · Full access</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2" key="full" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
-            <div className="flex items-start gap-2">
-              <span className="text-base mt-0.5">🎁</span>
-              <div>
-                <p className="text-white text-xs font-semibold">Save up <span style={{ color: BRAND }}>more</span></p>
-                <p className="text-white/50 text-[11px] mt-0.5">Pay the full course fee once and unlock a discount</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
-              <span className="text-xs">⚡</span>
-              <p className="text-white/80 text-[11px]">One-time payment · Instant savings · Priority support</p>
-            </div>
-          </div>
-        )}
+//         {/* Tab content */}
+//         {tab === "installment" ? (
+//           <div className="space-y-2" key="installment" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
+//             <div className="flex items-start gap-2">
+//               <span className="text-base mt-0.5">📅</span>
+//               <div>
+//                 <p className="text-white text-lg font-semibold">Split into easy payments</p>
+//                 <p className="text-white/50 text-[13px] mt-0.5">Pay 25% upfront, rest over your course duration</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
+//               <span className="text-xs">✅</span>
+//               <p className="text-white/80 text-[12px]">0% interest · No hidden fees · Full access</p>
+//             </div>
+//           </div>
+//         ) : (
+//           <div className="space-y-2" key="full" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
+//             <div className="flex items-start gap-2">
+//               <span className="text-base mt-0.5">🎁</span>
+//               <div>
+//                 <p className="text-white text-xs font-semibold">Save up <span style={{ color: BRAND }}>more</span></p>
+//                 <p className="text-white/50 text-[11px] mt-0.5">Pay the full course fee once and unlock a discount</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
+//               <span className="text-xs">⚡</span>
+//               <p className="text-white/80 text-[11px]">One-time payment · Instant savings · Priority support</p>
+//             </div>
+//           </div>
+//         )}
 
-        {/* Divider */}
-        <div className="my-3 h-px w-full" style={{ background: "rgba(255,255,255,0.07)" }} />
+//         {/* Divider */}
+//         <div className="my-3 h-px w-full" style={{ background: "rgba(255,255,255,0.07)" }} />
 
-        {/* Footer note */}
-        <p className="text-white/35 text-[12px] text-center leading-relaxed">
-          Both plans include full course access &amp; certification
-        </p>
-      </div>
-    </div>
-  );
-}
+//         {/* Footer note */}
+//         <p className="text-white/35 text-[12px] text-center leading-relaxed">
+//           Both plans include full course access &amp; certification
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -327,9 +327,9 @@ export default function Hero() {
           </div>
 
           {/* ── RIGHT / BOTTOM: Payment card ── */}
-          <div className="w-full lg:w-[440px] xl:w-[460px] shrink-0">
+          {/* <div className="w-full lg:w-[440px] xl:w-[460px] shrink-0">
             <PaymentCard visible={mounted} />
-          </div>
+          </div> */}
 
         </div>
       </div>
