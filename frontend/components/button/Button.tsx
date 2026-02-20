@@ -18,7 +18,7 @@ export const PrimaryButton = ({ label = "Explore courses", href = "/courses/cour
 };
 
 // primary button 2
-export const PrimaryButton2 = ({ label = "Explore Courses", href = "/courses/courses" }) => {
+export const PrimaryButton2 = ({ label = "Enroll Now", href = "/user/auth/register" }) => {
   return (
     <Link href={href}>
       <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">

@@ -15,40 +15,20 @@ export default function Testimonials() {
 
   const data = [
     {
-      name: "Jennifer A.",
-      role: "Product Manager",
-      video: "/videos/learnexity review video.mp4"
+      name: "Benedict.",
+      role: "video Editor",
+      video: "/videos/testimobial-1.mp4"
     },
     {
-      name: "Design Sprint.",
-      role: "project", 
+      name: "Lilian.",
+      role: "Ai Automation", 
       video:  "/videos/testimonial-video.mp4"
     },
-    // {
-    //   name: "Isreal Obinna.",
-    //   role: "Video Editing and Content Creation",
-    //   video:  "/videos/testimonial-3.mp4"
-    // },
-    // {
-    //   name: "Benedict.",
-    //   role: "Video Editing and Content Creation",
-    //   video: "/videos/testimonial-4.mp4"
-    // },
     {
       name: "Lilian Anekwe.",
       role: "Cybersecurity",
       video: "/videos/testimonial-5.mp4"
     },
-    // {
-    //   name: "Mrs Lilian.",
-    //   role: "AI Automation",
-    //   video: "/videos/testimoial-6.mp4"
-    // },
-    // {
-    //   name: "Benedict.",
-    //   role: "Video Editing and Content Creation",
-    //   video: "/videos/testimonial-8.mp4"
-    // }
   ];
 
   const nextSlide = () => {

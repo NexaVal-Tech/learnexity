@@ -63,10 +63,10 @@ export default function EnrollLandingPage() {
                 </div>
                 
                 <h3 className="text-2xl font-bold mb-3 text-gray-900">
-                  1-on-1 Mentorship
+                  Internship Experience
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Learn directly from industry professionals who are invested in guiding your personal growth.
+                  Gain real-world internship experience and build a results-driven portfolio that proves to employers you’re ready to contribute from day one.
                 </p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function EnrollLandingPage() {
             Join hundreds of students building real tech careers.
           </p>
           <a          
-            href="/courses/courses"
+            href="/user/auth/register"
             className="inline-block bg-white text-black font-semibold px-10 py-5 rounded-full text-lg hover:scale-105 transition-transform"
           >
             Start Your Journey Today
