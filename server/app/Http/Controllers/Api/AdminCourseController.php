@@ -138,6 +138,8 @@ class AdminCourseController extends Controller
         // Get enrolled students
         $students = $enrollments->map(function($enrollment) use ($courseId) {
             $user = \App\Models\User::find($enrollment->user_id);
+
+            if (!$user) return null;
             
             // Calculate progress
             $totalTopics = DB::table('material_items')
@@ -167,7 +169,7 @@ class AdminCourseController extends Controller
                 'progress' => $progress,
                 'date' => date('Y-m-d', strtotime($enrollment->enrollment_date)),
             ];
-        });
+        })->filter()->values();
 
         // Sprint completion data for chart
         $sprintCompletionData = $sprints->map(function($sprint, $index) use ($courseId) {
@@ -302,8 +304,8 @@ class AdminCourseController extends Controller
             $course = Course::create($validated);
 
             Log::info('✅ Course created successfully', [
-                'course_id' => $course->course_id,
-                'id' => $course->id
+                'course_id' => $course->id,
+                // 'id' => $course->id
             ]);
 
             return response()->json([

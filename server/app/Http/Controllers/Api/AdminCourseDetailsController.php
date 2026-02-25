@@ -37,7 +37,7 @@ class AdminCourseDetailsController extends Controller
         }
 
         $tool = CourseTool::create([
-            'course_id' => $course->course_id,
+            'course_id' => $course->id,
             'name' => $validated['name'],
             'icon' => $iconPath ? "/storage/{$iconPath}" : null,
             'order' => $validated['order'] ?? 0,
@@ -63,7 +63,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $learning = CourseLearning::create([
-            'course_id' => $course->course_id,
+            'course_id' => $course->id,
             'learning_point' => $validated['learning_point'],
             'order' => $validated['order'] ?? 0,
         ]);
@@ -89,7 +89,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $benefit = CourseBenefit::create([
-            'course_id' => $course->course_id,
+            'course_id' => $course->id,
             'title' => $validated['title'],
             'text' => $validated['text'],
             'order' => $validated['order'] ?? 0,
@@ -116,7 +116,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $careerPath = CourseCareerPath::create([
-            'course_id' => $course->course_id,
+            'course_id' => $course->id,
             'level' => $validated['level'],
             'position' => $validated['position'],
             'order' => $validated['order'] ?? 0,
@@ -143,7 +143,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $industry = CourseIndustry::create([
-            'course_id' => $course->course_id,
+            'course_id' => $course->id,
             'title' => $validated['title'],
             'text' => $validated['text'],
             'order' => $validated['order'] ?? 0,
@@ -179,7 +179,7 @@ class AdminCourseDetailsController extends Controller
         } else {
             // Create new
             $salary = CourseSalary::create([
-                'course_id' => $course->course_id,
+                'course_id' => $course->id,
                 'entry_level' => $validated['entry_level'],
                 'mid_level' => $validated['mid_level'],
                 'senior_level' => $validated['senior_level'],

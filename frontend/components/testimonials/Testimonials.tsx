@@ -15,6 +15,11 @@ export default function Testimonials() {
 
   const data = [
     {
+      name: "Ogechi.",
+      role: "Product management",
+      video: "/videos/product-manager-review.mp4"
+    },
+    {
       name: "Benedict.",
       role: "video Editor",
       video: "/videos/testimobial-1.mp4"
@@ -167,6 +172,7 @@ export default function Testimonials() {
                     <video 
                       src={testimonial.video} 
                       controls 
+                      autoPlay
                       className="w-full h-84 rounded-2xl mb-8 object-cover pointer-events-auto" 
                       preload="metadata"
                       onMouseDown={(e) => e.stopPropagation()}

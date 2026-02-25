@@ -48,6 +48,15 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const [savedPrices, setSavedPrices] = useState({
+    one_on_one_price_usd: '',
+    group_mentorship_price_usd: '',
+    self_paced_price_usd: '',
+    one_on_one_price_ngn: '',
+    group_mentorship_price_ngn: '',
+    self_paced_price_ngn: '',
+  });
+
   useEffect(() => {
     loadSettings();
   }, [courseId]);
@@ -55,7 +64,8 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const course = await adminApi.get<Course>(`/api/admin/courses/${courseId}`);
+const response = await adminApi.get<any>(`/api/admin/courses/${courseId}`);
+const course = response.course; // ✅ unwrap the course object
       
       setSettings({
         offers_one_on_one: course.offers_one_on_one ?? true,
@@ -64,28 +74,38 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         offers_real_world_exposure: course.offers_real_world_exposure ?? false,
         price_usd: course.price_usd ?? 0,
         price_ngn: course.price_ngn ?? 0,
+        // ✅ Always start empty so placeholder is visible
+        one_on_one_price_usd: '',
+        group_mentorship_price_usd: '',
+        self_paced_price_usd: '',
+        one_on_one_price_ngn: '',
+        group_mentorship_price_ngn: '',
+        self_paced_price_ngn: '',
+        onetime_discount_usd: course.onetime_discount_usd?.toString() || '',
+        onetime_discount_ngn: course.onetime_discount_ngn?.toString() || '',
+      });
+
+      setSavedPrices({
         one_on_one_price_usd: course.one_on_one_price_usd?.toString() || '',
         group_mentorship_price_usd: course.group_mentorship_price_usd?.toString() || '',
         self_paced_price_usd: course.self_paced_price_usd?.toString() || '',
         one_on_one_price_ngn: course.one_on_one_price_ngn?.toString() || '',
         group_mentorship_price_ngn: course.group_mentorship_price_ngn?.toString() || '',
         self_paced_price_ngn: course.self_paced_price_ngn?.toString() || '',
-        onetime_discount_usd: course.onetime_discount_usd?.toString() || '',
-        onetime_discount_ngn: course.onetime_discount_ngn?.toString() || '',
       });
+
     } catch (err) {
       console.error('Failed to load settings:', err);
+      // console.error('Server response:', err.response?.data);
       setError('Failed to load course settings');
     } finally {
       setLoading(false);
     }
   };
 
-  // FIXED: Handle number input with commas and large numbers
   const handleNumberChange = (field: string, value: string) => {
     const cleanValue = value.replace(/[^\d.]/g, '');
     if (cleanValue === '' || /^\d*\.?\d*$/.test(cleanValue)) {
-      // Cap discount fields at 100
       if (field.includes('discount')) {
         const num = parseFloat(cleanValue);
         if (!isNaN(num) && num > 100) return;
@@ -94,7 +114,6 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
     }
   };
 
-  // FIXED: Format number for display with commas
   const formatNumberDisplay = (value: string): string => {
     if (!value) return '';
     const num = parseFloat(value);
@@ -108,7 +127,6 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
       setError(null);
       setSuccess(false);
 
-      // FIXED: Convert string values to numbers properly
       const dataToSave = {
         ...settings,
         one_on_one_price_usd: parseFloat(settings.one_on_one_price_usd || '0'),
@@ -124,6 +142,26 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
       console.log('💾 Saving pricing data:', dataToSave);
 
       await adminApi.put(`/api/admin/courses/${courseId}/pricing`, dataToSave);
+
+      // Update savedPrices to reflect the newly saved values
+      setSavedPrices({
+        one_on_one_price_usd: settings.one_on_one_price_usd,
+        group_mentorship_price_usd: settings.group_mentorship_price_usd,
+        self_paced_price_usd: settings.self_paced_price_usd,
+        one_on_one_price_ngn: settings.one_on_one_price_ngn,
+        group_mentorship_price_ngn: settings.group_mentorship_price_ngn,
+        self_paced_price_ngn: settings.self_paced_price_ngn,
+      });
+
+      setSettings(prev => ({
+        ...prev,
+        one_on_one_price_usd: '',
+        group_mentorship_price_usd: '',
+        self_paced_price_usd: '',
+        one_on_one_price_ngn: '',
+        group_mentorship_price_ngn: '',
+        self_paced_price_ngn: '',
+      }));
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -273,12 +311,8 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     type="text"
                     value={settings.one_on_one_price_usd}
                     onChange={(e) => handleNumberChange('one_on_one_price_usd', e.target.value)}
-                    onBlur={(e) => {
-                      const formatted = formatNumberDisplay(e.target.value);
-                      setSettings({ ...settings, one_on_one_price_usd: e.target.value });
-                    }}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.one_on_one_price_usd || '0'}
                   />
                 </div>
                 {settings.one_on_one_price_usd && (
@@ -301,7 +335,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     value={settings.group_mentorship_price_usd}
                     onChange={(e) => handleNumberChange('group_mentorship_price_usd', e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.group_mentorship_price_usd || '0'}
                   />
                 </div>
                 {settings.group_mentorship_price_usd && (
@@ -324,7 +358,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     value={settings.self_paced_price_usd}
                     onChange={(e) => handleNumberChange('self_paced_price_usd', e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.self_paced_price_usd || '0'}
                   />
                 </div>
                 {settings.self_paced_price_usd && (
@@ -394,7 +428,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     value={settings.one_on_one_price_ngn}
                     onChange={(e) => handleNumberChange('one_on_one_price_ngn', e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.one_on_one_price_ngn || '0'}
                   />
                 </div>
                 {settings.one_on_one_price_ngn && (
@@ -417,7 +451,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     value={settings.group_mentorship_price_ngn}
                     onChange={(e) => handleNumberChange('group_mentorship_price_ngn', e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.group_mentorship_price_ngn || '0'}
                   />
                 </div>
                 {settings.group_mentorship_price_ngn && (
@@ -440,7 +474,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                     value={settings.self_paced_price_ngn}
                     onChange={(e) => handleNumberChange('self_paced_price_ngn', e.target.value)}
                     className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
-                    placeholder="0"
+                    placeholder={savedPrices.self_paced_price_ngn || '0'}
                   />
                 </div>
                 {settings.self_paced_price_ngn && (

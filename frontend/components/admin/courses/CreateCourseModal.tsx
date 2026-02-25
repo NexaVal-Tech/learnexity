@@ -719,9 +719,11 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       src={imageData.hero_image} 
                       alt="Hero preview" 
                       className="w-full h-48 object-cover rounded-lg"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/default-course.jpg';
-                      }}
+onError={(e) => {
+  const img = e.target as HTMLImageElement;
+  img.onerror = null; // prevent infinite loop
+  img.style.display = 'none'; // just hide it instead
+}}
                     />
                   </div>
                 )}
@@ -745,9 +747,11 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       src={imageData.secondary_image} 
                       alt="Secondary preview" 
                       className="w-full h-48 object-cover rounded-lg"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/default-course.jpg';
-                      }}
+onError={(e) => {
+  const img = e.target as HTMLImageElement;
+  img.onerror = null; // prevent infinite loop
+  img.style.display = 'none'; // just hide it instead
+}}
                     />
                   </div>
                 )}

@@ -91,9 +91,9 @@ Route::post('/referrals/validate', [ReferralController::class, 'validateReferral
 Route::post('/paystack/webhook', [PaystackWebhookController::class, 'handleWebhook']);
 
 // stripe route 
-Route::post('/create-stripe-checkout', [StripeController::class, 'createCheckoutSession'])->middleware('auth:sanctum');
+Route::post('/create-stripe-checkout', [StripeController::class, 'createCheckoutSession'])->middleware('jwt.auth');
 Route::post('/stripe/webhook', [StripeController::class, 'handleWebhook']);
-Route::post('/stripe/verify-session', [StripeController::class, 'verifySession'])->middleware('auth:sanctum');
+Route::post('/stripe/verify-session', [StripeController::class, 'verifySession'])->middleware('jwt.auth');
 
 // =================== PROTECTED ROUTES =================== //
 Route::middleware(['jwt.auth'])->group(function () {
