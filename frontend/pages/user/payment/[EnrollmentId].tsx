@@ -80,7 +80,9 @@ const TRACK_OPTIONS: TrackOption[] = [
 export default function PaymentPage() {
   const router = useRouter();
   const { enrollmentId } = router.query;
-  const { user } = useAuth();
+
+  // ✅ FIXED: Single useAuth call with authLoading — removed the duplicate
+  const { user, loading: authLoading } = useAuth();
 
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,7 @@ export default function PaymentPage() {
 
   const [paymentType, setPaymentType] = useState<'onetime' | 'installment'>('onetime');
   const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD');
-  const [currencyDetected, setCurrencyDetected] = useState(false); // NEW STATE
+  const [currencyDetected, setCurrencyDetected] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
   const [course, setCourse] = useState<any>(null);
   const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'paystack'>('paystack');
@@ -114,9 +116,8 @@ export default function PaymentPage() {
         
         setCurrency(data.currency);
         setDetectedLocation(data.country);
-        setCurrencyDetected(true); // ADDED
+        setCurrencyDetected(true);
         
-        // Set payment gateway based on currency
         if (data.currency === 'NGN') {
           setPaymentGateway('paystack');
           console.log('✅ Using Paystack for NGN payments');
@@ -129,7 +130,7 @@ export default function PaymentPage() {
         setCurrency('USD');
         setPaymentGateway('stripe');
         setDetectedLocation('Unknown');
-        setCurrencyDetected(true); // ADDED (even on error)
+        setCurrencyDetected(true);
       }
     };
 
@@ -144,18 +145,25 @@ export default function PaymentPage() {
       userEmail: user?.email,
       enrollment,
       loading,
+      authLoading,
       routerReady: router.isReady,
       selectedTrack,
       availableTracks,
       currency,
-      currencyDetected, // ADDED
+      currencyDetected,
       trackPrices,
       paymentGateway,
       routerQuery: router.query
     });
-  }, [enrollmentId, user, enrollment, loading, router.isReady, selectedTrack, availableTracks, currency, currencyDetected, trackPrices, paymentGateway, router.query]);
+  }, [enrollmentId, user, enrollment, loading, authLoading, router.isReady, selectedTrack, availableTracks, currency, currencyDetected, trackPrices, paymentGateway, router.query]);
 
+  // ✅ FIXED: Main useEffect now waits for authLoading before redirecting
   useEffect(() => {
+    if (authLoading) {
+      console.log('⏳ Waiting for auth to hydrate...');
+      return;
+    }
+
     if (!user) {
       console.log('❌ No user, redirecting to login');
       router.push('/user/auth/login');
@@ -167,7 +175,6 @@ export default function PaymentPage() {
       return;
     }
 
-    // WAIT FOR CURRENCY DETECTION
     if (!currencyDetected) {
       console.log('⏳ Waiting for currency detection...');
       return;
@@ -187,7 +194,7 @@ export default function PaymentPage() {
       setError('Invalid enrollment ID');
       setLoading(false);
     }
-  }, [router.isReady, enrollmentId, user, currencyDetected]); // ADDED currencyDetected
+  }, [router.isReady, enrollmentId, user, currencyDetected, authLoading]);
 
   // Refetch course details when currency changes
   useEffect(() => {
@@ -283,7 +290,6 @@ export default function PaymentPage() {
     }
   };
 
-  
   const fetchCourseTrackDetails = async (courseId: number) => {
     try {
       console.log('📚 Fetching course details for ID:', courseId, 'Currency:', currency);
@@ -300,13 +306,12 @@ export default function PaymentPage() {
         self_paced: 0
       };
 
-      // FIXED: Parse string prices to numbers
       if (courseData.offers_one_on_one) {
         tracks.push('one_on_one');
         const priceValue = currency === 'NGN' 
           ? courseData.one_on_one_price_ngn
           : courseData.one_on_one_price_usd;
-        prices.one_on_one = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
+        prices.one_on_one = priceValue ? parseFloat(priceValue?.toString()) : 0;
       }
       
       if (courseData.offers_group_mentorship) {
@@ -314,7 +319,7 @@ export default function PaymentPage() {
         const priceValue = currency === 'NGN'
           ? courseData.group_mentorship_price_ngn
           : courseData.group_mentorship_price_usd;
-        prices.group_mentorship = priceValue ? parseFloat(priceValue.toString()) : 0; // Parse to float
+        prices.group_mentorship = priceValue ? parseFloat(priceValue.toString()) : 0;
       }
       
       if (courseData.offers_self_paced) {
@@ -322,22 +327,20 @@ export default function PaymentPage() {
         const priceValue = currency === 'NGN'
           ? courseData.self_paced_price_ngn
           : courseData.self_paced_price_usd;
-        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
+        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
       }
 
-      // If no tracks are specified, default to self-paced
       if (tracks.length === 0) {
         console.log('⚠️ No tracks specified, defaulting to self-paced');
         tracks.push('self_paced');
         const priceValue = currency === 'NGN' 
           ? courseData.price_ngn
           : courseData.price_usd;
-        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0; // Parse to float
+        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
       }
 
       console.log('✅ Track prices calculated:', prices, 'Currency:', currency);
 
-      // Validate that prices are set
       const hasValidPrices = Object.values(prices).some(price => price > 0);
       if (!hasValidPrices) {
         console.error('⚠️ No valid prices found for currency:', currency);
@@ -354,7 +357,6 @@ export default function PaymentPage() {
       setAvailableTracks(tracks);
       setTrackPrices(prices);
 
-      // Auto-select if only one track is available
       if (tracks.length === 1) {
         console.log('✅ Auto-selecting only available track:', tracks[0]);
         setSelectedTrack(tracks[0]);
@@ -366,7 +368,6 @@ export default function PaymentPage() {
     }
   };
 
-  // Get current price based on track, payment type, and currency
   const getCurrentPrice = (): number => {
     if (!selectedTrack) return 0;
     
@@ -379,7 +380,6 @@ export default function PaymentPage() {
       paymentType
     });
     
-    // Apply one-time payment discount if applicable
     if (paymentType === 'onetime' && course) {
       const discountValue = currency === 'NGN'
         ? course.onetime_discount_ngn
@@ -392,7 +392,6 @@ export default function PaymentPage() {
       }
     }
     
-    // If installment, divide by 4
     if (paymentType === 'installment') {
       price = Math.round(price / 4);
       console.log('💰 Installment price (1/4):', price);
@@ -423,7 +422,6 @@ export default function PaymentPage() {
         throw new Error('Stripe failed to load');
       }
 
-      // Create checkout session on your backend
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-stripe-checkout`, {
         method: 'POST',
         headers: {
@@ -449,21 +447,19 @@ export default function PaymentPage() {
         throw new Error(session.error);
       }
 
-      // Modern approach: redirect to the checkout URL returned by backend
-      // Modern approach: redirect to the checkout URL returned by backend
       if (session.url) {
         window.location.href = session.url;
       } else {
         throw new Error('No checkout URL received from server');
       }
-      } catch (error: any) {
-        console.error('❌ Stripe payment failed:', error);
-        alert('Failed to initialize payment. Please try again.');
-        setProcessing(false);
-      }
-    };
+    } catch (error: any) {
+      console.error('❌ Stripe payment failed:', error);
+      alert('Failed to initialize payment. Please try again.');
+      setProcessing(false);
+    }
+  };
 
-  // Paystack success handler
+  // Paystack success handler — ✅ using window.location.href for reliable redirect
   const onSuccess = async (response: PaystackResponse) => {
     console.log('✅ Payment successful:', response);
     setProcessing(true);
@@ -484,7 +480,8 @@ export default function PaymentPage() {
       if (updatedEnrollment?.payment_status === 'completed') {
         console.log('✅ Webhook already processed payment');
         alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
-        await router.push('/user/dashboard?tab=your-course&payment=success');
+        // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
+        window.location.href = '/user/dashboard?tab=your-course&payment=success';
         return;
       }
 
@@ -499,12 +496,14 @@ export default function PaymentPage() {
 
       console.log('✅ Manual update successful:', updateResult);
       alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
-      await router.push('/user/dashboard?tab=your-course&payment=success');
+      // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
+      window.location.href = '/user/dashboard?tab=your-course&payment=success';
 
     } catch (error: any) {
       console.error('❌ Failed to verify payment:', error);
       alert(`Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`);
-      await router.push('/user/dashboard?tab=your-course&payment=pending');
+      // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
+      window.location.href = '/user/dashboard?tab=your-course&payment=pending';
     } finally {
       console.log('🏁 Payment processing complete');
     }
@@ -613,7 +612,6 @@ export default function PaymentPage() {
     }
   };
 
-  // Main payment handler that routes to correct gateway
   const handlePayment = () => {
     if (paymentGateway === 'stripe') {
       handleStripePayment();
@@ -622,15 +620,19 @@ export default function PaymentPage() {
     }
   };
 
-  // IMPROVED LOADING STATE
-  if (!currencyDetected || loading) {
+  // ✅ FIXED: Loading state now includes authLoading
+  if (authLoading || !currencyDetected || loading) {
     return (
       <UserDashboardLayout>
         <div className="max-w-2xl mx-auto p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
             <p className="text-gray-600">
-              {!currencyDetected ? 'Detecting your location...' : 'Loading payment details...'}
+              {authLoading
+                ? 'Loading...'
+                : !currencyDetected
+                ? 'Detecting your location...'
+                : 'Loading payment details...'}
             </p>
           </div>
         </div>
@@ -889,19 +891,6 @@ export default function PaymentPage() {
                 </div>
               </div>
             )}
-
-            {/* Currency Display */}
-            {/* {detectedLocation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
-                <div className="text-2xl">🌍</div>
-                <div>
-                  <div className="font-semibold text-blue-900">Location Detected: {detectedLocation}</div>
-                  <div className="text-sm text-blue-700">
-                    Prices shown in {currency === 'NGN' ? 'Nigerian Naira (₦)' : 'US Dollars ($)'}
-                  </div>
-                </div>
-              </div>
-            )} */}
           </div>
 
           {/* Right Column - Order Summary */}
