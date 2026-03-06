@@ -237,7 +237,10 @@ export default function UserDashboardPage() {
                           {/* Action Button */}
                           {enrollment.payment_status === 'completed' ? (
                             <button 
-                              onClick={() => router.push(`/user/resource/${enrollment.course_id}`)} 
+                              onClick={() => router.push({
+                                pathname: '/user/resource',
+                                query: { courseId: enrollment.course_id }
+                              })} 
                               className="w-full bg-white border-2 border-blue-600 p-2 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-3xl font-medium transition-colors"
                             >
                               Continue Learning

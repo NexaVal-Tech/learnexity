@@ -88,6 +88,8 @@ export default function ResourcesPage() {
   const [expandedSprints, setExpandedSprints] = useState<number[]>([1]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
 
   // Get courseId from query or fetch user's first enrolled course
   useEffect(() => {
@@ -136,32 +138,11 @@ export default function ResourcesPage() {
         
         if (response.enrollment) {
           setCurrentEnrollment(response.enrollment);
-          
-          console.log('📊 Enrollment Status:', {
-            courseId,
-            payment_status: response.enrollment.payment_status,
-            payment_type: response.enrollment.payment_type,
-            has_access: response.enrollment.has_access,
-            next_payment_due: response.enrollment.next_payment_due,
-            access_blocked_reason: response.enrollment.access_blocked_reason
-          });
-          
-          // Check if user has access
-          if (!response.enrollment.has_access) {
-            console.log('❌ Access blocked - user cannot view resources');
-          } else if (response.enrollment.payment_status === 'pending' && response.enrollment.payment_type === 'onetime') {
-            // One-time payment not completed - block access
-            setCurrentEnrollment({
-              ...response.enrollment,
-              has_access: false,
-              access_blocked_reason: 'Please complete your payment to access course materials.'
-            });
-          } else {
-            console.log('✅ Access granted');
-          }
         }
       } catch (error) {
         console.error('Failed to fetch enrollment status:', error);
+        // Don't block loading — set a default open enrollment so loadData can run
+        setCurrentEnrollment({ has_access: true } as CourseEnrollment);
       }
     };
 
@@ -170,18 +151,19 @@ export default function ResourcesPage() {
 
   // Update useEffect for loading data
   useEffect(() => {
-    if (courseId && currentEnrollment) {
-      loadData();
-    }
+    if (!courseId) return;
+    
+    // Wait for enrollment check before loading data
+    if (currentEnrollment === null) return; // still fetching
+    
+    loadData();
   }, [courseId, currentEnrollment]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       
-      // First check if user has access
       if (currentEnrollment && !currentEnrollment.has_access) {
-        console.log('❌ User does not have access to this course');
         setData(null);
         setError(null);
         setLoading(false);
@@ -274,6 +256,10 @@ export default function ResourcesPage() {
     }
   };
 
+  const handleOpenModal = () => {
+    setShowPreviewModal(true);
+  };
+
   // Check if course materials are empty
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
 
@@ -359,8 +345,8 @@ export default function ResourcesPage() {
          {/* Course Switcher - Horizontal Tabs */}
         {enrolledCourses.length > 1 && (
           <div className="block mb-6">
-            <div className="bg-white rounded-lg overflow-x-auto inline-block">
-              <div className="inline-flex border-b-2 border-gray-400 min-w-max">
+            <div className="w-full overflow-x-auto">
+              <div className="flex border-b-2 border-gray-400 min-w-max">
                 {enrolledCourses.map((course) => (
                   <button
                     key={course.course_id}
@@ -474,16 +460,9 @@ export default function ResourcesPage() {
                                   {item.type === 'link' && <span className="text-green-600 text-xs font-bold">LNK</span>}
                                 </div>
                                 <div className="flex-1">
-                                  <button
-                                    onClick={() => handlePreview(item.id, item.title)}
-                                    className={`font-medium text-sm text-left hover:underline ${
-                                      item.is_completed
-                                        ? 'text-gray-500 line-through'
-                                        : 'text-purple-600'
-                                    }`}
-                                  >
-                                    {item.title}
-                                  </button>
+                                    <button onClick={handleOpenModal}>
+                                      {item.title}
+                                    </button>
                                   <div className="text-xs text-gray-500">{item.file_size}</div>
                                 </div>
                               </div>
@@ -778,17 +757,22 @@ export default function ResourcesPage() {
         )}
 
         {/* preview component */}
-
-        <ResourcePreviewModal
-          url={preview?.url || null}
-          title={preview?.title}
-          onClose={() => {
-            if (preview?.url) {
-              window.URL.revokeObjectURL(preview.url);
-            }
-            setPreview(null);
-          }}
-        />
+        {showPreviewModal && (
+          <ResourcePreviewModal
+            url={null}
+            title={null}
+            onClose={() => setShowPreviewModal(false)}
+            sprints={data?.materials}
+            onMarkComplete={async (itemId, currentStatus) => {
+              await handleItemToggle(itemId, currentStatus);
+            }}
+            onDownload={handleDownload}
+            onPreviewFile={async (itemId, _title) => {
+              const blob = await api.courseResources.downloadMaterial(itemId);
+              return window.URL.createObjectURL(blob);
+            }}
+          />
+        )}
       </div>
     </UserDashboardLayout>
   );

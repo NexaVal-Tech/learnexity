@@ -107,7 +107,7 @@ export default function AnimatedHeroSection() {
                   : "opacity-0 scale-95 translate-y-8 pointer-events-none"
               }`}
             >
-              {/* Subtitle */}
+              {/* Subtitle — font-semibold, matching Method's feature title weight */}
               <div
                 className={`transform transition-all duration-700 delay-100 ${
                   index === currentSlide
@@ -115,12 +115,12 @@ export default function AnimatedHeroSection() {
                     : "translate-y-4 opacity-0"
                 }`}
               >
-                <p className="text-lg md:text-xl font-semibold text-white/90 tracking-widest uppercase mb-4">
+                <p className="text-lg md:text-xl font-semibold text-white/90 tracking-wide uppercase mb-4">
                   {slide.subtitle}
                 </p>
               </div>
 
-              {/* Title */}
+              {/* Title — font-semibold to match Method's h2 style */}
               <div
                 className={`transform transition-all duration-700 delay-300 ${
                   index === currentSlide
@@ -128,14 +128,14 @@ export default function AnimatedHeroSection() {
                     : "translate-y-4 opacity-0"
                 }`}
               >
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-6 text-white">
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-semibold leading-tight mb-6 text-white">
                   <span className="inline-block bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
                     {slide.title}
                   </span>
                 </h1>
               </div>
 
-              {/* Description */}
+              {/* Description — text-xl matching Method's subtitle size */}
               <div
                 className={`transform transition-all duration-700 delay-500 ${
                   index === currentSlide
@@ -143,7 +143,7 @@ export default function AnimatedHeroSection() {
                     : "translate-y-4 opacity-0"
                 }`}
               >
-                <p className="text-lg md:text-2xl text-white/80 mb-10 max-w-3xl">
+                <p className="text-xl text-white/80 mb-10 max-w-2xl">
                   {slide.description}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export default function AnimatedHeroSection() {
               >
                 <a
                   href="/user/auth/register"
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-lg text-white bg-gradient-to-r from-[#5D00FF] to-[#7B2EFF] rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50"
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-lg text-white bg-gradient-to-r from-[#5D00FF] to-[#7B2EFF] rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50"
                 >
                   <span className="relative z-10">Enroll Now</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] to-[#5D00FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -166,7 +166,7 @@ export default function AnimatedHeroSection() {
 
                 <a
                   href="/courses/courses"
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-lg text-white border-2 border-white rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:bg-white hover:text-[#5D00FF]"
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-lg text-white border-2 border-white rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:bg-white hover:text-[#5D00FF]"
                 >
                   <span className="relative z-10">Explore Courses</span>
                 </a>

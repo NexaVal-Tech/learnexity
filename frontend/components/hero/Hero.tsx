@@ -27,7 +27,8 @@ const DURATION = 3800;
 function AnimatedTitle({ title, accent, animKey }: { title: string; accent?: string; animKey: number }) {
   const words = title.split(" ");
   return (
-    <h1 className="hero-title text-5xl font-black leading-tight mb-5 tracking-tight">
+    // font-semibold to match Method.tsx h2 style; no serif font-family override
+    <h1 className="hero-title font-semibold leading-tight mb-5">
       {words.map((word, i) => {
         const clean = word.toLowerCase().replace(/[^a-z]/g, "");
         const isAccent =
@@ -57,11 +58,12 @@ function AnimatedBullets({ bullets, animKey }: { bullets: string[]; animKey: num
       {bullets.map((b, i) => (
         <li
           key={`${animKey}-b-${i}`}
-          className="flex items-center gap-3 text-lg sm:text-xl md:text-2xl text-white/90 bullet-reveal"
+          // text-xl matching Method's feature body text scale
+          className="flex items-center gap-3 text-lg sm:text-xl text-white/90 bullet-reveal"
           style={{ animationDelay: `${200 + i * 120}ms` }}
         >
           <span
-            className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-sm font-bold shrink-0"
+            className="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-white text-sm font-semibold shrink-0"
             style={{ background: BRAND, boxShadow: `0 0 14px ${BRAND}88` }}
           >
             {i + 1}
@@ -106,98 +108,6 @@ function Particles() {
   }, []);
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-[2] pointer-events-none" />;
 }
-
-/** Floating payment offer card */
-// function PaymentCard({ visible }: { visible: boolean }) {
-//   const [tab, setTab] = useState<"installment" | "full">("installment");
-//   return (
-//     <div
-//       className="w-full rounded-3xl overflow-hidden"
-//       style={{
-//         opacity: visible ? 1 : 0,
-//         transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.95)",
-//         transition: "opacity 0.7s ease 0.5s, transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s",
-//         background: "rgba(10,8,30,0.82)",
-//         border: "1px solid rgba(74,58,255,0.35)",
-//         backdropFilter: "blur(18px)",
-//         WebkitBackdropFilter: "blur(18px)",
-//         boxShadow: `0 8px 40px rgba(74,58,255,0.18), 0 2px 12px rgba(0,0,0,0.5)`,
-//       }}
-//     >
-//       {/* Card top glow strip */}
-//       <div className="h-[6px] w-full" style={{ background: `linear-gradient(to right, transparent, ${BRAND}, transparent)` }} />
-
-//       <div className="p-4 sm:p-5 lg:p-6">
-//         {/* Header */}
-//         <div className="flex items-center gap-2 mb-3">
-//           <span className="text-lg">💳</span>
-//           <p className="text-white text-xl font-bold tracking-wide">Flexible Payment Options</p>
-//           <span className="ml-auto relative flex h-2 w-2">
-//             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: BRAND }} />
-//             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: BRAND }} />
-//           </span>
-//         </div>
-
-//         {/* Tab switcher */}
-//         <div className="flex rounded-xl overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
-//           {(["installment", "full"] as const).map((t) => (
-//             <button
-//               key={t}
-//               onClick={() => setTab(t)}
-//               className="flex-1 py-1.5 text-xl font-semibold transition-all duration-300 rounded-xl focus:outline-none"
-//               style={{
-//                 background: tab === t ? BRAND : "transparent",
-//                 color: tab === t ? "white" : "rgba(255,255,255,0.45)",
-//                 boxShadow: tab === t ? `0 0 12px ${BRAND}66` : undefined,
-//               }}
-//             >
-//               {t === "installment" ? "Installment" : "Pay Once"}
-//             </button>
-//           ))}
-//         </div>
-
-//         {/* Tab content */}
-//         {tab === "installment" ? (
-//           <div className="space-y-2" key="installment" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
-//             <div className="flex items-start gap-2">
-//               <span className="text-base mt-0.5">📅</span>
-//               <div>
-//                 <p className="text-white text-lg font-semibold">Split into easy payments</p>
-//                 <p className="text-white/50 text-[13px] mt-0.5">Pay 25% upfront, rest over your course duration</p>
-//               </div>
-//             </div>
-//             <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
-//               <span className="text-xs">✅</span>
-//               <p className="text-white/80 text-[12px]">0% interest · No hidden fees · Full access</p>
-//             </div>
-//           </div>
-//         ) : (
-//           <div className="space-y-2" key="full" style={{ animation: "cardTabFade 0.3s ease forwards" }}>
-//             <div className="flex items-start gap-2">
-//               <span className="text-base mt-0.5">🎁</span>
-//               <div>
-//                 <p className="text-white text-xs font-semibold">Save up <span style={{ color: BRAND }}>more</span></p>
-//                 <p className="text-white/50 text-[11px] mt-0.5">Pay the full course fee once and unlock a discount</p>
-//               </div>
-//             </div>
-//             <div className="flex items-center gap-2 mt-2 rounded-xl px-3 py-2" style={{ background: "rgba(74,58,255,0.12)", border: `1px solid ${BRAND}33` }}>
-//               <span className="text-xs">⚡</span>
-//               <p className="text-white/80 text-[11px]">One-time payment · Instant savings · Priority support</p>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Divider */}
-//         <div className="my-3 h-px w-full" style={{ background: "rgba(255,255,255,0.07)" }} />
-
-//         {/* Footer note */}
-//         <p className="text-white/35 text-[12px] text-center leading-relaxed">
-//           Both plans include full course access &amp; certification
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -251,7 +161,7 @@ export default function Hero() {
         <Courses variant="white" />
       </div>
 
-      {/* ── Main layout: two-col on lg+, single-col stacked on mobile ── */}
+      {/* ── Main layout ── */}
       <div className="relative z-10 flex items-center min-h-[calc(100vh-5rem)] px-5 sm:px-8 md:px-12 lg:px-16 py-10">
         <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
 
@@ -279,8 +189,9 @@ export default function Hero() {
             <AnimatedTitle title={slide.title} accent={slide.accent} animKey={animKey} />
 
             {slide.subtitle && (
+              // text-xl to match Method's description paragraph size
               <p
-                className="text-lg sm:text-xl md:text-2xl text-white/80 mb-5 leading-relaxed subtitle-reveal"
+                className="text-xl text-white/80 mb-5 leading-relaxed subtitle-reveal"
                 style={{ animationDelay: `${slide.title.split(" ").length * 75 + 100}ms` }}
               >
                 {slide.subtitle}
@@ -325,11 +236,6 @@ export default function Hero() {
               </button>
             </div>
           </div>
-
-          {/* ── RIGHT / BOTTOM: Payment card ── */}
-          {/* <div className="w-full lg:w-[440px] xl:w-[460px] shrink-0">
-            <PaymentCard visible={mounted} />
-          </div> */}
 
         </div>
       </div>
@@ -380,15 +286,15 @@ export default function Hero() {
           animation: ctaReveal 0.5s ease forwards;
         }
 
-        @keyframes cardTabFade {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
+        /* ── TYPOGRAPHY: matches Method.tsx ──
+           - font-semibold weight (600)
+           - No serif / Georgia override
+           - Tailwind default sans-serif stack
+           - Size scales from 2rem → 4rem matching Method's text-4xl md:text-5xl pattern
+        */
         .hero-title {
-          font-family: 'Georgia', 'Times New Roman', serif;
-          letter-spacing: -0.02em;
           font-size: clamp(2rem, 5.5vw, 4rem);
+          letter-spacing: -0.01em;
         }
 
         @media (max-width: 640px) {
