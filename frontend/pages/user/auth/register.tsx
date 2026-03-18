@@ -132,33 +132,22 @@ export default function RegisterPage() {
     }
 
     try {
-      // console.log('📝 Registering user with referral code:', formData.referralCode);
-      
       await registerUser(
         formData.fullName,
         formData.email,
         formData.password,
         formData.confirmPassword,
         formData.phone,
-        formData.referralCode // Pass referral code to register function
+        formData.referralCode
       );
 
-      setSuccess('Registration successful! Please check your email to verify your account before logging in.');
+      // ✅ Remove everything below — AuthContext handles the redirect
+      // Don't set success, don't setTimeout, don't router.push
+      // AuthContext already redirects to /user/auth/verify-email
 
-      // Clear referral code from localStorage after successful registration
       sessionStorage.removeItem('pending_referral_code');
 
-      // console.log('✅ Registration successful, cleared referral code from localStorage');
-
-      // Redirect to login after 4 seconds
-      setTimeout(() => {
-        router.push('/user/auth/login?message=verify_email&email=' + encodeURIComponent(formData.email));
-      }, 4000);
-
     } catch (err: any) {
-
-      // console.error('❌ Registration error:', err);
-
       if (err.message.includes('email is already registered')) {
         setError('This email is already registered. Please login instead or use a different email.');
       } else if (err.message.includes('Validation failed')) {
@@ -170,6 +159,7 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
 
   const handleGoogleSignup = () => {
 
