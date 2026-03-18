@@ -102,16 +102,18 @@ apiClient.interceptors.response.use(
     }
 
     // 🔹 Handle unauthorized token
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname;
-        const isAuthPage = currentPath.includes('/auth/');
-        localStorage.removeItem('token');
-        if (!isAuthPage) {
-          window.location.href = '/user/auth/login';
-        }
+  if (error.response?.status === 401) {
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      // ✅ Add register page to the exclusion list
+      const isAuthPage = currentPath.includes('/auth/');
+      localStorage.removeItem('token');
+      if (!isAuthPage) {
+        window.location.href = '/user/auth/login';
       }
+      // If it IS an auth page (login, register, verify-email), do nothing
     }
+  }
 
     // 🔹 Default: pass through
     return Promise.reject(error);

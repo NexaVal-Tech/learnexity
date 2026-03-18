@@ -381,7 +381,7 @@ export default function RegisterPage() {
                   hover:bg-purple-700 transition-all duration-200 shadow-lg 
                   disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Creating account...' : success ? 'Redirecting to login...' : 'Sign Up'}
+                  {loading ? 'Creating account...' : 'Sign Up'}
                 </button>
 
                 {/* Divider */}

@@ -107,57 +107,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // REGISTER (with logging + referral support)
   // REGISTER
-    const register = async (
-      name: string,
-      email: string,
-      password: string,
-      passwordConfirmation: string,
-      phone?: string,
-      referralCode?: string
-    ) => {
-      try {
-        setError(null);
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+    phone?: string,
+    referralCode?: string
+  ) => {
+    try {
+      setError(null);
 
-        // console.log('📝 [AUTH CONTEXT] Registering user', {
-        //   name,
-        //   email,
-        //   has_phone: !!phone,
-        //   has_referral: !!referralCode,
-        //   referral_code: referralCode,
-        // });
+      const payload: any = {
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
+      };
 
-        const payload: any = {
-          name,
-          email,
-          password,
-          password_confirmation: passwordConfirmation,
-        };
+      if (phone) payload.phone = phone;
+      if (referralCode) payload.referral_code = referralCode;
 
-        if (phone) payload.phone = phone;
-        if (referralCode) {
-          payload.referral_code = referralCode;
-          // console.log('📌 [AUTH CONTEXT] Including referral code:', referralCode);
-        }
+      await api.auth.register(payload);
 
-        const response = await api.auth.register(payload);
+      // ✅ Move router.push OUTSIDE the try/catch
+      // so navigation errors don't get caught and re-thrown as "server error"
+      
+    } catch (error: any) {
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
+    }
 
-        // ✅ Laravel returns 201 with NO token on registration —
+    // ✅ Navigate AFTER try/catch completes — not inside it
+    router.push(`/user/auth/verify-email?email=${encodeURIComponent(email)}`);
+  };
 
-        // console.log('✅ [AUTH CONTEXT] Registration successful:', email);
-
-        // Redirect to a "check your email" page, passing the email
-        // so the page can show it and offer a resend button.
-        router.push(
-          `/user/auth/verify-email?email=${encodeURIComponent(email)}`
-        );
-
-      } catch (error: any) {
-        // console.error('❌ [AUTH CONTEXT] Registration failed:', error);
-        const err = handleApiError(error);
-        setError(err);
-        throw new Error(err);
-      }
-    };
 
   const logout = async () => {
     try {
