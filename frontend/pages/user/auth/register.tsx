@@ -45,13 +45,16 @@ export default function RegisterPage() {
     const { ref } = router.query;
     
     if (ref && typeof ref === 'string') {
-      console.log('📌 Referral code detected in URL:', ref);
+
+      // console.log('📌 Referral code detected in URL:', ref);
+
       setReferralCode(ref);
       setFormData(prev => ({ ...prev, referralCode: ref }));
       
       // Store in localStorage immediately for Google Sign-In
-      localStorage.setItem('pending_referral_code', ref);
-      console.log('💾 Stored referral code in localStorage:', ref);
+      sessionStorage.setItem('pending_referral_code', ref);
+
+      // console.log('💾 Stored referral code in localStorage:', ref);
       
       // Validate the referral code
       validateReferralCode(ref);
@@ -71,17 +74,23 @@ export default function RegisterPage() {
       
       if (response.ok && data.valid) {
         setReferralValidated(true);
-        console.log('✅ Referral code validated successfully');
+
+        // console.log('✅ Referral code validated successfully');
+
       } else {
         setError('Invalid referral code. You can still register without it.');
         setReferralCode(null);
         setReferralValidated(false);
         // Clear from localStorage if invalid
-        localStorage.removeItem('pending_referral_code');
-        console.log('❌ Invalid referral code');
+        sessionStorage.removeItem('pending_referral_code');
+
+        // console.log('❌ Invalid referral code');
+
       }
     } catch (err) {
-      console.error('Error validating referral code:', err);
+
+      // console.error('Error validating referral code:', err);
+
       setError('Could not validate referral code. You can still register.');
     } finally {
       setValidatingReferral(false);
@@ -123,7 +132,7 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log('📝 Registering user with referral code:', formData.referralCode);
+      // console.log('📝 Registering user with referral code:', formData.referralCode);
       
       await registerUser(
         formData.fullName,
@@ -137,8 +146,9 @@ export default function RegisterPage() {
       setSuccess('Registration successful! Please check your email to verify your account before logging in.');
 
       // Clear referral code from localStorage after successful registration
-      localStorage.removeItem('pending_referral_code');
-      console.log('✅ Registration successful, cleared referral code from localStorage');
+      sessionStorage.removeItem('pending_referral_code');
+
+      // console.log('✅ Registration successful, cleared referral code from localStorage');
 
       // Redirect to login after 4 seconds
       setTimeout(() => {
@@ -146,7 +156,9 @@ export default function RegisterPage() {
       }, 4000);
 
     } catch (err: any) {
-      console.error('❌ Registration error:', err);
+
+      // console.error('❌ Registration error:', err);
+
       if (err.message.includes('email is already registered')) {
         setError('This email is already registered. Please login instead or use a different email.');
       } else if (err.message.includes('Validation failed')) {
@@ -160,12 +172,15 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignup = () => {
-    console.log('🔵 Google Sign-Up clicked');
+
+    // console.log('🔵 Google Sign-Up clicked');
     
     // Ensure referral code is stored in localStorage before redirecting
     if (referralCode && referralValidated) {
-      localStorage.setItem('pending_referral_code', referralCode);
-      console.log('💾 Stored referral code before Google redirect:', referralCode);
+      sessionStorage.setItem('pending_referral_code', referralCode);
+
+      // console.log('💾 Stored referral code before Google redirect:', referralCode);
+
     }
     
     loginWithGoogle();

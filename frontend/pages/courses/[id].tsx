@@ -35,7 +35,7 @@ export default function CoursePage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`);
         const data = await response.json();
         
-        console.log('💱 Currency detected:', data);
+        // console.log('💱 Currency detected:', data);
         
         setCurrency(data.currency);
         setDetectedLocation(data.country);
@@ -98,7 +98,7 @@ export default function CoursePage() {
       setEnrolling(true);
       setError(null);
 
-      console.log('🚀 Enrolling in course:', id);
+      // console.log('🚀 Enrolling in course:', id);
 
       const response = await api.enrollment.enroll(
         id as string,
@@ -106,7 +106,7 @@ export default function CoursePage() {
         'onetime'
       );
 
-      console.log('✅ Enrollment successful:', response);
+      // console.log('✅ Enrollment successful:', response);
       router.push(`/user/payment/${response.enrollment_id}`);
       
     } catch (error: any) {
@@ -116,7 +116,7 @@ export default function CoursePage() {
         alert('You are already enrolled in this course!');
         router.push('/user/dashboard?tab=your-course');
       } else if (error.response?.status === 200 && error.response?.data?.enrollment_id) {
-        console.log('📋 Redirecting to existing enrollment payment');
+        // console.log('📋 Redirecting to existing enrollment payment');
         router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else if (error.response?.data?.enrollment_id) {
         router.push(`/user/payment/${error.response.data.enrollment_id}`);

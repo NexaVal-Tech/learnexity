@@ -26,7 +26,7 @@ class PaystackWebhookController extends Controller
         }
 
         $body = $request->getContent();
-        $computedSignature = hash_hmac('sha512', $body, env('PAYSTACK_SECRET_KEY'));
+        $computedSignature = hash_hmac('sha512', $body, config('services.paystack.secret'));
         if ($signature !== $computedSignature) {
             Log::warning('⚠️ Paystack webhook signature mismatch', [
                 'received' => $signature,

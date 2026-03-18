@@ -18,6 +18,7 @@ export default function Navbar() {
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact Us" },
     { href: "/community", label: "Join our community" },
+    { href: "/kids", label: "Kids" },
   ];
 
   return (

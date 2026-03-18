@@ -20,11 +20,11 @@ const StudentsPage = () => {
 
     const handleSendMessage = async (messageData: any) => {
     try {
-        console.log('Sending message with data:', messageData);
+        // console.log('Sending message with data:', messageData);
         
         const result = await api.admin.students.sendMessage(messageData);
         
-        console.log('Message queued successfully:', result);
+        // console.log('Message queued successfully:', result);
         
         // Show success message
         alert(`✅ Success! Message has been queued and will be sent to ${messageData.student_ids.length} student(s) shortly.`);

@@ -139,7 +139,7 @@ const course = response.course; // ✅ unwrap the course object
         onetime_discount_ngn: parseFloat(settings.onetime_discount_ngn || '0'),
       };
 
-      console.log('💾 Saving pricing data:', dataToSave);
+      // console.log('💾 Saving pricing data:', dataToSave);
 
       await adminApi.put(`/api/admin/courses/${courseId}/pricing`, dataToSave);
 

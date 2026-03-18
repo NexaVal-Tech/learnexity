@@ -26,14 +26,14 @@ export default function ResetPassword() {
     if (router.isReady && !storedToken && !storedEmail) {
       const { token, email } = router.query;
       
-      console.log('🔍 Reset Password Debug:', {
-        hasToken: !!token,
-        hasEmail: !!email,
-        token: token,
-        email: email,
-        tokenType: typeof token,
-        emailType: typeof email
-      });
+      // console.log('🔍 Reset Password Debug:', {
+      //   hasToken: !!token,
+      //   hasEmail: !!email,
+      //   token: token,
+      //   email: email,
+      //   tokenType: typeof token,
+      //   emailType: typeof email
+      // });
 
       if (token && email) {
         setStoredToken(String(token));

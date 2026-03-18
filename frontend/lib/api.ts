@@ -2,6 +2,11 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { adminApi } from './adminApi';
 
+// ✅ ADD: Fail loudly if API URL is missing in production
+if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+}
+
 // Import all types from the types file
 import type {
   User,
@@ -171,7 +176,7 @@ export const api = {
     },
 
     googleRedirect: () => {
-      const referralCode = localStorage.getItem('pending_referral_code');
+      const referralCode = sessionStorage.getItem('pending_referral_code');
       
       let redirectUrl = `${API_URL}/api/auth/google/redirect`;
       
@@ -208,31 +213,31 @@ export const api = {
       return response.data;
     },
 
-  enroll: async (
-    courseId: string, 
-    learningTrack?: LearningTrack,
-    paymentType?: 'onetime' | 'installment'
-  ): Promise<EnrollmentResponse> => {
-    // Log what we're sending
-    const payload = {
-      learning_track: learningTrack || 'self_paced',
-      payment_type: paymentType || 'onetime',
-    };
-    
-    console.log('📤 Sending enrollment request:', {
-      url: `/api/courses/${courseId}/enroll`,
-      payload
-    });
+    enroll: async (
+      courseId: string, 
+      learningTrack?: LearningTrack,
+      paymentType?: 'onetime' | 'installment'
+    ): Promise<EnrollmentResponse> => {
+      // Log what we're sending
+      const payload = {
+        learning_track: learningTrack || 'self_paced',
+        payment_type: paymentType || 'onetime',
+      };
+      
+      // console.log('📤 Sending enrollment request:', {
+      //   url: `/api/courses/${courseId}/enroll`,
+      //   payload
+      // });
 
-    const response = await apiClient.post<EnrollmentResponse>(
-      `/api/courses/${courseId}/enroll`,
-      payload
-    );
-    
-    console.log('📥 Enrollment response:', response.data);
-    
-    return response.data;
-  },
+      const response = await apiClient.post<EnrollmentResponse>(
+        `/api/courses/${courseId}/enroll`,
+        payload
+      );
+      
+      // console.log('📥 Enrollment response:', response.data);
+      
+      return response.data;
+    },
 
     getUserEnrollments: async (): Promise<UserEnrollmentsResponse> => {
       const response = await apiClient.get<UserEnrollmentsResponse>('/api/courses/enrollments');

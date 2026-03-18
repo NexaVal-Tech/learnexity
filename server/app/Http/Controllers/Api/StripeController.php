@@ -16,7 +16,7 @@ class StripeController extends Controller
 {
     public function __construct()
     {
-        Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
+        Stripe::setApiKey(config('services.stripe.secret'));
     }
 
     /**
@@ -26,82 +26,104 @@ class StripeController extends Controller
     {
         $validated = $request->validate([
             'enrollment_id' => 'required|integer',
-            'course_id' => 'required',
-            'course_name' => 'required|string',
             'learning_track' => 'required|in:one_on_one,group_mentorship,self_paced',
-            'payment_type' => 'required|in:onetime,installment',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'required|in:usd',
-            'user_email' => 'required|email',
-            'user_name' => 'required|string',
+            'payment_type'   => 'required|in:onetime,installment',
+            'currency'       => 'required|in:usd',
+            // ✅ amount removed — we calculate it server-side
         ]);
 
         try {
             $enrollment = CourseEnrollment::findOrFail($validated['enrollment_id']);
 
-            // Verify enrollment belongs to authenticated user
             if ($enrollment->user_id !== auth()->id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
-            // Convert amount to cents
-            $amountInCents = (int)($validated['amount'] * 100);
+            $course = $enrollment->course;
+            $track  = $validated['learning_track'];
+            $type   = $validated['payment_type'];
+
+            // ✅ Server-side price calculation
+            $priceMap = [
+                'one_on_one'       => $course->one_on_one_price_usd,
+                'group_mentorship' => $course->group_mentorship_price_usd,
+                'self_paced'       => $course->self_paced_price_usd,
+            ];
+
+            $basePrice = (float) ($priceMap[$track] ?? $course->price_usd ?? 0);
+
+            if ($basePrice <= 0) {
+                return response()->json(['error' => 'Invalid course price configuration.'], 422);
+            }
+
+            // Apply one-time discount if applicable
+            if ($type === 'onetime') {
+                $discountPercent = (float) ($course->onetime_discount_usd ?? 0);
+                if ($discountPercent > 0) {
+                    $basePrice = round($basePrice * (1 - $discountPercent / 100));
+                }
+            }
+
+            // Installment = 1/4 of price
+            if ($type === 'installment') {
+                $basePrice = round($basePrice / 4);
+            }
+
+            $amountInCents = (int) ($basePrice * 100);
+
+            if ($amountInCents <= 0) {
+                return response()->json(['error' => 'Calculated amount is invalid.'], 422);
+            }
 
             $trackNames = [
-                'one_on_one' => 'One-on-One Coaching',
+                'one_on_one'       => 'One-on-One Coaching',
                 'group_mentorship' => 'Group Mentorship Program',
-                'self_paced' => 'Self-Paced Learning',
+                'self_paced'       => 'Self-Paced Learning',
             ];
 
             $session = Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
                     'price_data' => [
-                        'currency' => 'usd',
+                        'currency'     => 'usd',
                         'product_data' => [
-                            'name' => $validated['course_name'],
-                            'description' => $trackNames[$validated['learning_track']] . 
-                                           ($validated['payment_type'] === 'installment' ? ' (Installment 1 of 4)' : ''),
-                            'images' => [config('app.url') . '/images/course-default.png'],
+                            'name'        => $course->title,
+                            'description' => $trackNames[$track] .
+                                ($type === 'installment' ? ' (Installment 1 of 4)' : ''),
                         ],
                         'unit_amount' => $amountInCents,
                     ],
                     'quantity' => 1,
                 ]],
-                'mode' => 'payment',
-                'success_url' => config('app.frontend_url') . '/user/payment/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => config('app.frontend_url') . '/user/payment/' . $validated['enrollment_id'],
-                'customer_email' => $validated['user_email'],
-                'metadata' => [
-                    'enrollment_id' => $validated['enrollment_id'],
-                    'course_id' => $validated['course_id'],
-                    'course_name' => $validated['course_name'],
-                    'user_id' => auth()->id(),
-                    'learning_track' => $validated['learning_track'],
-                    'payment_type' => $validated['payment_type'],
-                    'currency' => 'USD',
+                'mode'          => 'payment',
+                'success_url'   => config('app.frontend_url') . '/user/payment/success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url'    => config('app.frontend_url') . '/user/payment/' . $enrollment->id,
+                'customer_email' => auth()->user()->email,
+                'metadata'      => [
+                    'enrollment_id' => $enrollment->id,
+                    'course_id'     => $course->id,
+                    'course_name'   => $course->title,
+                    'user_id'       => auth()->id(),
+                    'learning_track' => $track,
+                    'payment_type'  => $type,
+                    'currency'      => 'USD',
                 ],
             ]);
 
-            Log::info('✅ Stripe checkout session created', [
-                'session_id' => $session->id,
-                'enrollment_id' => $validated['enrollment_id'],
-                'amount' => $validated['amount'],
+            Log::info('Stripe checkout session created', [
+                'session_id'    => $session->id,
+                'enrollment_id' => $enrollment->id,
             ]);
 
             return response()->json([
-                'id' => $session->id,
+                'id'  => $session->id,
                 'url' => $session->url,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('❌ Failed to create Stripe session', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
+            Log::error('Failed to create Stripe session', ['error' => $e->getMessage()]);
             return response()->json([
-                'error' => 'Failed to create payment session: ' . $e->getMessage()
+                'error' => 'Payment initialization failed. Please try again.'
             ], 500);
         }
     }
@@ -113,7 +135,7 @@ class StripeController extends Controller
     {
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-        $webhookSecret = env('STRIPE_WEBHOOK_SECRET');
+        $webhookSecret = config('services.stripe.webhook_secret');
 
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
@@ -262,6 +284,10 @@ class StripeController extends Controller
 
                 if ($enrollmentId) {
                     $enrollment = CourseEnrollment::find($enrollmentId);
+
+                    if (!$enrollment || $enrollment->user_id !== auth()->id()) {
+                        return response()->json(['error' => 'Unauthorized'], 403);
+                    }
                     
                     return response()->json([
                         'status' => 'success',

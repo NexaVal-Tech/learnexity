@@ -45,19 +45,19 @@ export default function UserDashboardPage() {
       const data = await api.courses.getAll();
       setCourses(data);
     } catch (error) {
-      console.error('Failed to fetch courses:', error);
+      // console.error('Failed to fetch courses:', error);
     }
   };
 
   const fetchEnrollments = async () => {
     try {
       const data = await api.enrollment.getUserEnrollments();
-      console.log('Fetched enrollments:', data.enrollments);
+      // console.log('Fetched enrollments:', data.enrollments);
 
       // Show ALL enrollments, not just completed ones
       setEnrollments(data.enrollments);
     } catch (error) {
-      console.error('Failed to fetch enrollments:', error);
+      // console.error('Failed to fetch enrollments:', error);
     } finally {
       setLoading(false);
     }

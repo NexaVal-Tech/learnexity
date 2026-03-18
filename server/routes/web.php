@@ -8,3 +8,6 @@ Route::get('/', function () {
 
 Route::get('/auth/google/redirect',[App\Http\Controllers\Api\User\AuthController::class,'redirectToGoogle']);
 Route::get('/auth/google/callback',[App\Http\Controllers\Api\User\AuthController::class,'handleGoogleCallback']);
+
+
+Route::post('/auth/exchange-token', [App\Http\Controllers\Api\User\AuthController::class, 'exchangeOAuthToken']);

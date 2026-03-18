@@ -30,6 +30,11 @@ export default function LoginPage() {
 
   // Check for verification success or email verification required messages
   useEffect(() => {
+
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    if (rememberedEmail) {
+        setFormData(prev => ({ ...prev, email: rememberedEmail, rememberMe: true }));
+    }
     const { message, email, verified } = router.query;
     
     // Email verification success from clicking link
@@ -54,18 +59,25 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-    setLoading(true);
+      e.preventDefault();
+      setError('');
+      setSuccessMessage('');
+      setLoading(true);
 
-    try {
-      await login(formData.email, formData.password);
-    } catch (err: any) {
-      setError(err.message || handleApiError(err));
-    } finally {
-      setLoading(false);
-    }
+      try {
+          await login(formData.email, formData.password);
+
+          // ✅ rememberMe: store email for next visit if checked
+          if (formData.rememberMe) {
+              localStorage.setItem('remembered_email', formData.email);
+          } else {
+              localStorage.removeItem('remembered_email');
+          }
+      } catch (err: any) {
+          setError(err.message || handleApiError(err));
+      } finally {
+          setLoading(false);
+      }
   };
 
   const handleGoogleLogin = () => {

@@ -105,520 +105,520 @@ export default function PaymentPage() {
   const [course, setCourse] = useState<any>(null);
   const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'paystack'>('paystack');
 
-  // Detect currency and set payment gateway
-  useEffect(() => {
-    const detectCurrency = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`);
-        const data = await response.json();
-        
-        console.log('💱 Currency detected:', data);
-        
-        setCurrency(data.currency);
-        setDetectedLocation(data.country);
-        setCurrencyDetected(true);
-        
-        if (data.currency === 'NGN') {
-          setPaymentGateway('paystack');
-          console.log('✅ Using Paystack for NGN payments');
-        } else {
+    // Detect currency and set payment gateway
+    useEffect(() => {
+      const detectCurrency = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`);
+          const data = await response.json();
+          
+          // console.log('💱 Currency detected:', data);
+          
+          setCurrency(data.currency);
+          setDetectedLocation(data.country);
+          setCurrencyDetected(true);
+          
+          if (data.currency === 'NGN') {
+            setPaymentGateway('paystack');
+            // console.log('✅ Using Paystack for NGN payments');
+          } else {
+            setPaymentGateway('stripe');
+            // console.log('✅ Using Stripe for international payments');
+          }
+        } catch (error) {
+          // console.error('Failed to detect currency:', error);
+          setCurrency('USD');
           setPaymentGateway('stripe');
-          console.log('✅ Using Stripe for international payments');
+          setDetectedLocation('Unknown');
+          setCurrencyDetected(true);
         }
-      } catch (error) {
-        console.error('Failed to detect currency:', error);
-        setCurrency('USD');
-        setPaymentGateway('stripe');
-        setDetectedLocation('Unknown');
-        setCurrencyDetected(true);
+      };
+
+      detectCurrency();
+    }, []);
+
+  // useEffect(() => {
+  //   console.log('🔍 Debug Info:', {
+  //     enrollmentId,
+  //     enrollmentIdType: typeof enrollmentId,
+  //     userId: user?.id,
+  //     userEmail: user?.email,
+  //     enrollment,
+  //     loading,
+  //     authLoading,
+  //     routerReady: router.isReady,
+  //     selectedTrack,
+  //     availableTracks,
+  //     currency,
+  //     currencyDetected,
+  //     trackPrices,
+  //     paymentGateway,
+  //     routerQuery: router.query
+  //   });
+  // }, [enrollmentId, user, enrollment, loading, authLoading, router.isReady, selectedTrack, availableTracks, currency, currencyDetected, trackPrices, paymentGateway, router.query]);
+
+    // ✅ FIXED: Main useEffect now waits for authLoading before redirecting
+    useEffect(() => {
+      if (authLoading) {
+        // console.log('⏳ Waiting for auth to hydrate...');
+        return;
+      }
+
+      if (!user) {
+        // console.log('❌ No user, redirecting to login');
+        router.push('/user/auth/login');
+        return;
+      }
+
+      if (!router.isReady) {
+        // console.log('⏳ Router not ready yet...');
+        return;
+      }
+
+      if (!currencyDetected) {
+        // console.log('⏳ Waiting for currency detection...');
+        return;
+      }
+
+      if (!enrollmentId) {
+        // console.log('⚠️ No enrollmentId in URL, checking for pending enrollment...');
+        fetchPendingEnrollment();
+        return;
+      }
+
+      if (typeof enrollmentId === 'string') {
+        // console.log('✅ Fetching enrollment details for ID:', enrollmentId);
+        fetchEnrollmentDetails();
+      } else {
+        // console.log('⚠️ Invalid enrollmentId type:', typeof enrollmentId);
+        setError('Invalid enrollment ID');
+        setLoading(false);
+      }
+    }, [router.isReady, enrollmentId, user, currencyDetected, authLoading]);
+
+    // Refetch course details when currency changes
+    useEffect(() => {
+      if (enrollment && currency && currencyDetected) {
+        // console.log('🔄 Currency changed, refetching course details');
+        fetchCourseTrackDetails(enrollment.course_id);
+      }
+    }, [currency, currencyDetected]);
+
+    const fetchPendingEnrollment = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // console.log('📡 Looking for pending enrollments...');
+        
+        const response = await api.enrollment.getUserEnrollments();
+        // console.log('📦 Received enrollments:', response.enrollments);
+        
+        const pendingEnrollments = response.enrollments.filter(
+          (e: CourseEnrollment) => e.payment_status === 'pending'
+        );
+
+        if (pendingEnrollments.length === 0) {
+          // console.log('❌ No pending enrollments found');
+          setError('No pending enrollment found');
+          alert('No pending enrollment found. Please enroll in a course first.');
+          router.push('/user/dashboard');
+          return;
+        }
+
+        const recentPending = pendingEnrollments.sort((a: CourseEnrollment, b: CourseEnrollment) => 
+          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        )[0];
+
+        // console.log('✅ Found pending enrollment:', recentPending);
+        
+        router.replace(`/user/payment/${recentPending.id}`, undefined, { shallow: true });
+        
+        setEnrollment(recentPending);
+        await fetchCourseTrackDetails(recentPending.course_id);
+        
+        } catch (error: any) {
+          // console.error('💥 Failed to fetch pending enrollment:', error);
+          setError('Failed to load payment details');
+          alert('Failed to load payment details. Please try again.');
+          router.push('/user/dashboard');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+    const fetchEnrollmentDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // console.log('📡 Fetching enrollments from API...');
+        
+        const response = await api.enrollment.getUserEnrollments();
+        // console.log('📦 Received enrollments:', response.enrollments);
+        
+        const found = response.enrollments.find(
+          (e: CourseEnrollment) => e.id === Number(enrollmentId)
+        );
+
+        // console.log('🔎 Found enrollment:', found);
+
+        if (!found) {
+          // console.error('❌ Enrollment not found in list');
+          setError('Enrollment not found');
+          alert('Enrollment not found. Please try enrolling again.');
+          router.push('/user/dashboard');
+          return;
+        }
+
+        if (found.payment_status === 'completed') {
+          // console.log('✅ Already paid');
+          alert('This course is already paid for!');
+          router.push('/user/dashboard?tab=your-course');
+          return;
+        }
+
+        setEnrollment(found);
+        await fetchCourseTrackDetails(found.course_id);
+        
+        // console.log('✅ Enrollment set successfully');
+      } catch (error: any) {
+        // console.error('💥 Failed to fetch enrollment:', error);
+        setError('Failed to load payment details');
+        alert('Failed to load payment details. Please check console for details.');
+        router.push('/user/dashboard');
+      } finally {
+        setLoading(false);
       }
     };
 
-    detectCurrency();
-  }, []);
+    const fetchCourseTrackDetails = async (courseId: number) => {
+      try {
+        // console.log('📚 Fetching course details for ID:', courseId, 'Currency:', currency);
+        const courseData = await api.courses.getById(courseId);
 
-  useEffect(() => {
-    console.log('🔍 Debug Info:', {
-      enrollmentId,
-      enrollmentIdType: typeof enrollmentId,
-      userId: user?.id,
-      userEmail: user?.email,
-      enrollment,
-      loading,
-      authLoading,
-      routerReady: router.isReady,
-      selectedTrack,
-      availableTracks,
-      currency,
-      currencyDetected,
-      trackPrices,
-      paymentGateway,
-      routerQuery: router.query
-    });
-  }, [enrollmentId, user, enrollment, loading, authLoading, router.isReady, selectedTrack, availableTracks, currency, currencyDetected, trackPrices, paymentGateway, router.query]);
+        // console.log('📚 Course details:', courseData);
+        
+        setCourse(courseData);
 
-  // ✅ FIXED: Main useEffect now waits for authLoading before redirecting
-  useEffect(() => {
-    if (authLoading) {
-      console.log('⏳ Waiting for auth to hydrate...');
-      return;
-    }
+        const tracks: LearningTrack[] = [];
+        const prices: Record<LearningTrack, number> = {
+          one_on_one: 0,
+          group_mentorship: 0,
+          self_paced: 0
+        };
 
-    if (!user) {
-      console.log('❌ No user, redirecting to login');
-      router.push('/user/auth/login');
-      return;
-    }
+        if (courseData.offers_one_on_one) {
+          tracks.push('one_on_one');
+          const priceValue = currency === 'NGN' 
+            ? courseData.one_on_one_price_ngn
+            : courseData.one_on_one_price_usd;
+          prices.one_on_one = priceValue ? parseFloat(priceValue?.toString()) : 0;
+        }
+        
+        if (courseData.offers_group_mentorship) {
+          tracks.push('group_mentorship');
+          const priceValue = currency === 'NGN'
+            ? courseData.group_mentorship_price_ngn
+            : courseData.group_mentorship_price_usd;
+          prices.group_mentorship = priceValue ? parseFloat(priceValue.toString()) : 0;
+        }
+        
+        if (courseData.offers_self_paced) {
+          tracks.push('self_paced');
+          const priceValue = currency === 'NGN'
+            ? courseData.self_paced_price_ngn
+            : courseData.self_paced_price_usd;
+          prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
+        }
 
-    if (!router.isReady) {
-      console.log('⏳ Router not ready yet...');
-      return;
-    }
+        if (tracks.length === 0) {
+          // console.log('⚠️ No tracks specified, defaulting to self-paced');
+          tracks.push('self_paced');
+          const priceValue = currency === 'NGN' 
+            ? courseData.price_ngn
+            : courseData.price_usd;
+          prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
+        }
 
-    if (!currencyDetected) {
-      console.log('⏳ Waiting for currency detection...');
-      return;
-    }
+        // console.log('✅ Track prices calculated:', prices, 'Currency:', currency);
 
-    if (!enrollmentId) {
-      console.log('⚠️ No enrollmentId in URL, checking for pending enrollment...');
-      fetchPendingEnrollment();
-      return;
-    }
+        const hasValidPrices = Object.values(prices).some(price => price > 0);
+        if (!hasValidPrices) {
+          // console.error('⚠️ No valid prices found for currency:', currency);
+          // console.log('Course data:', {
+          //   one_on_one_ngn: courseData.one_on_one_price_ngn,
+          //   one_on_one_usd: courseData.one_on_one_price_usd,
+          //   group_ngn: courseData.group_mentorship_price_ngn,
+          //   group_usd: courseData.group_mentorship_price_usd,
+          //   self_paced_ngn: courseData.self_paced_price_ngn,
+          //   self_paced_usd: courseData.self_paced_price_usd,
+          // });
+        }
 
-    if (typeof enrollmentId === 'string') {
-      console.log('✅ Fetching enrollment details for ID:', enrollmentId);
-      fetchEnrollmentDetails();
-    } else {
-      console.log('⚠️ Invalid enrollmentId type:', typeof enrollmentId);
-      setError('Invalid enrollment ID');
-      setLoading(false);
-    }
-  }, [router.isReady, enrollmentId, user, currencyDetected, authLoading]);
+        setAvailableTracks(tracks);
+        setTrackPrices(prices);
 
-  // Refetch course details when currency changes
-  useEffect(() => {
-    if (enrollment && currency && currencyDetected) {
-      console.log('🔄 Currency changed, refetching course details');
-      fetchCourseTrackDetails(enrollment.course_id);
-    }
-  }, [currency, currencyDetected]);
+        if (tracks.length === 1) {
+          // console.log('✅ Auto-selecting only available track:', tracks[0]);
+          setSelectedTrack(tracks[0]);
+        }
 
-  const fetchPendingEnrollment = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('📡 Looking for pending enrollments...');
-      
-      const response = await api.enrollment.getUserEnrollments();
-      console.log('📦 Received enrollments:', response.enrollments);
-      
-      const pendingEnrollments = response.enrollments.filter(
-        (e: CourseEnrollment) => e.payment_status === 'pending'
-      );
-
-      if (pendingEnrollments.length === 0) {
-        console.log('❌ No pending enrollments found');
-        setError('No pending enrollment found');
-        alert('No pending enrollment found. Please enroll in a course first.');
-        router.push('/user/dashboard');
-        return;
+      } catch (error) {
+        // console.error('💥 Failed to fetch course track details:', error);
+        setError('Failed to load course pricing. Please refresh the page.');
       }
+    };
 
-      const recentPending = pendingEnrollments.sort((a: CourseEnrollment, b: CourseEnrollment) => 
-        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-      )[0];
+    const getCurrentPrice = (): number => {
+      if (!selectedTrack) return 0;
+      
+      let price = trackPrices[selectedTrack] || 0;
+      
+      // console.log('💰 Calculating price:', {
+      //   selectedTrack,
+      //   basePrice: price,
+      //   currency,
+      //   paymentType
+      // });
+      
+      if (paymentType === 'onetime' && course) {
+        const discountValue = currency === 'NGN'
+          ? course.onetime_discount_ngn
+          : course.onetime_discount_usd;
+        const discountPercent = parseFloat(discountValue) || 0;
 
-      console.log('✅ Found pending enrollment:', recentPending);
-      
-      router.replace(`/user/payment/${recentPending.id}`, undefined, { shallow: true });
-      
-      setEnrollment(recentPending);
-      await fetchCourseTrackDetails(recentPending.course_id);
-      
-    } catch (error: any) {
-      console.error('💥 Failed to fetch pending enrollment:', error);
-      setError('Failed to load payment details');
-      alert('Failed to load payment details. Please try again.');
-      router.push('/user/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEnrollmentDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('📡 Fetching enrollments from API...');
-      
-      const response = await api.enrollment.getUserEnrollments();
-      console.log('📦 Received enrollments:', response.enrollments);
-      
-      const found = response.enrollments.find(
-        (e: CourseEnrollment) => e.id === Number(enrollmentId)
-      );
-
-      console.log('🔎 Found enrollment:', found);
-
-      if (!found) {
-        console.error('❌ Enrollment not found in list');
-        setError('Enrollment not found');
-        alert('Enrollment not found. Please try enrolling again.');
-        router.push('/user/dashboard');
-        return;
+        if (discountPercent > 0) {
+          price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
+          // console.log('💰 Applied discount:', discountPercent + '%', 'New price:', price);
+        }
       }
-
-      if (found.payment_status === 'completed') {
-        console.log('✅ Already paid');
-        alert('This course is already paid for!');
-        router.push('/user/dashboard?tab=your-course');
-        return;
+      
+      if (paymentType === 'installment') {
+        price = Math.round(price / 4);
+        // console.log('💰 Installment price (1/4):', price);
       }
-
-      setEnrollment(found);
-      await fetchCourseTrackDetails(found.course_id);
       
-      console.log('✅ Enrollment set successfully');
-    } catch (error: any) {
-      console.error('💥 Failed to fetch enrollment:', error);
-      setError('Failed to load payment details');
-      alert('Failed to load payment details. Please check console for details.');
-      router.push('/user/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return price;
+    };
 
-  const fetchCourseTrackDetails = async (courseId: number) => {
-    try {
-      console.log('📚 Fetching course details for ID:', courseId, 'Currency:', currency);
-      const courseData = await api.courses.getById(courseId);
+    // Stripe payment handler
+      const handleStripePayment = async () => {
+        // console.log('🚀 Stripe payment button clicked');
 
-      console.log('📚 Course details:', courseData);
-      
-      setCourse(courseData);
+        if (!selectedTrack) {
+          alert('Please select a learning track before proceeding with payment.');
+          return;
+        }
 
-      const tracks: LearningTrack[] = [];
-      const prices: Record<LearningTrack, number> = {
-        one_on_one: 0,
-        group_mentorship: 0,
-        self_paced: 0
+        if (!user?.email || !enrollment) {
+          alert('Missing payment information. Please try again.');
+          return;
+        }
+
+        setProcessing(true);
+
+        try {
+          const stripe = await stripePromise;
+          if (!stripe) {
+            throw new Error('Stripe failed to load');
+          }
+
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-stripe-checkout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+              enrollment_id: enrollment.id,
+              course_id: enrollment.course_id,
+              course_name: enrollment.course_name,
+              learning_track: selectedTrack,
+              payment_type: paymentType,
+              // amount: getCurrentPrice(),
+              currency: 'usd',
+              user_email: user.email,
+              user_name: user.name,
+            }),
+          });
+
+          const session: StripeCheckoutSession = await response.json();
+
+          if (session.error) {
+            throw new Error(session.error);
+          }
+
+          if (session.url) {
+            window.location.href = session.url;
+          } else {
+            throw new Error('No checkout URL received from server');
+          }
+        } catch (error: any) {
+          // console.error('❌ Stripe payment failed:', error);
+          alert('Failed to initialize payment. Please try again.');
+          setProcessing(false);
+        }
       };
 
-      if (courseData.offers_one_on_one) {
-        tracks.push('one_on_one');
-        const priceValue = currency === 'NGN' 
-          ? courseData.one_on_one_price_ngn
-          : courseData.one_on_one_price_usd;
-        prices.one_on_one = priceValue ? parseFloat(priceValue?.toString()) : 0;
-      }
-      
-      if (courseData.offers_group_mentorship) {
-        tracks.push('group_mentorship');
-        const priceValue = currency === 'NGN'
-          ? courseData.group_mentorship_price_ngn
-          : courseData.group_mentorship_price_usd;
-        prices.group_mentorship = priceValue ? parseFloat(priceValue.toString()) : 0;
-      }
-      
-      if (courseData.offers_self_paced) {
-        tracks.push('self_paced');
-        const priceValue = currency === 'NGN'
-          ? courseData.self_paced_price_ngn
-          : courseData.self_paced_price_usd;
-        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
-      }
+    // Paystack success handler — ✅ using window.location.href for reliable redirect
+    const onSuccess = async (response: PaystackResponse) => {
+      // console.log('✅ Payment successful:', response);
+      setProcessing(true);
 
-      if (tracks.length === 0) {
-        console.log('⚠️ No tracks specified, defaulting to self-paced');
-        tracks.push('self_paced');
-        const priceValue = currency === 'NGN' 
-          ? courseData.price_ngn
-          : courseData.price_usd;
-        prices.self_paced = priceValue ? parseFloat(priceValue?.toString()) : 0;
-      }
+      try {
+        // console.log('⏳ Waiting for webhook to process...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-      console.log('✅ Track prices calculated:', prices, 'Currency:', currency);
+        // console.log('🔍 Verifying payment with backend...');
+        
+        const enrollmentsResponse = await api.enrollment.getUserEnrollments();
+        const updatedEnrollment = enrollmentsResponse.enrollments.find(
+          (e: CourseEnrollment) => e.id === enrollment!.id
+        );
 
-      const hasValidPrices = Object.values(prices).some(price => price > 0);
-      if (!hasValidPrices) {
-        console.error('⚠️ No valid prices found for currency:', currency);
-        console.log('Course data:', {
-          one_on_one_ngn: courseData.one_on_one_price_ngn,
-          one_on_one_usd: courseData.one_on_one_price_usd,
-          group_ngn: courseData.group_mentorship_price_ngn,
-          group_usd: courseData.group_mentorship_price_usd,
-          self_paced_ngn: courseData.self_paced_price_ngn,
-          self_paced_usd: courseData.self_paced_price_usd,
-        });
-      }
+        // console.log('📦 Updated enrollment:', updatedEnrollment);
 
-      setAvailableTracks(tracks);
-      setTrackPrices(prices);
+        if (updatedEnrollment?.payment_status === 'completed') {
+          // console.log('✅ Webhook already processed payment');
+          alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
+          // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
+          window.location.href = '/user/dashboard?tab=your-course&payment=success';
+          return;
+        }
 
-      if (tracks.length === 1) {
-        console.log('✅ Auto-selecting only available track:', tracks[0]);
-        setSelectedTrack(tracks[0]);
-      }
+        // console.log('⏳ Webhook not processed yet, updating manually...');
+        
+        const updateResult = await api.enrollment.updatePayment(
+          enrollment!.id,
+          'completed',
+          response.reference,
+          selectedTrack!
+        );
 
-    } catch (error) {
-      console.error('💥 Failed to fetch course track details:', error);
-      setError('Failed to load course pricing. Please refresh the page.');
-    }
-  };
-
-  const getCurrentPrice = (): number => {
-    if (!selectedTrack) return 0;
-    
-    let price = trackPrices[selectedTrack] || 0;
-    
-    console.log('💰 Calculating price:', {
-      selectedTrack,
-      basePrice: price,
-      currency,
-      paymentType
-    });
-    
-    if (paymentType === 'onetime' && course) {
-      const discountValue = currency === 'NGN'
-        ? course.onetime_discount_ngn
-        : course.onetime_discount_usd;
-      const discountPercent = parseFloat(discountValue) || 0;
-
-      if (discountPercent > 0) {
-        price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
-        console.log('💰 Applied discount:', discountPercent + '%', 'New price:', price);
-      }
-    }
-    
-    if (paymentType === 'installment') {
-      price = Math.round(price / 4);
-      console.log('💰 Installment price (1/4):', price);
-    }
-    
-    return price;
-  };
-
-  // Stripe payment handler
-  const handleStripePayment = async () => {
-    console.log('🚀 Stripe payment button clicked');
-
-    if (!selectedTrack) {
-      alert('Please select a learning track before proceeding with payment.');
-      return;
-    }
-
-    if (!user?.email || !enrollment) {
-      alert('Missing payment information. Please try again.');
-      return;
-    }
-
-    setProcessing(true);
-
-    try {
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          enrollment_id: enrollment.id,
-          course_id: enrollment.course_id,
-          course_name: enrollment.course_name,
-          learning_track: selectedTrack,
-          payment_type: paymentType,
-          amount: getCurrentPrice(),
-          currency: 'usd',
-          user_email: user.email,
-          user_name: user.name,
-        }),
-      });
-
-      const session: StripeCheckoutSession = await response.json();
-
-      if (session.error) {
-        throw new Error(session.error);
-      }
-
-      if (session.url) {
-        window.location.href = session.url;
-      } else {
-        throw new Error('No checkout URL received from server');
-      }
-    } catch (error: any) {
-      console.error('❌ Stripe payment failed:', error);
-      alert('Failed to initialize payment. Please try again.');
-      setProcessing(false);
-    }
-  };
-
-  // Paystack success handler — ✅ using window.location.href for reliable redirect
-  const onSuccess = async (response: PaystackResponse) => {
-    console.log('✅ Payment successful:', response);
-    setProcessing(true);
-
-    try {
-      console.log('⏳ Waiting for webhook to process...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      console.log('🔍 Verifying payment with backend...');
-      
-      const enrollmentsResponse = await api.enrollment.getUserEnrollments();
-      const updatedEnrollment = enrollmentsResponse.enrollments.find(
-        (e: CourseEnrollment) => e.id === enrollment!.id
-      );
-
-      console.log('📦 Updated enrollment:', updatedEnrollment);
-
-      if (updatedEnrollment?.payment_status === 'completed') {
-        console.log('✅ Webhook already processed payment');
+        // console.log('✅ Manual update successful:', updateResult);
         alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
         // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
         window.location.href = '/user/dashboard?tab=your-course&payment=success';
+
+      } catch (error: any) {
+        // console.error('❌ Failed to verify payment:', error);
+        alert(`Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`);
+        // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
+        window.location.href = '/user/dashboard?tab=your-course&payment=pending';
+      } finally {
+        // console.log('🏁 Payment processing complete');
+      }
+    };
+
+    const onClose = () => {
+      // console.log('❌ Payment popup closed by user');
+      setProcessing(false);
+    };
+
+    const paystackConfig = enrollment && user && selectedTrack ? {
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+      email: user.email,
+      amount: Math.round(getCurrentPrice() * 100),
+      ref: `PAY-${crypto.randomUUID().replace(/-/g, '').substring(0, 20).toUpperCase()}`,
+      currency: currency === 'NGN' ? 'NGN' : 'USD',
+      metadata: {
+        enrollment_id: enrollment.id,
+        course_id: enrollment.course_id,
+        course_name: enrollment.course_name,
+        user_id: user.id,
+        learning_track: selectedTrack,
+        payment_type: paymentType,
+        currency: currency,
+        custom_fields: [
+          {
+            display_name: "Course Name",
+            variable_name: "course_name",
+            value: enrollment.course_name
+          },
+          {
+            display_name: "User Name",
+            variable_name: "user_name",
+            value: user.name
+          },
+          {
+            display_name: "Learning Track",
+            variable_name: "learning_track",
+            value: TRACK_OPTIONS.find(t => t.id === selectedTrack)?.name || selectedTrack
+          },
+          {
+            display_name: "Payment Type",
+            variable_name: "payment_type",
+            value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)'
+          }
+        ]
+      },
+      onSuccess,
+      onClose
+    } : null;
+
+    const { initializePayment } = usePaystack(paystackConfig || {} as any);
+
+    const handlePaystackPayment = () => {
+      // console.log('🚀 Paystack payment button clicked');
+
+      if (!selectedTrack) {
+        alert('Please select a learning track before proceeding with payment.');
         return;
       }
 
-      console.log('⏳ Webhook not processed yet, updating manually...');
-      
-      const updateResult = await api.enrollment.updatePayment(
-        enrollment!.id,
-        'completed',
-        response.reference,
-        selectedTrack!
-      );
+      if (!paystackConfig) {
+        // console.error('❌ Payment configuration missing');
+        alert('Payment configuration error. Please try again.');
+        return;
+      }
 
-      console.log('✅ Manual update successful:', updateResult);
-      alert(`Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`);
-      // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
-      window.location.href = '/user/dashboard?tab=your-course&payment=success';
+      if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
+        // console.error('❌ Paystack public key missing');
+        alert('Paystack is not configured. Please contact support.');
+        return;
+      }
 
-    } catch (error: any) {
-      console.error('❌ Failed to verify payment:', error);
-      alert(`Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`);
-      // ✅ Use window.location.href instead of router.push for reliability after Paystack popup
-      window.location.href = '/user/dashboard?tab=your-course&payment=pending';
-    } finally {
-      console.log('🏁 Payment processing complete');
-    }
-  };
+      if (!user?.email) {
+        // console.error('❌ User email missing');
+        alert('User email is required for payment. Please log in again.');
+        router.push('/user/auth/login');
+        return;
+      }
 
-  const onClose = () => {
-    console.log('❌ Payment popup closed by user');
-    setProcessing(false);
-  };
+      if (!enrollment) {
+        // console.error('❌ Enrollment missing');
+        alert('Enrollment information missing. Please try again.');
+        router.push('/user/dashboard');
+        return;
+      }
 
-  const paystackConfig = enrollment && user && selectedTrack ? {
-    key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-    email: user.email,
-    amount: Math.round(getCurrentPrice() * 100),
-    ref: `ENR-${enrollment.id}-${selectedTrack}-${paymentType}-${Date.now()}`,
-    currency: currency === 'NGN' ? 'NGN' : 'USD',
-    metadata: {
-      enrollment_id: enrollment.id,
-      course_id: enrollment.course_id,
-      course_name: enrollment.course_name,
-      user_id: user.id,
-      learning_track: selectedTrack,
-      payment_type: paymentType,
-      currency: currency,
-      custom_fields: [
-        {
-          display_name: "Course Name",
-          variable_name: "course_name",
-          value: enrollment.course_name
-        },
-        {
-          display_name: "User Name",
-          variable_name: "user_name",
-          value: user.name
-        },
-        {
-          display_name: "Learning Track",
-          variable_name: "learning_track",
-          value: TRACK_OPTIONS.find(t => t.id === selectedTrack)?.name || selectedTrack
-        },
-        {
-          display_name: "Payment Type",
-          variable_name: "payment_type",
-          value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)'
-        }
-      ]
-    },
-    onSuccess,
-    onClose
-  } : null;
+      // console.log('💳 Initializing Paystack payment', {
+      //   email: user.email,
+      //   amount: paystackConfig.amount,
+      //   enrollmentId: enrollment.id,
+      //   courseId: enrollment.course_id,
+      //   learningTrack: selectedTrack,
+      //   paymentType: paymentType,
+      //   currency: currency,
+      //   reference: paystackConfig.ref,
+      // });
 
-  const { initializePayment } = usePaystack(paystackConfig || {} as any);
+      try {
+        initializePayment();
+        // console.log('✅ Payment popup should be opening...');
+      } catch (error) {
+        // console.error('❌ Failed to initialize payment:', error);
+        alert('Failed to open payment window. Please try again.');
+        setProcessing(false);
+      }
+    };
 
-  const handlePaystackPayment = () => {
-    console.log('🚀 Paystack payment button clicked');
-
-    if (!selectedTrack) {
-      alert('Please select a learning track before proceeding with payment.');
-      return;
-    }
-
-    if (!paystackConfig) {
-      console.error('❌ Payment configuration missing');
-      alert('Payment configuration error. Please try again.');
-      return;
-    }
-
-    if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-      console.error('❌ Paystack public key missing');
-      alert('Paystack is not configured. Please contact support.');
-      return;
-    }
-
-    if (!user?.email) {
-      console.error('❌ User email missing');
-      alert('User email is required for payment. Please log in again.');
-      router.push('/user/auth/login');
-      return;
-    }
-
-    if (!enrollment) {
-      console.error('❌ Enrollment missing');
-      alert('Enrollment information missing. Please try again.');
-      router.push('/user/dashboard');
-      return;
-    }
-
-    console.log('💳 Initializing Paystack payment', {
-      email: user.email,
-      amount: paystackConfig.amount,
-      enrollmentId: enrollment.id,
-      courseId: enrollment.course_id,
-      learningTrack: selectedTrack,
-      paymentType: paymentType,
-      currency: currency,
-      reference: paystackConfig.ref,
-    });
-
-    try {
-      initializePayment();
-      console.log('✅ Payment popup should be opening...');
-    } catch (error) {
-      console.error('❌ Failed to initialize payment:', error);
-      alert('Failed to open payment window. Please try again.');
-      setProcessing(false);
-    }
-  };
-
-  const handlePayment = () => {
-    if (paymentGateway === 'stripe') {
-      handleStripePayment();
-    } else {
-      handlePaystackPayment();
-    }
-  };
+    const handlePayment = () => {
+      if (paymentGateway === 'stripe') {
+        handleStripePayment();
+      } else {
+        handlePaystackPayment();
+      }
+    };
 
   // ✅ FIXED: Loading state now includes authLoading
   if (authLoading || !currencyDetected || loading) {

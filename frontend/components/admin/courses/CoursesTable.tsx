@@ -40,7 +40,7 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters }) => {
       const response = await api.admin.courses.getAll(filters);
       setCourses(response.data);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      // console.error('Error fetching courses:', error);
     } finally {
       setLoading(false);
     }

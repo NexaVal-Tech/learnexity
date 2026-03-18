@@ -6,7 +6,7 @@ import { GeistSans } from "geist/font/sans";
 import { useRouter } from "next/router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
-import useAuthTokenSync from "@/hooks/useAuthTokenSync";
+// import useAuthTokenSync from "@/hooks/useAuthTokenSync";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -15,9 +15,9 @@ export default function App({ Component, pageProps }: AppProps) {
   const isUserRoute = router.pathname.startsWith("/user");
 
   // ✅ Only sync USER tokens on USER routes
-  if (isUserRoute) {
-    useAuthTokenSync();
-  }
+  // if (isUserRoute) {
+  //   useAuthTokenSync();
+  // }
 
   return (
     <main className={GeistSans.variable}>

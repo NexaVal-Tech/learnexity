@@ -254,37 +254,33 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         Log::info('🔵 [GOOGLE CALLBACK] Callback received');
-        
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $isProduction = app()->environment('production');
+
+        // 1️⃣ Fetch user from Google
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
-            
             Log::info('✅ [GOOGLE] User fetched from Google', [
                 'email' => $googleUser->getEmail(),
                 'name' => $googleUser->getName(),
                 'google_id' => $googleUser->getId(),
             ]);
         } catch (\Exception $e) {
-            Log::error('❌ [GOOGLE] Failed to fetch user', [
-                'error' => $e->getMessage(),
-            ]);
-            
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            Log::error('❌ [GOOGLE] Failed to fetch user', ['error' => $e->getMessage()]);
             return redirect($frontendUrl . '/user/auth/login?error=oauth_failed');
         }
 
-        // Get referral code from session
+        // 2️⃣ Check referral code in session
         $referralCode = session('pending_referral_code');
-        
         Log::info('🔍 [GOOGLE] Checking for referral code', [
             'has_referral_in_session' => !empty($referralCode),
             'referral_code' => $referralCode
         ]);
 
-        // Find or create user
+        // 3️⃣ Find or create user
         $user = User::where('email', $googleUser->getEmail())->first();
-        
         if ($user) {
-            // Existing user
             if (!$user->google_id) {
                 $user->update([
                     'google_id' => $googleUser->getId(),
@@ -292,13 +288,8 @@ class AuthController extends Controller
                 ]);
                 Log::info('🔄 [GOOGLE] Updated existing user with google_id', ['user_id' => $user->id]);
             }
-            
-            Log::info('✅ [GOOGLE] Existing user logged in', [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
+            Log::info('✅ [GOOGLE] Existing user logged in', ['user_id' => $user->id]);
         } else {
-            // New user - create with referral code
             $user = User::create([
                 'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'User',
                 'email' => $googleUser->getEmail(),
@@ -308,13 +299,8 @@ class AuthController extends Controller
                 'referred_by_code' => $referralCode,
             ]);
 
-            Log::info('✅ [GOOGLE] New user created', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'referred_by_code' => $user->referred_by_code
-            ]);
+            Log::info('✅ [GOOGLE] New user created', ['user_id' => $user->id]);
 
-            // Process referral if code was provided
             if ($referralCode) {
                 $this->processReferral($user, $referralCode);
                 session()->forget('pending_referral_code');
@@ -322,34 +308,98 @@ class AuthController extends Controller
             }
         }
 
-        // Generate JWT token
-        try {
-            $token = JWTAuth::fromUser($user);
-            
-            Log::info('✅ [GOOGLE] Token generated', [
-                'user_id' => $user->id,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('❌ [GOOGLE] Failed to generate token', [
-                'error' => $e->getMessage(),
-                'user_id' => $user->id,
-            ]);
-            
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-            return redirect($frontendUrl . '/user/auth/login?error=token_failed');
-        }
+        // 4️⃣ Generate JWT token
+        $token = JWTAuth::fromUser($user);
+        $isProduction = app()->environment('production');
 
-        // Redirect to frontend callback
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-        $callbackUrl = $frontendUrl . '/user/auth/callback?token=' . $token;
-        
-        Log::info('🟢 [GOOGLE] Redirecting to frontend', [
-            'user_id' => $user->id,
-            'callback_url' => $callbackUrl
+        $cookie = cookie(
+            'oauth_token',
+            $token,
+            10,                                         // 10 minutes
+            '/',
+            $isProduction ? '.learnexity.org' : null,   // root domain in prod, null locally
+            $isProduction,                              // secure=true in prod (HTTPS only)
+            true,                                       // httpOnly always
+            false,
+            $isProduction ? 'None' : 'Lax'             // None for cross-subdomain, Lax for local
+        );
+
+        Log::info('🟢 [GOOGLE] Redirecting to frontend with cookie', ['user_id' => $user->id]);
+
+        return redirect($frontendUrl . '/user/auth/callback')->withCookie($cookie);
+    }
+
+    /**
+ * Exchange the short-lived OAuth cookie for a real JWT token.
+ * Called by the frontend callback page after Google OAuth redirect.
+ */
+    public function exchangeOAuthToken(Request $request)
+    {
+        // Debug: log all cookies received (remove after confirming it works)
+        Log::info('🍪 [OAUTH EXCHANGE] Cookies received', [
+            'cookie_names' => array_keys($request->cookies->all()),
+            'has_oauth_token' => $request->cookies->has('oauth_token'),
         ]);
 
-        return redirect($callbackUrl);
+        $oauthToken = $request->cookie('oauth_token');
+
+        if (!$oauthToken) {
+            Log::warning('⚠️ [OAUTH EXCHANGE] No oauth_token cookie found', [
+                'all_cookies' => array_keys($request->cookies->all()),
+            ]);
+            return response()->json([
+                'message' => 'No authentication token found. Please try signing in again.'
+            ], 401);
+        }
+
+        try {
+            // Validate the short-lived cookie token
+            JWTAuth::setToken($oauthToken);
+            $user = JWTAuth::authenticate();
+
+            if (!$user) {
+                Log::warning('⚠️ [OAUTH EXCHANGE] Token valid but user not found');
+                return response()->json(['message' => 'User not found.'], 401);
+            }
+
+            // Invalidate the short-lived cookie token immediately
+            JWTAuth::invalidate($oauthToken);
+
+            // Issue a fresh full-length token
+            $newToken = JWTAuth::fromUser($user);
+
+            Log::info('✅ [OAUTH EXCHANGE] Token exchanged successfully', [
+                'user_id' => $user->id,
+            ]);
+
+            return response()
+                ->json([
+                    'token' => $newToken,
+                    'user'  => $user,
+                ])
+                ->withCookie(cookie()->forget('oauth_token'));
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            Log::warning('⚠️ [OAUTH EXCHANGE] Cookie token expired');
+            return response()->json([
+                'message' => 'Authentication session expired. Please sign in again.'
+            ], 401);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            Log::warning('⚠️ [OAUTH EXCHANGE] Cookie token invalid', [
+                'token_preview' => substr($oauthToken, 0, 10) . '...',
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Invalid authentication token.'], 401);
+
+        } catch (\Exception $e) {
+            Log::error('❌ [OAUTH EXCHANGE] Exception', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Authentication failed. Please try again.'], 500);
+        }
     }
+
 
     public function resetPassword(Request $request)
     {

@@ -17,11 +17,11 @@ adminApiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('admin_token');
-      console.log('🔑 Admin Token Check:', {
-        hasToken: !!token,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'NO TOKEN',
-        url: config.url
-      });
+      // console.log('🔑 Admin Token Check:', {
+      //   hasToken: !!token,
+      //   tokenPreview: token ? `${token.substring(0, 20)}...` : 'NO TOKEN',
+      //   url: config.url
+      // });
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;

@@ -50,31 +50,36 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const clearError = () => setError(null);
 
-const login = async (email: string, password: string) => {
-  try {
-    setError(null);
+  const login = async (email: string, password: string) => {
+    try {
+      setError(null);
 
-    const response = await adminApi.auth.login({ email, password });
+      const response = await adminApi.auth.login({ email, password });
 
-    if (response.success && response.data) {
-      localStorage.setItem('admin_token', response.data.token);
-      setAdmin(response.data.admin);
+      if (response.success && response.data) {
+        localStorage.setItem('admin_token', response.data.token);
+        setAdmin(response.data.admin);
 
-      const intended =
-        sessionStorage.getItem('admin_intended_route') || '/admin/dashboard';
+        const rawIntended = sessionStorage.getItem('admin_intended_route');
+        sessionStorage.removeItem('admin_intended_route');
 
-      sessionStorage.removeItem('admin_intended_route');
+        // Only allow relative paths on the same origin
+        const intended = (
+            rawIntended &&
+            rawIntended.startsWith('/') &&
+            !rawIntended.startsWith('//')
+        ) ? rawIntended : '/admin/dashboard';
 
-      router.replace(intended);
-    } else {
-      throw new Error(response.message || 'Login failed');
+        router.replace(intended);
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
+    } catch (error) {
+      const err = handleAdminApiError(error);
+      setError(err);
+      throw new Error(err);
     }
-  } catch (error) {
-    const err = handleAdminApiError(error);
-    setError(err);
-    throw new Error(err);
-  }
-};
+  };
 
 
   const logout = async () => {

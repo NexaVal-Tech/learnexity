@@ -82,7 +82,7 @@ export default function CommunityPage() {
       //   body: JSON.stringify(formData)
       // });
 
-      console.log('Form submitted:', formData);
+      // console.log('Form submitted:', formData);
 
       // Close modal
       setShowModal(false);
