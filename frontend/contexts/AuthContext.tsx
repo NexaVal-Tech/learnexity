@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // ✅ Navigate AFTER try/catch completes — not inside it
-    router.push(`/user/auth/verify-email?email=${encodeURIComponent(email)}`);
+    await router.replace(`/user/auth/login?message=verify_email&email=${encodeURIComponent(email)}`);
   };
 
 
