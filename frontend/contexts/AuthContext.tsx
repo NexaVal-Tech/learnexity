@@ -171,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithGoogle = () => {
     // console.log('🔵 [AUTH CONTEXT] Initiating Google login');
 
-    const referralCode = localStorage.getItem('pending_referral_code');
+    const referralCode = sessionStorage.getItem('pending_referral_code');
     if (referralCode) {
       // console.log('📌 [AUTH CONTEXT] Found referral code in localStorage:', referralCode);
     }

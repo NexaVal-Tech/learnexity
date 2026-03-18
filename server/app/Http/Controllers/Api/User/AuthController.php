@@ -72,9 +72,20 @@ class AuthController extends Controller
             'referred_by_code' => $user->referred_by_code
         ]);
 
-        // Send email verification
-        event(new Registered($user));
-        $user->sendEmailVerificationNotification();
+        // ✅ Wrap email sending in try/catch so SMTP failure doesn't kill registration
+        $emailSent = false;
+        try {
+            event(new Registered($user));
+            $user->sendEmailVerificationNotification();
+            $emailSent = true;
+            Log::info('✅ [REGISTER] Verification email sent', ['user_id' => $user->id]);
+        } catch (\Exception $e) {
+            Log::error('❌ [REGISTER] Failed to send verification email', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't rethrow — user is created, email just failed
+        }
 
         // Process referral if code was provided
         if ($req->referral_code) {
@@ -84,12 +95,15 @@ class AuthController extends Controller
         Log::info('✅ [REGISTER] Registration completed successfully', [
             'user_id' => $user->id,
             'email' => $user->email,
+            'email_sent' => $emailSent,
         ]);
 
         return response()->json([
-            'message' => 'Registration successful! Please check your email to verify your account.',
+            'message' => $emailSent
+                ? 'Registration successful! Please check your email to verify your account.'
+                : 'Registration successful! However, we could not send a verification email. Please use the resend option on the next page.',
             'email' => $user->email,
-            'email_verification_sent' => true,
+            'email_verification_sent' => $emailSent,
         ], 201); 
     }
 
