@@ -1,703 +1,590 @@
 import React, { useState, useEffect, useRef } from "react";
-import Image from 'next/image';
+import Image from "next/image";
+import { useRouter } from "next/router";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
 
-// ─── Brand tokens ─────────────────────────────────────────────────────────────
-const BRAND = "#4A3AFF";
-const BRAND_LIGHT = "#6C63FF";
-const BRAND_ORANGE = "#f59e0b";
+const BRAND        = "#4A3AFF";
+const BRAND_LIGHT  = "#4A3AFF";
+const BRAND_ORANGE = "#4A3AFF";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+interface CoursePricing {
+  standalone_group: number; standalone_one_on_one: number;
+  bundle_group: number; bundle_one_on_one: number;
+  standalone_group_discounted: number; standalone_one_on_one_discounted: number;
+  bundle_group_discounted: number; bundle_one_on_one_discounted: number;
+  installment_standalone_group: number; installment_standalone_one_on_one: number;
+  installment_bundle_group: number; installment_bundle_one_on_one: number;
+}
+interface KidsCourseAPI {
+  id: number; slug: string; name: string; description: string;
+  emoji: string; color: string; duration_months: number;
+  is_foundation: boolean; onetime_discount_percent: number;
+  pricing: { USD: CoursePricing; NGN: CoursePricing };
+}
 interface Track {
-  id: string;
-  emoji: string;
-  name: string;
-  tagline: string;
-  image: string;
-  description: string;
-  color: string;
-  what_they_do: string[];
-  what_it_builds: string[];
-  what_they_learn: string[];
-  why_it_matters: string;
-  decision_line: string;
+  id: string; emoji: string; name: string; tagline: string; image: string;
+  description: string; color: string; courseSlug: string;
+  what_they_do: string[]; what_it_builds: string[]; what_they_learn: string[];
+  why_it_matters: string; decision_line: string;
 }
 
-// ─── Track data ───────────────────────────────────────────────────────────────
 const tracks: Track[] = [
-  {
-    id: "creative-design",
-    emoji: "🎨",
-    name: "Creative Design",
-    tagline: "Turn creativity into real digital skills",
-    image: "/images/kids-3.jpg",
-    description:
-      "From 'I like drawing' to creating designs they can actually use and share — structured design thinking for young visual minds.",
-    color: "#4A3AFF",
-    what_they_do: [
-      "Create posters, graphics, and digital visuals",
-      "Turn ideas into clear, structured designs",
-      "Use real design tools with confidence",
-    ],
-    what_it_builds: ["Creative confidence", "Visual thinking", "Attention to detail"],
-    what_they_learn: [
-      "Graphic design fundamentals",
-      "Layout and visual storytelling",
-      "Digital design tools",
-    ],
-    why_it_matters:
-      "Most kids are creative but don't know how to express it digitally. This track helps them turn imagination into something real and shareable.",
-    decision_line:
-      "If your child enjoys drawing, visuals, or expressing ideas — this is the right path.",
-  },
-  {
-    id: "game-builder",
-    emoji: "🎮",
-    name: "Game Builder",
-    tagline: "From playing games to building them",
-    image: "/images/kids-2.jpg",
-    description:
-      "Your child learns how games actually work by creating their own — turning passive gaming into real thinking skills and technical confidence.",
-    color: "#059669",
-    what_they_do: [
-      "Build simple interactive games",
-      "Understand how games are designed",
-      "Solve problems through logic and structure",
-    ],
-    what_it_builds: ["Logical thinking", "Problem-solving skills", "Persistence and focus"],
-    what_they_learn: [
-      "Game design thinking",
-      "Interactive storytelling",
-      "Beginner programming logic",
-      "Problem-solving through mechanics",
-    ],
-    why_it_matters:
-      "Gaming is passive. Building games turns that interest into real thinking skills and technical confidence.",
-    decision_line:
-      "If your child enjoys games, challenges, or figuring things out — this is the right path.",
-  },
-  {
-    id: "media-creator",
-    emoji: "🎬",
-    name: "Media Creator",
-    tagline: "Turn screen time into creation time",
-    image: "/images/kids-1.jpg",
-    description:
-      "Instead of just watching videos, your child learns how to create them — editing, producing, and telling stories that matter.",
-    color: "#ea580c",
-    what_they_do: [
-      "Edit and produce their own videos",
-      "Add effects, text, and sound",
-      "Create content they are proud to share",
-    ],
-    what_it_builds: ["Communication skills", "Storytelling ability", "Creative confidence"],
-    what_they_learn: [
-      "Video cutting and trimming",
-      "Text and simple motion graphics",
-      "Transitions and effects",
-      "Sound editing and syncing",
-      "Basic color correction",
-    ],
-    why_it_matters:
-      "Most kids consume content daily. Very few know how to create it — and that is where real value is built.",
-    decision_line:
-      "If your child enjoys videos, storytelling, or content creation — this is the right path.",
-  },
+  { id: "creative-design", emoji: "🎨", name: "Creative Design", tagline: "Turn creativity into real digital skills", image: "/images/kids-3.jpg", color: "#4A3AFF", courseSlug: "creative-design", description: "From 'I like drawing' to creating designs they can actually use and share — structured design thinking for young visual minds.", what_they_do: ["Create posters, graphics, and digital visuals", "Turn ideas into clear, structured designs", "Use real design tools with confidence"], what_it_builds: ["Creative confidence", "Visual thinking", "Attention to detail"], what_they_learn: ["Graphic design fundamentals", "Layout and visual storytelling", "Digital design tools"], why_it_matters: "Most kids are creative but don't know how to express it digitally. This track helps them turn imagination into something real and shareable.", decision_line: "If your child enjoys drawing, visuals, or expressing ideas — this is the right path." },
+  { id: "game-builder", emoji: "🎮", name: "Game Builder", tagline: "From playing games to building them", image: "/images/kids-2.jpg", color: "#4A3AFF", courseSlug: "game-builder", description: "Your child learns how games actually work by creating their own — turning passive gaming into real thinking skills and technical confidence.", what_they_do: ["Build simple interactive games", "Understand how games are designed", "Solve problems through logic and structure"], what_it_builds: ["Logical thinking", "Problem-solving skills", "Persistence and focus"], what_they_learn: ["Game design thinking", "Interactive storytelling", "Beginner programming logic", "Problem-solving through mechanics"], why_it_matters: "Gaming is passive. Building games turns that interest into real thinking skills and technical confidence.", decision_line: "If your child enjoys games, challenges, or figuring things out — this is the right path." },
+  { id: "media-creator", emoji: "🎬", name: "Media Creator", tagline: "Turn screen time into creation time", image: "/images/kids-1.jpg", color: "#4A3AFF", courseSlug: "media-creator", description: "Instead of just watching videos, your child learns how to create them — editing, producing, and telling stories that matter.", what_they_do: ["Edit and produce their own videos", "Add effects, text, and sound", "Create content they are proud to share"], what_it_builds: ["Communication skills", "Storytelling ability", "Creative confidence"], what_they_learn: ["Video cutting and trimming", "Text and simple motion graphics", "Transitions and effects", "Sound editing and syncing", "Basic color correction"], why_it_matters: "Most kids consume content daily. Very few know how to create it — and that is where real value is built.", decision_line: "If your child enjoys videos, storytelling, or content creation — this is the right path." },
 ];
 
-// ─── Registration Modal ───────────────────────────────────────────────────────
-const RegistrationModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  preselectedTrack: string;
-}> = ({ isOpen, onClose, preselectedTrack }) => {
-  const [selectedTrack, setSelectedTrack] = useState(preselectedTrack);
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
+function fmt(amount: number, currency: string): string {
+  if (!amount) return "—";
+  if (currency === "NGN") return `₦${amount.toLocaleString("en-NG")}`;
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
+}
 
-  useEffect(() => { setSelectedTrack(preselectedTrack); }, [preselectedTrack]);
+// ─── Registration Modal ───────────────────────────────────────────────────────
+interface RegModalProps { isOpen: boolean; onClose: () => void; preselectedTrack: string; currency: string; courses: KidsCourseAPI[]; }
+
+const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselectedTrack, currency, courses }) => {
+  const router = useRouter();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [studentAge, setStudentAge] = useState("");
+  const [selectedTrack, setSelectedTrack] = useState(preselectedTrack);
+  const [enrollmentType, setEnrollmentType] = useState<"bundle" | "track_only">("bundle");
+  const [showDFWarning, setShowDFWarning] = useState(false);
+  const [sessionType, setSessionType] = useState<"one_on_one" | "group_mentorship">("group_mentorship");
+  const [paymentType, setPaymentType] = useState<"onetime" | "installment">("onetime");
+
+  useEffect(() => { console.log("[RegistrationModal] isOpen →", isOpen); }, [isOpen]);
+  useEffect(() => { console.log("[RegistrationModal] preselectedTrack →", preselectedTrack); setSelectedTrack(preselectedTrack); }, [preselectedTrack]);
+  useEffect(() => { document.body.style.overflow = isOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [isOpen]);
+  useEffect(() => { if (!isOpen) { console.log("[RegistrationModal] Closed — resetting state"); setStep(1); setError(""); setShowDFWarning(false); setEnrollmentType("bundle"); } }, [isOpen]);
+  useEffect(() => { console.log("[RegistrationModal] Step →", step); }, [step]);
+
+  const trackSlug   = tracks.find(t => t.name === selectedTrack)?.courseSlug ?? "creative-design";
+  const trackCourse = courses.find(c => c.slug === trackSlug);
+  const cur         = currency as "USD" | "NGN";
+  const p           = trackCourse?.pricing[cur];
+  const discount    = trackCourse?.onetime_discount_percent ?? 0;
+  const isBundle    = enrollmentType === "bundle";
+  const isOnetime   = paymentType === "onetime";
+  const is1on1      = sessionType === "one_on_one";
+
+  const fullPrice         = p ? (isBundle ? (is1on1 ? p.bundle_one_on_one : p.bundle_group) : (is1on1 ? p.standalone_one_on_one : p.standalone_group)) : 0;
+  const discountedPrice   = p ? (isBundle ? (is1on1 ? p.bundle_one_on_one_discounted : p.bundle_group_discounted) : (is1on1 ? p.standalone_one_on_one_discounted : p.standalone_group_discounted)) : 0;
+  const installmentAmount = p ? (isBundle ? (is1on1 ? p.installment_bundle_one_on_one : p.installment_bundle_group) : (is1on1 ? p.installment_standalone_one_on_one : p.installment_standalone_group)) : 0;
+  const todayAmount       = isOnetime ? discountedPrice : installmentAmount;
+  const savedAmount       = isOnetime && discount > 0 ? fullPrice - discountedPrice : 0;
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+    console.log("[RegistrationModal] Pricing →", { selectedTrack, trackSlug, enrollmentType, sessionType, paymentType, currency, fullPrice, discountedPrice, installmentAmount, todayAmount, savedAmount, discount, courseFound: !!trackCourse });
+  }, [selectedTrack, enrollmentType, sessionType, paymentType, currency]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    const data = new FormData(e.currentTarget);
-    data.set("Chosen_Track", selectedTrack);
+  const handleStep1Next = () => {
+    console.log("[RegistrationModal] Step 1 Next →", { parentName, parentEmail, parentPhone, studentName, studentAge });
+    if (!parentName || !parentEmail || !studentName || !studentAge) { console.warn("[RegistrationModal] Step 1 validation failed — missing fields"); setError("Please fill in all required fields."); return; }
+    console.log("[RegistrationModal] Step 1 passed → step 2");
+    setError(""); setStep(2);
+  };
+
+  const handleStep2Next = () => {
+    console.log("[RegistrationModal] Step 2 Next →", { selectedTrack, enrollmentType, sessionType, showDFWarning });
+    if (enrollmentType === "track_only" && !showDFWarning) { console.log("[RegistrationModal] track_only → showing DF advisory"); setShowDFWarning(true); return; }
+    console.log("[RegistrationModal] Step 2 passed → step 3");
+    setShowDFWarning(false); setError(""); setStep(3);
+  };
+
+  const handleDFWarningInclude = () => { console.log("[RegistrationModal] DF warning → INCLUDE chosen (switching to bundle)"); setEnrollmentType("bundle"); setShowDFWarning(false); };
+  const handleDFWarningSkip    = () => { console.log("[RegistrationModal] DF warning → SKIP chosen (track_only confirmed)"); setShowDFWarning(false); setStep(3); };
+
+  const handleSubmit = async () => {
+    const payload = { parent_name: parentName, parent_email: parentEmail, parent_phone: parentPhone, student_name: studentName, student_age: parseInt(studentAge), session_type: sessionType, track_slug: trackSlug, enrollment_type: enrollmentType, payment_type: paymentType, currency };
+    console.log("[RegistrationModal] Submit →", payload);
+    console.log("[RegistrationModal] Expected amount today →", fmt(todayAmount, currency));
+    setLoading(true); setError("");
     try {
-      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body: data });
-      if (res.ok) setSubmitted(true);
-    } catch { /* silent */ } finally { setLoading(false); }
+      console.log(`[RegistrationModal] POST ${API_URL}/api/kids/enroll`);
+      const res  = await fetch(`${API_URL}/api/kids/enroll`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      console.log("[RegistrationModal] Enroll response →", { status: res.status, ok: res.ok, data });
+      if (!res.ok) { console.error("[RegistrationModal] Enrollment API error →", data); throw new Error(data.error || data.message || "Enrollment failed"); }
+      console.log("[RegistrationModal] Enrollment OK → redirecting to payment", { enrollmentId: data.enrollment.id, totalPrice: data.enrollment.total_price });
+      router.push(`/kids/payment/${data.enrollment.id}`);
+      onClose();
+    } catch (e: any) {
+      console.error("[RegistrationModal] Submit error →", e.message, e);
+      setError(e.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+      console.log("[RegistrationModal] Submit complete — loading reset");
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      ref={overlayRef}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}
-    >
-      <div
-        className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl"
-        style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}
-      >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-        >
-          ✕
-        </button>
-
-        {submitted ? (
-          <div className="flex flex-col items-center justify-center py-20 px-8 text-center gap-5">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl" style={{ background: `${BRAND}15` }}>🎉</div>
-            <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>Spot Reserved!</h2>
-            <p className="text-slate-500 max-w-sm">We'll be in touch shortly with next steps. Your child's journey starts now.</p>
-            <button
-              onClick={onClose}
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
-              style={{ background: BRAND }}
-            >
-              Close →
-            </button>
+    <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) { console.log("[RegistrationModal] Overlay click → close"); onClose(); } }} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.82)", backdropFilter: "blur(8px)" }}>
+      <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl" style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={() => { console.log("[RegistrationModal] ✕ clicked"); onClose(); }} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
+        <div className="px-8 pt-8 pb-0">
+          <div className="flex items-center gap-2 mb-6">
+            {[1, 2, 3].map((s) => (
+              <React.Fragment key={s}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0" style={{ background: step >= s ? BRAND : "#e2e8f0", color: step >= s ? "#fff" : "#94a3b8" }}>{s}</div>
+                {s < 3 && <div className="flex-1 h-0.5 rounded" style={{ background: step > s ? BRAND : "#e2e8f0" }} />}
+              </React.Fragment>
+            ))}
           </div>
-        ) : (
-          <div className="p-8 md:p-10">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800 mt-3" style={{ fontFamily: "Poppins, sans-serif" }}>
-                Begin Your Child&apos;s Journey
-              </h2>
-              <p className="text-slate-500 mt-1 text-sm">Complete this form and we&apos;ll email you the next steps.</p>
+          <h2 className="text-2xl font-bold text-slate-800" style={{ fontFamily: "Poppins, sans-serif" }}>
+            {step === 1 ? "Begin Your Child's Journey" : step === 2 ? "Choose Your Path" : "Payment Plan"}
+          </h2>
+          <p className="text-slate-500 text-sm mt-1 mb-6">
+            {step === 1 ? "Tell us about your child so we can personalise the experience." : step === 2 ? "Select a track, session format, and how you'd like to start." : "Choose how you'd like to pay. One-time payments include a discount."}
+          </p>
+        </div>
+        <div className="px-8 pb-8">
+          {error && <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+
+          {step === 1 && (
+            <div className="space-y-5">
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: BRAND }}>A</span>Parent Information</p>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div><label className="block text-xs font-semibold text-slate-600 text-grey-900 mb-1.5">Parent Name *</label><input value={parentName} onChange={(e) => { setParentName(e.target.value); console.log("[RegistrationModal] parentName →", e.target.value); }} placeholder="John Doe" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Email Address *</label><input value={parentEmail} onChange={(e) => { setParentEmail(e.target.value); console.log("[RegistrationModal] parentEmail →", e.target.value); }} placeholder="name@email.com" type="email" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number</label><input value={parentPhone} onChange={(e) => { setParentPhone(e.target.value); console.log("[RegistrationModal] parentPhone →", e.target.value); }} placeholder="+234 800 000 0000" type="tel" className="w-full px-4 text-gray-800 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                </div>
+              </div>
+              <hr className="border-slate-100" />
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: BRAND }}>B</span>Student Details</p>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Name *</label><input value={studentName} onChange={(e) => { setStudentName(e.target.value); console.log("[RegistrationModal] studentName →", e.target.value); }} placeholder="Alex" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Age *</label><select value={studentAge} onChange={(e) => { setStudentAge(e.target.value); console.log("[RegistrationModal] studentAge →", e.target.value); }} className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all"><option value="">Select Age</option>{[10,11,12,13,14,15,16,17].map((a) => <option key={a}>{a}</option>)}</select></div>
+                </div>
+              </div>
+              <button onClick={handleStep1Next} className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01]" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>Continue →</button>
             </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <input type="hidden" name="access_key" value="f742de36-c13e-4b98-a17d-ea27d051f1b9" />
-              <input type="hidden" name="subject" value="New Learnexity Kids Registration" />
-              <input type="hidden" name="from_name" value="Learnexity Enrollment" />
-
-              {/* Parent */}
-              <section>
-                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-5 flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-bold" style={{ background: BRAND }}>1</span>
-                  Parent Information
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {[
-                    { label: "Parent Name", name: "Parent_Name", type: "text", placeholder: "John Doe", full: false },
-                    { label: "Email Address", name: "Parent_Email", type: "email", placeholder: "name@email.com", full: false },
-                    { label: "Phone Number", name: "Phone_Number", type: "tel", placeholder: "+1 (555) 000-0000", full: true },
-                  ].map((f) => (
-                    <div key={f.name} className={f.full ? "md:col-span-2" : ""}>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1.5">{f.label}</label>
-                      <input
-                        type={f.type} name={f.name} required placeholder={f.placeholder}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
-                        style={{ fontFamily: "Outfit, sans-serif" }}
-                      />
+          {step === 2 && (
+            <div className="space-y-6">
+              {showDFWarning && (
+                <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl shrink-0">⚠️</span>
+                    <div>
+                      <p className="font-bold text-amber-900 text-sm mb-1">We recommend Digital Foundations first</p>
+                      <p className="text-amber-800 text-xs leading-relaxed">If your child has little or no prior computer experience, we strongly advise starting with our <strong>Digital Foundations</strong> module (1 month). It builds the essential skills and confidence needed to get the most out of the specialisation track. Skipping it may make the track harder to follow.</p>
+                      <div className="flex gap-2 mt-4">
+                        <button onClick={handleDFWarningInclude} className="flex-1 py-2.5 rounded-xl text-white text-xs font-bold" style={{ background: BRAND }}>✓ Include Digital Foundations (Recommended)</button>
+                        <button onClick={handleDFWarningSkip} className="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-amber-300 text-amber-800 bg-white">Skip anyway, I understand</button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </section>
-
-              <hr className="border-slate-100" />
-
-              {/* Student */}
-              <section>
-                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-5 flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-bold" style={{ background: BRAND }}>2</span>
-                  Student Details
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Student&apos;s Name</label>
-                    <input type="text" name="Student_Name" required placeholder="Alex"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Student&apos;s Age</label>
-                    <select name="Student_Age" required
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none bg-white transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50">
-                      <option value="">Select Age</option>
-                      {[10, 11, 12, 13, 14, 15, 16, 17].map((a) => <option key={a}>{a}</option>)}
-                    </select>
                   </div>
                 </div>
-              </section>
+              )}
+              {!showDFWarning && (
+                <>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Specialisation Track</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[{ value: "Creative Design", emoji: "🎨" }, { value: "Game Builder", emoji: "🎮" }, { value: "Media Creator", emoji: "🎬" }].map((t) => (
+                        <button key={t.value} type="button" onClick={() => { console.log("[RegistrationModal] Track selected →", t.value); setSelectedTrack(t.value); }} className="p-3 rounded-2xl border-2 text-center transition-all hover:scale-105" style={selectedTrack === t.value ? { borderColor: BRAND, background: `${BRAND}0d`, boxShadow: `0 0 0 3px ${BRAND}22` } : { borderColor: "#e2e8f0", background: "white" }}>
+                          <div className="text-xl mb-1">{t.emoji}</div>
+                          <div className="text-[11px] font-bold leading-tight" style={{ color: selectedTrack === t.value ? BRAND : "#475569" }}>{t.value}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Programme Path</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {([{ value: "bundle" as const, icon: "🎓", label: "Full Journey (Recommended)", desc: "Digital Foundations (1 month) + " + selectedTrack + " (2 months) = 3 months total", badge: "Best value", badgeColor: "#16a34a", badgeBg: "#dcfce7" }, { value: "track_only" as const, icon: "⚡", label: selectedTrack + " Only", desc: "Skip to the specialisation track directly (2 months). Suitable if your child already has computer basics.", badge: "For advanced", badgeColor: "#d97706", badgeBg: "#fef3c7" }]).map((opt) => (
+                        <button key={opt.value} type="button" onClick={() => { console.log("[RegistrationModal] Enrollment type →", opt.value); setEnrollmentType(opt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={enrollmentType === opt.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                          <div className="flex items-start justify-between mb-2"><span className="text-2xl">{opt.icon}</span><span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: opt.badgeBg, color: opt.badgeColor }}>{opt.badge}</span></div>
+                          <p className="font-bold text-sm text-slate-800 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{opt.label}</p>
+                          <p className="text-xs text-slate-500 leading-relaxed">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Session Format</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {([{ value: "group_mentorship" as const, icon: "👥", label: "Group Mentorship", desc: "Collaborative, peer-learning environment", badge: "Popular" }, { value: "one_on_one" as const, icon: "🎯", label: "One-on-One Coaching", desc: "Fully personalised, your child's own pace", badge: "Premium" }]).map((s) => (
+                        <button key={s.value} type="button" onClick={() => { console.log("[RegistrationModal] Session type →", s.value); setSessionType(s.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={sessionType === s.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                          <div className="flex items-center justify-between mb-2"><span className="text-2xl">{s.icon}</span><span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: sessionType === s.value ? `${BRAND}18` : "#f1f5f9", color: sessionType === s.value ? BRAND : "#94a3b8" }}>{s.badge}</span></div>
+                          <p className="font-bold text-sm text-slate-800" style={{ fontFamily: "Poppins, sans-serif" }}>{s.label}</p>
+                          <p className="text-xs text-slate-500 mt-1">{s.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => { console.log("[RegistrationModal] Back → step 1"); setStep(1); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
+                    <button onClick={handleStep2Next} className="flex-[2] py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01]" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>Continue →</button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
-              <hr className="border-slate-100" />
-
-              {/* Track */}
-              <section>
-                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-5 flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-bold" style={{ background: BRAND }}>3</span>
-                  Choose a Learning Track
-                </h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { value: "Creative Design", emoji: "🎨", label: "Creative" },
-                    { value: "Game Builder", emoji: "🎮", label: "Gaming" },
-                    { value: "Media Creator", emoji: "🎬", label: "Media" },
-                  ].map((t) => (
-                    <button key={t.value} type="button" onClick={() => setSelectedTrack(t.value)}
-                      className="p-4 rounded-2xl border-2 text-center transition-all duration-200 hover:scale-105"
-                      style={selectedTrack === t.value
-                        ? { borderColor: BRAND, background: `${BRAND}0d`, boxShadow: `0 0 0 3px ${BRAND}22` }
-                        : { borderColor: "#e2e8f0", background: "white" }}>
-                      <div className="text-2xl mb-1">{t.emoji}</div>
-                      <div className="text-xs font-bold" style={{ color: selectedTrack === t.value ? BRAND : "#475569" }}>{t.label}</div>
+          {step === 3 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Payment Plan</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {([{ value: "onetime" as const, icon: "⚡", label: "Pay in Full", desc: discount > 0 ? `Save ${discount}% when you pay upfront` : "Single payment, full access immediately", highlight: discount > 0 }, { value: "installment" as const, icon: "📅", label: "3 Monthly Payments", desc: "Split across 3 months at full price. Access starts after first payment.", highlight: false }]).map((pt) => (
+                    <button key={pt.value} type="button" onClick={() => { console.log("[RegistrationModal] Payment type →", pt.value); setPaymentType(pt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all relative" style={paymentType === pt.value ? { borderColor: pt.highlight ? "#16a34a" : BRAND_ORANGE, background: pt.highlight ? "#f0fdf4" : `${BRAND_ORANGE}07`, boxShadow: `0 0 0 3px ${pt.highlight ? "#16a34a" : BRAND_ORANGE}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                      {pt.highlight && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Save {discount}%</span>}
+                      <span className="text-2xl block mb-2">{pt.icon}</span>
+                      <p className="font-bold text-sm text-slate-800" style={{ fontFamily: "Poppins, sans-serif" }}>{pt.label}</p>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{pt.desc}</p>
                     </button>
                   ))}
                 </div>
-                <input type="hidden" name="Chosen_Track" value={selectedTrack} />
-              </section>
-
-              <button
-                type="submit" disabled={loading}
-                className="w-full py-4 rounded-2xl text-white font-bold text-lg transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
-                style={{ background: BRAND, boxShadow: `0 10px 30px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}
-              >
-                {loading ? "Reserving…" : "Reserve My Child's Spot →"}
-              </button>
-            </form>
-          </div>
-        )}
+              </div>
+              {p && (
+                <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Price Summary</p>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: `${BRAND}14`, color: BRAND }}>{isBundle ? "3 months total" : `${trackCourse?.duration_months} months`}</span>
+                  </div>
+                  <div className="px-4 py-4 space-y-2 text-sm">
+                    {isBundle && (<><div className="flex justify-between text-slate-500"><span>🏗️ Digital Foundations (1 month)</span><span className="text-slate-400 text-xs italic">included</span></div><div className="flex justify-between text-slate-500"><span>{tracks.find(t => t.courseSlug === trackSlug)?.emoji} {trackCourse?.name} (2 months)</span><span className="text-slate-400 text-xs italic">included</span></div><hr className="border-slate-100" /></>)}
+                    <div className="flex justify-between"><span className="text-slate-600">Full programme price</span><span className={`font-semibold ${isOnetime && savedAmount > 0 ? "line-through text-slate-400" : "text-slate-800"}`}>{fmt(fullPrice, currency)}</span></div>
+                    {isOnetime && savedAmount > 0 && <div className="flex justify-between text-green-600"><span>One-time discount ({discount}%)</span><span className="font-bold">−{fmt(savedAmount, currency)}</span></div>}
+                    <div className="border-t border-slate-200 pt-2 flex justify-between font-bold"><span className="text-slate-800">{isOnetime ? "Total due today" : "Due today (1 of 3)"}</span><span style={{ color: BRAND }} className="text-base">{fmt(todayAmount, currency)}</span></div>
+                    {!isOnetime && <p className="text-[11px] text-slate-400 pt-1">Then {fmt(installmentAmount, currency)}/month for 2 more months. No discount on instalment plan.</p>}
+                    {enrollmentType === "track_only" && <div className="mt-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-700">⚠️ You're enrolling in the track only. Digital Foundations is not included.</div>}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button onClick={() => { console.log("[RegistrationModal] Back → step 2"); setStep(2); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
+                <button onClick={handleSubmit} disabled={loading} className="flex-[2] py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01] disabled:opacity-60" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>{loading ? "Processing…" : "Proceed to Payment →"}</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-
-      <style jsx>{`
-        @keyframes kidsModalIn {
-          from { opacity: 0; transform: translateY(32px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+      <style jsx>{`@keyframes kidsModalIn { from { opacity:0; transform:translateY(32px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
     </div>
   );
 };
 
 // ─── Track Detail Modal ───────────────────────────────────────────────────────
-const TrackModal: React.FC<{
-  track: Track | null;
-  onClose: () => void;
-  onEnroll: (trackName: string) => void;
-}> = ({ track, onClose, onEnroll }) => {
+const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll: (trackName: string) => void; currency: string; courses: KidsCourseAPI[]; }> = ({ track, onClose, onEnroll, currency, courses }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
+    console.log("[TrackModal] track →", track ? track.name : "null");
     document.body.style.overflow = track ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [track]);
-
   if (!track) return null;
-
+  const course   = courses.find(c => c.slug === track.courseSlug);
+  const p        = course?.pricing[currency as "USD" | "NGN"];
+  const discount = course?.onetime_discount_percent ?? 0;
+  console.log("[TrackModal] Render →", { track: track.name, courseFound: !!course, pricingAvailable: !!p, currency, discount });
   return (
-    <div
-      ref={overlayRef}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}
-    >
-      <div
-        className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl"
-        style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-        >✕</button>
-
-        {/* Header band */}
-        <div
-          className="px-8 pt-10 pb-8 rounded-t-3xl"
-          style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}06 100%)`, borderBottom: `1px solid ${track.color}22` }}
-        >
+    <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) { console.log("[TrackModal] Overlay click → close"); onClose(); } }} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}>
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl" style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={() => { console.log("[TrackModal] ✕ clicked"); onClose(); }} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
+        <div className="px-8 pt-10 pb-8 rounded-t-3xl" style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}06 100%)`, borderBottom: `1px solid ${track.color}22` }}>
           <div className="text-5xl mb-3">{track.emoji}</div>
           <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{track.name}</h2>
           <p className="text-slate-500 text-sm leading-relaxed">{track.description}</p>
         </div>
-
         <div className="px-8 py-6 space-y-6">
-          {/* Image placeholder — swap for <Image> when asset is ready */}
-          <div
-            className="w-[500px] h-50 mx-auto rounded-2xl flex items-cent justify-centr text-sm font-semibold"
-            style={{ background: `${track.color}10`, border: `2px dashed ${track.color}33`, color: track.color }}
-          >
-              <Image src={track.image} alt={track.name} width={500} height={20} className="rounded-2xl"/>
-          </div>
-
-          {/* What they'll do */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What Your Child Will Be Able To Do</h4>
-            <ul className="space-y-2">
-              {track.what_they_do.map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                  <span className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: track.color }}>✓</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* What it builds */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What This Builds In Your Child</h4>
-            <div className="flex flex-wrap gap-2">
-              {track.what_it_builds.map((item, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: `${track.color}14`, color: track.color }}>{item}</span>
-              ))}
+          <div className="w-full overflow-hidden rounded-2xl"><Image src={track.image} alt={track.name} width={500} height={200} className="rounded-2xl w-full object-cover" /></div>
+          {p && (
+            <div className="rounded-2xl p-4 border" style={{ background: `${track.color}07`, borderColor: `${track.color}22` }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>Pricing — {course?.duration_months} months (or 3 months with Digital Foundations)</p>
+              <div className="space-y-3">
+                <div className="bg-white rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2"><p className="text-xs font-bold text-slate-700">🎓 Full Journey (DF + {track.name})</p><span className="text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">3 months</span></div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><p className="text-slate-400 mb-0.5">👥 Group · Pay in full</p><p className="font-bold text-slate-800">{fmt(p.bundle_group_discounted, currency)}</p>{discount > 0 && <p className="text-slate-400 line-through text-[10px]">{fmt(p.bundle_group, currency)}</p>}<p className="text-slate-400 text-[10px]">or {fmt(p.installment_bundle_group, currency)}/mo × 3</p></div>
+                    <div><p className="text-slate-400 mb-0.5">🎯 1-on-1 · Pay in full</p><p className="font-bold text-slate-800">{fmt(p.bundle_one_on_one_discounted, currency)}</p>{discount > 0 && <p className="text-slate-400 line-through text-[10px]">{fmt(p.bundle_one_on_one, currency)}</p>}<p className="text-slate-400 text-[10px]">or {fmt(p.installment_bundle_one_on_one, currency)}/mo × 3</p></div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2"><p className="text-xs font-bold text-slate-700">⚡ Track only</p><span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">2 months</span></div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><p className="text-slate-400 mb-0.5">👥 Group · Pay in full</p><p className="font-bold text-slate-800">{fmt(p.standalone_group_discounted, currency)}</p>{discount > 0 && <p className="text-slate-400 line-through text-[10px]">{fmt(p.standalone_group, currency)}</p>}<p className="text-slate-400 text-[10px]">or {fmt(p.installment_standalone_group, currency)}/mo × 3</p></div>
+                    <div><p className="text-slate-400 mb-0.5">🎯 1-on-1 · Pay in full</p><p className="font-bold text-slate-800">{fmt(p.standalone_one_on_one_discounted, currency)}</p>{discount > 0 && <p className="text-slate-400 line-through text-[10px]">{fmt(p.standalone_one_on_one, currency)}</p>}<p className="text-slate-400 text-[10px]">or {fmt(p.installment_standalone_one_on_one, currency)}/mo × 3</p></div>
+                  </div>
+                </div>
+                {discount > 0 && <p className="text-[10px] text-green-600 font-semibold px-1">✦ {discount}% discount applied when paying in full</p>}
+              </div>
             </div>
-          </div>
-
-          {/* What they learn */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What They Learn</h4>
-            <ul className="space-y-1.5">
-              {track.what_they_learn.map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                  <span style={{ color: track.color }}>▸</span> {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Why it matters */}
-          <div className="p-4 rounded-2xl text-sm leading-relaxed" style={{ background: `${track.color}0d`, borderLeft: `3px solid ${track.color}` }}>
-            <p className="font-bold text-slate-800 mb-1">Why This Matters</p>
-            <p className="text-slate-600">{track.why_it_matters}</p>
-          </div>
-
-          {/* Decision line */}
+          )}
+          <div><h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What Your Child Will Be Able To Do</h4><ul className="space-y-2">{track.what_they_do.map((item, i) => (<li key={i} className="flex items-start gap-2.5 text-sm text-slate-700"><span className="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: track.color }}>✓</span>{item}</li>))}</ul></div>
+          <div><h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What This Builds In Your Child</h4><div className="flex flex-wrap gap-2">{track.what_it_builds.map((item, i) => (<span key={i} className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: `${track.color}14`, color: track.color }}>{item}</span>))}</div></div>
+          <div className="p-4 rounded-2xl text-sm leading-relaxed" style={{ background: `${track.color}0d`, borderLeft: `3px solid ${track.color}` }}><p className="font-bold text-slate-800 mb-1">Why This Matters</p><p className="text-slate-600">{track.why_it_matters}</p></div>
           <p className="text-sm font-semibold text-slate-700 italic border-t border-slate-100 pt-4">{track.decision_line}</p>
-
-          {/* CTA */}
-          <button
-            onClick={() => { onClose(); onEnroll(track.name); }}
-            className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
-            style={{ background: track.color, boxShadow: `0 8px 24px ${track.color}44`, fontFamily: "Poppins, sans-serif" }}
-          >
-            Choose {track.name} →
-          </button>
+          <button onClick={() => { console.log("[TrackModal] Choose clicked →", track.name); onClose(); onEnroll(track.name); }} className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01] active:scale-[0.99]" style={{ background: track.color, boxShadow: `0 8px 24px ${track.color}44`, fontFamily: "Poppins, sans-serif" }}>Choose {track.name} →</button>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes kidsModalIn {
-          from { opacity: 0; transform: translateY(32px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+      <style jsx>{`@keyframes kidsModalIn { from { opacity:0; transform:translateY(32px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
     </div>
   );
 };
 
 // ─── Track Card ───────────────────────────────────────────────────────────────
-const TrackCard: React.FC<{
-  track: Track;
-  onLearnMore: (track: Track) => void;
-  onEnroll: (trackName: string) => void;
-}> = ({ track, onLearnMore, onEnroll }) => (
-  <div
-    className="group bg-white rounded-3xl overflow-hidden border border-slate-100 flex flex-col transition-all duration-300 hover:-translate-y-2"
-    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
-    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 48px ${track.color}22`; }}
-    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 24px rgba(0,0,0,0.06)"; }}
-  >
-    {/* Image zone — swap inner div for <Image> when asset is ready */}
-    <div
-      className="relative w-full h-48 flex items-center justify-center overflow-hidden"
-      style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}0a 100%)` }}
-    >
-      <div className="flex flex-col items-center gap-2 opacity-100">
-            <Image src={track.image} alt={track.name} fill className="object-cover"/>
+const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; onEnroll: (trackName: string) => void; currency: string; courses: KidsCourseAPI[]; }> = ({ track, onLearnMore, onEnroll, currency, courses }) => {
+  const course   = courses.find(c => c.slug === track.courseSlug);
+  const p        = course?.pricing[currency as "USD" | "NGN"];
+  const discount = course?.onetime_discount_percent ?? 0;
+  return (
+    <div className="group bg-white rounded-3xl overflow-hidden border border-slate-100 flex flex-col transition-all duration-300 hover:-translate-y-2" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 48px ${track.color}22`; }} onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 24px rgba(0,0,0,0.06)"; }}>
+      <div className="relative w-full h-48 overflow-hidden" style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}0a 100%)` }}>
+        <Image src={track.image} alt={track.name} fill className="object-cover" />
+        <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${track.color}, transparent)` }} />
+        <div className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full bg-white/90 text-slate-600 shadow-sm">2 months</div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-0.5"
-        style={{ background: `linear-gradient(90deg, transparent, ${track.color}, transparent)` }} />
-    </div>
-
-    {/* Body */}
-    <div className="flex flex-col flex-1 p-6 gap-4">
-      <div>
-        <div
-          className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest rounded-full px-3 py-1 mb-3"
-          style={{ background: `${track.color}14`, color: track.color }}
-        >
-          {track.emoji} {track.name}
+      <div className="flex flex-col flex-1 p-6 gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest rounded-full px-3 py-1 mb-3" style={{ background: `${track.color}14`, color: track.color }}>{track.emoji} {track.name}</div>
+          <h3 className="text-xl font-bold text-slate-900 leading-snug mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{track.tagline}</h3>
+          <p className="text-slate-500 text-sm leading-relaxed">{track.description}</p>
         </div>
-        <h3 className="text-xl font-bold text-slate-900 leading-snug mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>
-          {track.tagline}
-        </h3>
-        <p className="text-slate-500 text-sm leading-relaxed">{track.description}</p>
-      </div>
-
-      {/* Quick wins */}
-      <ul className="space-y-1.5 mt-1">
-        {track.what_it_builds.map((item, i) => (
-          <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="text-xs" style={{ color: track.color }}>✦</span>
-            {item}
-          </li>
-        ))}
-      </ul>
-
-      {/* CTAs — pinned to bottom */}
-      <div className="flex flex-col gap-2 mt-auto pt-4">
-        <button
-          onClick={() => onEnroll(track.name)}
-          className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
-          style={{ background: track.color, fontFamily: "Poppins, sans-serif" }}
-        >
-          Enroll Now →
-        </button>
-        <button
-          onClick={() => onLearnMore(track)}
-          className="w-full py-3 rounded-xl font-semibold text-sm border-2 transition-all duration-200 hover:bg-slate-50 active:scale-95"
-          style={{ borderColor: `${track.color}44`, color: track.color }}
-        >
-          Learn More
-        </button>
+        <ul className="space-y-1.5 mt-1">{track.what_it_builds.map((item, i) => (<li key={i} className="flex items-center gap-2 text-sm text-slate-600"><span className="text-xs" style={{ color: track.color }}>✦</span>{item}</li>))}</ul>
+        {p && (
+          <div className="rounded-xl p-3 border text-xs" style={{ background: `${track.color}07`, borderColor: `${track.color}22` }}>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Pricing {discount > 0 && <span className="text-green-600 ml-1">· {discount}% off when paid in full</span>}</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between"><span className="text-slate-500">🎓 Bundle (with DF, 3 mo)</span><div className="text-right"><span className="font-bold" style={{ color: track.color }}>{fmt(p.bundle_group_discounted, currency)}</span><span className="text-slate-400 ml-1">group</span></div></div>
+              <div className="flex items-center justify-between"><span className="text-slate-500">⚡ Track only (2 mo)</span><div className="text-right"><span className="font-bold text-slate-600">{fmt(p.standalone_group_discounted, currency)}</span><span className="text-slate-400 ml-1">group</span></div></div>
+            </div>
+          </div>
+        )}
+        <div className="flex flex-col gap-2 mt-auto pt-2">
+          <button onClick={() => { console.log("[TrackCard] Enroll Now →", track.name); onEnroll(track.name); }} className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95" style={{ background: track.color, fontFamily: "Poppins, sans-serif" }}>Enroll Now →</button>
+          <button onClick={() => { console.log("[TrackCard] Learn More →", track.name); onLearnMore(track); }} className="w-full py-3 rounded-xl font-semibold text-sm border-2 transition-all hover:bg-slate-50 active:scale-95" style={{ borderColor: `${track.color}44`, color: track.color }}>Learn More</button>
+        </div>
       </div>
     </div>
+  );
+};
+
+// ─── Resume Banner + Modal ────────────────────────────────────────────────────
+const ResumeBanner: React.FC<{ onResume: () => void }> = ({ onResume }) => (
+  <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 flex items-center gap-4">
+    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl shrink-0">📋</div>
+    <div className="flex-1"><p className="font-bold text-slate-800 text-sm">Have an incomplete enrollment?</p><p className="text-slate-500 text-xs mt-0.5">Enter your email to pick up where you left off — no account needed.</p></div>
+    <button onClick={() => { console.log("[ResumeBanner] Resume Payment clicked"); onResume(); }} className="px-4 py-2 rounded-xl text-xs font-bold text-white shrink-0" style={{ background: BRAND_ORANGE }}>Resume Payment</button>
   </div>
 );
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const ResumeModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const router = useRouter();
+  const [email, setEmail]     = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [found, setFound]     = useState<any[]>([]);
+  useEffect(() => { console.log("[ResumeModal] isOpen →", isOpen); }, [isOpen]);
+  if (!isOpen) return null;
+  const lookup = async () => {
+    console.log("[ResumeModal] Lookup → email:", email);
+    if (!email) { console.warn("[ResumeModal] No email entered"); return; }
+    setLoading(true); setError("");
+    try {
+      const url = `${API_URL}/api/kids/enrollment/lookup?email=${encodeURIComponent(email)}`;
+      console.log(`[ResumeModal] GET ${url}`);
+      const res  = await fetch(url);
+      const data = await res.json();
+      console.log("[ResumeModal] Lookup response →", { status: res.status, count: data.enrollments?.length, data });
+      if (data.enrollments?.length) { console.log(`[ResumeModal] Found ${data.enrollments.length} pending enrollment(s)`); setFound(data.enrollments); }
+      else { console.warn("[ResumeModal] No pending enrollments for →", email); setError("No pending enrollments found for this email."); }
+    } catch (e) { console.error("[ResumeModal] Lookup error →", e); setError("Something went wrong. Please try again."); }
+    finally { setLoading(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}>
+      <div className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl p-8" style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={() => { console.log("[ResumeModal] Closed"); onClose(); }} className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
+        <h3 className="text-xl font-bold text-slate-800 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>Resume Your Enrollment</h3>
+        <p className="text-slate-500 text-sm mb-6">Enter the parent email used during registration.</p>
+        <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); console.log("[ResumeModal] Email →", e.target.value); }} placeholder="parent@email.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all mb-3" />
+        {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+        {found.length === 0 ? (
+          <button onClick={lookup} disabled={loading} className="w-full py-3 rounded-xl text-white font-bold disabled:opacity-60" style={{ background: BRAND }}>{loading ? "Searching…" : "Find My Enrollment →"}</button>
+        ) : (
+          <div className="space-y-3">
+            {found.map((enr: any) => (
+              <button key={enr.id} onClick={() => { console.log("[ResumeModal] Enrollment selected →", { id: enr.id, course: enr.course?.name, amountPaid: enr.amount_paid, remaining: enr.installments_remaining }); router.push(`/kids/payment/${enr.id}`); }} className="w-full p-4 rounded-2xl border-2 border-slate-200 text-left hover:border-indigo-300 transition-all">
+                <p className="font-bold text-slate-800 text-sm">{enr.course?.name} — {enr.student_name}</p>
+                <p className="text-xs text-slate-500 mt-0.5 capitalize">{enr.enrollment_type?.replace("_", " ")} · Paid {enr.currency} {enr.amount_paid?.toLocaleString()} of {enr.total_price?.toLocaleString()} · {enr.installments_remaining} payment{enr.installments_remaining !== 1 ? "s" : ""} remaining</p>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <style jsx>{`@keyframes kidsModalIn { from { opacity:0; transform:translateY(32px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
+    </div>
+  );
+};
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Kids() {
-  const [enrollOpen, setEnrollOpen]       = useState(false);
+  const [enrollOpen, setEnrollOpen]             = useState(false);
   const [preselectedTrack, setPreselectedTrack] = useState("Creative Design");
-  const [activeTrack, setActiveTrack]     = useState<Track | null>(null);
+  const [activeTrack, setActiveTrack]           = useState<Track | null>(null);
+  const [resumeOpen, setResumeOpen]             = useState(false);
+  const [currency, setCurrency]                 = useState("USD");
+  const [courses, setCourses]                   = useState<KidsCourseAPI[]>([]);
+
+  useEffect(() => { console.log("[Kids Page] Mounted | API_URL →", API_URL); }, []);
+  useEffect(() => { console.log("[Kids Page] enrollOpen →", enrollOpen); }, [enrollOpen]);
+  useEffect(() => { console.log("[Kids Page] preselectedTrack →", preselectedTrack); }, [preselectedTrack]);
+  useEffect(() => { console.log("[Kids Page] activeTrack →", activeTrack?.name ?? "null"); }, [activeTrack]);
+  useEffect(() => { console.log("[Kids Page] resumeOpen →", resumeOpen); }, [resumeOpen]);
+  useEffect(() => { console.log("[Kids Page] currency →", currency); }, [currency]);
+  useEffect(() => { console.log("[Kids Page] courses updated — count →", courses.length, "| slugs →", courses.map(c => c.slug)); }, [courses]);
+
+  useEffect(() => {
+    console.log(`[Kids Page] GET ${API_URL}/api/detect-currency`);
+    fetch(`${API_URL}/api/detect-currency`)
+      .then(r => { console.log("[Kids Page] detect-currency status →", r.status); return r.json(); })
+      .then(d => { console.log("[Kids Page] detect-currency data →", d); if (d.currency) { console.log("[Kids Page] Currency set →", d.currency, `(${d.country_code ?? "unknown"})`); setCurrency(d.currency); } else { console.warn("[Kids Page] No currency in response — keeping USD"); } })
+      .catch(e => { console.error("[Kids Page] detect-currency failed →", e.message, "| fallback: USD"); });
+  }, []);
+
+  useEffect(() => {
+    console.log(`[Kids Page] GET ${API_URL}/api/kids/courses`);
+    fetch(`${API_URL}/api/kids/courses`)
+      .then(r => { console.log("[Kids Page] /api/kids/courses status →", r.status); return r.json(); })
+      .then(d => { console.log("[Kids Page] Courses raw response →", d); if (d.courses) { console.log(`[Kids Page] ${d.courses.length} course(s) loaded →`, d.courses.map((c: KidsCourseAPI) => `${c.slug} | ${c.duration_months}mo | foundation:${c.is_foundation}`)); setCourses(d.courses); } else { console.warn("[Kids Page] No 'courses' key in response →", d); } })
+      .catch(e => { console.error("[Kids Page] /api/kids/courses failed →", e.message); });
+  }, []);
 
   const openEnroll = (trackName?: string) => {
+    console.log("[Kids Page] openEnroll →", trackName ?? "(default)");
     if (trackName) setPreselectedTrack(trackName);
     setEnrollOpen(true);
   };
 
+  const dfCourse  = courses.find(c => c.is_foundation);
+  const dfPricing = dfCourse?.pricing[currency as "USD" | "NGN"];
+  console.log("[Kids Page] Render | dfCourse:", !!dfCourse, "| dfPricing:", !!dfPricing, "| currency:", currency, "| coursesLoaded:", courses.length);
+
   return (
     <AppLayout>
       <div style={{ fontFamily: "Outfit, sans-serif" }} className="bg-slate-50 text-slate-800 overflow-x-hidden">
-
-        {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <section className="relative bg-white pt-30 pb-10 overflow-hidden">
-          {/* Blob bg decorations */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-30 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${BRAND_ORANGE}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full opacity-20 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${BRAND}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
-
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND_ORANGE}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
           <div className="relative max-w-screen-2xl mx-auto px-6 grid md:grid-cols-2 gap-14 items-center">
-            {/* Left */}
             <div>
-              <span
-                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6"
-                style={{ background: `${BRAND_ORANGE}18`, color: BRAND_ORANGE }}
-              >
-                ⚡ Ages 10–17 Program
-              </span>
-              <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>
-                Turn Your Child Into a{" "}
-                <span style={{ color: BRAND }}>Tech Creator</span>
-              </h1>
-              <p className="text-lg text-slate-500 mt-6 leading-relaxed max-w-md">
-                Start with the basics. Then choose what they love. Guided 1-on-1 mentorship that builds real skills, not screen time.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 mt-10">
-                <button
-                  onClick={() => openEnroll()}
-                  className="inline-flex items-center gap-3 px-7 py-4 rounded-2xl text-white font-bold text-base transition-all duration-300 hover:scale-105 active:scale-95"
-                  style={{ background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}
-                >
-                  Start With Digital Foundations
-                  <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">→</span>
-                </button>
+              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6" style={{ background: `${BRAND_ORANGE}18`, color: BRAND_ORANGE }}>⚡ Ages 10–17 · 3 Month Programme</span>
+              <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>Turn Your Child Into a <span style={{ color: BRAND }}>Tech Creator</span></h1>
+              <p className="text-lg text-slate-500 mt-6 leading-relaxed max-w-md">Start with Digital Foundations (1 month), then specialise in what they love (2 months). Guided 1-on-1 or group mentorship that builds real skills.</p>
+              <div className="flex items-center gap-2 mt-6 flex-wrap">
+                {[{ label: "Month 1", desc: "Digital Foundations 🏗️", color: BRAND }, { label: "Months 2–3", desc: "Specialisation Track 🎯", color: "#7c3aed" }].map((pill, i) => (
+                  <React.Fragment key={i}><div className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: `${pill.color}12`, color: pill.color }}><span className="text-slate-400 font-normal">{pill.label} · </span>{pill.desc}</div>{i === 0 && <span className="text-slate-300 text-lg">→</span>}</React.Fragment>
+                ))}
               </div>
-              <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-green-400 inline-block" />
-                Spots are limited · Beginner-friendly · No experience needed
-              </p>
+              {dfPricing && (
+                <div className="flex items-center gap-4 mt-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 w-fit">
+                  <div><p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Bundle from</p><p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>{fmt(dfPricing.bundle_group_discounted, currency)}</p><p className="text-xs text-slate-500">or {fmt(dfPricing.installment_bundle_group, currency)}/mo × 3</p></div>
+                  <div className="w-px h-12 bg-slate-200" />
+                  <div><p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">1-on-1 from</p><p className="text-2xl font-extrabold" style={{ color: BRAND, fontFamily: "Poppins, sans-serif" }}>{fmt(dfPricing.bundle_one_on_one_discounted, currency)}</p><p className="text-xs text-slate-500">or {fmt(dfPricing.installment_bundle_one_on_one, currency)}/mo × 3</p></div>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                <button onClick={() => openEnroll()} className="inline-flex items-center gap-3 px-7 py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-105 active:scale-95" style={{ background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}>Enroll Now <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">→</span></button>
+              </div>
+              <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-400 inline-block" />Spots are limited · Beginner-friendly · No experience needed</p>
             </div>
-
-            {/* Right — swap inner div for <Image> when asset is ready */}
             <div className="relative">
-              <div className="w-full h-[450px] rounded-3xl flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl"
-                style={{ background: `linear-gradient(135deg, ${BRAND}18 0%, ${BRAND_ORANGE}18 100%)` }}
-              >
-                <div className="flex flex-col items-center gap-3 text-center opacity-100">
-                    <Image
-                        src="images/photo-1593642532842-98d0fd5ebc1a.avif"
-                        alt="Student coding" fill className="object-cover transition-transform duration-700 group-hover:scale-110 rounded-3xl border-4 border-white shadow-2xl"
-                    />
-                </div>
-                <div className="absolute bottom-5 left-5 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#22c55e" }}>✓</div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Mentorship</p>
-                    <p className="text-sm font-bold text-slate-800">One-on-One Session</p>
-                  </div>
-                </div>
+              <div className="w-full h-[450px] rounded-3xl flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl" style={{ background: `linear-gradient(135deg, ${BRAND}18 0%, ${BRAND_ORANGE}18 100%)` }}>
+                <Image src="images/photo-1593642532842-98d0fd5ebc1a.avif" alt="Student coding" fill className="object-cover transition-transform duration-700 group-hover:scale-110 rounded-3xl border-4 border-white shadow-2xl" />
+                <div className="absolute bottom-5 left-5 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#22c55e" }}>✓</div><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Mentorship</p><p className="text-sm font-bold text-slate-800">One-on-One Available</p></div></div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
-        <section className="py-8 bg-slate-100">
+        <section className="py-2 bg-white border-b border-slate-100"><div className="max-w-screen-2xl mx-auto px-6"><ResumeBanner onResume={() => setResumeOpen(true)} /></div></section>
+
+        <section className="py-4 bg-slate-100">
           <div className="max-w-screen-2xl mx-auto px-6 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>The Process</p>
-            <h2 className="text-4xl font-bold text-slate-900 mb-16" style={{ fontFamily: "Poppins, sans-serif" }}>How It Works</h2>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>The 3-Month Journey</p>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>How It Works</h2>
+            <p className="text-slate-500 mb-4 max-w-lg mx-auto">One connected learning journey — foundations first, then specialisation.</p>
             <div className="grid md:grid-cols-3 gap-6 relative">
-              {/* Connector line (desktop only) */}
-              <div className="hidden md:block absolute top-12 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-0.5 bg-gradient-to-r from-indigo-200 via-indigo-400 to-orange-200" />
-              {[
-                { step: "01", icon: "🏗️", title: "Start with Digital Foundations", desc: "Every child starts here to build computer confidence and core digital skills.", color: BRAND },
-                { step: "02", icon: "🔍", title: "Discover What They Enjoy", desc: "Explore three specialization paths and find what clicks for your child.", color: "#7c3aed" },
-                { step: "03", icon: "🚀", title: "Build Real Projects", desc: "Choose a track and create real work they can show off and be proud of.", color: BRAND_ORANGE },
-              ].map((s, i) => (
-                <div key={i} className="bg-white rounded-3xl p-8 text-left border border-slate-100" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold mb-5" style={{ background: s.color }}>{s.step}</div>
-                  <div className="text-3xl mb-3">{s.icon}</div>
+              <div className="hidden md:block absolute top-8 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-0.5 bg-gradient-to-r from-indigo-200 via-indigo-400 to-orange-200" />
+              {[{ step: "Month 1", title: "Digital Foundations", desc: "Every child starts here. Build computer confidence and core skills — the bedrock of everything that follows.", color: BRAND, badge: "1 month" }, { step: "Month 2", title: "Discover & Begin Track", desc: "Start the specialisation track. Apply your foundation skills in a real creative or technical context.", color: "#7c3aed", badge: "Month 2" }, { step: "Month 3", title: "Build & Complete", desc: "Finish your project, build your portfolio piece, and celebrate what you've created.", color: BRAND_ORANGE, badge: "Month 3" }].map((s, i) => (
+                <div key={i} className="bg-white rounded-3xl p-4 text-left border border-slate-100" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
+                  <div className="flex items-center justify-between mb-2"><div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: s.color }}>{s.step}</div><span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: `${s.color}14`, color: s.color }}>{s.badge}</span></div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{s.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
                 </div>
               ))}
             </div>
+            <div className="mt-8 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm text-slate-600"><span>💡</span><span>Already have computer basics? You can enroll in a specialisation track directly (2 months).</span><button onClick={() => openEnroll()} className="font-bold underline" style={{ color: BRAND }}>Enroll now</button></div>
           </div>
         </section>
 
-        {/* ── DIGITAL FOUNDATIONS ───────────────────────────────────────────── */}
-        <section className="py-8 bg-white">
+        <section className="py-3 bg-white">
           <div className="max-w-screen-2xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div>
-                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6" style={{ background: `${BRAND}12`, color: BRAND }}>
-                  🏁 Start Here
-                </span>
-                <h2 className="text-4xl font-bold text-slate-900 leading-tight mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  This Is Where<br /><span style={{ color: BRAND }}>Everything Changes</span>
-                </h2>
-                <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                  In just weeks, your child goes from &quot;I don&apos;t know how&quot; to{" "}
-                  <strong className="text-slate-800">&quot;I can do this myself.&quot;</strong>
-                </p>
-                <div className="space-y-3 mb-8">
-                  {[
-                    "Confidence using a computer without help",
-                    "Create documents, slides & projects independently",
-                    "Strong thinking and organisation skills",
-                    "A real foundation for future tech skills",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 text-slate-700 text-sm">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: BRAND }}>✓</span>
-                      {item}
-                    </div>
-                  ))}
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6" style={{ background: `${BRAND}12`, color: BRAND }}>🏁 Month 1 — Digital Foundation</span>
+                <h2 className="text-4xl font-bold text-slate-900 leading-tight mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>This Is Where<br /><span style={{ color: BRAND }}>Everything Changes</span></h2>
+                <p className="text-slate-500 text-lg leading-relaxed mb-6">In just 4 weeks, your child goes from <strong className="text-slate-800">"I don't know how"</strong> to <strong className="text-slate-800">"I can do this myself."</strong></p>
+                {["Confidence using a computer without help", "Create documents, slides & projects independently", "Strong thinking and organisation skills", "A real foundation for future tech skills"].map((item, i) => (<div key={i} className="flex items-center gap-3 text-slate-700 text-sm mb-2"><span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: BRAND }}>✓</span>{item}</div>))}
+                <div className="rounded-2xl border border-slate-200 p-5 mt-6 bg-slate-50">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Available in Two Formats</p>
+                  <div className="flex gap-4">
+                    <div className="flex-1"><p className="font-bold text-slate-800 text-sm">👥 Group Mentorship</p><p className="text-xs text-slate-500 mt-1">Collaborative peer environment guided by a mentor</p>{dfPricing && <p className="text-sm font-bold mt-2" style={{ color: BRAND }}>{fmt(dfPricing.bundle_group_discounted, currency)} <span className="text-slate-400 font-normal text-xs">(bundle)</span></p>}</div>
+                    <div className="w-px bg-slate-200" />
+                    <div className="flex-1"><p className="font-bold text-slate-800 text-sm">🎯 One-on-One Coaching</p><p className="text-xs text-slate-500 mt-1">Fully personalised, your child's own pace</p>{dfPricing && <p className="text-sm font-bold mt-2" style={{ color: BRAND }}>{fmt(dfPricing.bundle_one_on_one_discounted, currency)} <span className="text-slate-400 font-normal text-xs">(bundle)</span></p>}</div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => openEnroll()}
-                  className="inline-flex items-center gap-3 px-7 py-4 rounded-2xl text-white font-bold transition-all duration-300 hover:scale-105 active:scale-95"
-                  style={{ background: BRAND, boxShadow: `0 8px 24px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}
-                >
-                  Start Here →
-                </button>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: "🧠", title: "Critical Thinking", desc: "Approach problems with logic and structure" },
-                  { icon: "⚡", title: "Digital Independence", desc: "Work without constant adult help" },
-                  { icon: "🎯", title: "Problem-Solving", desc: "Break challenges into manageable steps" },
-                  { icon: "🔍", title: "Focused Mind", desc: "Build sustained attention on tasks" },
-                ].map((c, i) => (
-                  <div key={i} className="p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-all duration-300" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-                    <div className="text-3xl mb-3">{c.icon}</div>
-                    <h4 className="font-bold text-slate-900 text-sm mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{c.title}</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">{c.desc}</p>
-                  </div>
-                ))}
+                {[{ icon: "🧠", title: "Critical Thinking", desc: "Approach problems with logic and structure" }, { icon: "⚡", title: "Digital Independence", desc: "Work without constant adult help" }, { icon: "🎯", title: "Problem-Solving", desc: "Break challenges into manageable steps" }, { icon: "🔍", title: "Focused Mind", desc: "Build sustained attention on tasks" }].map((c, i) => (<div key={i} className="p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-all" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}><div className="text-3xl mb-3">{c.icon}</div><h4 className="font-bold text-slate-900 text-sm mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{c.title}</h4><p className="text-xs text-slate-500 leading-relaxed">{c.desc}</p></div>))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── TRACKS ────────────────────────────────────────────────────────── */}
-        <section className="py-8 bg-slate-50">
+        <section className="py-3 bg-slate-50">
           <div className="max-w-screen-2xl mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Step 2</p>
-              <h2 className="text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Then Choose a Path</h2>
-              <p className="text-slate-500 max-w-lg mx-auto">
-                After foundations, pick the track that matches your child&apos;s interests and watch them thrive.
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Months 2 & 3</p>
+              <h2 className="text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Choose a Specialisation</h2>
+              <p className="text-slate-500 max-w-lg mx-auto">After foundations, pick the track that matches your child's passion. Each offers both Group and One-on-One formats.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {tracks.map((track) => (
-                <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} />
-              ))}
+              {tracks.map((track) => (<TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} courses={courses} />))}
             </div>
           </div>
         </section>
 
-        {/* ── STATS STRIP ───────────────────────────────────────────────────── */}
-        <section className="py-20 text-white" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)" }}>
+        <section className="py-6 text-white" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)" }}>
           <div className="max-w-screen-2xl mx-auto px-6 text-center">
             <h2 className="text-4xl font-bold mb-12" style={{ fontFamily: "Poppins, sans-serif" }}>A Personalised Experience</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { value: "1:1", label: "Instruction" },
-                { value: "60–90", label: "Min Sessions" },
-                { value: "Flexible", label: "Scheduling" },
-                { value: "Hands-on", label: "Projects" },
-              ].map((s, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <div className="text-3xl md:text-4xl font-extrabold" style={{ color: BRAND_LIGHT }}>{s.value}</div>
-                  <div className="text-xs text-indigo-300 font-semibold uppercase tracking-widest">{s.label}</div>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              {[{ value: "3 months", label: "Full Journey" }, { value: "1:1", label: "Coaching Option" }, { value: "3 months", label: "Group Mentorship" }, { value: "60–90", label: "Per Sessions" }, { value: "Real", label: "Projects Built" }].map((s, i) => (<div key={i} className="flex flex-col items-center gap-1"><div className="text-3xl md:text-4xl font-extrabold" style={{ color: BRAND_LIGHT }}>{s.value}</div><div className="text-xs text-indigo-300 font-semibold uppercase tracking-widest">{s.label}</div></div>))}
             </div>
           </div>
         </section>
-
-        {/* ── FINAL CTA ─────────────────────────────────────────────────────── */}
-        {/* <section className="py-24 bg-white">
-          <div className="max-w-3xl mx-auto px-6 text-center">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Give Them Skills{" "}
-              <span style={{ color: BRAND }}>Most Kids Don&apos;t Have</span>
-            </h2>
-            <p className="text-lg text-slate-500 mb-10 max-w-xl mx-auto">
-              Limited spots available to keep classes focused and mentorship personal.
-            </p>
-            <button
-              onClick={() => openEnroll()}
-              className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl text-white font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{ background: BRAND, boxShadow: `0 14px 40px ${BRAND}55`, fontFamily: "Poppins, sans-serif" }}
-            >
-              Enroll Now
-              <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">→</span>
-            </button>
-            <p className="text-xs text-slate-400 mt-5">
-              📞 +1 (276) 252-8415 &nbsp;·&nbsp; ✉️ info@learnexity.org
-            </p>
-          </div>
-        </section> */}
-
       </div>
 
-      {/* ── MODALS (outside scroll div, still inside AppLayout) ───────────── */}
-      <TrackModal
-        track={activeTrack}
-        onClose={() => setActiveTrack(null)}
-        onEnroll={(name) => { setActiveTrack(null); openEnroll(name); }}
-      />
-      <RegistrationModal
-        isOpen={enrollOpen}
-        onClose={() => setEnrollOpen(false)}
-        preselectedTrack={preselectedTrack}
-      />
-
+      <TrackModal track={activeTrack} onClose={() => { console.log("[Kids Page] TrackModal closed"); setActiveTrack(null); }} onEnroll={(name) => { console.log("[Kids Page] TrackModal onEnroll →", name); setActiveTrack(null); openEnroll(name); }} currency={currency} courses={courses} />
+      <RegistrationModal isOpen={enrollOpen} onClose={() => { console.log("[Kids Page] RegistrationModal closed"); setEnrollOpen(false); }} preselectedTrack={preselectedTrack} currency={currency} courses={courses} />
+      <ResumeModal isOpen={resumeOpen} onClose={() => { console.log("[Kids Page] ResumeModal closed"); setResumeOpen(false); }} />
       <Footer />
     </AppLayout>
   );

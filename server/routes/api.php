@@ -249,3 +249,54 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         });
     });
 });
+
+
+// kids routes
+// kids routes
+// kids routes
+// kids routes
+
+use App\Http\Controllers\Api\KidsController;
+use App\Http\Controllers\Api\KidsStripeController;
+use App\Http\Controllers\Api\KidsPaystackController;
+
+Route::prefix('kids')->group(function () {
+ 
+    // Courses catalogue
+    Route::get('/courses', [KidsController::class, 'courses']);
+ 
+    // Create an enrollment (registration step)
+    Route::post('/enroll', [KidsController::class, 'enroll']);
+
+    //look up route
+    Route::get('/enrollment/lookup', [KidsController::class, 'lookupByEmail']);
+ 
+    // Get enrollment by ID (payment page uses this)
+    Route::get('/enrollment/{id}', [KidsController::class, 'getEnrollment']);
+ 
+    // Resume payment via emailed token
+    Route::get('/resume/{token}', [KidsController::class, 'resumeByToken']);
+ 
+    // Verify/refresh enrollment status (called on success page)
+    Route::post('/enrollment/{id}/verify', [KidsController::class, 'verifyPayment']);
+ 
+    // ── Stripe (USD) ──────────────────────────────────────────────────────────
+    Route::prefix('stripe')->group(function () {
+        Route::post('/checkout',        [KidsStripeController::class, 'createCheckout']);
+        Route::get('/verify',           [KidsStripeController::class, 'verify']);
+        // Webhook — must stay public
+        Route::post('/webhook',         [KidsStripeController::class, 'webhook']);
+    });
+ 
+    // ── Paystack (NGN) ────────────────────────────────────────────────────────
+    Route::prefix('paystack')->group(function () {
+        Route::post('/initialize',      [KidsPaystackController::class, 'initialize']);
+        Route::get('/verify',           [KidsPaystackController::class, 'verify']);
+        // Webhook — must stay public
+        Route::post('/webhook',         [KidsPaystackController::class, 'webhook']);
+    });
+
+    
+
+});
+ 
