@@ -4,7 +4,7 @@ export default function Experience() {
   return (
     <section className="py-10 bg-white">
       {/* <FadeUpOnScroll> */}
-        <div className="max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row items-start">
+        <div className="max-w-screen-xl mx-auto px-6 flex flex-col md:flex-row items-start">
     
           <div className="md:w-1/2 mb-8 md:mb-0">
             <h2 className="text-4xl font-semibold text-gray-900 component-headers ">

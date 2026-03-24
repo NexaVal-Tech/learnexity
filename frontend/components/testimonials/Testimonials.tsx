@@ -114,9 +114,9 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-10 bg-white overflow-x-hidden">
+    <section className="py-5 bg-white overflow-x-hidden">
       <FadeUpOnScroll>
-      <div className="max-w-screen-2xl mx-auto">
+      <div className="max-w-[1180px] mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -127,29 +127,7 @@ export default function Testimonials() {
         {/* Desktop/Tablet View */}
         <div className="hidden md:block relative">
           <div className="flex items-start gap-12">
-            {/* Left Side - Title and Navigation - Fixed */}
-            {/* <div className="bg-white flex-shrink-0 relative z-10 w-96 p-6">
-              <h3 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">
-                What our students<br />are saying
-              </h3>
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={prevSlide}
-                  className="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5 text-gray-600" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div> */}
             
-
             {/* Right Side - Testimonials Container with overflow */}
             <div 
               ref={scrollContainerRef}
@@ -168,11 +146,10 @@ export default function Testimonials() {
                   style={{ transform: `translateX(-${currentSlide * 384}px)` }}
                 >
                 {data.map((testimonial, index) => (
-                  <div key={index} className="flex-shrink-0 w-[32rem] p-6 bg-gray-200 rounded-4xl">
+                  <div key={index} className="flex-shrink-0 w-[32rem] p-1 bg-gray-200 rounded-4xl">
                     <video 
                       src={testimonial.video} 
                       controls 
-                      autoPlay
                       className="w-full h-84 rounded-2xl mb-8 object-cover pointer-events-auto" 
                       preload="metadata"
                       onMouseDown={(e) => e.stopPropagation()}
@@ -180,7 +157,7 @@ export default function Testimonials() {
 
                     <div className="flex items-center gap-3">
                       <div>
-                        <p className="text-base text-gray-900 text-sm">
+                        <p className="text-base text-gray-900 text-sm p-6">
                           {testimonial.name}, {testimonial.role}
                         </p>
                       </div>
@@ -194,26 +171,6 @@ export default function Testimonials() {
 
         {/* Mobile View - Horizontal scrolling cards */}
         <div className="md:hidden px-6">
-          {/* <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              What our students<br />are saying
-            </h3>
-            
-            <div className="flex justify-center gap-3 mb-8">
-              <button
-                onClick={prevSlide}
-                className="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <button 
-                onClick={nextSlide}
-                className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div> */}
 
           {/* Horizontal scrolling container */}
           <div 

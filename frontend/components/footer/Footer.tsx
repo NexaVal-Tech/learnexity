@@ -6,7 +6,7 @@ export default function Footer() {
     <FadeUpOnScroll>
     <div className="bg-[#6D4AFF] text-white mx-auto">
       {/* CTA Section */}
-      <div className="text-center py-12 px-6">
+      <div className="text-center py-6 px-6">
         <h2 className="text-5xl font-semibold mb-8 leading-tight">
           Ready to Transform Your Career?
         </h2>
@@ -30,7 +30,7 @@ export default function Footer() {
 
       {/* Footer Links Section */}
       <div className="px-6 pb-6 pt-2">
-        <div className="max-w-[1505px] mx-auto">
+        <div className="max-w-screen-xl mx-auto">
           <div className="grid md:grid-cols-4 gap-16">
             {/* Logo and Copyright */}
             <div>

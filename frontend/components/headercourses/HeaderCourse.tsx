@@ -1,5 +1,7 @@
+// components/headercourses/HeaderCourse.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { api, Course } from "@/lib/api";
+import { Course } from "@/lib/api";
+import { subscribeCourses } from "@/lib/courseCache";
 import Link from "next/link";
 
 interface CoursesProps {
@@ -12,40 +14,33 @@ export default function HeaderCourse({ variant = "white" }: CoursesProps) {
   const textColor = variant === "white" ? "text-white" : "text-black";
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const data = await api.courses.getAll();
-        setCourses(data);
-      } catch (error) {
-        console.error("Failed to load courses:", error);
-      }
-    };
-
-    fetchCourses();
+    // Uses the shared cache — zero extra network request if courses.tsx
+    // or [id].tsx already fetched them.
+    const unsub = subscribeCourses(setCourses);
+    return unsub;
   }, []);
 
   // AUTO SCROLL EFFECT
   useEffect(() => {
     const container = scrollRef.current;
-    if (!container) return;
+    if (!container || courses.length === 0) return;
 
     const interval = setInterval(() => {
       container.scrollBy({ left: 200, behavior: "smooth" });
 
-      // If reached end → go back to start
       if (container.scrollLeft + container.clientWidth >= container.scrollWidth) {
         setTimeout(() => {
           container.scrollTo({ left: 0, behavior: "smooth" });
         }, 500);
       }
-    }, 2000); // <-- scroll every 2 seconds (you can increase or reduce)
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [courses]);
 
   return (
     <div className="py-2 overflow-hidden">
-      <div className="max-w-screen-2xl mx-auto px-8">
+      <div className="max-w-screen-xl mx-auto px-8">
         <div
           ref={scrollRef}
           className="overflow-x-auto scrollbar-hide whitespace-nowrap"
@@ -53,7 +48,7 @@ export default function HeaderCourse({ variant = "white" }: CoursesProps) {
           <div className={`flex gap-8 text-sm sm:text-xl mt-2 min-w-max ${textColor}`}>
             {courses.length > 0 ? (
               courses.map((course) => (
-                <Link 
+                <Link
                   key={course.id}
                   href={`/courses/${course.course_id}`}
                   className="cursor-pointer hover:text-gray-400 transition"
@@ -62,7 +57,16 @@ export default function HeaderCourse({ variant = "white" }: CoursesProps) {
                 </Link>
               ))
             ) : (
-              <span>Loading courses...</span>
+              // Show pill skeletons while loading instead of "Loading courses..."
+              <div className="flex gap-8">
+                {[120, 90, 140, 100, 110].map((w, i) => (
+                  <div
+                    key={i}
+                    className="h-5 rounded-full bg-gray-400/30 animate-pulse"
+                    style={{ width: w }}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>

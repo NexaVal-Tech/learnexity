@@ -28,7 +28,7 @@ function AnimatedTitle({ title, accent, animKey }: { title: string; accent?: str
   const words = title.split(" ");
   return (
     // font-semibold to match Method.tsx h2 style; no serif font-family override
-    <h1 className="hero-title font-semibold leading-tight mb-5">
+    <h1 className="hero-title text-5xl font-bold leading-tight mb-5">
       {words.map((word, i) => {
         const clean = word.toLowerCase().replace(/[^a-z]/g, "");
         const isAccent =
@@ -163,7 +163,7 @@ export default function Hero() {
 
       {/* ── Main layout ── */}
       <div className="relative z-10 flex items-center min-h-[calc(100vh-5rem)] px-5 sm:px-8 md:px-12 lg:px-16 py-10">
-        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+        <div className="w-full max-w-screen-xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
 
           {/* ── LEFT / TOP: Animated text section ── */}
           <div

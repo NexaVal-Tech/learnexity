@@ -6,7 +6,7 @@ import Footer from "@/components/footer/Footer";
 
 const BRAND        = "#4A3AFF";
 const BRAND_LIGHT  = "#4A3AFF";
-const BRAND_ORANGE = "#4A3AFF";
+const BRAND_ORANGE = "#f59e0b";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface CoursePricing {
@@ -157,17 +157,17 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: BRAND }}>A</span>Parent Information</p>
                 <div className="grid md:grid-cols-2 gap-3">
-                  <div><label className="block text-xs font-semibold text-slate-600 text-grey-900 mb-1.5">Parent Name *</label><input value={parentName} onChange={(e) => { setParentName(e.target.value); console.log("[RegistrationModal] parentName →", e.target.value); }} placeholder="John Doe" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
-                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Email Address *</label><input value={parentEmail} onChange={(e) => { setParentEmail(e.target.value); console.log("[RegistrationModal] parentEmail →", e.target.value); }} placeholder="name@email.com" type="email" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
-                  <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number</label><input value={parentPhone} onChange={(e) => { setParentPhone(e.target.value); console.log("[RegistrationModal] parentPhone →", e.target.value); }} placeholder="+234 800 000 0000" type="tel" className="w-full px-4 text-gray-800 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Parent Name *</label><input value={parentName} onChange={(e) => { setParentName(e.target.value); }} placeholder="John Doe" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Email Address *</label><input value={parentEmail} onChange={(e) => { setParentEmail(e.target.value); }} placeholder="name@email.com" type="email" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number</label><input value={parentPhone} onChange={(e) => { setParentPhone(e.target.value); }} placeholder="+234 800 000 0000" type="tel" className="w-full px-4 text-gray-800 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
                 </div>
               </div>
               <hr className="border-slate-100" />
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: BRAND }}>B</span>Student Details</p>
                 <div className="grid md:grid-cols-2 gap-3">
-                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Name *</label><input value={studentName} onChange={(e) => { setStudentName(e.target.value); console.log("[RegistrationModal] studentName →", e.target.value); }} placeholder="Alex" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
-                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Age *</label><select value={studentAge} onChange={(e) => { setStudentAge(e.target.value); console.log("[RegistrationModal] studentAge →", e.target.value); }} className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all"><option value="">Select Age</option>{[10,11,12,13,14,15,16,17].map((a) => <option key={a}>{a}</option>)}</select></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Name *</label><input value={studentName} onChange={(e) => { setStudentName(e.target.value); }} placeholder="Alex" type="text" className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all" /></div>
+                  <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Student's Age *</label><select value={studentAge} onChange={(e) => { setStudentAge(e.target.value); }} className="w-full px-4 py-3 text-gray-800 rounded-xl border border-slate-200 text-sm outline-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all"><option value="">Select Age</option>{[10,11,12,13,14,15,16,17].map((a) => <option key={a}>{a}</option>)}</select></div>
                 </div>
               </div>
               <button onClick={handleStep1Next} className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01]" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>Continue →</button>
@@ -197,7 +197,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Specialisation Track</p>
                     <div className="grid grid-cols-3 gap-2">
                       {[{ value: "Creative Design", emoji: "🎨" }, { value: "Game Builder", emoji: "🎮" }, { value: "Media Creator", emoji: "🎬" }].map((t) => (
-                        <button key={t.value} type="button" onClick={() => { console.log("[RegistrationModal] Track selected →", t.value); setSelectedTrack(t.value); }} className="p-3 rounded-2xl border-2 text-center transition-all hover:scale-105" style={selectedTrack === t.value ? { borderColor: BRAND, background: `${BRAND}0d`, boxShadow: `0 0 0 3px ${BRAND}22` } : { borderColor: "#e2e8f0", background: "white" }}>
+                        <button key={t.value} type="button" onClick={() => { setSelectedTrack(t.value); }} className="p-3 rounded-2xl border-2 text-center transition-all hover:scale-105" style={selectedTrack === t.value ? { borderColor: BRAND, background: `${BRAND}0d`, boxShadow: `0 0 0 3px ${BRAND}22` } : { borderColor: "#e2e8f0", background: "white" }}>
                           <div className="text-xl mb-1">{t.emoji}</div>
                           <div className="text-[11px] font-bold leading-tight" style={{ color: selectedTrack === t.value ? BRAND : "#475569" }}>{t.value}</div>
                         </button>
@@ -208,7 +208,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Programme Path</p>
                     <div className="grid grid-cols-2 gap-3">
                       {([{ value: "bundle" as const, icon: "🎓", label: "Full Journey (Recommended)", desc: "Digital Foundations (1 month) + " + selectedTrack + " (2 months) = 3 months total", badge: "Best value", badgeColor: "#16a34a", badgeBg: "#dcfce7" }, { value: "track_only" as const, icon: "⚡", label: selectedTrack + " Only", desc: "Skip to the specialisation track directly (2 months). Suitable if your child already has computer basics.", badge: "For advanced", badgeColor: "#d97706", badgeBg: "#fef3c7" }]).map((opt) => (
-                        <button key={opt.value} type="button" onClick={() => { console.log("[RegistrationModal] Enrollment type →", opt.value); setEnrollmentType(opt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={enrollmentType === opt.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                        <button key={opt.value} type="button" onClick={() => { setEnrollmentType(opt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={enrollmentType === opt.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
                           <div className="flex items-start justify-between mb-2"><span className="text-2xl">{opt.icon}</span><span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: opt.badgeBg, color: opt.badgeColor }}>{opt.badge}</span></div>
                           <p className="font-bold text-sm text-slate-800 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{opt.label}</p>
                           <p className="text-xs text-slate-500 leading-relaxed">{opt.desc}</p>
@@ -220,7 +220,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Session Format</p>
                     <div className="grid grid-cols-2 gap-3">
                       {([{ value: "group_mentorship" as const, icon: "👥", label: "Group Mentorship", desc: "Collaborative, peer-learning environment", badge: "Popular" }, { value: "one_on_one" as const, icon: "🎯", label: "One-on-One Coaching", desc: "Fully personalised, your child's own pace", badge: "Premium" }]).map((s) => (
-                        <button key={s.value} type="button" onClick={() => { console.log("[RegistrationModal] Session type →", s.value); setSessionType(s.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={sessionType === s.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                        <button key={s.value} type="button" onClick={() => { setSessionType(s.value); }} className="p-4 rounded-2xl border-2 text-left transition-all" style={sessionType === s.value ? { borderColor: BRAND, background: `${BRAND}07`, boxShadow: `0 0 0 3px ${BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
                           <div className="flex items-center justify-between mb-2"><span className="text-2xl">{s.icon}</span><span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: sessionType === s.value ? `${BRAND}18` : "#f1f5f9", color: sessionType === s.value ? BRAND : "#94a3b8" }}>{s.badge}</span></div>
                           <p className="font-bold text-sm text-slate-800" style={{ fontFamily: "Poppins, sans-serif" }}>{s.label}</p>
                           <p className="text-xs text-slate-500 mt-1">{s.desc}</p>
@@ -229,7 +229,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => { console.log("[RegistrationModal] Back → step 1"); setStep(1); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
+                    <button onClick={() => { setStep(1); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
                     <button onClick={handleStep2Next} className="flex-[2] py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01]" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>Continue →</button>
                   </div>
                 </>
@@ -243,7 +243,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Payment Plan</p>
                 <div className="grid grid-cols-2 gap-3">
                   {([{ value: "onetime" as const, icon: "⚡", label: "Pay in Full", desc: discount > 0 ? `Save ${discount}% when you pay upfront` : "Single payment, full access immediately", highlight: discount > 0 }, { value: "installment" as const, icon: "📅", label: "3 Monthly Payments", desc: "Split across 3 months at full price. Access starts after first payment.", highlight: false }]).map((pt) => (
-                    <button key={pt.value} type="button" onClick={() => { console.log("[RegistrationModal] Payment type →", pt.value); setPaymentType(pt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all relative" style={paymentType === pt.value ? { borderColor: pt.highlight ? "#16a34a" : BRAND_ORANGE, background: pt.highlight ? "#f0fdf4" : `${BRAND_ORANGE}07`, boxShadow: `0 0 0 3px ${pt.highlight ? "#16a34a" : BRAND_ORANGE}18` } : { borderColor: "#e2e8f0", background: "white" }}>
+                    <button key={pt.value} type="button" onClick={() => { setPaymentType(pt.value); }} className="p-4 rounded-2xl border-2 text-left transition-all relative" style={paymentType === pt.value ? { borderColor: pt.highlight ? "#16a34a" : BRAND, background: pt.highlight ? "#f0fdf4" : `${BRAND}07`, boxShadow: `0 0 0 3px ${pt.highlight ? "#16a34a" : BRAND}18` } : { borderColor: "#e2e8f0", background: "white" }}>
                       {pt.highlight && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Save {discount}%</span>}
                       <span className="text-2xl block mb-2">{pt.icon}</span>
                       <p className="font-bold text-sm text-slate-800" style={{ fontFamily: "Poppins, sans-serif" }}>{pt.label}</p>
@@ -269,7 +269,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                 </div>
               )}
               <div className="flex gap-3">
-                <button onClick={() => { console.log("[RegistrationModal] Back → step 2"); setStep(2); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
+                <button onClick={() => { setStep(2); }} className="flex-1 py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">← Back</button>
                 <button onClick={handleSubmit} disabled={loading} className="flex-[2] py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01] disabled:opacity-60" style={{ background: BRAND, fontFamily: "Poppins, sans-serif" }}>{loading ? "Processing…" : "Proceed to Payment →"}</button>
               </div>
             </div>
@@ -285,7 +285,6 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
 const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll: (trackName: string) => void; currency: string; courses: KidsCourseAPI[]; }> = ({ track, onClose, onEnroll, currency, courses }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    console.log("[TrackModal] track →", track ? track.name : "null");
     document.body.style.overflow = track ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [track]);
@@ -293,11 +292,10 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
   const course   = courses.find(c => c.slug === track.courseSlug);
   const p        = course?.pricing[currency as "USD" | "NGN"];
   const discount = course?.onetime_discount_percent ?? 0;
-  console.log("[TrackModal] Render →", { track: track.name, courseFound: !!course, pricingAvailable: !!p, currency, discount });
   return (
-    <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) { console.log("[TrackModal] Overlay click → close"); onClose(); } }} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}>
+    <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) { onClose(); } }} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}>
       <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl" style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
-        <button onClick={() => { console.log("[TrackModal] ✕ clicked"); onClose(); }} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
+        <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
         <div className="px-8 pt-10 pb-8 rounded-t-3xl" style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}06 100%)`, borderBottom: `1px solid ${track.color}22` }}>
           <div className="text-5xl mb-3">{track.emoji}</div>
           <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{track.name}</h2>
@@ -331,7 +329,7 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
           <div><h4 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: track.color }}>What This Builds In Your Child</h4><div className="flex flex-wrap gap-2">{track.what_it_builds.map((item, i) => (<span key={i} className="px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: `${track.color}14`, color: track.color }}>{item}</span>))}</div></div>
           <div className="p-4 rounded-2xl text-sm leading-relaxed" style={{ background: `${track.color}0d`, borderLeft: `3px solid ${track.color}` }}><p className="font-bold text-slate-800 mb-1">Why This Matters</p><p className="text-slate-600">{track.why_it_matters}</p></div>
           <p className="text-sm font-semibold text-slate-700 italic border-t border-slate-100 pt-4">{track.decision_line}</p>
-          <button onClick={() => { console.log("[TrackModal] Choose clicked →", track.name); onClose(); onEnroll(track.name); }} className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01] active:scale-[0.99]" style={{ background: track.color, boxShadow: `0 8px 24px ${track.color}44`, fontFamily: "Poppins, sans-serif" }}>Choose {track.name} →</button>
+          <button onClick={() => { onClose(); onEnroll(track.name); }} className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-[1.01] active:scale-[0.99]" style={{ background: track.color, boxShadow: `0 8px 24px ${track.color}44`, fontFamily: "Poppins, sans-serif" }}>Choose {track.name} →</button>
         </div>
       </div>
       <style jsx>{`@keyframes kidsModalIn { from { opacity:0; transform:translateY(32px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
@@ -340,36 +338,81 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
 };
 
 // ─── Track Card ───────────────────────────────────────────────────────────────
+const GAME_BUILDER_GRADIENT = "linear-gradient(163.36deg, #5B1EF6 -33.94%, #F59E0B 18.93%, #5B1EF6 48.37%, #DE492B 97.22%)";
+
 const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; onEnroll: (trackName: string) => void; currency: string; courses: KidsCourseAPI[]; }> = ({ track, onLearnMore, onEnroll, currency, courses }) => {
   const course   = courses.find(c => c.slug === track.courseSlug);
   const p        = course?.pricing[currency as "USD" | "NGN"];
   const discount = course?.onetime_discount_percent ?? 0;
+  const isGameBuilder = track.id === "game-builder";
+
+  const cardBg: Record<string, string> = {
+    "creative-design": "bg-indigo-50 border-indigo-100",
+    "game-builder":    "border-transparent",          // border handled by gradient bg
+    "media-creator":   "bg-orange-50 border-orange-100",
+  };
+  const titleColor: Record<string, string> = {
+    "creative-design": "text-indigo-900",
+    "game-builder":    "text-white",
+    "media-creator":   "text-orange-900",
+  };
+
   return (
-    <div className="group bg-white rounded-3xl overflow-hidden border border-slate-100 flex flex-col transition-all duration-300 hover:-translate-y-2" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }} onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 48px ${track.color}22`; }} onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 24px rgba(0,0,0,0.06)"; }}>
-      <div className="relative w-full h-48 overflow-hidden" style={{ background: `linear-gradient(135deg, ${track.color}18 0%, ${track.color}0a 100%)` }}>
-        <Image src={track.image} alt={track.name} fill className="object-cover" />
-        <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${track.color}, transparent)` }} />
+    <div
+      className={`group rounded-3xl overflow-hidden border text-left flex flex-col ${cardBg[track.id] ?? "bg-white border-slate-100"}`}
+      style={{
+        transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+        ...(isGameBuilder ? { background: GAME_BUILDER_GRADIENT } : {}),
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-10px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = isGameBuilder ? "0 24px 40px rgba(91,30,246,0.45)" : "0 20px 25px -5px rgb(0 0 0 / 0.1)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = ""; }}
+    >
+      <div className="relative w-full h-48 overflow-hidden">
+        <Image src={track.image} alt={track.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full bg-white/90 text-slate-600 shadow-sm">2 months</div>
       </div>
-      <div className="flex flex-col flex-1 p-6 gap-4">
+      <div className="flex flex-col flex-1 p-8 gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest rounded-full px-3 py-1 mb-3" style={{ background: `${track.color}14`, color: track.color }}>{track.emoji} {track.name}</div>
-          <h3 className="text-xl font-bold text-slate-900 leading-snug mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{track.tagline}</h3>
-          <p className="text-slate-500 text-sm leading-relaxed">{track.description}</p>
+          <h3 className={`text-2xl font-bold mb-3 ${titleColor[track.id] ?? "text-slate-900"}`} style={{ fontFamily: "Poppins, sans-serif" }}>{track.emoji} {track.name}</h3>
+          <p className={`text-sm leading-relaxed ${isGameBuilder ? "text-white/80" : "text-slate-600"}`}>{track.description}</p>
         </div>
-        <ul className="space-y-1.5 mt-1">{track.what_it_builds.map((item, i) => (<li key={i} className="flex items-center gap-2 text-sm text-slate-600"><span className="text-xs" style={{ color: track.color }}>✦</span>{item}</li>))}</ul>
+        <ul className="space-y-2 mt-1">
+          {track.what_it_builds.map((item, i) => (
+            <li key={i} className={`flex items-center gap-2 text-sm ${isGameBuilder ? "text-white/90" : "text-slate-600"}`}>
+              <span className="text-xs" style={{ color: isGameBuilder ? "#F59E0B" : track.color }}>✦</span>{item}
+            </li>
+          ))}
+        </ul>
         {p && (
-          <div className="rounded-xl p-3 border text-xs" style={{ background: `${track.color}07`, borderColor: `${track.color}22` }}>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Pricing {discount > 0 && <span className="text-green-600 ml-1">· {discount}% off when paid in full</span>}</p>
+          <div className={`rounded-xl p-3 text-xs border ${isGameBuilder ? "bg-white/15 border-white/20" : "bg-white/70 border-white"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isGameBuilder ? "text-white/60" : "text-slate-400"}`}>
+              Pricing {discount > 0 && <span className={isGameBuilder ? "text-amber-300 ml-1" : "text-green-600 ml-1"}>· {discount}% off when paid in full</span>}
+            </p>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between"><span className="text-slate-500">🎓 Bundle (with DF, 3 mo)</span><div className="text-right"><span className="font-bold" style={{ color: track.color }}>{fmt(p.bundle_group_discounted, currency)}</span><span className="text-slate-400 ml-1">group</span></div></div>
-              <div className="flex items-center justify-between"><span className="text-slate-500">⚡ Track only (2 mo)</span><div className="text-right"><span className="font-bold text-slate-600">{fmt(p.standalone_group_discounted, currency)}</span><span className="text-slate-400 ml-1">group</span></div></div>
+              <div className="flex items-center justify-between">
+                <span className={isGameBuilder ? "text-white/70" : "text-slate-500"}>🎓 Bundle (with DF, 3 mo)</span>
+                <div className="text-right">
+                  <span className="font-bold" style={{ color: isGameBuilder ? "#F59E0B" : track.color }}>{fmt(p.bundle_group_discounted, currency)}</span>
+                  <span className={`ml-1 ${isGameBuilder ? "text-white/50" : "text-slate-400"}`}>group</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className={isGameBuilder ? "text-white/70" : "text-slate-500"}>⚡ Track only (2 mo)</span>
+                <div className="text-right">
+                  <span className={`font-bold ${isGameBuilder ? "text-white" : "text-slate-600"}`}>{fmt(p.standalone_group_discounted, currency)}</span>
+                  <span className={`ml-1 ${isGameBuilder ? "text-white/50" : "text-slate-400"}`}>group</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
         <div className="flex flex-col gap-2 mt-auto pt-2">
-          <button onClick={() => { console.log("[TrackCard] Enroll Now →", track.name); onEnroll(track.name); }} className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95" style={{ background: track.color, fontFamily: "Poppins, sans-serif" }}>Enroll Now →</button>
-          <button onClick={() => { console.log("[TrackCard] Learn More →", track.name); onLearnMore(track); }} className="w-full py-3 rounded-xl font-semibold text-sm border-2 transition-all hover:bg-slate-50 active:scale-95" style={{ borderColor: `${track.color}44`, color: track.color }}>Learn More</button>
+          <button onClick={() => onEnroll(track.name)} className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95 shadow-lg" style={{ background: isGameBuilder ? "rgba(255,255,255,0.2)" : BRAND, backdropFilter: isGameBuilder ? "blur(8px)" : undefined, border: isGameBuilder ? "1px solid rgba(255,255,255,0.35)" : undefined, boxShadow: isGameBuilder ? "0 4px 16px rgba(0,0,0,0.2)" : `0 8px 20px ${BRAND}33`, fontFamily: "Poppins, sans-serif" }}>
+            Enroll Now →
+          </button>
+          <button onClick={() => onLearnMore(track)} className="w-full py-3 rounded-xl font-semibold text-sm border-2 transition-all hover:bg-white/20 active:scale-95" style={{ borderColor: isGameBuilder ? "rgba(255,255,255,0.35)" : `${track.color}44`, color: isGameBuilder ? "white" : track.color }}>
+            Learn More
+          </button>
         </div>
       </div>
     </div>
@@ -381,7 +424,7 @@ const ResumeBanner: React.FC<{ onResume: () => void }> = ({ onResume }) => (
   <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 flex items-center gap-4">
     <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-xl shrink-0">📋</div>
     <div className="flex-1"><p className="font-bold text-slate-800 text-sm">Have an incomplete enrollment?</p><p className="text-slate-500 text-xs mt-0.5">Enter your email to pick up where you left off — no account needed.</p></div>
-    <button onClick={() => { console.log("[ResumeBanner] Resume Payment clicked"); onResume(); }} className="px-4 py-2 rounded-xl text-xs font-bold text-white shrink-0" style={{ background: BRAND_ORANGE }}>Resume Payment</button>
+    <button onClick={onResume} className="px-4 py-2 rounded-xl text-xs font-bold text-white shrink-0" style={{ background: BRAND_ORANGE }}>Resume Payment</button>
   </div>
 );
 
@@ -391,37 +434,33 @@ const ResumeModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [found, setFound]     = useState<any[]>([]);
-  useEffect(() => { console.log("[ResumeModal] isOpen →", isOpen); }, [isOpen]);
   if (!isOpen) return null;
   const lookup = async () => {
-    console.log("[ResumeModal] Lookup → email:", email);
-    if (!email) { console.warn("[ResumeModal] No email entered"); return; }
+    if (!email) return;
     setLoading(true); setError("");
     try {
       const url = `${API_URL}/api/kids/enrollment/lookup?email=${encodeURIComponent(email)}`;
-      console.log(`[ResumeModal] GET ${url}`);
       const res  = await fetch(url);
       const data = await res.json();
-      console.log("[ResumeModal] Lookup response →", { status: res.status, count: data.enrollments?.length, data });
-      if (data.enrollments?.length) { console.log(`[ResumeModal] Found ${data.enrollments.length} pending enrollment(s)`); setFound(data.enrollments); }
-      else { console.warn("[ResumeModal] No pending enrollments for →", email); setError("No pending enrollments found for this email."); }
-    } catch (e) { console.error("[ResumeModal] Lookup error →", e); setError("Something went wrong. Please try again."); }
+      if (data.enrollments?.length) { setFound(data.enrollments); }
+      else { setError("No pending enrollments found for this email."); }
+    } catch (e) { setError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(10,8,30,0.80)", backdropFilter: "blur(8px)" }}>
       <div className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl p-8" style={{ animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
-        <button onClick={() => { console.log("[ResumeModal] Closed"); onClose(); }} className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
+        <button onClick={onClose} className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">✕</button>
         <h3 className="text-xl font-bold text-slate-800 mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>Resume Your Enrollment</h3>
         <p className="text-slate-500 text-sm mb-6">Enter the parent email used during registration.</p>
-        <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); console.log("[ResumeModal] Email →", e.target.value); }} placeholder="parent@email.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all mb-3" />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="parent@email.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all mb-3" />
         {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
         {found.length === 0 ? (
           <button onClick={lookup} disabled={loading} className="w-full py-3 rounded-xl text-white font-bold disabled:opacity-60" style={{ background: BRAND }}>{loading ? "Searching…" : "Find My Enrollment →"}</button>
         ) : (
           <div className="space-y-3">
             {found.map((enr: any) => (
-              <button key={enr.id} onClick={() => { console.log("[ResumeModal] Enrollment selected →", { id: enr.id, course: enr.course?.name, amountPaid: enr.amount_paid, remaining: enr.installments_remaining }); router.push(`/kids/payment/${enr.id}`); }} className="w-full p-4 rounded-2xl border-2 border-slate-200 text-left hover:border-indigo-300 transition-all">
+              <button key={enr.id} onClick={() => router.push(`/kids/payment/${enr.id}`)} className="w-full p-4 rounded-2xl border-2 border-slate-200 text-left hover:border-indigo-300 transition-all">
                 <p className="font-bold text-slate-800 text-sm">{enr.course?.name} — {enr.student_name}</p>
                 <p className="text-xs text-slate-500 mt-0.5 capitalize">{enr.enrollment_type?.replace("_", " ")} · Paid {enr.currency} {enr.amount_paid?.toLocaleString()} of {enr.total_price?.toLocaleString()} · {enr.installments_remaining} payment{enr.installments_remaining !== 1 ? "s" : ""} remaining</p>
               </button>
@@ -444,55 +483,54 @@ export default function Kids() {
   const [courses, setCourses]                   = useState<KidsCourseAPI[]>([]);
 
   useEffect(() => { console.log("[Kids Page] Mounted | API_URL →", API_URL); }, []);
-  useEffect(() => { console.log("[Kids Page] enrollOpen →", enrollOpen); }, [enrollOpen]);
-  useEffect(() => { console.log("[Kids Page] preselectedTrack →", preselectedTrack); }, [preselectedTrack]);
-  useEffect(() => { console.log("[Kids Page] activeTrack →", activeTrack?.name ?? "null"); }, [activeTrack]);
-  useEffect(() => { console.log("[Kids Page] resumeOpen →", resumeOpen); }, [resumeOpen]);
-  useEffect(() => { console.log("[Kids Page] currency →", currency); }, [currency]);
-  useEffect(() => { console.log("[Kids Page] courses updated — count →", courses.length, "| slugs →", courses.map(c => c.slug)); }, [courses]);
 
   useEffect(() => {
-    console.log(`[Kids Page] GET ${API_URL}/api/detect-currency`);
     fetch(`${API_URL}/api/detect-currency`)
-      .then(r => { console.log("[Kids Page] detect-currency status →", r.status); return r.json(); })
-      .then(d => { console.log("[Kids Page] detect-currency data →", d); if (d.currency) { console.log("[Kids Page] Currency set →", d.currency, `(${d.country_code ?? "unknown"})`); setCurrency(d.currency); } else { console.warn("[Kids Page] No currency in response — keeping USD"); } })
-      .catch(e => { console.error("[Kids Page] detect-currency failed →", e.message, "| fallback: USD"); });
+      .then(r => r.json())
+      .then(d => { if (d.currency) setCurrency(d.currency); })
+      .catch(e => console.error("[Kids Page] detect-currency failed →", e.message));
   }, []);
 
   useEffect(() => {
-    console.log(`[Kids Page] GET ${API_URL}/api/kids/courses`);
     fetch(`${API_URL}/api/kids/courses`)
-      .then(r => { console.log("[Kids Page] /api/kids/courses status →", r.status); return r.json(); })
-      .then(d => { console.log("[Kids Page] Courses raw response →", d); if (d.courses) { console.log(`[Kids Page] ${d.courses.length} course(s) loaded →`, d.courses.map((c: KidsCourseAPI) => `${c.slug} | ${c.duration_months}mo | foundation:${c.is_foundation}`)); setCourses(d.courses); } else { console.warn("[Kids Page] No 'courses' key in response →", d); } })
-      .catch(e => { console.error("[Kids Page] /api/kids/courses failed →", e.message); });
+      .then(r => r.json())
+      .then(d => { if (d.courses) setCourses(d.courses); })
+      .catch(e => console.error("[Kids Page] /api/kids/courses failed →", e.message));
   }, []);
 
   const openEnroll = (trackName?: string) => {
-    console.log("[Kids Page] openEnroll →", trackName ?? "(default)");
     if (trackName) setPreselectedTrack(trackName);
     setEnrollOpen(true);
   };
 
   const dfCourse  = courses.find(c => c.is_foundation);
   const dfPricing = dfCourse?.pricing[currency as "USD" | "NGN"];
-  console.log("[Kids Page] Render | dfCourse:", !!dfCourse, "| dfPricing:", !!dfPricing, "| currency:", currency, "| coursesLoaded:", courses.length);
 
   return (
     <AppLayout>
       <div style={{ fontFamily: "Outfit, sans-serif" }} className="bg-slate-50 text-slate-800 overflow-x-hidden">
-        <section className="relative bg-white pt-30 pb-10 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND_ORANGE}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND}55 0%, transparent 70%)`, filter: "blur(80px)" }} />
-          <div className="relative max-w-screen-2xl mx-auto px-6 grid md:grid-cols-2 gap-14 items-center">
+
+        {/* ── Hero ──────────────────────────────────────────────────── */}
+        <header className="relative bg-white pt-28 pb-12 overflow-hidden">
+          {/* floating blobs */}
+          <div className="absolute top-20 right-0 w-72 h-72 rounded-full opacity-40 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND_ORANGE}88 0%, transparent 70%)`, filter: "blur(80px)", animation: "kidsFloat 6s ease-in-out infinite" }} />
+          <div className="absolute bottom-10 left-0 w-96 h-96 rounded-full opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${BRAND}88 0%, transparent 70%)`, filter: "blur(80px)", animation: "kidsFloat 6s ease-in-out infinite 2s" }} />
+
+          <div className="relative max-w-screen-xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6" style={{ background: `${BRAND_ORANGE}18`, color: BRAND_ORANGE }}>⚡ Ages 10–17 · 3 Month Programme</span>
-              <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>Turn Your Child Into a <span style={{ color: BRAND }}>Tech Creator</span></h1>
-              <p className="text-lg text-slate-500 mt-6 leading-relaxed max-w-md">Start with Digital Foundations (1 month), then specialise in what they love (2 months). Guided 1-on-1 or group mentorship that builds real skills.</p>
-              <div className="flex items-center gap-2 mt-6 flex-wrap">
-                {[{ label: "Month 1", desc: "Digital Foundations 🏗️", color: BRAND }, { label: "Months 2–3", desc: "Specialisation Track 🎯", color: "#7c3aed" }].map((pill, i) => (
-                  <React.Fragment key={i}><div className="px-4 py-2 rounded-xl text-xs font-bold" style={{ background: `${pill.color}12`, color: pill.color }}><span className="text-slate-400 font-normal">{pill.label} · </span>{pill.desc}</div>{i === 0 && <span className="text-slate-300 text-lg">→</span>}</React.Fragment>
-                ))}
-              </div>
+              <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider rounded-full px-4 py-1 mb-6" style={{ background: "#fff3cd", color: BRAND_ORANGE }}>
+                Ages 10–17 Program
+              </span>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mt-2" style={{ fontFamily: "Poppins, sans-serif" }}>
+                Turn Screen Time Into Real{" "}
+                <span style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_ORANGE})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  Creative Skills
+                </span>
+              </h1>
+              <p className="text-lg text-slate-600 mt-6 leading-relaxed max-w-md">
+                Stop wasting hours on the screen. Join a guided digital program where kids design, build, and create technology with personalised 1-on-1 or group mentorship.
+              </p>
+
               {dfPricing && (
                 <div className="flex items-center gap-4 mt-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 w-fit">
                   <div><p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Bundle from</p><p className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>{fmt(dfPricing.bundle_group_discounted, currency)}</p><p className="text-xs text-slate-500">or {fmt(dfPricing.installment_bundle_group, currency)}/mo × 3</p></div>
@@ -500,92 +538,207 @@ export default function Kids() {
                   <div><p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">1-on-1 from</p><p className="text-2xl font-extrabold" style={{ color: BRAND, fontFamily: "Poppins, sans-serif" }}>{fmt(dfPricing.bundle_one_on_one_discounted, currency)}</p><p className="text-xs text-slate-500">or {fmt(dfPricing.installment_bundle_one_on_one, currency)}/mo × 3</p></div>
                 </div>
               )}
-              <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <button onClick={() => openEnroll()} className="inline-flex items-center gap-3 px-7 py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-105 active:scale-95" style={{ background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}>Enroll Now <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">→</span></button>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center">
+                <button
+                  onClick={() => openEnroll()}
+                  className="px-4 py-2 rounded-xl text-white font-bold text-lg transition-all hover:scale-105 active:scale-95"
+                  style={{ background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Poppins, sans-serif" }}
+                >
+                  Start Your Child's Journey
+                </button>
+                <div className="flex items-center gap-3 px-2">
+                  <div className="flex -space-x-2">
+                    {["#4A3AFF", "#f59e0b", "#22c55e"].map((c, i) => (
+                      <div key={i} className="w-10 h-10 rounded-full border-2 border-white" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-slate-500">Join 500+ young creators</span>
+                </div>
               </div>
-              <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-400 inline-block" />Spots are limited · Beginner-friendly · No experience needed</p>
+              <p className="text-xs text-slate-400 mt-4 flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-green-400 inline-block" />
+                Spots are limited · Beginner-friendly · No experience needed
+              </p>
             </div>
+
             <div className="relative">
-              <div className="w-full h-[450px] rounded-3xl flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl" style={{ background: `linear-gradient(135deg, ${BRAND}18 0%, ${BRAND_ORANGE}18 100%)` }}>
-                <Image src="images/photo-1593642532842-98d0fd5ebc1a.avif" alt="Student coding" fill className="object-cover transition-transform duration-700 group-hover:scale-110 rounded-3xl border-4 border-white shadow-2xl" />
-                <div className="absolute bottom-5 left-5 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3"><div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#22c55e" }}>✓</div><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Mentorship</p><p className="text-sm font-bold text-slate-800">One-on-One Available</p></div></div>
+              <div className="relative w-full aspect-square rounded-3xl overflow-hidden border-4 border-white shadow-2xl group">
+                <Image src="images/photo-1593642532842-98d0fd5ebc1a.avif" alt="Student coding" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute bottom-5 left-5 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3" style={{ animation: "kidsBounce 3s ease-in-out infinite" }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#22c55e" }}>✓</div>
+                  <div><p className="text-xs text-slate-500 font-bold uppercase">Live Mentorship</p><p className="text-sm font-bold text-slate-800">One-on-One Session</p></div>
+                </div>
               </div>
             </div>
           </div>
+        </header>
+
+        {/* ── Resume Banner ─────────────────────────────────────────── */}
+        <section className="py-4 bg-white border-b border-slate-100">
+          <div className="max-w-screen-xl mx-auto px-6">
+            <ResumeBanner onResume={() => setResumeOpen(true)} />
+          </div>
         </section>
 
-        <section className="py-2 bg-white border-b border-slate-100"><div className="max-w-screen-2xl mx-auto px-6"><ResumeBanner onResume={() => setResumeOpen(true)} /></div></section>
-
-        <section className="py-4 bg-slate-100">
-          <div className="max-w-screen-2xl mx-auto px-6 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>The 3-Month Journey</p>
-            <h2 className="text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>How It Works</h2>
-            <p className="text-slate-500 mb-4 max-w-lg mx-auto">One connected learning journey — foundations first, then specialisation.</p>
-            <div className="grid md:grid-cols-3 gap-6 relative">
-              <div className="hidden md:block absolute top-8 left-[calc(33%+1rem)] right-[calc(33%+1rem)] h-0.5 bg-gradient-to-r from-indigo-200 via-indigo-400 to-orange-200" />
-              {[{ step: "Month 1", title: "Digital Foundations", desc: "Every child starts here. Build computer confidence and core skills — the bedrock of everything that follows.", color: BRAND, badge: "1 month" }, { step: "Month 2", title: "Discover & Begin Track", desc: "Start the specialisation track. Apply your foundation skills in a real creative or technical context.", color: "#7c3aed", badge: "Month 2" }, { step: "Month 3", title: "Build & Complete", desc: "Finish your project, build your portfolio piece, and celebrate what you've created.", color: BRAND_ORANGE, badge: "Month 3" }].map((s, i) => (
-                <div key={i} className="bg-white rounded-3xl p-4 text-left border border-slate-100" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-                  <div className="flex items-center justify-between mb-2"><div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: s.color }}>{s.step}</div><span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: `${s.color}14`, color: s.color }}>{s.badge}</span></div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{s.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
+        {/* ── What Your Child Will Gain ─────────────────────────────── */}
+        <section className="py-10 overflow-hidden" style={{ background: `linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)` }}>
+          <div className="max-w-screen-xl mx-auto px-6 text-center">
+            <h2 className="text-3xl font-bold text-white mb-12" style={{ fontFamily: "Poppins, sans-serif" }}>What Your Child Will Gain</h2>
+            <div className="grid md:grid-cols-4 gap-8">
+              {[
+                { icon: "🛠️", title: "Practical Skills",    desc: "Real tools used by designers and developers today." },
+                { icon: "🧠", title: "Logical Thinking",    desc: "Problem-solving skills that translate to school and life." },
+                { icon: "✨", title: "Confidence",           desc: "Mastering tools that usually feel 'too hard'." },
+                { icon: "📂", title: "Real Portfolio",       desc: "A collection of projects they built from scratch." },
+              ].map((item, i) => (
+                <div key={i} className="p-6 rounded-2xl border border-white/10 transition-all duration-300 hover:bg-white/20 cursor-default" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <div className="text-4xl mb-4">{item.icon}</div>
+                  <h3 className="font-bold text-xl text-white mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{item.title}</h3>
+                  <p className="text-indigo-200 text-sm">{item.desc}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-8 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm text-slate-600"><span>💡</span><span>Already have computer basics? You can enroll in a specialisation track directly (2 months).</span><button onClick={() => openEnroll()} className="font-bold underline" style={{ color: BRAND }}>Enroll now</button></div>
           </div>
         </section>
 
-        <section className="py-3 bg-white">
-          <div className="max-w-screen-2xl mx-auto px-6">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div>
-                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest rounded-full px-4 py-1.5 mb-6" style={{ background: `${BRAND}12`, color: BRAND }}>🏁 Month 1 — Digital Foundation</span>
-                <h2 className="text-4xl font-bold text-slate-900 leading-tight mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>This Is Where<br /><span style={{ color: BRAND }}>Everything Changes</span></h2>
-                <p className="text-slate-500 text-lg leading-relaxed mb-6">In just 4 weeks, your child goes from <strong className="text-slate-800">"I don't know how"</strong> to <strong className="text-slate-800">"I can do this myself."</strong></p>
-                {["Confidence using a computer without help", "Create documents, slides & projects independently", "Strong thinking and organisation skills", "A real foundation for future tech skills"].map((item, i) => (<div key={i} className="flex items-center gap-3 text-slate-700 text-sm mb-2"><span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: BRAND }}>✓</span>{item}</div>))}
-                <div className="rounded-2xl border border-slate-200 p-5 mt-6 bg-slate-50">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Available in Two Formats</p>
-                  <div className="flex gap-4">
-                    <div className="flex-1"><p className="font-bold text-slate-800 text-sm">👥 Group Mentorship</p><p className="text-xs text-slate-500 mt-1">Collaborative peer environment guided by a mentor</p>{dfPricing && <p className="text-sm font-bold mt-2" style={{ color: BRAND }}>{fmt(dfPricing.bundle_group_discounted, currency)} <span className="text-slate-400 font-normal text-xs">(bundle)</span></p>}</div>
-                    <div className="w-px bg-slate-200" />
-                    <div className="flex-1"><p className="font-bold text-slate-800 text-sm">🎯 One-on-One Coaching</p><p className="text-xs text-slate-500 mt-1">Fully personalised, your child's own pace</p>{dfPricing && <p className="text-sm font-bold mt-2" style={{ color: BRAND }}>{fmt(dfPricing.bundle_one_on_one_discounted, currency)} <span className="text-slate-400 font-normal text-xs">(bundle)</span></p>}</div>
-                  </div>
-                </div>
+        {/* ── The Problem ───────────────────────────────────────────── */}
+        <section className="py-10 max-w-screen-xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="order-2 md:order-1">
+              <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg">
+                <Image src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80" alt="Passive tech use" fill className="object-cover opacity-80 hover:scale-105 transition-transform duration-700" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[{ icon: "🧠", title: "Critical Thinking", desc: "Approach problems with logic and structure" }, { icon: "⚡", title: "Digital Independence", desc: "Work without constant adult help" }, { icon: "🎯", title: "Problem-Solving", desc: "Break challenges into manageable steps" }, { icon: "🔍", title: "Focused Mind", desc: "Build sustained attention on tasks" }].map((c, i) => (<div key={i} className="p-5 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-all" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}><div className="text-3xl mb-3">{c.icon}</div><h4 className="font-bold text-slate-900 text-sm mb-1" style={{ fontFamily: "Poppins, sans-serif" }}>{c.title}</h4><p className="text-xs text-slate-500 leading-relaxed">{c.desc}</p></div>))}
+            </div>
+            <div className="order-1 md:order-2">
+              <h2 className="text-4xl font-bold text-slate-900 leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
+                The Problem Most Parents Face
+              </h2>
+              <p className="text-lg text-slate-600 mt-6">
+                Children spend hours on devices, but they are stuck in a loop of <strong>Passive Consumption</strong>:
+              </p>
+              <ul className="mt-8 space-y-4">
+                <li className="flex items-center gap-3 text-slate-700"><span className="text-red-500 font-bold text-lg">✕</span> Watching endless videos</li>
+                <li className="flex items-center gap-3 text-slate-700"><span className="text-red-500 font-bold text-lg">✕</span> Scrolling social media for hours</li>
+                <li className="flex items-center gap-3 text-slate-700"><span className="text-red-500 font-bold text-lg">✕</span> Gaming without building anything</li>
+              </ul>
+              <div className="mt-8 p-6 rounded-2xl border-l-4" style={{ background: "#fffbeb", borderLeftColor: BRAND_ORANGE }}>
+                <p className="font-bold text-amber-800">The Gap:</p>
+                <p className="text-amber-700 mt-1">Very few kids are taught to <strong>Create</strong>. Learnexity closes that gap — turning screen time into real, shareable skills.</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-3 bg-slate-50">
-          <div className="max-w-screen-2xl mx-auto px-6">
+        {/* ── How It Works ──────────────────────────────────────────── */}
+        <section className="py-10 bg-slate-100">
+          <div className="max-w-screen-xl mx-auto px-6 text-center">
+            <h2 className="text-4xl font-bold text-slate-900 mb-16" style={{ fontFamily: "Poppins, sans-serif" }}>How the Program Works</h2>
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Stage 1 */}
+              <div className="bg-white p-10 rounded-3xl shadow-xl text-left transition-all duration-400 hover:-translate-y-2" style={{ borderTop: `8px solid ${BRAND}` }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mb-6 text-white" style={{ background: BRAND }}>1</div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Stage 1: Digital Foundations</h3>
+                <p className="text-slate-600 mb-6">Every student starts here to master essential professional tools — the bedrock for everything that follows.</p>
+                <ul className="space-y-3 font-medium text-slate-700">
+                  <li>🔹 Computer Fundamentals</li>
+                  <li>🔹 Presentation &amp; Visual Design</li>
+                  <li>🔹 Introduction to Cloud Tools</li>
+                  <li>🔹 Word Processing &amp; Spreadsheets</li>
+                </ul>
+              </div>
+              {/* Stage 2 */}
+              <div className="bg-white p-10 rounded-3xl shadow-xl text-left transition-all duration-400 hover:-translate-y-2" style={{ borderTop: `8px solid ${BRAND_ORANGE}` }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mb-6 text-white" style={{ background: BRAND_ORANGE }}>2</div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Stage 2: Specialisation</h3>
+                <p className="text-slate-600 mb-6">After foundations, students pick a track based on their unique interests.</p>
+                <div className="space-y-2">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold" style={{ color: BRAND }}>🎨 Creative Design</div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold text-green-600">🎮 Game Builder</div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 font-bold" style={{ color: BRAND_ORANGE }}>🎬 Media Creator</div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-10 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm text-slate-600">
+              <span>💡</span>
+              <span>Already have computer basics? You can enroll in a specialisation track directly (2 months).</span>
+              <button onClick={() => openEnroll()} className="font-bold underline" style={{ color: BRAND }}>Enroll now</button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Specialisation Tracks ─────────────────────────────────── */}
+        <section className="py-10">
+          <div className="max-w-screen-xl mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Months 2 & 3</p>
-              <h2 className="text-4xl font-bold text-slate-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Choose a Specialisation</h2>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Months 2 &amp; 3</p>
+              <h2 className="text-4xl font-bold text-indigo-900 mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Our Specialised Tracks</h2>
               <p className="text-slate-500 max-w-lg mx-auto">After foundations, pick the track that matches your child's passion. Each offers both Group and One-on-One formats.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {tracks.map((track) => (<TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} courses={courses} />))}
+              {tracks.map((track) => (
+                <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} courses={courses} />
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="py-6 text-white" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)" }}>
-          <div className="max-w-screen-2xl mx-auto px-6 text-center">
-            <h2 className="text-4xl font-bold mb-12" style={{ fontFamily: "Poppins, sans-serif" }}>A Personalised Experience</h2>
+        {/* ── A Personalised Experience ─────────────────────────────── */}
+        <section className="py-6 text-white" style={{ background: "#0f172a" }}>
+          <div className="max-w-screen-xl mx-auto px-6 text-center">
+            <h2 className="text-4xl font-bold mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>A Personalised Experience</h2>
+            <p className="text-xl text-indigo-300 mb-12">No large groups. Just your child and their expert mentor.</p>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-              {[{ value: "3 months", label: "Full Journey" }, { value: "1:1", label: "Coaching Option" }, { value: "3 months", label: "Group Mentorship" }, { value: "60–90", label: "Per Sessions" }, { value: "Real", label: "Projects Built" }].map((s, i) => (<div key={i} className="flex flex-col items-center gap-1"><div className="text-3xl md:text-4xl font-extrabold" style={{ color: BRAND_LIGHT }}>{s.value}</div><div className="text-xs text-indigo-300 font-semibold uppercase tracking-widest">{s.label}</div></div>))}
+              {[
+                { value: "1:1",      label: "Instruction" },
+                { value: "60–90",    label: "Min Per Sessions" },
+                { value: "Group",    label: "Mentorship" },
+                { value: "Flexible", label: "Scheduling" },
+                { value: "Hands-on", label: "Projects" },
+              ].map((s, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <div className="text-3xl md:text-4xl font-extrabold" style={{ color: BRAND_LIGHT }}>{s.value}</div>
+                  <div className="text-xs text-indigo-300 font-semibold uppercase tracking-widest">{s.label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
       </div>
 
-      <TrackModal track={activeTrack} onClose={() => { console.log("[Kids Page] TrackModal closed"); setActiveTrack(null); }} onEnroll={(name) => { console.log("[Kids Page] TrackModal onEnroll →", name); setActiveTrack(null); openEnroll(name); }} currency={currency} courses={courses} />
-      <RegistrationModal isOpen={enrollOpen} onClose={() => { console.log("[Kids Page] RegistrationModal closed"); setEnrollOpen(false); }} preselectedTrack={preselectedTrack} currency={currency} courses={courses} />
-      <ResumeModal isOpen={resumeOpen} onClose={() => { console.log("[Kids Page] ResumeModal closed"); setResumeOpen(false); }} />
+      <TrackModal
+        track={activeTrack}
+        onClose={() => setActiveTrack(null)}
+        onEnroll={(name) => { setActiveTrack(null); openEnroll(name); }}
+        currency={currency}
+        courses={courses}
+      />
+      <RegistrationModal
+        isOpen={enrollOpen}
+        onClose={() => setEnrollOpen(false)}
+        preselectedTrack={preselectedTrack}
+        currency={currency}
+        courses={courses}
+      />
+      <ResumeModal isOpen={resumeOpen} onClose={() => setResumeOpen(false)} />
       <Footer />
+
+      <style jsx global>{`
+        @keyframes kidsFloat {
+          0%   { transform: translateY(0px) rotate(0deg); }
+          50%  { transform: translateY(-20px) rotate(5deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes kidsBounce {
+          0%   { transform: translateY(0); }
+          50%  { transform: translateY(-8px); }
+          100% { transform: translateY(0); }
+        }
+        @keyframes kidsModalIn {
+          from { opacity:0; transform:translateY(32px) scale(0.96); }
+          to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+      `}</style>
     </AppLayout>
   );
 }

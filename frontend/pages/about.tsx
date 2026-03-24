@@ -22,7 +22,7 @@ export default function About() {
   return (
     <AppLayout>
       {/* Hero Section */}
-      <section className="max-w-[1485px] mx-auto mt-30 bg-gradient-to-r from-purple-100 via-blue-100 to-purple-100 py-10 px-6 rounded-2xl">
+      <section className="max-w-[1230px] mx-auto mt-30 bg-gradient-to-r from-purple-100 via-blue-100 to-purple-100 py-10 px-6 rounded-2xl">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-5xl md:text-5xl font-bold text-gray-900 mb-6">
             Build Real Tech Skills. Gain Real Experience. Launch Your Career.
@@ -40,7 +40,7 @@ export default function About() {
 
       {/* Who We Are Section */}
       <section className="py-20 px-6 bg-white">
-        <div className="max-w-[1485px] mx-auto">
+        <div className="max-w-[1230px] mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4 text-gray-900">Who We Are</h2>
           <p className="text-center font-semibold text-gray-700 mb-16 max-w-5xl mx-auto text-lg">
             Learnexity is a tech career launch platform built to bridge the gap between learning and real opportunity. We empower learners with skills, experience, and pathways into jobs, freelancing, or entrepreneurship.
@@ -82,7 +82,7 @@ export default function About() {
 
       {/* What Makes Us Different Section */}
       <section className="py-20 px-6 bg-gray-100">
-        <div className="max-w-[1480px] mx-auto">
+        <div className="max-w-[1230px] mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4 text-gray-900">What Makes Us Different</h2>
           <p className="text-center text-gray-800 mb-8 text-lg">
             We don't just teach. We help you gain experience, build confidence, and launch your life through.
@@ -139,7 +139,7 @@ export default function About() {
 
       {/* Who We Help Section */}
       <section className="py-20 px-3 bg-white">
-        <div className="max-w-[1474px] mx-auto">
+        <div className="max-w-[1230px] mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4 text-gray-900">Who We Help</h2>
           <p className="text-center text-gray-700 mb-10 max-w-2xl mx-auto text-xl">
             Our platform is designed to support diverse learners at every stage of their tech journey.
@@ -211,7 +211,7 @@ export default function About() {
 
       {/* Why Learnexity Section */}
       <section className="py-4 px-6">
-        <div className="max-w-[1474px] mx-auto">
+        <div className="max-w-[1230px] mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4 text-gray-900">Why Learnexity</h2>
           <div className="flex justify-center mb-8">
             <Link href="/user/auth/login">

@@ -10,7 +10,7 @@ export default function Pathways() {
   return (
     
     <section className="pt-2 py-20 bg-white">
-      <div className="max-w-screen-2xl mx-auto px-6">
+      <div className="max-w-screen-xl mx-auto px-6">
         {/* <FadeUpOnScroll> */}
         <div className="mb-16 flex flex-col gap-6 text-center md:text-left lg:flex-row lg:items-center lg:justify-between">
           
@@ -48,14 +48,7 @@ export default function Pathways() {
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
               Access a library of courses with live expert tutors to master in-demand skills and accelerate your learning.
             </p>
-            
-            {/* <div className="flex justify-start">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}  d="M7 17l9.2-9.2M17 17V7H7" />
-                </svg>
-              </div>
-            </div> */}
+
           </div>
 
           {/* Card 02 */}
@@ -71,24 +64,7 @@ export default function Pathways() {
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               Get personalized tutoring on your schedule. Perfect for busy professionals who need flexible learning to fit their life.
             </p>
-            
-            {/* <div className="flex justify-start">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <svg 
-                  className="w-5 h-5 text-blue-600" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M7 17l9.2-9.2M17 17V7H7" 
-                  />
-                </svg>
-              </div>
-            </div> */}
+          
           </div>
 
           {/* Card 03 */}
@@ -105,23 +81,6 @@ export default function Pathways() {
                 Work directly with a mentor in private , focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.
             </p>
             
-            {/* <div className="flex justify-start">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <svg 
-                  className="w-5 h-5 text-blue-600" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M7 17l9.2-9.2M17 17V7H7" 
-                  />
-                </svg>
-              </div>
-            </div> */}
           </div>
         </div>
         {/* </FadeUpOnScroll> */}

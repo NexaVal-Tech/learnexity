@@ -38,7 +38,7 @@ export default function Contact() {
 
       {/* Contact Cards Section */}
       <section className="px-6 relative">
-        <div className="max-w-[1480px] mx-auto">
+        <div className="max-w-[1230px] mx-auto">
 
           {/* FIRST THREE CARDS — overlapping hero */}
           <div className="-mt-32 z-20 relative grid md:grid-cols-3 gap-6 mb-16">
@@ -155,7 +155,7 @@ export default function Contact() {
       </section>
 
       {/* Business Hours Section */}
-      <section className="py-16 px-6 bg-white border-2 rounded-2xl max-w-[1480px] mx-auto">
+      <section className="py-16 px-6 bg-white border-2 rounded-2xl max-w-[1230px] mx-auto">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-8">Business Hours & Response Times</h2>
           <div className="space-y-2 text-gray-700">

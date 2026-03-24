@@ -108,7 +108,7 @@ export default function CommunityPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="max-w-[1505px] mx-auto px-4 py-16 mt-12">
+      <div className="max-w-[1260px] mx-auto px-4 py-16 mt-12">
         <div className="bg-gradient-to-r from-purple-200 via-purple-100 to-blue-200 rounded-3xl p-12 text-center shadow-lg">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             Learnexity Innovation Hub
@@ -126,7 +126,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Features Section */}
-      <div className="max-w-[1505px] mx-auto px-4 py-16">
+      <div className="max-w-[1260px] mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
           Connect with mentors, gain hands-on experience,
         </h2>

@@ -547,3 +547,30 @@ export default function ResourcesPage() {
     </UserDashboardLayout>
   );
 }
+
+
+
+
+// parts of testimonial codes
+
+            {/* Left Side - Title and Navigation - Fixed */}
+            {/* <div className="bg-white flex-shrink-0 relative z-10 w-96 p-6">
+              <h3 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">
+                What our students<br />are saying
+              </h3>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={prevSlide}
+                  className="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div> */}

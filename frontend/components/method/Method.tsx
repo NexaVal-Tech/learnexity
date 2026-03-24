@@ -8,7 +8,7 @@
 export default function Method() {
   return (
     <section className="py-20 bg-white">
-      <div className="max-w-screen-2xl mx-auto px-6">
+      <div className="max-w-screen-xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-4">

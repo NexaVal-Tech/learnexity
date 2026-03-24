@@ -30,7 +30,7 @@ export default function Courses() {
   return (
     <FadeUpOnScroll>
       <section className="py-20 bg-black">
-        <div className="max-w-screen-2xl mx-auto px-6">
+        <div className="max-w-screen-xl mx-auto px-6">
           {/* Header */}
           <FadeInCard>
             <div className="flex flex-col md:flex-row justify-between items-start mb-16 gap-6">
