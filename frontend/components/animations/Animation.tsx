@@ -6,20 +6,26 @@ import { useRef, ReactNode } from "react";
 type AnimationProps = {
   children: ReactNode;
   delay?: number;
+  duration?: number; // ✅ add this
 };
 
-export const ScrollFadeIn = ({ children, delay = 0 }: AnimationProps) => {
+export const ScrollFadeIn = ({
+  children,
+  delay = 0,
+  duration = 0.3, // ✅ default
+}: AnimationProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, delay }}
+      transition={{ duration, delay }} // ✅ use it here
     >
       {children}
     </motion.div>
   );
 };
+
 
 export const FadeInCard = ({ children }: { children: ReactNode }) => {
   return (

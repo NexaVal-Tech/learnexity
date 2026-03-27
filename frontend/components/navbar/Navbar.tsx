@@ -27,7 +27,7 @@ export default function Navbar() {
         <div className="max-w-screen-xl mx-auto flex justify-between items-center px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/images/Logo.png" alt="Learnexity logo" />
+            <img src="/images/Logo.png" alt="logo" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -115,7 +115,7 @@ export default function Navbar() {
         {/* Menu Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <Link href="/" className="flex items-center space-x-2" onClick={closeMenu}>
-            <img src="/images/Logo.png" alt="Learnexity logo" />
+            <img src="/images/Logo.png" alt="logo" />
           </Link>
           <button
             onClick={closeMenu}

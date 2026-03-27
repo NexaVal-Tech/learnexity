@@ -7,11 +7,11 @@ import { CourseActionButton } from "./CourseActionButton";
 export const PrimaryButton = ({ label = "Explore courses", href = "/courses/courses" }) => {
   return (
     <Link href={href}>
-      <button className="bg-white text-[#6C63FF] px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
+      <button className="bg-white text-[#6C63FF] px-5 py-2 rounded-full font-semibold text-base md:text-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
         <span>{label}</span>
-        <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-[#4A3AFF] text-white">
+        {/* <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-[#4A3AFF] text-white">
           <img src="/icons/arrow_right_line (1).png" alt="icon" className="w-6 h-6 object-contain"/>
-        </span>
+        </span> */}
       </button>
     </Link>
   );
@@ -21,7 +21,7 @@ export const PrimaryButton = ({ label = "Explore courses", href = "/courses/cour
 export const PrimaryButton2 = ({ label = "Enroll Now", href = "/user/auth/register" }) => {
   return (
     <Link href={href}>
-      <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
+      <button className="bg-[#4A3AFF] text-white px-5 py-2 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
         <span>{label}</span>
         <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
           <img src="/icons/arrow_right_Line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
@@ -44,11 +44,11 @@ export const SignUpButton = ({ label = "Sign Up", href = "/user/auth/register" }
 export const SignUpButton2 = ({ label = "Sign Up", href = "/user/auth/register" }) => {
   return (
     <Link href={href}>
-      <button className="bg-[#4A3AFF] text-white px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-4">
+      <button className="bg-[#4A3AFF] text-white px-5 py-2 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-4">
         <span>{label}</span>
-        <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
+        {/* <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
           <img src="/icons/arrow_right_Line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
-        </span>
+        </span> */}
       </button>
     </Link>
   );

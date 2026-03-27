@@ -29,7 +29,7 @@ export default function Courses() {
 
   return (
     <FadeUpOnScroll>
-      <section className="py-20 bg-black">
+      <section className="py-20">
         <div className="max-w-screen-xl mx-auto px-6">
           {/* Header */}
           <FadeInCard>

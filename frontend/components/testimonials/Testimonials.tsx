@@ -1,215 +1,240 @@
-import { useState, useRef, useEffect } from "react";
+"use client";
+
+import { useState, useRef } from "react";
+import { ScrollFadeIn } from "@/components/animations/Animation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Placeholder animation components
-const FadeUpOnScroll = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+const BRAND = "#4A3AFF";
 
-export default function Testimonials() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
+const data = [
+  {
+    name: "Ogechi",
+    role: "Product Management",
+    video: "/videos/product-manager-review.mp4",
+    thumbnail: "/thumbnails/ogechi.jpg",
+  },
+  {
+    name: "Benedict",
+    role: "Video Editor",
+    video: "/videos/testimobial-1.mp4",
+    thumbnail: "/thumbnails/benedict.jpg",
+  },
+  {
+    name: "Lilian",
+    role: "AI Automation",
+    video: "/videos/testimonial-video.mp4",
+    thumbnail: "/thumbnails/lilian.jpg",
+  },
+  {
+    name: "Lilian Anekwe",
+    role: "Cybersecurity",
+    video: "/videos/testimonial-5.mp4",
+    thumbnail: "/thumbnails/lilian-anekwe.jpg",
+  },
+];
 
-  const data = [
-    {
-      name: "Ogechi.",
-      role: "Product management",
-      video: "/videos/product-manager-review.mp4"
-    },
-    {
-      name: "Benedict.",
-      role: "video Editor",
-      video: "/videos/testimobial-1.mp4"
-    },
-    {
-      name: "Lilian.",
-      role: "Ai Automation", 
-      video:  "/videos/testimonial-video.mp4"
-    },
-    {
-      name: "Lilian Anekwe.",
-      role: "Cybersecurity",
-      video: "/videos/testimonial-5.mp4"
-    },
-  ];
+function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % data.length);
+  const handlePlay = () => {
+    setPlaying(true);
+    videoRef.current?.play();
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + data.length) % data.length);
-  };
-
-  // Handle touch events for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const swipeThreshold = 50;
-    const diff = touchStartX.current - touchEndX.current;
-
-    if (Math.abs(diff) > swipeThreshold) {
-      if (diff > 0) {
-        nextSlide();
-      } else {
-        prevSlide();
-      }
-    }
-  };
-
-  // Handle mouse drag for desktop
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!scrollContainerRef.current) return;
-    isDragging.current = true;
-    startX.current = e.pageX - scrollContainerRef.current.offsetLeft;
-    scrollLeft.current = scrollContainerRef.current.scrollLeft;
-    scrollContainerRef.current.style.cursor = 'grabbing';
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !scrollContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startX.current) * 2;
-    scrollContainerRef.current.scrollLeft = scrollLeft.current - walk;
-  };
-
-  const handleMouseUp = () => {
-    if (!scrollContainerRef.current) return;
-    isDragging.current = false;
-    scrollContainerRef.current.style.cursor = 'grab';
-    
-    // Snap to nearest slide
-    const container = scrollContainerRef.current;
-    const cardWidth = 384 + 24; // w-96 + gap
-    const newSlide = Math.round(container.scrollLeft / cardWidth);
-    setCurrentSlide(Math.max(0, Math.min(newSlide, data.length - 1)));
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging.current) {
-      handleMouseUp();
-    }
-  };
-
-  // Handle wheel scroll for desktop
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (!scrollContainerRef.current) return;
-    e.preventDefault();
-    
-    if (e.deltaY > 0 || e.deltaX > 0) {
-      nextSlide();
-    } else if (e.deltaY < 0 || e.deltaX < 0) {
-      prevSlide();
-    }
+  const handleVideoEnd = () => {
+    setPlaying(false);
   };
 
   return (
-    <section className="py-5 bg-white overflow-x-hidden">
-      <FadeUpOnScroll>
-      <div className="max-w-[1180px] mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Student Transformations
-          </h2>
-        </div>
+    <div
+      className="flex-shrink-0 w-[340px] flex flex-col"
+      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
+    >
+      {/* Video container */}
+      <div
+        className="relative overflow-hidden border border-white/10 bg-[#0f0f0f]"
+        style={{
+          borderRadius: "2rem 0.75rem 2rem 0.75rem",
+          aspectRatio: "9/10",
+        }}
+      >
+        {/* Thumbnail overlay */}
+        {!playing && (
+          <img
+            src={testimonial.thumbnail}
+            alt={testimonial.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
 
-        {/* Desktop/Tablet View */}
-        <div className="hidden md:block relative">
-          <div className="flex items-start gap-12">
-            
-            {/* Right Side - Testimonials Container with overflow */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex-1 relative overflow-x-clip pl-6 -ml-6 cursor-grab select-none"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onWheel={handleWheel}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+        {/* Dark gradient overlay */}
+        {!playing && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        )}
+
+        {/* Video element */}
+        <video
+          ref={videoRef}
+          src={testimonial.video}
+          className="absolute inset-0 w-full h-full object-cover"
+          preload="metadata"
+          onEnded={handleVideoEnd}
+          onClick={() => {
+            if (playing) {
+              videoRef.current?.pause();
+              setPlaying(false);
+            }
+          }}
+        />
+
+        {/* Play button */}
+        {!playing && (
+          <button
+            onClick={handlePlay}
+            className="absolute inset-0 flex items-center justify-center group z-10"
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center
+                backdrop-blur-sm border border-white/30
+                group-hover:scale-110 transition-all duration-300"
+              style={{ backgroundColor: `${BRAND}cc` }}
             >
-              <div 
-                  className="flex gap-6 transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 384}px)` }}
-                >
-                {data.map((testimonial, index) => (
-                  <div key={index} className="flex-shrink-0 w-[32rem] p-1 bg-gray-200 rounded-4xl">
-                    <video 
-                      src={testimonial.video} 
-                      controls 
-                      className="w-full h-84 rounded-2xl mb-8 object-cover pointer-events-auto" 
-                      preload="metadata"
-                      onMouseDown={(e) => e.stopPropagation()}
-                    />
+              {/* Play triangle */}
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="white"
+                className="ml-1"
+              >
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </div>
+          </button>
+        )}
 
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="text-base text-gray-900 text-sm p-6">
-                          {testimonial.name}, {testimonial.role}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Name tag pinned to bottom */}
+        {!playing && (
+          <div className="absolute bottom-0 left-0 right-0 px-5 py-4 z-10">
+            <p className="text-white font-semibold text-base">{testimonial.name}</p>
+            <p className="text-sm mt-0.5" style={{ color: `${BRAND}cc` }}>
+              {testimonial.role}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Testimonials() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const visibleCount = 3; // cards visible at once on desktop
+  const maxSlide = data.length - 1;
+
+  const nextSlide = () => setCurrentSlide((prev) => Math.min(prev + 1, maxSlide));
+  const prevSlide = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) diff > 0 ? nextSlide() : prevSlide();
+  };
+
+  return (
+    <section className="py-16 overflow-hidden">
+      <style>{`
+        .nav-btn:hover {
+          background-color: ${BRAND} !important;
+          border-color: ${BRAND} !important;
+        }
+      `}</style>
+
+      <div className="max-w-screen-xl mx-auto px-6">
+        {/* Header */}
+        <ScrollFadeIn delay={0}>
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest mb-3"
+                style={{ color: BRAND }}>
+                Real Stories
+              </p>
+              <h2 className="text-4xl md:text-5xl font-bold text-white">
+                Student Transformations
+              </h2>
+            </div>
+
+            {/* Navigation arrows */}
+            <div className="hidden md:flex gap-3">
+              <button
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className="nav-btn w-11 h-11 rounded-full border border-white/20
+                  flex items-center justify-center
+                  bg-white/5 text-white
+                  disabled:opacity-30 disabled:cursor-not-allowed
+                  transition-all duration-300"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={nextSlide}
+                disabled={currentSlide === maxSlide}
+                className="nav-btn w-11 h-11 rounded-full border border-white/20
+                  flex items-center justify-center
+                  bg-white/5 text-white
+                  disabled:opacity-30 disabled:cursor-not-allowed
+                  transition-all duration-300"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
           </div>
-        </div>
+        </ScrollFadeIn>
 
-        {/* Mobile View - Horizontal scrolling cards */}
-        <div className="md:hidden px-6">
-
-          {/* Horizontal scrolling container */}
-          <div 
-            className="relative overflow-hidden p-4 bg-white"
+        {/* Cards track */}
+        <ScrollFadeIn delay={0.1} duration={0.3}>
+          <div
+            className="overflow-hidden"
             onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div 
-              className="flex transition-transform duration-500 ease-in-out" 
-              style={{ transform: `translateX(-${currentSlide * 260}px)` }}
+            <div
+              className="flex gap-6 transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 356}px)` }}
             >
               {data.map((testimonial, index) => (
-                <div 
-                  key={index} 
-                  className="flex-shrink-0 w-78 p-8 bg-white rounded-4xl shadow-2xl" 
-                  style={{ marginLeft: index > 0 ? '-20px' : '0' }}
-                >
-                  <video 
-                    src={testimonial.video} 
-                    controls 
-                    className="w-full h-64 rounded-2xl mb-8 object-cover" 
-                    preload="metadata"
-                  />
-
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="font-medium text-gray-900 text-xs">
-                        {testimonial.name}, {testimonial.role}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <VideoCard key={index} testimonial={testimonial} />
               ))}
             </div>
           </div>
+        </ScrollFadeIn>
+
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-2 mt-10">
+          {data.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{
+                width: currentSlide === i ? "2rem" : "0.5rem",
+                backgroundColor: currentSlide === i ? BRAND : "rgba(255,255,255,0.2)",
+              }}
+            />
+          ))}
         </div>
       </div>
-      </FadeUpOnScroll>
     </section>
   );
 }

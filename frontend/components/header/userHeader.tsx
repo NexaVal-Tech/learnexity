@@ -59,7 +59,7 @@ export default function UserHeader() {
         <div className="max-w-screen-2xl mx-auto flex justify-between items-center px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/images/Logo.png" alt="Learnexity logo" className="h-8" />
+            <img src="/images/Logo.png" alt="logo" className="h-8" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -181,7 +181,7 @@ export default function UserHeader() {
         {/* Menu Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <Link href="/" className="flex items-center space-x-2" onClick={closeMenu}>
-            <img src="/images/Logo.png" alt="Learnexity logo" className="h-8" />
+            <img src="/images/Logo.png" alt="logo" className="h-8" />
           </Link>
           <button 
             onClick={closeMenu} 
