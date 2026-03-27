@@ -75,7 +75,10 @@ const DistributionChart: React.FC<DistributionChartProps> = ({ data }) => {
             </Pie>
 
             <Tooltip
-              formatter={(value: number, name: string) => [value, name]}
+             formatter={(value, name) => [
+                typeof value === "number" ? value : Number(value) || 0,
+                name,
+              ]}
               contentStyle={{
                 borderRadius: '8px',
                 border: 'none',
