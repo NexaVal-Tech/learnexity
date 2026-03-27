@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   reactStrictMode: false,
   output: "export", // enables static export with /out folder
   images: {
