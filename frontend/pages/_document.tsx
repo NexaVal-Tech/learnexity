@@ -4,9 +4,16 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* Paystack Inline Script */}
-        <script src="https://js.paystack.co/v1/inline.js"></script>
+        {/* Canonical domain hint */}
+        <link rel="canonical" href="https://learnexity.org" />
+
+        {/* Paystack Script (defer prevents blocking rendering) */}
+        <script
+          src="https://js.paystack.co/v1/inline.js"
+          defer
+        ></script>
       </Head>
+
       <body>
         <Main />
         <NextScript />

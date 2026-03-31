@@ -27,11 +27,11 @@ export default function Navbar() {
         <div className="max-w-screen-xl mx-auto flex justify-between items-center px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/images/Logo.png" alt="logo" />
+            <img src="/images/Logo.png" alt="Learnexity - Tech Career Platform" width={140} height={40} />
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <nav aria-label="Main navigation" className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -61,7 +61,7 @@ export default function Navbar() {
                 Dashboard
               </Link>
             )}
-          </div>
+          </nav>
 
           {/* Desktop CTA Button */}
           <Link
@@ -129,7 +129,7 @@ export default function Navbar() {
         </div>
 
         {/* Menu Items */}
-        <div className="flex flex-col px-6 py-6 space-y-5">
+        <nav aria-label="Main navigation" className="flex flex-col px-6 py-6 space-y-5">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -163,7 +163,7 @@ export default function Navbar() {
               Dashboard
             </Link>
           )}
-        </div>
+        </nav>
 
         {/* Mobile CTA Button */}
         <div className="px-6 pb-6">

@@ -1,3 +1,4 @@
+import Head from "next/head";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
 import Link from "next/link";
@@ -22,6 +23,17 @@ export default function About() {
   ];
 
   return (
+    <>
+      <Head>
+        <title>About Us — Who we are, And What Makes us Different</title>
+
+        <meta
+          name="description"
+          content="Learn about Learnexity's mission to empower tech learners in Africa and beyond with hands-on training, mentorship, and real career pathways."
+        />
+        <link rel="canonical" href="https://learnexity.org/about" />
+      </Head>
+
     <AppLayout>
       <style>{`
         .about-card {
@@ -298,5 +310,6 @@ export default function About() {
 
       <Footer />
     </AppLayout>
+    </>
   );
 }

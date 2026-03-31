@@ -23,9 +23,9 @@ export const PrimaryButton2 = ({ label = "Enroll Now", href = "/user/auth/regist
     <Link href={href}>
       <button className="bg-[#4A3AFF] text-white px-5 py-2 rounded-full font-semibold text-base md:text-lg hover:bg-[#3A2AFF] transition-colors flex items-center space-x-2">
         <span>{label}</span>
-        <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
+        {/* <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-white text-[#4A3AFF]">
           <img src="/icons/arrow_right_Line_blue.png" alt="icon" className="w-6 h-6 object-contain" />
-        </span>
+        </span> */}
       </button>
     </Link>
   );

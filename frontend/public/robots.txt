@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Block private/auth routes from Google
+Disallow: /user/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://learnexity.org/sitemap.xml
