@@ -27,7 +27,7 @@ const cards = [
     number: "[ 03 ]",
     title: "Join Our One-on-One Coaching",
     description:
-      "Work directly with a mentor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.",
+      "Work directly with a mentor in private, focused sessions tailored to your goals. Expect clear direction and accelerated progress.",
     gradient: false,
   },
 ];

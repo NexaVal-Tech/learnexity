@@ -4,8 +4,8 @@ return [
     'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
+        'https://learnexity.org',
+        'https://www.learnexity.org',
         env('FRONTEND_URL', 'http://localhost:3000')
     ],
     'allowed_origins_patterns' => [],

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { PrimaryButton2 } from "../button/Button";
 
 const BRAND = "#4A3AFF";
 
@@ -12,7 +13,6 @@ export default function ProbStatement() {
           margin: 0 auto;
         }
 
-        /* ── Main card: full-bleed image background ── */
         .prob-card {
           border-radius: 1.25rem;
           overflow: hidden;
@@ -22,7 +22,6 @@ export default function ProbStatement() {
           align-items: stretch;
         }
 
-        /* Background image — swap src when ready */
         .prob-bg-img {
           position: absolute;
           inset: 0;
@@ -33,35 +32,6 @@ export default function ProbStatement() {
           z-index: 0;
         }
 
-        /* Placeholder shown while no image is set */
-        .prob-bg-placeholder {
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-          background: linear-gradient(135deg, #0d1b45 0%, #1a3a7a 40%, #2a1a6e 70%, #0d1b45 100%);
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          padding-right: 3rem;
-        }
-        .prob-bg-placeholder-hint {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-          opacity: 0.25;
-        }
-        .prob-bg-placeholder-hint svg {
-          color: white;
-        }
-        .prob-bg-placeholder-hint span {
-          font-size: 0.72rem;
-          color: white;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-
-        /* Dark gradient overlay — left side stronger, fades right */
         .prob-overlay {
           position: absolute;
           inset: 0;
@@ -76,7 +46,6 @@ export default function ProbStatement() {
           pointer-events: none;
         }
 
-        /* Text panel — left side, transparent, above overlay */
         .prob-panel-left {
           position: relative;
           z-index: 2;
@@ -89,13 +58,13 @@ export default function ProbStatement() {
           gap: 0;
         }
 
-        /* Headline */
+        /* Matches component-headers: text-4xl font-semibold text-white */
         .prob-headline {
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
-          font-weight: 900;
+          font-size: 2.25rem; /* text-4xl */
+          font-weight: 600;   /* font-semibold */
           color: #ffffff;
-          line-height: 1.15;
-          letter-spacing: -0.025em;
+          line-height: 1.2;
+          letter-spacing: -0.015em;
           margin-bottom: 1.5rem;
         }
 
@@ -104,32 +73,33 @@ export default function ProbStatement() {
           color: #a5b4fc;
         }
 
-        /* Body lines */
+        /* Matches: text-xl text-gray-400 leading-relaxed */
         .prob-body {
           display: flex;
           flex-direction: column;
-          gap: 0.55rem;
+          gap: 0.4rem;
           margin-bottom: 2rem;
         }
 
         .prob-body-line {
-          font-size: 0.9rem;
-          color: rgba(255,255,255,0.75);
-          line-height: 1.55;
+          font-size: 1.25rem; /* text-xl */
+          color: #9ca3af;     /* text-gray-400 */
+          line-height: 1.625; /* leading-relaxed */
         }
 
+        /* White emphasis — matches card h3 text-white */
         .prob-body-line.accent {
-          color: rgba(255,255,255,0.95);
+          color: #ffffff;
           font-weight: 600;
         }
 
+        /* Brand tint emphasis */
         .prob-body-line.highlight {
           color: #c7d2fe;
-          font-weight: 700;
-          font-size: 0.95rem;
+          font-weight: 600;
         }
 
-        /* CTA button */
+        /* CTA button — unchanged structure, font aligned to text-sm */
         .prob-cta-btn {
           display: inline-flex;
           align-items: center;
@@ -137,7 +107,7 @@ export default function ProbStatement() {
           background-color: ${BRAND};
           color: white;
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: 0.875rem; /* text-sm */
           padding: 0.85rem 1.75rem;
           border-radius: 2rem 0.5rem 2rem 0.5rem;
           border: none;
@@ -159,7 +129,6 @@ export default function ProbStatement() {
           transform: translateX(3px);
         }
 
-        /* Divider accent above headline */
         .prob-accent-bar {
           width: 48px;
           height: 3px;
@@ -168,7 +137,6 @@ export default function ProbStatement() {
           margin-bottom: 1.25rem;
         }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .prob-card {
             min-height: unset;
@@ -188,18 +156,19 @@ export default function ProbStatement() {
             padding: 2.5rem 1.5rem;
             min-height: 520px;
           }
-          .prob-bg-placeholder {
-            padding-right: 0;
-            justify-content: center;
-          }
         }
 
         @media (max-width: 480px) {
           .prob-panel-left {
             padding: 2rem 1.25rem;
           }
+          /* On mobile, step down one size: text-3xl */
           .prob-headline {
-            font-size: 1.5rem;
+            font-size: 1.875rem;
+          }
+          /* Body steps down to text-lg on mobile */
+          .prob-body-line {
+            font-size: 1.125rem;
           }
         }
       `}</style>
@@ -207,17 +176,13 @@ export default function ProbStatement() {
       <div className="prob-wrapper">
         <div className="prob-card">
 
-          {/* ── BACKGROUND IMAGE ──*/}
           <img src="/images/nnamdi.png" alt="" className="prob-bg-img" aria-hidden="true" />
-
-          {/* Dark gradient overlay */}
           <div className="prob-overlay" />
 
-          {/* Text panel */}
           <div className="prob-panel-left">
-
             <div className="prob-accent-bar" />
 
+            {/* component-headers equivalent */}
             <h2 className="prob-headline">
               Worried You'll Learn Tech…<br />
               But Still <em>Not Get Hired?</em>
@@ -236,12 +201,8 @@ export default function ProbStatement() {
               </p>
             </div>
 
-            <Link href="/user/auth/register" className="prob-cta-btn">
-              Start Your Free Consultation
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
+
+            <PrimaryButton2 />
 
           </div>
         </div>

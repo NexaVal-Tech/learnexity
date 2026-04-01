@@ -40,10 +40,6 @@ export default function InstallmentBanner() {
         .installment-badge {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
         }
-        @keyframes installment-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
       `}</style>
 
       {/* Subtle brand orbs */}
@@ -55,9 +51,9 @@ export default function InstallmentBanner() {
         {/* Heading */}
         <div className={`text-center mb-12 transition-all duration-700 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
 
-          {/* Pill badge */}
+          {/* Pill badge — matches card number style: text-sm font-mono */}
           <span
-            className="installment-badge inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold mb-4 border border-white/10 bg-[#0f0f0f]/90"
+            className="installment-badge inline-flex items-center gap-2 px-4 py-2 text-sm font-mono mb-4 border border-white/10 bg-[#0f0f0f]/90"
             style={{ color: BRAND }}
           >
             <span className="relative flex h-2 w-2">
@@ -74,12 +70,16 @@ export default function InstallmentBanner() {
               bg-[#0f0f0f]/90 backdrop-blur-sm
               shadow-2xl shadow-black/80"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            {/* Matches: text-4xl font-semibold text-white component-headers */}
+            <h2 className="text-4xl font-semibold text-white mb-4 component-headers">
               Learn Now, Pay As You Go
             </h2>
-            <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+
+            {/* Matches: text-xl text-gray-400 leading-relaxed */}
+            <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
               We believe cost should never be a barrier to education. Pay in flexible installments spread over your course duration — start learning immediately and settle the balance as you progress.
             </p>
+
             <div className="flex justify-center mt-6 py-4">
               <PrimaryButton2 />
             </div>
