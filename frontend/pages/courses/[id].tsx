@@ -90,7 +90,7 @@ export default function CoursePage() {
     if (!user) {
       sessionStorage.setItem("intended_course", id as string);
       sessionStorage.setItem("intended_course_name", course?.title || "");
-      router.push("/user/auth/login");
+      router.push("/user/auth/register");
       return;
     }
     try {

@@ -42,7 +42,7 @@ export default function CurriculumPartners() {
               shadow-2xl shadow-black/80"
           >
             <h2 className="text-4xl md:text-3xl font-semibold text-white leading-tight">
-              Our curriculum is designed to align with global<br /> tech leaders like:
+              Imagine working with global<br /> tech giants like:
             </h2>
           </div>
 
@@ -58,14 +58,13 @@ export default function CurriculumPartners() {
                   min-w-[100px] h-20
                   transition-all duration-300 cursor-pointer"
               >
-                <Image
-                  src={partner.logo}
-                  alt={`${partner.name} logo`}
-                  width={80}
-                  height={30}
-                  className="object-contain opacity-50 hover:opacity-100 transition-opacity duration-200"
-                  style={{ filter: "brightness(0) invert(1)" }}
-                />
+              <Image
+                src={partner.logo}
+                alt={`${partner.name} logo`}
+                width={80}
+                height={30}
+                className="object-contain transition-opacity duration-200"
+              />
               </div>
             ))}
           </div>

@@ -472,13 +472,13 @@ export default function ResourcesPage() {
                                     Completed
                                   </span>
                                 )}
-                                <button 
+                                {/* <button 
                                   onClick={() => item.download_url && handleDownload(item.id, item.title)}
                                   className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
                                 >
                                   <Download className="w-4 h-4" />
                                   Download
-                                </button>
+                                </button> */}
                               </div>
                             </div>
                           ))}

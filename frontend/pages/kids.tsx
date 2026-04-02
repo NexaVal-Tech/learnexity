@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
@@ -606,6 +607,16 @@ export default function Kids() {
   const dfPricing = dfCourse?.pricing[currency as "USD" | "NGN"];
 
   return (
+        <>
+          <Head>
+            <title>Explore the best learning track for u kids </title>
+    
+            <meta
+              name="description"
+              content="Choose any prefered method to reach out to us."
+            />
+            <link rel="canonical" href="https://learnexity.org/contact" />
+          </Head>
     <AppLayout>
       <style jsx global>{`
         // body { background: #080808; }
@@ -832,5 +843,6 @@ export default function Kids() {
       <ResumeModal isOpen={resumeOpen} onClose={() => setResumeOpen(false)} />
       <Footer />
     </AppLayout>
+    </>
   );
 }

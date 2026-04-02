@@ -241,7 +241,7 @@ function MaterialCard({ item, onMarkComplete, onDownload, onPreviewFile }: Mater
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {onDownload && (
+          {/* {onDownload && (
             <button
               onClick={() => onDownload(item.id, item.title)}
               className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
@@ -249,7 +249,7 @@ function MaterialCard({ item, onMarkComplete, onDownload, onPreviewFile }: Mater
             >
               <Download className="w-4 h-4" />
             </button>
-          )}
+          )} */}
           <button
             onClick={handleComplete}
             disabled={isCompleting}

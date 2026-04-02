@@ -1,4 +1,5 @@
 // pages/courses/courses.tsx
+import Head from "next/head";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Course } from "@/lib/api";
@@ -79,6 +80,17 @@ export default function CoursesPage() {
   };
 
   return (
+        <>
+          <Head>
+            <title>Courses - Explore our avalaible programmes </title>
+    
+            <meta
+              name="description"
+              content="Choose any prefered method to reach out to us."
+            />
+            <link rel="canonical" href="https://learnexity.org/contact" />
+          </Head>
+
     <AppLayout>
       <style>{`
         .course-card {
@@ -125,7 +137,7 @@ export default function CoursesPage() {
       <div className=" pt-16 md:pt-20 pb-20 min-h-screen">
         <div className="max-w-screen-xl mx-auto px-6 py-10 pt-16">
           <h1 className="text-3xl font-bold mb-12 text-white">
-            Explore Our Courses
+            Avalaible Programmes
           </h1>
 
           {/* ── Error state ── */}
@@ -246,5 +258,6 @@ export default function CoursesPage() {
         <Footer />
       </div>
     </AppLayout>
+    </>
   );
 }

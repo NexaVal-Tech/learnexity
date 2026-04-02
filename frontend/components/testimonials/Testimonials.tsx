@@ -8,28 +8,28 @@ const BRAND = "#4A3AFF";
 
 const data = [
   {
-    name: "Ogechi",
-    role: "Product Management",
-    video: "/videos/product-manager-review.mp4",
-    thumbnail: "/thumbnails/ogechi.jpg",
-  },
-  {
     name: "Benedict",
     role: "Video Editor",
     video: "/videos/testimobial-1.mp4",
     thumbnail: "/thumbnails/benedict.jpg",
   },
   {
-    name: "Lilian",
-    role: "AI Automation",
-    video: "/videos/testimonial-video.mp4",
-    thumbnail: "/thumbnails/lilian.jpg",
-  },
-  {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
     video: "/videos/testimonial-5.mp4",
     thumbnail: "/thumbnails/lilian-anekwe.jpg",
+  },
+  {
+    name: "Ogechi",
+    role: "Product Management",
+    video: "/videos/product-manager-review.mp4",
+    thumbnail: "/thumbnails/thumbnail-1.png",
+  },
+  {
+    name: "Lilian",
+    role: "AI Automation",
+    video: "/videos/testimonial-video.mp4",
+    thumbnail: "/thumbnails/thumbnail-2.png",
   },
 ];
 
