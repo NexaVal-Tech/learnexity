@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { ScrollFadeIn, FadeUpOnScroll } from "@/components/animations/Animation";
 
@@ -6,6 +7,7 @@ const BRAND = "#4A3AFF";
 
 const cards = [
   {
+    id: "experts",
     label: "Led by industry experts",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -17,15 +19,37 @@ const cards = [
     ),
   },
   {
-    label: "In partnership with Cisco and Microsoft",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-      </svg>
+    id: "partners",
+    label: (
+      <div className="flex flex-col items-center gap-3">
+        <span>In partnership with</span>
+
+        <div className="flex items-center gap-4">
+          <Image
+            src="/partners/cisco.png"
+            alt="Cisco"
+            width={90}
+            height={30}
+            className="object-contain"
+          />
+
+          <span className="text-white font-semibold text-sm">
+            and
+          </span>
+
+          <Image
+            src="/partners/microsoft.png"
+            alt="Microsoft"
+            width={110}
+            height={30}
+            className="object-contain"
+          />
+        </div>
+      </div>
     ),
   },
   {
+    id: "global",
     label: "Collaborating with global partners",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +77,7 @@ export default function Experience() {
         <div className="max-w-screen-xl mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {cards.map((card, index) => (
-              <ScrollFadeIn key={card.label} delay={index * 0.15}>
+              <ScrollFadeIn key={card.id} delay={index * 0.15}>
                 <div
                   className="experience-card group flex flex-col items-center justify-center text-center px-8 py-10
                     rounded-xl rounded-tr-4xl

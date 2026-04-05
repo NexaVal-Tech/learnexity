@@ -1,5 +1,6 @@
 'use client';
 
+import Head from "next/head";
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import AppLayout from "@/components/layouts/AppLayout";
@@ -79,6 +80,16 @@ export default function LoginPage() {
   };
 
   return (
+        <>
+          <Head>
+            <title>Login - to access your course materials</title>
+    
+            <meta
+              name="description"
+              content="log in to access your course resources."
+            />
+            <link rel="canonical" href="https://learnexity.org/login" />
+          </Head>
     <AppLayout>
       <style>{`
         @keyframes pageEnter {
@@ -313,5 +324,6 @@ export default function LoginPage() {
         </div>
       </div>
     </AppLayout>
+    </>
   );
 }

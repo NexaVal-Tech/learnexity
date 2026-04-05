@@ -116,9 +116,41 @@ export default function CoursePage() {
 
   const getDisplayPrice = () => {
     if (!course) return 0;
-    const price =
-      currency === "NGN" ? course.self_paced_price_ngn : course.self_paced_price_usd;
-    return parseFloat(price?.toString() || "0");
+ 
+    // ✅ FIX: Pick the lowest non-zero price from whichever tracks are enabled,
+    //    so courses that don't offer self_paced still show a price.
+    const candidates: number[] = [];
+ 
+    if (course.offers_self_paced) {
+      const p = parseFloat(
+        (currency === 'NGN' ? course.self_paced_price_ngn : course.self_paced_price_usd)?.toString() || '0'
+      );
+      if (p > 0) candidates.push(p);
+    }
+ 
+    if (course.offers_group_mentorship) {
+      const p = parseFloat(
+        (currency === 'NGN' ? course.group_mentorship_price_ngn : course.group_mentorship_price_usd)?.toString() || '0'
+      );
+      if (p > 0) candidates.push(p);
+    }
+ 
+    if (course.offers_one_on_one) {
+      const p = parseFloat(
+        (currency === 'NGN' ? course.one_on_one_price_ngn : course.one_on_one_price_usd)?.toString() || '0'
+      );
+      if (p > 0) candidates.push(p);
+    }
+ 
+    // Fall back to legacy price_usd / price_ngn if none of the track prices are set
+    if (candidates.length === 0) {
+      const fallback = parseFloat(
+        (currency === 'NGN' ? course.price_ngn : course.price_usd)?.toString() || '0'
+      );
+      return fallback;
+    }
+ 
+    return Math.min(...candidates);
   };
 
   // ── Loading state ───────────────────────────────────────────────────────

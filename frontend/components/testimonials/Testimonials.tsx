@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { ScrollFadeIn } from "@/components/animations/Animation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,13 +12,13 @@ const data = [
     name: "Benedict",
     role: "Video Editor",
     video: "/videos/testimobial-1.mp4",
-    thumbnail: "/thumbnails/benedict.jpg",
+    thumbnail: "/thumbnails/thumbnail-3.png",
   },
   {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
     video: "/videos/testimonial-5.mp4",
-    thumbnail: "/thumbnails/lilian-anekwe.jpg",
+    thumbnail: "/thumbnails/thumbnail-4.png",
   },
   {
     name: "Ogechi",
@@ -61,13 +62,12 @@ function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
       >
         {/* Thumbnail overlay */}
         {!playing && (
-          <img
+          <Image
             src={testimonial.thumbnail}
             alt={testimonial.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+            fill
+            className="absolute inset-0 object-cover"
+            sizes="340px"
           />
         )}
 
@@ -80,7 +80,9 @@ function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
         <video
           ref={videoRef}
           src={testimonial.video}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+            playing ? "opacity-100" : "opacity-0"
+          }`}
           preload="metadata"
           onEnded={handleVideoEnd}
           onClick={() => {

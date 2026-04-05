@@ -26,8 +26,8 @@ export default function Navbar() {
       <nav className="bg-white shadow-sm fixed w-full z-50">
         <div className="max-w-screen-xl mx-auto flex justify-between items-center px-6 py-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <img src="/images/Logo.png" alt="Learnexity - Tech Career Platform" width={140} height={40} />
+          <Link href="/" className="flex items-center space-x-2" area-label="homepage logo link">
+            <img src="/images/Logo.png" alt="Learnexity" width={140} height={40} />
           </Link>
 
           {/* Desktop Navigation Links */}

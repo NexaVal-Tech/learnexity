@@ -64,8 +64,8 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
   const loadSettings = async () => {
     try {
       setLoading(true);
-const response = await adminApi.get<any>(`/api/admin/courses/${courseId}`);
-const course = response.course; // ✅ unwrap the course object
+      const response = await adminApi.get<any>(`/api/admin/courses/${courseId}`);
+      const course = response.course;
       
       setSettings({
         offers_one_on_one: course.offers_one_on_one ?? true,
@@ -74,7 +74,7 @@ const course = response.course; // ✅ unwrap the course object
         offers_real_world_exposure: course.offers_real_world_exposure ?? false,
         price_usd: course.price_usd ?? 0,
         price_ngn: course.price_ngn ?? 0,
-        // ✅ Always start empty so placeholder is visible
+        // Always start empty so placeholder shows the saved value
         one_on_one_price_usd: '',
         group_mentorship_price_usd: '',
         self_paced_price_usd: '',
@@ -96,7 +96,6 @@ const course = response.course; // ✅ unwrap the course object
 
     } catch (err) {
       console.error('Failed to load settings:', err);
-      // console.error('Server response:', err.response?.data);
       setError('Failed to load course settings');
     } finally {
       setLoading(false);
@@ -127,32 +126,42 @@ const course = response.course; // ✅ unwrap the course object
       setError(null);
       setSuccess(false);
 
+      // ✅ FIX: Only send a price field if the admin actually typed a new value.
+      //    If the input is empty, fall back to the previously saved value so we
+      //    never accidentally overwrite a real price with 0.
+      const resolvePrice = (newValue: string, savedValue: string): number => {
+        const trimmed = newValue.trim();
+        if (trimmed !== '') return parseFloat(trimmed) || 0;
+        // Field was left blank — keep the existing saved price
+        const existing = parseFloat(savedValue);
+        return isNaN(existing) ? 0 : existing;
+      };
+
       const dataToSave = {
         ...settings,
-        one_on_one_price_usd: parseFloat(settings.one_on_one_price_usd || '0'),
-        group_mentorship_price_usd: parseFloat(settings.group_mentorship_price_usd || '0'),
-        self_paced_price_usd: parseFloat(settings.self_paced_price_usd || '0'),
-        one_on_one_price_ngn: parseFloat(settings.one_on_one_price_ngn || '0'),
-        group_mentorship_price_ngn: parseFloat(settings.group_mentorship_price_ngn || '0'),
-        self_paced_price_ngn: parseFloat(settings.self_paced_price_ngn || '0'),
+        one_on_one_price_usd:       resolvePrice(settings.one_on_one_price_usd,       savedPrices.one_on_one_price_usd),
+        group_mentorship_price_usd: resolvePrice(settings.group_mentorship_price_usd, savedPrices.group_mentorship_price_usd),
+        self_paced_price_usd:       resolvePrice(settings.self_paced_price_usd,       savedPrices.self_paced_price_usd),
+        one_on_one_price_ngn:       resolvePrice(settings.one_on_one_price_ngn,       savedPrices.one_on_one_price_ngn),
+        group_mentorship_price_ngn: resolvePrice(settings.group_mentorship_price_ngn, savedPrices.group_mentorship_price_ngn),
+        self_paced_price_ngn:       resolvePrice(settings.self_paced_price_ngn,       savedPrices.self_paced_price_ngn),
         onetime_discount_usd: parseFloat(settings.onetime_discount_usd || '0'),
         onetime_discount_ngn: parseFloat(settings.onetime_discount_ngn || '0'),
       };
 
-      // console.log('💾 Saving pricing data:', dataToSave);
-
       await adminApi.put(`/api/admin/courses/${courseId}/pricing`, dataToSave);
 
-      // Update savedPrices to reflect the newly saved values
+      // Update savedPrices to reflect what was just stored
       setSavedPrices({
-        one_on_one_price_usd: settings.one_on_one_price_usd,
-        group_mentorship_price_usd: settings.group_mentorship_price_usd,
-        self_paced_price_usd: settings.self_paced_price_usd,
-        one_on_one_price_ngn: settings.one_on_one_price_ngn,
-        group_mentorship_price_ngn: settings.group_mentorship_price_ngn,
-        self_paced_price_ngn: settings.self_paced_price_ngn,
+        one_on_one_price_usd:       dataToSave.one_on_one_price_usd.toString(),
+        group_mentorship_price_usd: dataToSave.group_mentorship_price_usd.toString(),
+        self_paced_price_usd:       dataToSave.self_paced_price_usd.toString(),
+        one_on_one_price_ngn:       dataToSave.one_on_one_price_ngn.toString(),
+        group_mentorship_price_ngn: dataToSave.group_mentorship_price_ngn.toString(),
+        self_paced_price_ngn:       dataToSave.self_paced_price_ngn.toString(),
       });
 
+      // Clear inputs so placeholders show the freshly saved values
       setSettings(prev => ({
         ...prev,
         one_on_one_price_usd: '',
@@ -291,7 +300,10 @@ const course = response.course; // ✅ unwrap the course object
           <DollarSign className="w-5 h-5 text-purple-600" />
           <h3 className="text-lg font-semibold text-gray-900">Pricing Configuration</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-6">Set prices for each learning track in both USD and NGN</p>
+        <p className="text-sm text-gray-600 mb-1">Set prices for each learning track in both USD and NGN</p>
+        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-6">
+          💡 Leave a field blank to keep its current price unchanged. Only fields you type in will be updated.
+        </p>
 
         {/* USD Pricing */}
         <div className="mb-8">
@@ -389,9 +401,9 @@ const course = response.course; // ✅ unwrap the course object
               {settings.onetime_discount_usd && (() => {
                 const pct = parseFloat(settings.onetime_discount_usd);
                 const tracks = [
-                  { label: '1-on-1', price: parseFloat(settings.one_on_one_price_usd || '0') },
-                  { label: 'Group', price: parseFloat(settings.group_mentorship_price_usd || '0') },
-                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_usd || '0') },
+                  { label: '1-on-1',     price: parseFloat(settings.one_on_one_price_usd       || savedPrices.one_on_one_price_usd       || '0') },
+                  { label: 'Group',      price: parseFloat(settings.group_mentorship_price_usd || savedPrices.group_mentorship_price_usd || '0') },
+                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_usd       || savedPrices.self_paced_price_usd       || '0') },
                 ].filter(t => t.price > 0);
                 if (!pct || !tracks.length) return null;
                 return (
@@ -505,9 +517,9 @@ const course = response.course; // ✅ unwrap the course object
               {settings.onetime_discount_ngn && (() => {
                 const pct = parseFloat(settings.onetime_discount_ngn);
                 const tracks = [
-                  { label: '1-on-1', price: parseFloat(settings.one_on_one_price_ngn || '0') },
-                  { label: 'Group', price: parseFloat(settings.group_mentorship_price_ngn || '0') },
-                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_ngn || '0') },
+                  { label: '1-on-1',     price: parseFloat(settings.one_on_one_price_ngn       || savedPrices.one_on_one_price_ngn       || '0') },
+                  { label: 'Group',      price: parseFloat(settings.group_mentorship_price_ngn || savedPrices.group_mentorship_price_ngn || '0') },
+                  { label: 'Self-paced', price: parseFloat(settings.self_paced_price_ngn       || savedPrices.self_paced_price_ngn       || '0') },
                 ].filter(t => t.price > 0);
                 if (!pct || !tracks.length) return null;
                 return (
