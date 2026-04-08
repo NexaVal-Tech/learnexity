@@ -299,4 +299,19 @@ Route::prefix('kids')->group(function () {
     
 
 });
+
+// Public referal
+
+use App\Http\Controllers\Api\PublicReferralController;
+
+// Public Refer & Earn — no auth required
+Route::prefix('referrals/public')->group(function () {
+    Route::post('/register', [PublicReferralController::class, 'register']);
+    Route::post('/login',    [PublicReferralController::class, 'login']);
+});
+ 
+// Stats — JWT protected (uses public_referrer guard)
+Route::middleware(['jwt.auth.re'])->group(function () {
+    Route::get('/referrals/public/stats', [PublicReferralController::class, 'stats']);
+});
  

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'role' => \App\Http\Middleware\CheckRole::class,
         'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
+        'jwt.auth.re' => \App\Http\Middleware\JwtMiddlewareRe::class,
         'admin.auth' => \App\Http\Middleware\AdminAuthMiddleware::class,
         'oauth.csrf.disable' => \App\Http\Middleware\DisableCsrfForOAuth::class,
     ]);
