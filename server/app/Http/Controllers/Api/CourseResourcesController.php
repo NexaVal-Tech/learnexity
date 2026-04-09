@@ -75,6 +75,7 @@ class CourseResourcesController extends Controller
                             'type' => $item->type,
                             'file_size' => $item->file_size,
                             'download_url' => $downloadUrl,
+                            'text_content' => $item->text_content ?? null,
                             'is_completed' => $itemProgress ? $itemProgress->is_completed : false,
                         ];
                     }),
@@ -257,33 +258,27 @@ class CourseResourcesController extends Controller
     /**
      * Download course material file
      */
-    public function downloadMaterial(Request $request, int $itemId): mixed
-    {
-        $materialItem = MaterialItem::findOrFail($itemId);
+   public function downloadMaterial(Request $request, int $itemId): mixed
+   {
+       $materialItem = MaterialItem::findOrFail($itemId);
 
-        // Check if file_path exists
-        if (!$materialItem->file_path) {
-            return response()->json([
-                'error' => 'No file available for download'
-            ], 404);
-        }
+       // TEXT type: return text_content as a plain text response
+       if ($materialItem->type === 'text') {
+           if (empty($materialItem->text_content)) {
+               return response()->json(['error' => 'No text content available'], 404);
+           }
+           return response($materialItem->text_content, 200, [
+               'Content-Type' => 'text/plain; charset=UTF-8',
+               'Content-Disposition' => 'inline; filename="' . $materialItem->title . '.txt"',
+           ]);
+       }
 
-        // Check if file exists in public disk
-        if (!Storage::disk('public')->exists($materialItem->file_path)) {
-            \Log::error('File not found in storage', [
-                'item_id' => $itemId,
-                'file_path' => $materialItem->file_path,
-                'title' => $materialItem->title,
-            ]);
-            
-            return response()->json([
-                'error' => 'File not found in storage',
-                'debug' => [
-                    'file_path' => $materialItem->file_path,
-                    'storage_path' => Storage::disk('public')->path($materialItem->file_path),
-                ]
-            ], 404);
-        }
+       // Check if file_path exists (for pdf/doc etc)
+       if (!$materialItem->file_path) {
+           return response()->json([
+               'error' => 'No file available for download'
+           ], 404);
+       }
 
         // Get the file extension
         $extension = pathinfo($materialItem->file_path, PATHINFO_EXTENSION);

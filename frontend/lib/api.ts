@@ -689,10 +689,11 @@ export const api = {
 
       createTopic: async (courseId: string, sprintId: number, data: {
         title: string;
-        type: 'pdf' | 'video' | 'document' | 'link';
+        type: 'pdf' | 'video' | 'document' | 'link' | 'text';
         file_url?: string;
         file_size?: string;
         order?: number;
+        text_content?: string;
       }) => {
         return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}/items`,
@@ -706,6 +707,7 @@ export const api = {
         file_url: string;
         file_size: string;
         order: number;
+         text_content?: string | null;
       }>) => {
         return await adminApi.put(
           `/api/admin/courses/${courseId}/resources/items/${topicId}`,

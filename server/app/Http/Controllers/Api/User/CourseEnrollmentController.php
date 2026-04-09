@@ -49,144 +49,145 @@ class CourseEnrollmentController extends Controller
      * Enroll user in a course with location-based pricing
      */
 
-public function enroll(Request $request, $courseId)
-{
-    $user = auth()->user();
-    
-    // Log incoming request for debugging
-    Log::info('📥 Enrollment request received', [
-        'user_id' => $user->id,
-        'course_id' => $courseId,
-        'request_data' => $request->all()
-    ]);
-
-    $validator = Validator::make($request->all(), [
-        'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
-        'payment_type' => 'required|in:onetime,installment',
-    ]);
-
-    if ($validator->fails()) {
-        Log::error('❌ Validation failed', [
-            'errors' => $validator->errors()->toArray()
-        ]);
+    public function enroll(Request $request, $courseId)
+    {
+        $user = auth()->user();
         
-        return response()->json([
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $course = Course::where('course_id', $courseId)->firstOrFail();
-    $currency = LocationService::detectCurrency();
-    
-    $learningTrack = $request->input('learning_track', 'self_paced');
-    $paymentType = $request->input('payment_type');
-    
-    Log::info('📊 Enrollment data', [
-        'learning_track' => $learningTrack,
-        'payment_type' => $paymentType,
-        'currency' => $currency
-    ]);
-
-    // FIXED: Check for existing enrollment
-    $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
-        ->where('course_id', $courseId)
-        ->first();
-
-    if ($existingEnrollment) {
-        // If payment is completed, prevent re-enrollment
-        if ($existingEnrollment->payment_status === 'completed') {
-            return response()->json([
-                'message' => 'You are already enrolled in this course',
-                'enrollment_id' => $existingEnrollment->id,
-            ], 409);
-        }
-        
-        // If payment is pending, return the existing enrollment
-        Log::info('✅ Returning existing pending enrollment', [
-            'enrollment_id' => $existingEnrollment->id,
-            'payment_status' => $existingEnrollment->payment_status
+        // Log incoming request for debugging
+        Log::info('📥 Enrollment request received', [
+            'user_id' => $user->id,
+            'course_id' => $courseId,
+            'request_data' => $request->all()
         ]);
 
-        return response()->json([
-            'message' => 'Enrollment already exists. Please complete your payment.',
-            'enrollment_id' => $existingEnrollment->id,
-            'total_amount' => $existingEnrollment->total_amount,
-            'installment_amount' => $existingEnrollment->installment_amount,
-            'total_installments' => $existingEnrollment->total_installments,
-            'currency' => $existingEnrollment->currency,
-            'payment_type' => $existingEnrollment->payment_type,
-        ], 200);
-    }
-
-    // Get price for selected track and currency
-    $trackPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
-
-    // Validate that price exists
-    if ($trackPrice <= 0) {
-        Log::error('❌ Invalid price for track', [
-            'track' => $learningTrack,
-            'currency' => $currency,
-            'price' => $trackPrice
+        $validator = Validator::make($request->all(), [
+            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
+            'payment_type' => 'required|in:onetime,installment',
         ]);
-        
-        return response()->json([
-            'message' => 'Pricing not configured for this course and currency combination',
-        ], 400);
-    }
 
-    // Apply one-time discount if applicable (percentage-based)
-    if ($paymentType === 'onetime') {
-        $discountPercent = $course->getOneTimeDiscountByCurrency($currency);
-        if ($discountPercent > 0) {
-            $trackPrice = max(0, round($trackPrice * (1 - ($discountPercent / 100)), 2));
-            
-            Log::info('💰 One-time discount applied', [
-                'discount_percent' => $discountPercent,
-                'original_price'   => $course->getTrackPriceByCurrency($learningTrack, $currency),
-                'discounted_price' => $trackPrice,
-                'currency'         => $currency,
+        if ($validator->fails()) {
+            Log::error('❌ Validation failed', [
+                'errors' => $validator->errors()->toArray()
             ]);
+            
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        $currency = LocationService::detectCurrency();
+        
+        $learningTrack = $request->input('learning_track', 'self_paced');
+        $paymentType = $request->input('payment_type');
+        
+        Log::info('📊 Enrollment data', [
+            'learning_track' => $learningTrack,
+            'payment_type' => $paymentType,
+            'currency' => $currency
+        ]);
+
+        // FIXED: Check for existing enrollment
+        $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if ($existingEnrollment) {
+            // If payment is completed, prevent re-enrollment
+            if ($existingEnrollment->payment_status === 'completed') {
+                return response()->json([
+                    'message' => 'You are already enrolled in this course',
+                    'enrollment_id' => $existingEnrollment->id,
+                ], 409);
+            }
+            
+            // If payment is pending, return the existing enrollment
+            Log::info('✅ Returning existing pending enrollment', [
+                'enrollment_id' => $existingEnrollment->id,
+                'payment_status' => $existingEnrollment->payment_status
+            ]);
+
+            return response()->json([
+                'message' => 'Enrollment already exists. Please complete your payment.',
+                'enrollment_id' => $existingEnrollment->id,
+                'total_amount' => $existingEnrollment->total_amount,
+                'installment_amount' => $existingEnrollment->installment_amount,
+                'total_installments' => $existingEnrollment->total_installments,
+                'currency' => $existingEnrollment->currency,
+                'payment_type' => $existingEnrollment->payment_type,
+            ], 200);
+        }
+
+        // Get price for selected track and currency
+        $trackPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
+
+        // Validate that price exists
+        if ($trackPrice <= 0) {
+            Log::error('❌ Invalid price for track', [
+                'track' => $learningTrack,
+                'currency' => $currency,
+                'price' => $trackPrice
+            ]);
+            
+            return response()->json([
+                'message' => 'Pricing not configured for this course and currency combination',
+            ], 400);
+        }
+
+        // Apply one-time discount if applicable (percentage-based)
+        if ($paymentType === 'onetime') {
+            $discountPercent = $course->getOneTimeDiscountByCurrency($currency);
+            if ($discountPercent > 0) {
+                $trackPrice = max(0, round($trackPrice * (1 - ($discountPercent / 100)), 2));
+                
+                Log::info('💰 One-time discount applied', [
+                    'discount_percent' => $discountPercent,
+                    'original_price'   => $course->getTrackPriceByCurrency($learningTrack, $currency),
+                    'discounted_price' => $trackPrice,
+                    'currency'         => $currency,
+                ]);
+            }
+        }
+
+        $totalInstallments = $paymentType === 'installment' ? 4 : 1;
+        $installmentAmount = $paymentType === 'installment' 
+            ? round($trackPrice / 4, 2) 
+            : $trackPrice;
+
+        $enrollment = CourseEnrollment::create([
+            'user_id' => $user->id,
+            'course_id' => $courseId,
+            'course_name' => $course->title,
+            'learning_track' => $learningTrack,
+            'payment_type' => $paymentType,
+            'currency' => $currency,
+            'total_amount' => $trackPrice,
+            'amount_paid' => 0,
+            'total_installments' => $totalInstallments,
+            'installments_paid' => 0,
+            'installment_amount' => $installmentAmount,
+            'payment_status' => 'pending',
+            'has_access' => false,
+            'next_payment_due' => $paymentType === 'installment' ? now()->addWeeks(4) : null,
+            'enrollment_date' => now(),
+        ]);
+        
+        Log::info('✅ Enrollment created successfully', [
+            'enrollment_id' => $enrollment->id
+        ]);
+
+        return response()->json([
+            'message' => 'Enrollment created successfully',
+            'enrollment_id' => $enrollment->id,
+            'total_amount' => $trackPrice,
+            'installment_amount' => $installmentAmount,
+            'total_installments' => $totalInstallments,
+            'currency' => $currency,
+            'payment_type' => $paymentType,
+        ], 201);
     }
-
-    $totalInstallments = $paymentType === 'installment' ? 4 : 1;
-    $installmentAmount = $paymentType === 'installment' 
-        ? round($trackPrice / 4, 2) 
-        : $trackPrice;
-
-    $enrollment = CourseEnrollment::create([
-        'user_id' => $user->id,
-        'course_id' => $courseId,
-        'course_name' => $course->title,
-        'learning_track' => $learningTrack,
-        'payment_type' => $paymentType,
-        'currency' => $currency,
-        'total_amount' => $trackPrice,
-        'amount_paid' => 0,
-        'total_installments' => $totalInstallments,
-        'installments_paid' => 0,
-        'installment_amount' => $installmentAmount,
-        'payment_status' => 'pending',
-        'has_access' => false,
-        'next_payment_due' => $paymentType === 'installment' ? now()->addWeeks(4) : null,
-        'enrollment_date' => now(),
-    ]);
     
-    Log::info('✅ Enrollment created successfully', [
-        'enrollment_id' => $enrollment->id
-    ]);
-
-    return response()->json([
-        'message' => 'Enrollment created successfully',
-        'enrollment_id' => $enrollment->id,
-        'total_amount' => $trackPrice,
-        'installment_amount' => $installmentAmount,
-        'total_installments' => $totalInstallments,
-        'currency' => $currency,
-        'payment_type' => $paymentType,
-    ], 201);
-}
     /**
      * Get user's enrolled courses with access status
      */

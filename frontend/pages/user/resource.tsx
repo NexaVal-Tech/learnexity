@@ -19,6 +19,7 @@ interface CourseResourceItem {
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
+  text_content?: string | null; 
 }
 
 interface Sprint {
@@ -757,12 +758,14 @@ export default function ResourcesPage() {
         )}
 
         {/* preview component */}
+
         {showPreviewModal && (
           <ResourcePreviewModal
             url={null}
             title={null}
             onClose={() => setShowPreviewModal(false)}
             sprints={data?.materials}
+            externalVideos={data?.external_resources?.video_tutorials}   // <-- ADD THIS
             onMarkComplete={async (itemId, currentStatus) => {
               await handleItemToggle(itemId, currentStatus);
             }}

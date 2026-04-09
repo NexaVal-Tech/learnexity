@@ -16,6 +16,7 @@ class MaterialItem extends Model
         'file_path',
         'file_url',
         'file_size',
+        'text_content',
         'order',
     ];
 

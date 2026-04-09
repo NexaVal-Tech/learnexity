@@ -117,9 +117,10 @@ const CourseDetail = () => {
       setSubmitting(true);
       await api.admin.courses.createTopic(id as string, selectedSprint.id, {
         title: formData.title,
-        type: formData.type || 'document',
+        type: formData.type || 'text',
         file_url: formData.file_url || '',
         order: parseInt(formData.order || '0'),
+        text_content: formData.text_content || '',
       });
       setIsAddTopicModalOpen(false);
       setSelectedSprint(null);
@@ -138,10 +139,11 @@ const CourseDetail = () => {
     
     try {
       setSubmitting(true);
-      await api.admin.courses.updateTopic(id as string, selectedTopic.id, {
-        title: formData.title,
-        type: formData.type,
-      });
+        await api.admin.courses.updateTopic(id as string, selectedTopic.id, {
+          title: formData.title,
+          type: formData.type,
+          text_content: formData.text_content || '',
+        });
       setIsEditTopicModalOpen(false);
       setSelectedTopic(null);
       setFormData({});
@@ -350,7 +352,7 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
 
   const AddTopicModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
           <button onClick={() => setIsAddTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -374,27 +376,46 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
             <select 
-              value={formData.type || 'document'}
-              onChange={(e) => setFormData({...formData, type: e.target.value})}
+              value={formData.type || 'text'}
+              onChange={(e) => setFormData({...formData, type: e.target.value, text_content: '', file_url: ''})}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             >
-              <option value="document">Document</option>
-              <option value="pdf">PDF</option>
+              <option value="text">Text</option>
               <option value="video">Video</option>
               <option value="link">Link</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">URL (Optional)</label>
-            <input 
-              type="url"
-              value={formData.file_url || ''}
-              onChange={(e) => setFormData({...formData, file_url: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="https://..."
-            />
-          </div>
+          {/* Text content — shown when type is text or unset */}
+          {(!formData.type || formData.type === 'text') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
+              <textarea
+                value={formData.text_content || ''}
+                onChange={(e) => setFormData({...formData, text_content: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                rows={8}
+                placeholder="Paste or type the material content here..."
+              />
+              <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
+            </div>
+          )}
+
+          {/* URL — shown for video and link types */}
+          {(formData.type === 'video' || formData.type === 'link') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                {formData.type === 'video' ? 'Video URL' : 'Link URL'}
+              </label>
+              <input 
+                type="url"
+                value={formData.file_url || ''}
+                onChange={(e) => setFormData({...formData, file_url: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                placeholder="https://..."
+              />
+            </div>
+          )}
           
           <div className="flex items-center gap-3 pt-2">
             <button 
@@ -447,11 +468,23 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
               onChange={(e) => setFormData({...formData, type: e.target.value})}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             >
-              <option value="document">Document</option>
-              <option value="pdf">PDF</option>
-              <option value="video">Video</option>
-              <option value="link">Link</option>
+            <option value="text">Text</option>
+            <option value="video">Video</option>
+            <option value="link">Link</option>
             </select>
+            {formData.type === 'text' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
+                <textarea
+                  value={formData.text_content || ''}
+                  onChange={(e) => setFormData({...formData, text_content: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                  rows={8}
+                  placeholder="Paste or type the material content here..."
+                />
+                <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-3 pt-2">
@@ -801,7 +834,7 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
                             <span className="text-xs text-gray-500">({topic.type})</span>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button 
+                            {/* <button 
                               onClick={() => {
                                 setSelectedTopic(topic);
                                 setFormData({});
@@ -812,13 +845,14 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
                               title="Upload file"
                             >
                               <Upload size={14} />
-                            </button>
+                            </button> */}
                             <button 
                               onClick={() => {
                                 setSelectedTopic(topic);
                                 setFormData({
                                   title: topic.title,
                                   type: topic.type,
+                                  text_content: topic.text_content || '',
                                 });
                                 setIsEditTopicModalOpen(true);
                               }}

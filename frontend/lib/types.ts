@@ -507,6 +507,7 @@ export interface AdminCourseTopic {
   id: number;
   title: string;
   type: string;
+  text_content?: string | null; 
 }
 
 export interface AdminCourseMaterial {

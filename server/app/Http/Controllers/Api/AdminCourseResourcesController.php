@@ -83,21 +83,22 @@ class AdminCourseResourcesController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:pdf,video,document,link',
+            'type' => 'required|in:text,video,link,document,pdf',
             'file_url' => 'nullable|url',
             'file_size' => 'nullable|string',
+            'text_content' => 'nullable|string',
             'order' => 'integer|min:0',
         ]);
 
         $material = CourseMaterial::where('course_id', $courseId)
             ->findOrFail($materialId);
-
         $item = MaterialItem::create([
             'course_material_id' => $material->id,
             'title' => $validated['title'],
             'type' => $validated['type'],
             'file_url' => $validated['file_url'] ?? null,
             'file_size' => $validated['file_size'] ?? null,
+            'text_content' => $validated['text_content'] ?? null,
             'order' => $validated['order'] ?? 0,
         ]);
 
@@ -111,7 +112,7 @@ class AdminCourseResourcesController extends Controller
 
         $validated = $request->validate([
             'title' => 'string|max:255',
-            'type' => 'in:pdf,video,document,link',
+            'text_content' => 'nullable|string',
             'file_url' => 'nullable|url',
             'file_size' => 'nullable|string',
             'order' => 'integer|min:0',
