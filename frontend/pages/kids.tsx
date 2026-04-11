@@ -727,11 +727,11 @@ export default function Kids() {
                   </span>
                 </h1>
                 <p className="text-lg text-gray-400 mt-6 leading-relaxed max-w-md">
-                  A structured 3-month program with expert mentorship — starting with digital foundations, then your child's chosen specialisation.
+                  Enroll your child in a structured 3-month tech program with expert mentorship. Start with digital foundations, then advance into their chosen specialization.
                 </p>
 
                 {/* Pricing display in hero */}
-                <div className="mt-8 flex flex-col sm:flex-row gap-3 items-start">
+                {/* <div className="mt-8 flex flex-col sm:flex-row gap-3 items-start">
                   <div className="flex gap-3">
                     <div className="px-3 py-2" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(15,15,15,0.9)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(8px)" }}>
                       <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">👥 Mini Group</p>
@@ -744,7 +744,7 @@ export default function Kids() {
                       <p className="text-xs text-gray-600 mt-0.5">{fmt(hero1on1 * MONTHS, currency)} total · 3 months</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <p className="text-xs mt-3" style={{ color: "rgba(74,58,255,0.8)" }}>
                   <Sparkles className="inline w-3 h-3 mr-1" />
@@ -886,7 +886,7 @@ export default function Kids() {
             <SectionCTA
               onEnroll={() => openEnroll()}
               headline="Pick a track and start your child's 3-month journey"
-              sub={`From $${MONTHLY_GROUP}/month for mini groups · From $${MONTHLY_1ON1}/month for one-on-one`}
+              sub={` $${MONTHLY_GROUP}/month for mini groups · $${MONTHLY_1ON1}/month for one-on-one`}
               cta="Choose a Track & Enroll"
             />
           </section>

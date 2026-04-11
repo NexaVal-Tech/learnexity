@@ -57,9 +57,14 @@ return new class extends Migration
         else {
 
             Schema::table('material_items', function (Blueprint $table) {
+
+                // Add text_content if missing
                 if (!Schema::hasColumn('material_items', 'text_content')) {
                     $table->longText('text_content')->nullable()->after('file_size');
                 }
+
+                // 🔥 FIX: Modify type column
+                $table->enum('type', ['text', 'pdf', 'video', 'document', 'link'])->change();
             });
 
         }
