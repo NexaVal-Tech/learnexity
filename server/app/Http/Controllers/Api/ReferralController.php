@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ReferralCode;
 use App\Models\ReferralHistory;
 use App\Models\User;
+use App\Models\PublicReferrer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -128,17 +129,21 @@ class ReferralController extends Controller
             'code' => 'required|string'
         ]);
 
-        $referralCode = ReferralCode::where('referral_code', $request->code)->first();
+        $code = $request->code;
 
-        if (!$referralCode) {
+        // Check student referral codes first
+        $found = ReferralCode::where('referral_code', $code)->exists()
+            ||   PublicReferrer::where('referral_code', $code)->exists();
+
+        if (!$found) {
             return response()->json([
-                'valid' => false,
+                'valid'   => false,
                 'message' => 'Invalid referral code'
             ], 404);
         }
 
         return response()->json([
-            'valid' => true,
+            'valid'   => true,
             'message' => 'Valid referral code'
         ]);
     }

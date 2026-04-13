@@ -16,6 +16,7 @@ class ReferralHistory extends Model
 
     protected $fillable = [
         'referrer_id',
+        'public_referrer_id',
         'referred_user_id',
         'status',
         'reward_amount',

@@ -571,7 +571,7 @@ const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; o
         <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-600">
           Pricing · 3 months <span className="text-green-400 ml-1">· {ONETIME_DISCOUNT}% off upfront</span>
         </p>
-        <div className="space-y-1.5">
+        {/* <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-gray-500">👥 Mini Group (3–5 kids)</span>
             <div className="text-right">
@@ -586,7 +586,7 @@ const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; o
               <span className="text-gray-600 ml-1 text-[10px]">= ${FULL_1ON1} total</span>
             </div>
           </div>
-        </div>
+        </div> */}
         <p className="text-[10px] text-gray-600 mt-2">Includes Digital Foundations (month 1)</p>
       </div>
 
@@ -723,7 +723,7 @@ export default function Kids() {
                 <h1 className="text-4xl md:text-4xl lg:text-5xl font-bold leading-tight text-white mt-2">
                   Turn Screen Time Into Real{" "}
                   <span style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_ORANGE})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                    Creative Skills
+                    Creative Tech Skills
                   </span>
                 </h1>
                 <p className="text-lg text-gray-400 mt-6 leading-relaxed max-w-md">
@@ -818,7 +818,7 @@ export default function Kids() {
             <SectionCTA
               onEnroll={() => openEnroll()}
               headline="Ready to invest in your child's future?"
-              sub="3 months. Real skills. A portfolio they'll be proud of."
+              sub="3 months. Beginner friendly, lifelong skills."
               cta="Reserve a Spot Now"
             />
           </section>
@@ -841,7 +841,7 @@ export default function Kids() {
                   ))}
                 </ul>
                 <div className="mt-8 p-5" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: `${BRAND_ORANGE}10`, border: `1px solid ${BRAND_ORANGE}25` }}>
-                  <p className="font-bold text-amber-400">The Gap:</p>
+                  <p className="font-bold text-amber-400">Why Join Us:</p>
                   <p className="text-amber-200/70 mt-1 text-sm leading-relaxed">With Learnexity, screen time becomes skill time. <strong className="text-amber-300">Every</strong> hour spent on a device is a step toward real, lasting creativity, confidence, and problem-solving ability.</p>
                 </div>
               </div>
@@ -853,7 +853,7 @@ export default function Kids() {
             <div className="max-w-[1230px] mx-auto text-center">
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Structure</p>
               <h2 className="text-4xl font-bold text-white mb-4">3 Months. One Clear Path.</h2>
-              <p className="text-gray-500 mb-16 max-w-lg mx-auto">Every enrollment includes Digital Foundations first — then your child's chosen specialisation. No skipping, no guessing.</p>
+              <p className="text-gray-500 mb-16 max-w-lg mx-auto">Every enrollment includes Digital Foundations first, then your child's chosen specialisation, beginner friendly. Designed to build real, lifelong skills.</p>
               <div className="grid md:grid-cols-2 gap-8">
                 {[
                   {
@@ -882,14 +882,14 @@ export default function Kids() {
           </section>
 
           {/* ── CTA between How It Works & Tracks ── */}
-          <section className="px-6">
+          {/* <section className="px-6">
             <SectionCTA
               onEnroll={() => openEnroll()}
               headline="Pick a track and start your child's 3-month journey"
               sub={` $${MONTHLY_GROUP}/month for mini groups · $${MONTHLY_1ON1}/month for one-on-one`}
               cta="Choose a Track & Enroll"
             />
-          </section>
+          </section> */}
 
           {/* ── Specialisation Tracks ─────────────────────────────────────── */}
           <section className="py-20 px-6">
@@ -989,7 +989,7 @@ export default function Kids() {
           </section>
 
           {/* ── Final CTA Section ─────────────────────────────────────────── */}
-          <section className="py-24 px-6" style={{ background: `linear-gradient(135deg, ${BRAND}12 0%, rgba(245,158,11,0.06) 100%)`, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {/* <section className="py-24 px-6" style={{ background: `linear-gradient(135deg, ${BRAND}12 0%, rgba(245,158,11,0.06) 100%)`, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="max-w-2xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest px-4 py-1.5" style={{ borderRadius: "2rem", background: `${BRAND}18`, color: BRAND, border: `1px solid ${BRAND}30` }}>
                 <Star className="w-3 h-3" /> Limited Spots Available
@@ -998,7 +998,7 @@ export default function Kids() {
                 Your Child's Digital Journey Starts Here
               </h2>
               <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                3 months. Expert mentorship. A skill they'll carry for life.<br />
+                The beginner friendly. No Experience required. A skill they'll carry for life.<br />
                 From <span className="text-white font-semibold">${MONTHLY_GROUP}/month</span> for mini groups · <span className="text-white font-semibold">${MONTHLY_1ON1}/month</span> for one-on-one.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1010,7 +1010,7 @@ export default function Kids() {
                 Beginner-friendly · No experience required · Cancel anytime on monthly plan
               </p>
             </div>
-          </section>
+          </section> */}
 
         </div>
 

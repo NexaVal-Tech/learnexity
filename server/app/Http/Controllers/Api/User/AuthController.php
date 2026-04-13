@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\PublicReferrer;
 use App\Models\ReferralCode;
 use App\Models\ReferralHistory;
 use Illuminate\Http\Request;
@@ -31,7 +32,20 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'phone' => 'nullable|string',
-            'referral_code' => 'nullable|string|exists:referral_codes,referral_code'
+            'referral_code' => [
+            'nullable',
+            'string',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $inStudentCodes  = ReferralCode::where('referral_code', $value)->exists();
+                        $inPublicReferrers = PublicReferrer::where('referral_code', $value)->exists();
+
+                        if (!$inStudentCodes && !$inPublicReferrers) {
+                            $fail('Invalid referral code. Please check and try again.');
+                        }
+                    }
+                }
+            ],
         ]);
 
         if ($v->fails()) {
@@ -467,51 +481,37 @@ class AuthController extends Controller
      */
     private function processReferral(User $user, string $referralCode)
     {
-        Log::info('🎯 [REFERRAL] Processing referral', [
-            'referred_user_id' => $user->id,
-            'referral_code' => $referralCode
-        ]);
+        // Check if it's a student referral code
+        $studentCode = ReferralCode::where('referral_code', $referralCode)->first();
+        if ($studentCode) {
+            // existing student referral logic...
+            $existingReferral = ReferralHistory::where('referred_user_id', $user->id)->first();
+            if ($existingReferral) return;
 
-        $referralCodeRecord = ReferralCode::where('referral_code', $referralCode)->first();
-
-        if (!$referralCodeRecord) {
-            Log::warning('⚠️ [REFERRAL] Invalid referral code', [
-                'code' => $referralCode,
-                'user_id' => $user->id
+            ReferralHistory::create([
+                'referrer_id'      => $studentCode->user_id,
+                'referred_user_id' => $user->id,
+                'status'           => 'pending',
+                'reward_amount'    => 30.00,
+                'referred_at'      => now(),
             ]);
+
+            $studentCode->increment('total_referrals');
+            $studentCode->increment('pending_referrals');
+            $studentCode->update(['last_referral_at' => now()]);
             return;
         }
 
-        // Check if referral already exists
-        $existingReferral = ReferralHistory::where('referred_user_id', $user->id)->first();
-        
-        if ($existingReferral) {
-            Log::warning('⚠️ [REFERRAL] Referral already exists', [
-                'user_id' => $user->id,
-                'existing_referral_id' => $existingReferral->id
-            ]);
+        // Check if it's a public referrer code
+        $publicReferrer = PublicReferrer::where('referral_code', $referralCode)->first();
+        if ($publicReferrer) {
+            \App\Http\Controllers\Api\PublicReferralController::handleNewSignup($user, $referralCode);
             return;
         }
 
-        // Create referral history record
-        $referralHistory = ReferralHistory::create([
-            'referrer_id' => $referralCodeRecord->user_id,
-            'referred_user_id' => $user->id,
-            'status' => 'pending',
-            'reward_amount' => 30.00,
-            'referred_at' => now(),
-        ]);
-
-        // Update referral code stats
-        $referralCodeRecord->increment('total_referrals');
-        $referralCodeRecord->increment('pending_referrals');
-        $referralCodeRecord->update(['last_referral_at' => now()]);
-
-        Log::info('✅ [REFERRAL] Referral processed successfully', [
-            'referrer_id' => $referralCodeRecord->user_id,
-            'referred_user_id' => $user->id,
-            'referral_history_id' => $referralHistory->id,
-            'code' => $referralCode
+        Log::warning('⚠️ [REFERRAL] Code not found in either table', [
+            'code'    => $referralCode,
+            'user_id' => $user->id,
         ]);
     }
 }

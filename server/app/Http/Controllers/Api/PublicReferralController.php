@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Public Refer & Earn program.
@@ -97,64 +98,113 @@ class PublicReferralController extends Controller
 
     // ─── Stats (JWT protected via public_referrer guard) ──────────────────────
     public function stats(Request $request)
-    {
-        try {
-            $referrer = JWTAuth::parseToken()->authenticate();
-        } catch (JWTException $e) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
+{
+    $token = $request->bearerToken();
 
-        if (!$referrer instanceof PublicReferrer) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
-
-        $history = ReferralHistory::where('public_referrer_id', $referrer->id)
-            ->with('referredUser:id,name')
-            ->orderByDesc('referred_at')
-            ->get()
-            ->map(fn($r) => [
-                'id'                 => $r->id,
-                'referred_user_name' => $r->referredUser?->name ?? 'Anonymous',
-                'status'             => $r->status,
-                'reward_amount'      => $r->reward_amount,
-                'referred_at'        => $r->referred_at,
-            ]);
-
-        return response()->json([
-            'statistics' => [
-                'total_referrals'      => $referrer->total_referrals,
-                'successful_referrals' => $referrer->successful_referrals,
-                'pending_referrals'    => $referrer->pending_referrals,
-                'total_earnings'       => $referrer->total_earnings,
-            ],
-            'history' => $history,
-        ]);
+    if (!$token) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
     }
 
+    try {
+        // Decode the token payload without guard resolution
+        $payload = JWTAuth::setToken($token)->getPayload();
+        $sub     = $payload->get('sub');   // e.g. "re:3"
+        $guard   = $payload->get('guard'); // "public_referrer"
+
+        if ($guard !== 'public_referrer' || !str_starts_with($sub, 're:')) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $referrerId = (int) str_replace('re:', '', $sub);
+        $referrer   = PublicReferrer::find($referrerId);
+
+        if (!$referrer) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+    } catch (JWTException $e) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+
+    // Count directly from referral_history — always accurate
+    $historyQuery = ReferralHistory::where('public_referrer_id', $referrer->id);
+
+    $total      = (clone $historyQuery)->count();
+    $pending    = (clone $historyQuery)->where('status', 'pending')->count();
+    $successful = (clone $historyQuery)->where('status', 'completed')->count();
+    $earnings   = (clone $historyQuery)->where('status', 'completed')->sum('reward_amount');
+
+    $history = (clone $historyQuery)
+        ->with('referredUser:id,name')
+        ->orderByDesc('referred_at')
+        ->get()
+        ->map(fn($r) => [
+            'id'                 => $r->id,
+            'referred_user_name' => $r->referredUser?->name ?? 'Anonymous',
+            'status'             => $r->status,
+            'reward_amount'      => $r->reward_amount,
+            'referred_at'        => $r->referred_at,
+        ]);
+
+    return response()->json([
+        'statistics' => [
+            'total_referrals'      => $total,
+            'successful_referrals' => $successful,
+            'pending_referrals'    => $pending,
+            'total_earnings'       => $earnings,
+        ],
+        'history' => $history,
+    ]);
+}
     // ─── Called from AuthController@register when a new User registers ────────
     public static function handleNewSignup(User $newUser, string $referralCode): void
     {
+        // Fresh query — don't rely on a passed-in cached instance
         $referrer = PublicReferrer::where('referral_code', $referralCode)->first();
-        if (!$referrer) return;
-
-        // Avoid duplicates
-        if (ReferralHistory::where('referred_user_id', $newUser->id)
-            ->where('public_referrer_id', $referrer->id)->exists()) {
+        
+        if (!$referrer) {
+            Log::warning('⚠️ [PUBLIC REFERRAL] Referrer not found', ['code' => $referralCode]);
             return;
         }
 
-        DB::transaction(function () use ($referrer, $newUser) {
-            ReferralHistory::create([
-                'public_referrer_id' => $referrer->id,
-                'referred_user_id'   => $newUser->id,
-                'status'             => 'pending',
-                'reward_amount'      => 5000.00, // ₦5,000
-                'referred_at'        => now(),
+        // Avoid duplicates
+        if (ReferralHistory::where('referred_user_id', $newUser->id)
+            ->where('public_referrer_id', $referrer->id)
+            ->exists()) {
+            Log::warning('⚠️ [PUBLIC REFERRAL] Duplicate referral', [
+                'user_id' => $newUser->id,
+                'referrer_id' => $referrer->id,
             ]);
+            return;
+        }
 
-            $referrer->increment('total_referrals');
-            $referrer->increment('pending_referrals');
-        });
+        try {
+            DB::transaction(function () use ($referrer, $newUser) {
+                ReferralHistory::create([
+                    'public_referrer_id' => $referrer->id,
+                    'referrer_id'        => null,        // nullable after your migration
+                    'referred_user_id'   => $newUser->id,
+                    'status'             => 'pending',
+                    'reward_amount'      => 5000.00,
+                    'referred_at'        => now(),
+                ]);
+
+                // Use fresh DB increment — bypasses any stale Eloquent model state
+                PublicReferrer::where('id', $referrer->id)->increment('total_referrals');
+                PublicReferrer::where('id', $referrer->id)->increment('pending_referrals');
+            });
+
+            Log::info('✅ [PUBLIC REFERRAL] Referral recorded', [
+                'referrer_id' => $referrer->id,
+                'user_id'     => $newUser->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('❌ [PUBLIC REFERRAL] Failed to record referral', [
+                'error'       => $e->getMessage(),
+                'referrer_id' => $referrer->id,
+                'user_id'     => $newUser->id,
+            ]);
+        }
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────

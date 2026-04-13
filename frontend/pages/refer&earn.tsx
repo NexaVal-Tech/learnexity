@@ -82,22 +82,32 @@ export default function ReferAndEarn() {
   };
 
   const fetchDashboard = useCallback(async () => {
-    if (!session) return;
-    setLoadingDash(true);
-    try {
-      const res = await fetch(`${API}/api/referrals/public/stats`, {
-        headers: { Authorization: `Bearer ${session.token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data.statistics);
-        setHistory(data.history || []);
+      if (!session) return;
+      setLoadingDash(true);
+      try {
+          const res = await fetch(`${API}/api/referrals/public/stats`, {
+              headers: { Authorization: `Bearer ${session.token}` },
+          });
+
+          if (res.status === 401) {
+              // Token expired or invalid — log the user out
+              handleLogout();
+              return;
+          }
+
+          if (!res.ok) {
+              console.error('Stats fetch failed:', res.status, await res.text());
+              return;
+          }
+
+          const data = await res.json();
+          setStats(data.statistics);
+          setHistory(data.history || []);
+      } catch (err) {
+          console.error('Stats fetch error:', err);
+      } finally {
+          setLoadingDash(false);
       }
-    } catch {
-      // silently fail — show cached/empty state
-    } finally {
-      setLoadingDash(false);
-    }
   }, [session]);
 
   useEffect(() => {
