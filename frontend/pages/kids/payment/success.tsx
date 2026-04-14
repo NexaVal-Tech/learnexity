@@ -1,50 +1,36 @@
 /**
  * pages/kids/payment/success.tsx
  *
- * Shown after a successful Stripe or Paystack payment.
- * Verifies the payment server-side and displays full session details.
- * Works for both one-time and installment payments.
+ * Dark-themed success page matching the kids.tsx design language.
+ * Verifies Stripe / Paystack payment and shows full session details.
  */
 import React, { useEffect, useState } from "react";
 import { useRouter }   from "next/router";
 import Head            from "next/head";
+import { ArrowRight, CheckCircle, Mail, Phone, Calendar, Rocket } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const BRAND   = "#4A3AFF";
+const API_URL      = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BRAND        = "#4A3AFF";
+const BRAND_ORANGE = "#f59e0b";
 
 interface Enrollment {
   id: number;
-  parent_name: string;
-  parent_email: string;
-  student_name: string;
-  student_age: number;
+  parent_name: string; parent_email: string;
+  student_name: string; student_age: number;
   session_type: "one_on_one" | "group_mentorship";
   chosen_track: string;
   payment_type: "onetime" | "installment";
   payment_status: "pending" | "partial" | "completed" | "failed";
   currency: "USD" | "NGN";
-  total_price: number;
-  amount_paid: number;
-  remaining_balance: number;
-  next_installment_amount: number;
-  total_installments: number;
-  installments_paid: number;
-  installments_remaining: number;
+  total_price: number; amount_paid: number; remaining_balance: number;
+  next_installment_amount: number; total_installments: number;
+  installments_paid: number; installments_remaining: number;
   next_payment_due: string | null;
   has_access: boolean;
-  course: {
-    name: string;
-    emoji: string;
-    color: string;
-    duration_months: number;
-  } | null;
+  course: { name: string; emoji: string; color: string; duration_months: number; } | null;
   payments: Array<{
-    number: number;
-    amount: number;
-    currency: string;
-    paid_at: string;
-    transaction_id: string;
-    gateway: string;
+    number: number; amount: number; currency: string;
+    paid_at: string; transaction_id: string; gateway: string;
   }>;
 }
 
@@ -77,26 +63,17 @@ export default function KidsPaymentSuccess() {
     const verify = async () => {
       setLoading(true);
       try {
-        let data: { enrollment: Enrollment };
-
+        let data: any;
         if (session_id) {
-          // Stripe
-          const res = await fetch(
-            `${API_URL}/api/kids/stripe/verify?session_id=${session_id}&enrollment_id=${enrollment_id}`
-          );
+          const res = await fetch(`${API_URL}/api/kids/stripe/verify?session_id=${session_id}&enrollment_id=${enrollment_id}`);
           data = await res.json();
         } else if (reference) {
-          // Paystack
-          const res = await fetch(
-            `${API_URL}/api/kids/paystack/verify?reference=${reference}&enrollment_id=${enrollment_id}`
-          );
+          const res = await fetch(`${API_URL}/api/kids/paystack/verify?reference=${reference}&enrollment_id=${enrollment_id}`);
           data = await res.json();
         } else {
-          // Fallback: just load the enrollment
           const res = await fetch(`${API_URL}/api/kids/enrollment/${enrollment_id}`);
           data = await res.json();
         }
-
         setEnrollment(data.enrollment ?? null);
         if (!data.enrollment) setError("Could not verify payment. Please contact support.");
       } catch {
@@ -109,23 +86,33 @@ export default function KidsPaymentSuccess() {
     verify();
   }, [session_id, reference, enrollment_id]);
 
-  // ── Loading ───────────────────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5">
-        <div className="w-14 h-14 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
-        <p className="text-slate-500 text-sm">Verifying your payment…</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: "#080808" }}>
+        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: BRAND, borderRightColor: `${BRAND}44` }} />
+          <div className="absolute inset-2 rounded-full" style={{ background: `${BRAND}15` }} />
+        </div>
+        <div className="text-center">
+          <p className="font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>Verifying your payment…</p>
+          <p className="text-sm mt-1" style={{ color: "#6b7280", fontFamily: "Outfit, sans-serif" }}>This usually takes just a second.</p>
+        </div>
       </div>
     );
   }
 
   if (error && !enrollment) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4 gap-5">
-        <div className="text-5xl">😔</div>
-        <h2 className="text-xl font-bold text-slate-800">Verification Issue</h2>
-        <p className="text-slate-500 text-sm max-w-sm text-center">{error}</p>
-        <button onClick={() => router.push("/kids")} className="px-6 py-3 rounded-xl text-white font-bold" style={{ background: BRAND }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-5" style={{ background: "#080808" }}>
+        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+        <div className="text-6xl">😔</div>
+        <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>Verification Issue</h2>
+        <p className="text-sm max-w-sm text-center" style={{ color: "#9ca3af" }}>{error}</p>
+        <button onClick={() => router.push("/kids")}
+          className="px-8 py-4 font-bold text-white transition-all hover:opacity-90"
+          style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Outfit, sans-serif" }}>
           Back to Kids Page
         </button>
       </div>
@@ -134,190 +121,260 @@ export default function KidsPaymentSuccess() {
 
   if (!enrollment) return null;
 
-  const isFullyPaid  = enrollment.payment_status === "completed";
-  const isPartial    = enrollment.payment_status === "partial";
-  const color        = enrollment.course?.color ?? BRAND;
-  const lastPayment  = enrollment.payments[enrollment.payments.length - 1];
+  const isFullyPaid = enrollment.payment_status === "completed";
+  const isPartial   = enrollment.payment_status === "partial";
+  const color       = enrollment.course?.color ?? BRAND;
+  const lastPayment = enrollment.payments[enrollment.payments.length - 1];
 
   return (
     <>
       <Head>
-        <title>{isFullyPaid ? "Enrollment Confirmed!" : "Payment Received!"} — Learnexity Kids</title>
+        <title>{isFullyPaid ? "Enrollment Confirmed! 🎉" : "Payment Received! ✅"} — Learnexity Kids</title>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50" style={{ fontFamily: "Outfit, sans-serif" }}>
-        <div className="max-w-xl mx-auto px-4 py-12">
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #080808; }
+        @keyframes successPop {
+          0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+          70%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes confetti {
+          0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes kidsFloat { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-12px) rotate(4deg); } }
+        .fade-up-1 { animation: fadeUp 0.5s ease 0.1s forwards; opacity: 0; }
+        .fade-up-2 { animation: fadeUp 0.5s ease 0.25s forwards; opacity: 0; }
+        .fade-up-3 { animation: fadeUp 0.5s ease 0.4s forwards; opacity: 0; }
+      `}</style>
 
-          {/* Success header */}
-          <div className="text-center mb-8">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg"
-              style={{ background: isFullyPaid ? "#dcfce7" : "#fff7ed" }}
-            >
-              {isFullyPaid ? "🎉" : "✅"}
+      {/* Confetti particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        {isFullyPaid && [BRAND, BRAND_ORANGE, "#22c55e", "#ec4899", "#8b5cf6"].map((c, idx) =>
+          Array.from({ length: 3 }).map((_, j) => (
+            <div key={`${idx}-${j}`} style={{
+              position: "absolute",
+              left: `${(idx * 20 + j * 7 + 5)}%`,
+              top: "-20px",
+              width: `${6 + j * 2}px`,
+              height: `${6 + j * 2}px`,
+              borderRadius: j === 0 ? "50%" : "2px",
+              background: c,
+              opacity: 0.7,
+              animation: `confetti ${3 + idx * 0.4 + j * 0.3}s ease-in ${idx * 0.15 + j * 0.1}s forwards`,
+            }} />
+          ))
+        )}
+        {/* Ambient glow */}
+        <div style={{ position: "absolute", top: "0%", right: "0%", width: "600px", height: "600px", borderRadius: "50%", background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`, filter: "blur(80px)" }} />
+        <div style={{ position: "absolute", bottom: "0%", left: "0%", width: "500px", height: "500px", borderRadius: "50%", background: `radial-gradient(circle, ${BRAND}12 0%, transparent 70%)`, filter: "blur(80px)" }} />
+      </div>
+
+      <div className="relative min-h-screen" style={{ fontFamily: "Outfit, sans-serif", color: "#fff", zIndex: 1 }}>
+
+        {/* ── Top bar ── */}
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)" }}>
+          <div className="max-w-3xl mx-auto px-6 py-4">
+            <button onClick={() => router.push("/kids")} className="flex items-center gap-2 text-sm font-semibold transition-all hover:text-white" style={{ color: "#6b7280" }}>← Back to Kids</button>
+          </div>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-4 py-12">
+
+          {/* ── Success header ── */}
+          <div className="text-center mb-10">
+            <div style={{ animation: "successPop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards", display: "inline-block" }}>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto mb-5"
+                style={{ background: isFullyPaid ? "rgba(34,197,94,0.12)" : "rgba(74,58,255,0.12)", border: `2px solid ${isFullyPaid ? "rgba(34,197,94,0.3)" : `${BRAND}40`}`, boxShadow: `0 0 60px ${isFullyPaid ? "rgba(34,197,94,0.2)" : `${BRAND}25`}` }}>
+                {isFullyPaid ? "🎉" : "✅"}
+              </div>
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>
+            <h1 className="text-4xl font-bold text-white fade-up-1" style={{ fontFamily: "Poppins, sans-serif" }}>
               {isFullyPaid ? "You're all set!" : "Payment received!"}
             </h1>
-            <p className="text-slate-500 mt-2">
+            <p className="text-lg mt-3 fade-up-1" style={{ color: "#9ca3af" }}>
               {isFullyPaid
-                ? `${enrollment.student_name}'s enrollment is fully confirmed.`
-                : `Payment ${enrollment.installments_paid} of ${enrollment.total_installments} received for ${enrollment.student_name}.`}
+                ? `${enrollment.student_name}'s enrollment is fully confirmed. Welcome to Learnexity! 🚀`
+                : `Payment ${enrollment.installments_paid} of ${enrollment.total_installments} confirmed for ${enrollment.student_name}.`}
             </p>
           </div>
 
-          {/* Main card */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+          {/* ── Email notice ── */}
+          <div className="mb-6 fade-up-1 flex items-center gap-3 px-5 py-4"
+            style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: `${BRAND}08`, border: `1px solid ${BRAND}25` }}>
+            <Mail className="w-5 h-5 flex-shrink-0" style={{ color: BRAND }} />
+            <p className="text-sm" style={{ color: "#d1d5db" }}>
+              <span className="font-bold text-white">Confirmation email sent</span> to <span style={{ color: BRAND }}>{enrollment.parent_email}</span>. Check your inbox (and spam folder).
+            </p>
+          </div>
 
-            {/* Course band */}
-            <div className="px-6 py-5 flex items-center gap-4" style={{ background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`, borderBottom: `1px solid ${color}20` }}>
-              <div className="text-4xl">{enrollment.course?.emoji ?? "📚"}</div>
-              <div>
-                <p className="font-bold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>{enrollment.course?.name}</p>
-                <p className="text-sm text-slate-500">
-                  {trackLabel(enrollment.chosen_track)} ·{" "}
-                  {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"} ·{" "}
-                  {enrollment.course?.duration_months} months
-                </p>
-              </div>
-            </div>
+          <div className="grid lg:grid-cols-5 gap-6 fade-up-2">
 
-            <div className="px-6 py-6 space-y-5">
-              {/* Student & parent */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Student</p>
-                  <p className="font-semibold text-slate-800">{enrollment.student_name}</p>
-                  <p className="text-xs text-slate-400">Age {enrollment.student_age}</p>
+            {/* ── Left: Course + Payment Summary ── */}
+            <div className="lg:col-span-3 space-y-4">
+
+              {/* Course card */}
+              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+                <div className="px-6 py-5 flex items-center gap-4"
+                  style={{ background: `linear-gradient(135deg, ${color}18 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="text-4xl" style={{ animation: "kidsFloat 4s ease-in-out infinite" }}>{enrollment.course?.emoji ?? "📚"}</div>
+                  <div>
+                    <p className="font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>{enrollment.course?.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
+                      {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"} · {enrollment.course?.duration_months} months
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Parent</p>
-                  <p className="font-semibold text-slate-800">{enrollment.parent_name}</p>
-                  <p className="text-xs text-slate-400">{enrollment.parent_email}</p>
-                </div>
-              </div>
 
-              <hr className="border-slate-100" />
-
-              {/* Payment summary */}
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3">Payment Summary</p>
-                <div className="space-y-2 text-sm">
-                  {lastPayment && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Paid now</span>
-                      <span className="font-bold text-slate-800">{fmt(lastPayment.amount, lastPayment.currency)}</span>
+                <div className="px-6 py-5 space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Student</p>
+                      <p className="font-bold text-sm text-white">{enrollment.student_name}</p>
+                      <p className="text-xs" style={{ color: "#6b7280" }}>Age {enrollment.student_age}</p>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Total paid so far</span>
-                    <span className="font-bold text-green-600">{fmt(enrollment.amount_paid, enrollment.currency)}</span>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Parent</p>
+                      <p className="font-bold text-sm text-white">{enrollment.parent_name}</p>
+                      <p className="text-xs truncate" style={{ color: "#6b7280" }}>{enrollment.parent_email}</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Total course fee</span>
-                    <span className="font-semibold text-slate-600">{fmt(enrollment.total_price, enrollment.currency)}</span>
-                  </div>
-                  {isPartial && (
-                    <>
-                      <div className="flex justify-between text-amber-600">
-                        <span>Remaining balance</span>
-                        <span className="font-bold">{fmt(enrollment.remaining_balance, enrollment.currency)}</span>
+
+                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+                  {/* Payment summary */}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Payment Summary</p>
+                    <div className="space-y-2 text-sm">
+                      {lastPayment && (
+                        <div className="flex justify-between">
+                          <span style={{ color: "#9ca3af" }}>Paid now</span>
+                          <span className="font-bold text-white">{fmt(lastPayment.amount, lastPayment.currency)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span style={{ color: "#9ca3af" }}>Total paid so far</span>
+                        <span className="font-bold" style={{ color: "#22c55e" }}>{fmt(enrollment.amount_paid, enrollment.currency)}</span>
                       </div>
-                      <div className="flex justify-between text-amber-600">
-                        <span>Next payment due</span>
-                        <span className="font-semibold">
-                          {enrollment.next_payment_due
-                            ? new Date(enrollment.next_payment_due).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-                            : "~1 month from now"}
+                      <div className="flex justify-between">
+                        <span style={{ color: "#9ca3af" }}>Total course fee</span>
+                        <span className="font-semibold" style={{ color: "#d1d5db" }}>{fmt(enrollment.total_price, enrollment.currency)}</span>
+                      </div>
+                      {isPartial && (
+                        <>
+                          <div className="flex justify-between" style={{ color: BRAND_ORANGE }}>
+                            <span>Remaining balance</span>
+                            <span className="font-bold">{fmt(enrollment.remaining_balance, enrollment.currency)}</span>
+                          </div>
+                          <div className="flex justify-between" style={{ color: BRAND_ORANGE }}>
+                            <span>Next payment due</span>
+                            <span className="font-semibold">
+                              {enrollment.next_payment_due
+                                ? new Date(enrollment.next_payment_due).toLocaleDateString("en-GB", { day: "numeric", month: "long" })
+                                : "~1 month from now"}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <span style={{ color: "#9ca3af" }}>Status</span>
+                        <span className="font-bold text-xs px-3 py-1 rounded-full"
+                          style={{ background: isFullyPaid ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)", color: isFullyPaid ? "#22c55e" : BRAND_ORANGE }}>
+                          {isFullyPaid ? "✓ Fully Paid" : `${enrollment.installments_paid} of ${enrollment.total_installments} paid`}
                         </span>
                       </div>
-                    </>
-                  )}
-                  <div className="flex justify-between pt-1 border-t border-slate-100 mt-1">
-                    <span className="text-slate-500">Status</span>
-                    <span
-                      className="font-bold px-3 py-0.5 rounded-full text-xs"
-                      style={{ background: isFullyPaid ? "#dcfce7" : "#fff7ed", color: isFullyPaid ? "#16a34a" : "#ea580c" }}
-                    >
-                      {isFullyPaid ? "Fully Paid" : `${enrollment.installments_paid} of ${enrollment.total_installments} paid`}
-                    </span>
+                    </div>
                   </div>
+
+                  {/* Transaction ref */}
+                  {lastPayment?.transaction_id && (
+                    <div className="px-4 py-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Transaction Reference</p>
+                      <p className="text-xs font-mono break-all" style={{ color: "#6b7280" }}>{lastPayment.transaction_id}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right: What happens next + actions ── */}
+            <div className="lg:col-span-2 space-y-4 fade-up-3">
+
+              {/* What happens next */}
+              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+                <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>What Happens Next</p>
+                </div>
+                <div className="px-6 py-5 space-y-5">
+                  {[
+                    {
+                      icon: <Mail className="w-5 h-5" />,
+                      iconColor: BRAND,
+                      title: "Email sent",
+                      desc: `Receipt sent to ${enrollment.parent_email}`,
+                      done: true,
+                    },
+                    {
+                      icon: <Phone className="w-5 h-5" />,
+                      iconColor: BRAND_ORANGE,
+                      title: isFullyPaid ? "We'll contact you within 24h" : "Next payment reminder",
+                      desc: isFullyPaid
+                        ? `Scheduling sessions for ${enrollment.student_name}`
+                        : "You'll be reminded before your next payment",
+                      done: false,
+                    },
+                    {
+                      icon: <Rocket className="w-5 h-5" />,
+                      iconColor: "#22c55e",
+                      title: "Sessions begin",
+                      desc: `${enrollment.student_name} starts the programme`,
+                      done: false,
+                    },
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: step.done ? `${step.iconColor}20` : "rgba(255,255,255,0.04)", border: `1px solid ${step.done ? `${step.iconColor}40` : "rgba(255,255,255,0.08)"}`, color: step.iconColor }}>
+                        {step.icon}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-white">{step.title}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>{step.desc}</p>
+                      </div>
+                      {step.done && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 ml-auto" style={{ color: "#22c55e" }} />}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Transaction reference */}
-              {lastPayment?.transaction_id && (
-                <div className="bg-slate-50 rounded-xl p-3">
-                  <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Transaction Reference</p>
-                  <p className="text-xs font-mono text-slate-600 break-all">{lastPayment.transaction_id}</p>
-                </div>
-              )}
+              {/* Actions */}
+              <div className="space-y-3">
+                {isPartial && (
+                  <button onClick={() => router.push(`/kids/payment/${enrollment.id}`)}
+                    className="w-full py-4 font-bold text-base text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: color, boxShadow: `0 10px 32px ${color}44`, fontFamily: "Poppins, sans-serif" }}>
+                    View Payment Schedule <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+                <button onClick={() => router.push("/kids")}
+                  className="w-full py-4 font-bold text-sm text-white transition-all hover:bg-white/5"
+                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>
+                  ← Back to Kids Programme
+                </button>
+              </div>
+
+              {/* Support */}
+              <p className="text-center text-xs" style={{ color: "#4b5563" }}>
+                Questions?{" "}
+                <a href="mailto:info@learnexity.org" className="underline transition-all hover:text-white" style={{ color: BRAND }}>
+                  info@learnexity.org
+                </a>
+              </p>
             </div>
           </div>
-
-          {/* What happens next */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 mb-6">
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-4">What Happens Next</p>
-            <div className="space-y-4">
-              {[
-                {
-                  icon: "📧",
-                  title: "Confirmation email sent",
-                  desc: `We've sent a receipt to ${enrollment.parent_email}`,
-                  done: true,
-                },
-                {
-                  icon: "📞",
-                  title: isFullyPaid ? "We'll be in touch within 24 hours" : "Next payment reminder",
-                  desc: isFullyPaid
-                    ? "Our team will contact you to schedule sessions for " + enrollment.student_name
-                    : `You'll receive an email reminder before your next payment is due in ~1 month`,
-                  done: false,
-                },
-                {
-                  icon: "🚀",
-                  title: "Sessions begin",
-                  desc: `${enrollment.student_name} starts the ${enrollment.course?.name} programme`,
-                  done: false,
-                },
-              ].map((step, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0" style={{ background: step.done ? "#dcfce7" : "#f1f5f9" }}>
-                    {step.icon}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 text-sm">{step.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="space-y-3">
-            {isPartial && (
-              <button
-                onClick={() => router.push(`/kids/payment/${enrollment.id}`)}
-                className="w-full py-4 rounded-2xl text-white font-bold transition-all hover:scale-[1.01]"
-                style={{ background: color, fontFamily: "Poppins, sans-serif" }}
-              >
-                View Payment Schedule →
-              </button>
-            )}
-            <button
-              onClick={() => router.push("/kids")}
-              className="w-full py-4 rounded-2xl font-bold text-slate-700 border-2 border-slate-200 hover:bg-slate-50 transition-all"
-            >
-              Back to Kids Programme
-            </button>
-          </div>
-
-          {/* Support line */}
-          <p className="text-center text-xs text-slate-400 mt-6">
-            Questions? Email us at{" "}
-            <a href="mailto:info@learnexity.org" className="underline" style={{ color: BRAND }}>info@learnexity.org</a>
-          </p>
         </div>
       </div>
     </>

@@ -16,7 +16,7 @@ const MONTHLY_1ON1     = 200;   // USD per month, one-on-one
 const MONTHS           = 3;
 const FULL_GROUP       = MONTHLY_GROUP * MONTHS;   // 300
 const FULL_1ON1        = MONTHLY_1ON1 * MONTHS;    // 600
-const ONETIME_DISCOUNT = 5;                         // %
+const ONETIME_DISCOUNT = 12;                         // %
 const DISC_GROUP       = Math.round(FULL_GROUP  * (1 - ONETIME_DISCOUNT / 100)); // 285
 const DISC_1ON1        = Math.round(FULL_1ON1   * (1 - ONETIME_DISCOUNT / 100)); // 570
 
@@ -233,7 +233,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
           <p className="text-gray-500 text-sm mt-1 mb-6">
             {step === 1 ? "Tell us about your child so we can personalise the experience."
               : step === 2 ? "Pick a specialisation track and your preferred session format. Digital Foundations is always included."
-              : "Choose how you'd like to pay. Pay in full and save 5%."}
+              : "Choose how you'd like to pay. Pay in full and save 12%."}
           </p>
         </div>
 
@@ -566,30 +566,6 @@ const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; o
         ))}
       </ul>
 
-      {/* Pricing summary */}
-      <div className="p-3 text-xs" style={{ borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-600">
-          Pricing · 3 months <span className="text-green-400 ml-1">· {ONETIME_DISCOUNT}% off upfront</span>
-        </p>
-        {/* <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">👥 Mini Group (3–5 kids)</span>
-            <div className="text-right">
-              <span className="font-bold" style={{ color: BRAND }}>${MONTHLY_GROUP}/mo</span>
-              <span className="text-gray-600 ml-1 text-[10px]">= ${FULL_GROUP} total</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">🎯 One-on-One</span>
-            <div className="text-right">
-              <span className="font-bold text-white">${MONTHLY_1ON1}/mo</span>
-              <span className="text-gray-600 ml-1 text-[10px]">= ${FULL_1ON1} total</span>
-            </div>
-          </div>
-        </div> */}
-        <p className="text-[10px] text-gray-600 mt-2">Includes Digital Foundations (month 1)</p>
-      </div>
-
       <div className="flex flex-col gap-2 mt-auto pt-2">
         <button onClick={() => onEnroll(track.name)}
           className="w-full py-3 font-bold text-sm text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
@@ -730,27 +706,6 @@ export default function Kids() {
                   Enroll your child in a structured 3-month tech program with expert mentorship. Start with digital foundations, then advance into their chosen specialization.
                 </p>
 
-                {/* Pricing display in hero */}
-                {/* <div className="mt-8 flex flex-col sm:flex-row gap-3 items-start">
-                  <div className="flex gap-3">
-                    <div className="px-3 py-2" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(15,15,15,0.9)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(8px)" }}>
-                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">👥 Mini Group</p>
-                      <p className="text-2xl font-bold text-white">{fmt(heroGroup, currency)}<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                      <p className="text-xs text-gray-600 mt-0.5">{fmt(heroGroup * MONTHS, currency)} total · 3 months</p>
-                    </div>
-                    <div className="px-3 py-2" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(15,15,15,0.9)", border: `1px solid ${BRAND}40`, backdropFilter: "blur(8px)" }}>
-                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">🎯 One-on-One</p>
-                      <p className="text-2xl font-bold" style={{ color: BRAND }}>{fmt(hero1on1, currency)}<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                      <p className="text-xs text-gray-600 mt-0.5">{fmt(hero1on1 * MONTHS, currency)} total · 3 months</p>
-                    </div>
-                  </div>
-                </div> */}
-
-                <p className="text-xs mt-3" style={{ color: "rgba(74,58,255,0.8)" }}>
-                  <Sparkles className="inline w-3 h-3 mr-1" />
-                  Pay in full and save {ONETIME_DISCOUNT}% — or pay monthly, no pressure.
-                </p>
-
                 <div className="mt-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <CTAButton onClick={() => openEnroll()} />
                   <div className="flex items-center gap-3 px-2">
@@ -881,16 +836,6 @@ export default function Kids() {
             </div>
           </section>
 
-          {/* ── CTA between How It Works & Tracks ── */}
-          {/* <section className="px-6">
-            <SectionCTA
-              onEnroll={() => openEnroll()}
-              headline="Pick a track and start your child's 3-month journey"
-              sub={` $${MONTHLY_GROUP}/month for mini groups · $${MONTHLY_1ON1}/month for one-on-one`}
-              cta="Choose a Track & Enroll"
-            />
-          </section> */}
-
           {/* ── Specialisation Tracks ─────────────────────────────────────── */}
           <section className="py-20 px-6">
             <div className="max-w-[1230px] mx-auto">
@@ -987,30 +932,6 @@ export default function Kids() {
               </div>
             </div>
           </section>
-
-          {/* ── Final CTA Section ─────────────────────────────────────────── */}
-          {/* <section className="py-24 px-6" style={{ background: `linear-gradient(135deg, ${BRAND}12 0%, rgba(245,158,11,0.06) 100%)`, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest px-4 py-1.5" style={{ borderRadius: "2rem", background: `${BRAND}18`, color: BRAND, border: `1px solid ${BRAND}30` }}>
-                <Star className="w-3 h-3" /> Limited Spots Available
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                Your Child's Digital Journey Starts Here
-              </h2>
-              <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                The beginner friendly. No Experience required. A skill they'll carry for life.<br />
-                From <span className="text-white font-semibold">${MONTHLY_GROUP}/month</span> for mini groups · <span className="text-white font-semibold">${MONTHLY_1ON1}/month</span> for one-on-one.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <CTAButton onClick={() => openEnroll()} label="Start Their Journey Today" />
-                <CTAButton onClick={() => setResumeOpen(true)} label="Resume Enrollment" secondary />
-              </div>
-              <p className="text-xs text-gray-600 mt-6 flex items-center justify-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-                Beginner-friendly · No experience required · Cancel anytime on monthly plan
-              </p>
-            </div>
-          </section> */}
 
         </div>
 

@@ -1,8 +1,24 @@
+/**
+ * pages/kids/payment/[enrollmentId].tsx
+ *
+ * Dark-themed payment page matching the kids.tsx design language.
+ * Handles both Stripe (USD) and Paystack (NGN) payments.
+ * Supports one-time and installment payment flows.
+ */
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { ArrowRight, Shield, Clock, CheckCircle } from "lucide-react";
 
-interface PaymentInfo { number: number; amount: number; currency: string; paid_at: string; transaction_id: string; gateway: string; }
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BRAND        = "#4A3AFF";
+const BRAND_ORANGE = "#f59e0b";
+
+interface PaymentInfo {
+  number: number; amount: number; currency: string;
+  paid_at: string; transaction_id: string; gateway: string;
+}
+
 interface Enrollment {
   id: number; resume_token: string; parent_name: string; parent_email: string;
   student_name: string; student_age: number;
@@ -19,252 +35,295 @@ interface Enrollment {
   payments: PaymentInfo[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const BRAND   = "#4A3AFF";
-
 function fmt(amount: number, currency: string): string {
   if (currency === "NGN") return `₦${amount.toLocaleString("en-NG")}`;
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
 }
+
 function trackLabel(slug: string): string {
-  const map: Record<string, string> = { digital_foundations: "Digital Foundations", creative_design: "Creative Design", game_builder: "Game Builder", media_creator: "Media Creator" };
+  const map: Record<string, string> = {
+    digital_foundations: "Digital Foundations",
+    creative_design: "Creative Design",
+    game_builder: "Game Builder",
+    media_creator: "Media Creator",
+  };
   return map[slug] ?? slug.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default function KidsPaymentPage() {
   const router = useRouter();
   const { enrollmentId, cancelled } = router.query;
-  const [enrollment, setEnrollment]     = useState<Enrollment | null>(null);
-  const [loading, setLoading]           = useState(true);
-  const [paying, setPaying]             = useState(false);
-  const [error, setError]               = useState("");
+
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [paying, setPaying]         = useState(false);
+  const [error, setError]           = useState("");
   const [cancelledMsg, setCancelledMsg] = useState(false);
 
-  // ── Page mount ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    console.log("[KidsPaymentPage] Mounted | API_URL →", API_URL);
-    console.log("[KidsPaymentPage] URL query params →", router.query);
-  }, []);
-
-  // ── Watch query params ──────────────────────────────────────────────────────
-  useEffect(() => {
-    console.log("[KidsPaymentPage] enrollmentId →", enrollmentId);
-  }, [enrollmentId]);
-
-  useEffect(() => {
-    if (cancelled === "1") {
-      console.log("[KidsPaymentPage] Payment was cancelled by user — showing cancellation banner");
-      setCancelledMsg(true);
-    }
+    if (cancelled === "1") setCancelledMsg(true);
   }, [cancelled]);
 
-  // ── Load enrollment ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!enrollmentId) { console.log("[KidsPaymentPage] No enrollmentId yet — waiting"); return; }
-    console.log(`[KidsPaymentPage] Fetching enrollment ${enrollmentId} from ${API_URL}/api/kids/enrollment/${enrollmentId}`);
+    if (!enrollmentId) return;
     setLoading(true);
     fetch(`${API_URL}/api/kids/enrollment/${enrollmentId}`)
-      .then((r) => {
-        console.log("[KidsPaymentPage] Enrollment fetch status →", r.status);
-        return r.json();
-      })
+      .then((r) => r.json())
       .then((d) => {
-        console.log("[KidsPaymentPage] Enrollment data →", d);
-        if (d.enrollment) {
-          console.log("[KidsPaymentPage] Enrollment loaded →", {
-            id:               d.enrollment.id,
-            student:          d.enrollment.student_name,
-            course:           d.enrollment.course?.name,
-            enrollmentType:   d.enrollment.enrollment_type,
-            paymentType:      d.enrollment.payment_type,
-            paymentStatus:    d.enrollment.payment_status,
-            currency:         d.enrollment.currency,
-            totalPrice:       d.enrollment.total_price,
-            amountPaid:       d.enrollment.amount_paid,
-            remaining:        d.enrollment.remaining_balance,
-            nextAmount:       d.enrollment.next_installment_amount,
-            installmentsPaid: d.enrollment.installments_paid,
-            totalInstallments: d.enrollment.total_installments,
-            hasAccess:        d.enrollment.has_access,
-          });
-          setEnrollment(d.enrollment);
-        } else {
-          console.warn("[KidsPaymentPage] No enrollment in response →", d);
-          setError("Enrollment not found.");
-        }
+        if (d.enrollment) setEnrollment(d.enrollment);
+        else setError("Enrollment not found.");
       })
-      .catch((e) => {
-        console.error("[KidsPaymentPage] Enrollment fetch failed →", e.message, e);
-        setError("Could not load enrollment. Please check the link or try again.");
-      })
-      .finally(() => {
-        setLoading(false);
-        console.log("[KidsPaymentPage] Enrollment fetch complete — loading off");
-      });
+      .catch(() => setError("Could not load enrollment. Please check the link or try again."))
+      .finally(() => setLoading(false));
   }, [enrollmentId]);
 
-  // ── State change tracking ───────────────────────────────────────────────────
-  useEffect(() => { console.log("[KidsPaymentPage] enrollment state →", enrollment ? `id:${enrollment.id} status:${enrollment.payment_status}` : "null"); }, [enrollment]);
-  useEffect(() => { console.log("[KidsPaymentPage] loading →", loading); }, [loading]);
-  useEffect(() => { console.log("[KidsPaymentPage] paying →", paying); }, [paying]);
-  useEffect(() => { if (error) console.error("[KidsPaymentPage] error →", error); }, [error]);
-
-  // ── Handle payment ──────────────────────────────────────────────────────────
   const handlePay = async () => {
-    if (!enrollment) { console.warn("[KidsPaymentPage] handlePay called but no enrollment loaded"); return; }
-    console.log("[KidsPaymentPage] handlePay fired →", {
-      enrollmentId:  enrollment.id,
-      currency:      enrollment.currency,
-      gateway:       enrollment.currency === "USD" ? "Stripe" : "Paystack",
-      amount:        fmt(enrollment.next_installment_amount, enrollment.currency),
-      paymentType:   enrollment.payment_type,
-      installmentNo: enrollment.installments_paid + 1,
-    });
-    setPaying(true); setError("");
+    if (!enrollment) return;
+    setPaying(true);
+    setError("");
     try {
       if (enrollment.currency === "USD") {
-        console.log(`[KidsPaymentPage] POST ${API_URL}/api/kids/stripe/checkout`);
         const res  = await fetch(`${API_URL}/api/kids/stripe/checkout`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ enrollment_id: enrollment.id }),
         });
         const data = await res.json();
-        console.log("[KidsPaymentPage] Stripe checkout response →", { status: res.status, ok: res.ok, url: data.url, sessionId: data.session_id, error: data.error });
         if (!res.ok) throw new Error(data.error || "Stripe payment failed to initialise");
-        console.log("[KidsPaymentPage] Redirecting to Stripe →", data.url);
         window.location.href = data.url;
       } else {
-        console.log(`[KidsPaymentPage] POST ${API_URL}/api/kids/paystack/initialize`);
         const res  = await fetch(`${API_URL}/api/kids/paystack/initialize`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ enrollment_id: enrollment.id }),
         });
         const data = await res.json();
-        console.log("[KidsPaymentPage] Paystack initialize response →", { status: res.status, ok: res.ok, authUrl: data.authorization_url, reference: data.reference, error: data.error });
         if (!res.ok) throw new Error(data.error || "Paystack payment failed to initialise");
-        console.log("[KidsPaymentPage] Redirecting to Paystack →", data.authorization_url);
         window.location.href = data.authorization_url;
       }
     } catch (e: any) {
-      console.error("[KidsPaymentPage] Payment initiation error →", e.message, e);
       setError(e.message || "Something went wrong. Please try again.");
       setPaying(false);
     }
   };
 
-  // ── Loading / error states ──────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
-    console.log("[KidsPaymentPage] Rendering loading state");
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
-          <p className="text-slate-500 text-sm">Loading your enrollment…</p>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "#080808" }}>
+        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+        <div className="relative w-16 h-16 mb-6">
+          <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: BRAND, borderRightColor: `${BRAND}44` }} />
+          <div className="absolute inset-2 rounded-full" style={{ background: `${BRAND}15` }} />
         </div>
+        <p className="text-sm font-semibold" style={{ color: "#9ca3af", fontFamily: "Outfit, sans-serif" }}>Loading your enrollment…</p>
       </div>
     );
   }
 
   if (error && !enrollment) {
-    console.log("[KidsPaymentPage] Rendering error state →", error);
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-lg p-8 text-center">
-          <div className="text-5xl mb-4">😔</div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Enrollment Not Found</h2>
-          <p className="text-slate-500 text-sm mb-6">{error}</p>
-          <button onClick={() => { console.log("[KidsPaymentPage] Error state → back to kids"); router.push("/kids"); }} className="px-6 py-3 rounded-xl text-white font-bold text-sm" style={{ background: BRAND }}>Back to Kids Page</button>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#080808" }}>
+        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+        <div className="text-6xl mb-4">😔</div>
+        <h2 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>Enrollment Not Found</h2>
+        <p className="text-gray-500 text-sm mb-8 max-w-sm text-center">{error}</p>
+        <button onClick={() => router.push("/kids")}
+          className="px-8 py-4 font-bold text-white text-sm transition-all hover:opacity-90"
+          style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Outfit, sans-serif" }}>
+          Back to Kids Programme
+        </button>
       </div>
     );
   }
 
-  if (!enrollment) { console.log("[KidsPaymentPage] No enrollment yet — rendering null"); return null; }
+  if (!enrollment) return null;
 
   const isComplete  = enrollment.payment_status === "completed";
+  const isPartial   = enrollment.payment_status === "partial";
   const color       = enrollment.course?.color ?? BRAND;
-  const paidPercent = enrollment.total_price > 0 ? Math.min(100, (enrollment.amount_paid / enrollment.total_price) * 100) : 0;
-
-  console.log("[KidsPaymentPage] Rendering payment page →", { isComplete, paidPercent: paidPercent.toFixed(1) + "%", color });
+  const paidPercent = enrollment.total_price > 0
+    ? Math.min(100, (enrollment.amount_paid / enrollment.total_price) * 100)
+    : 0;
 
   return (
     <>
       <Head><title>Kids Payment — {enrollment.course?.name ?? "Learnexity"}</title></Head>
-      <div className="min-h-screen bg-slate-50" style={{ fontFamily: "Outfit, sans-serif" }}>
-        <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <button onClick={() => { console.log("[KidsPaymentPage] Back to kids clicked"); router.push("/kids"); }} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1">← Back to Kids</button>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Secure Payment</p>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-400" /><span className="text-xs text-slate-500">SSL Protected</span></div>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #080808; }
+        @keyframes kidsFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        .fade-up { animation: fadeUp 0.5s ease forwards; }
+        .fade-up-delay { animation: fadeUp 0.5s ease 0.15s forwards; opacity: 0; }
+        .fade-up-delay-2 { animation: fadeUp 0.5s ease 0.3s forwards; opacity: 0; }
+      `}</style>
+
+      <div style={{ minHeight: "100vh", background: "#080808", fontFamily: "Outfit, sans-serif", color: "#fff" }}>
+
+        {/* ── Top Bar ── */}
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 40 }}>
+          <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+            <button onClick={() => router.push("/kids")}
+              className="flex items-center gap-2 text-sm font-semibold transition-all hover:text-white"
+              style={{ color: "#6b7280" }}>
+              ← Back to Kids
+            </button>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4" style={{ color: "#22c55e" }} />
+              <span className="text-xs font-bold" style={{ color: "#6b7280" }}>SSL Encrypted · Secure Payment</span>
+            </div>
+          </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-10">
+        {/* ── Hero accent ── */}
+        <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
+          <div style={{ position: "absolute", top: "10%", right: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`, filter: "blur(80px)" }} />
+          <div style={{ position: "absolute", bottom: "5%", left: "-5%", width: "400px", height: "400px", borderRadius: "50%", background: `radial-gradient(circle, ${BRAND}12 0%, transparent 70%)`, filter: "blur(80px)" }} />
+        </div>
+
+        <div className="relative max-w-3xl mx-auto px-4 py-10" style={{ zIndex: 1 }}>
+
+          {/* ── Cancelled Banner ── */}
           {cancelledMsg && (
-            <div className="mb-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm flex items-center gap-2">
-              <span>⚠️</span> Payment was cancelled. You can try again whenever you're ready.
-            </div>
-          )}
-          {isComplete && (
-            <div className="mb-6 px-4 py-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl">✅</div>
-              <div><p className="font-bold text-green-800 text-sm">This enrollment is fully paid!</p><p className="text-green-600 text-xs mt-0.5">Our team will reach out within 24 hours with session details.</p></div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-6">
-            <div className="px-6 py-6" style={{ background: `linear-gradient(135deg, ${color}18 0%, ${color}06 100%)`, borderBottom: `1px solid ${color}22` }}>
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">{enrollment.course?.emoji ?? "📚"}</div>
-                <div className="flex-1">
-                  <h1 className="text-xl font-bold text-slate-900" style={{ fontFamily: "Poppins, sans-serif" }}>{enrollment.course?.name ?? "Course"}</h1>
-                  <p className="text-sm text-slate-500 mt-0.5">{trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"}</p>
-                </div>
-                <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: isComplete ? "#dcfce7" : enrollment.payment_status === "partial" ? "#fff7ed" : "#f1f5f9", color: isComplete ? "#16a34a" : enrollment.payment_status === "partial" ? "#ea580c" : "#64748b" }}>
-                  {isComplete ? "Paid" : enrollment.payment_status === "partial" ? "Partial" : "Pending"}
-                </span>
-              </div>
-            </div>
-
-            <div className="px-6 py-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Student</p><p className="font-semibold text-slate-800">{enrollment.student_name}, age {enrollment.student_age}</p></div>
-                <div><p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Parent</p><p className="font-semibold text-slate-800">{enrollment.parent_name}</p></div>
-              </div>
-              <hr className="border-slate-100" />
+            <div className="mb-6 px-5 py-4 flex items-center gap-3 fade-up"
+              style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(245,158,11,0.08)", border: `1px solid ${BRAND_ORANGE}30` }}>
+              <span className="text-xl">⚠️</span>
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3">Payment Progress</p>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 mb-3"><div className="h-full rounded-full transition-all duration-500" style={{ width: `${paidPercent}%`, background: isComplete ? "#22c55e" : color }} /></div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm"><span className="text-slate-500">Total Course Fee</span><span className="font-bold text-slate-800">{fmt(enrollment.total_price, enrollment.currency)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-slate-500">Amount Paid</span><span className="font-bold text-green-600">{fmt(enrollment.amount_paid, enrollment.currency)}</span></div>
-                  {!isComplete && (
-                    <div className="flex justify-between text-sm font-bold border-t border-slate-100 pt-2">
-                      <span className="text-slate-700">{enrollment.payment_type === "installment" ? `Payment ${enrollment.installments_paid + 1} of ${enrollment.total_installments}` : "Amount Due Now"}</span>
-                      <span style={{ color }}>{fmt(enrollment.next_installment_amount, enrollment.currency)}</span>
+                <p className="font-bold text-sm" style={{ color: BRAND_ORANGE }}>Payment Cancelled</p>
+                <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>No worries — your enrollment is saved. You can try again whenever you're ready.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Fully Paid Banner ── */}
+          {isComplete && (
+            <div className="mb-6 px-5 py-4 flex items-center gap-3 fade-up"
+              style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}>
+              <CheckCircle className="w-6 h-6 flex-shrink-0" style={{ color: "#22c55e" }} />
+              <div>
+                <p className="font-bold text-sm" style={{ color: "#22c55e" }}>Enrollment Fully Paid!</p>
+                <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>Our team will reach out within 24 hours with session details for {enrollment.student_name}.</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid lg:grid-cols-5 gap-6">
+
+            {/* ── Left: Course info + Progress ── */}
+            <div className="lg:col-span-3 space-y-4">
+
+              {/* Course Card */}
+              <div className="fade-up" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+                <div className="px-6 py-5 flex items-center gap-4"
+                  style={{ background: `linear-gradient(135deg, ${color}18 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="text-4xl" style={{ animation: "kidsFloat 4s ease-in-out infinite" }}>{enrollment.course?.emoji ?? "📚"}</div>
+                  <div className="flex-1">
+                    <h1 className="text-lg font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>
+                      {enrollment.course?.name ?? "Course"}
+                    </h1>
+                    <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
+                      {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold px-3 py-1 rounded-full"
+                    style={{
+                      background: isComplete ? "rgba(34,197,94,0.12)" : isPartial ? "rgba(245,158,11,0.12)" : "rgba(255,255,255,0.06)",
+                      color: isComplete ? "#22c55e" : isPartial ? BRAND_ORANGE : "#9ca3af",
+                      border: `1px solid ${isComplete ? "rgba(34,197,94,0.25)" : isPartial ? `${BRAND_ORANGE}30` : "rgba(255,255,255,0.1)"}`,
+                    }}>
+                    {isComplete ? "✓ Paid" : isPartial ? "Partial" : "Pending"}
+                  </span>
+                </div>
+
+                <div className="px-6 py-5 space-y-5">
+                  {/* Student / Parent */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Student</p>
+                      <p className="font-bold text-sm text-white">{enrollment.student_name}</p>
+                      <p className="text-xs" style={{ color: "#6b7280" }}>Age {enrollment.student_age}</p>
                     </div>
-                  )}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Parent</p>
+                      <p className="font-bold text-sm text-white">{enrollment.parent_name}</p>
+                      <p className="text-xs truncate" style={{ color: "#6b7280" }}>{enrollment.parent_email}</p>
+                    </div>
+                  </div>
+
+                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+
+                  {/* Payment progress */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>Payment Progress</p>
+                      <span className="text-xs font-bold" style={{ color }}>{paidPercent.toFixed(0)}%</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${paidPercent}%`, background: isComplete ? "#22c55e" : `linear-gradient(90deg, ${color}, ${BRAND_ORANGE})` }} />
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: "#6b7280" }}>Total Course Fee</span>
+                        <span className="font-bold text-white">{fmt(enrollment.total_price, enrollment.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: "#6b7280" }}>Amount Paid</span>
+                        <span className="font-bold" style={{ color: "#22c55e" }}>{fmt(enrollment.amount_paid, enrollment.currency)}</span>
+                      </div>
+                      {!isComplete && (
+                        <div className="flex justify-between text-sm font-bold pt-2"
+                          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                          <span className="text-white">
+                            {enrollment.payment_type === "installment"
+                              ? `Payment ${enrollment.installments_paid + 1} of ${enrollment.total_installments}`
+                              : "Due Now"}
+                          </span>
+                          <span style={{ color }}>{fmt(enrollment.next_installment_amount, enrollment.currency)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Installment Schedule */}
               {enrollment.payment_type === "installment" && (
-                <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3">Payment Schedule</p>
-                  <div className="space-y-2">
+                <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+                  <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>Payment Schedule</p>
+                  </div>
+                  <div className="px-6 py-4 space-y-3">
                     {Array.from({ length: enrollment.total_installments }).map((_, i) => {
                       const paid      = i < enrollment.installments_paid;
                       const isCurrent = i === enrollment.installments_paid && !isComplete;
                       const amount    = enrollment.total_price / enrollment.total_installments;
                       const paidTxn   = enrollment.payments[i];
-                      console.log(`[KidsPaymentPage] Installment row ${i + 1} →`, { paid, isCurrent, amount: fmt(amount, enrollment.currency), txn: paidTxn?.transaction_id ?? "none" });
                       return (
-                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: paid ? "#f0fdf4" : isCurrent ? `${color}08` : "#f8fafc", border: `1px solid ${paid ? "#bbf7d0" : isCurrent ? `${color}33` : "#e2e8f0"}` }}>
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: paid ? "#22c55e" : isCurrent ? color : "#cbd5e1", color: "#fff" }}>{paid ? "✓" : i + 1}</div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-800">Payment {i + 1} — {fmt(amount, enrollment.currency)}</p>
-                            {paid && paidTxn && <p className="text-xs text-slate-400">{new Date(paidTxn.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>}
-                            {isCurrent && <p className="text-xs font-bold" style={{ color }}>Due now</p>}
-                            {!paid && !isCurrent && enrollment.next_payment_due && i === enrollment.installments_paid + 1 && <p className="text-xs text-slate-400">Due ~{new Date(enrollment.next_payment_due).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</p>}
+                        <div key={i} className="flex items-center gap-3 px-4 py-3 transition-all"
+                          style={{
+                            borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem",
+                            background: paid ? "rgba(34,197,94,0.06)" : isCurrent ? `${color}0a` : "rgba(255,255,255,0.03)",
+                            border: `1px solid ${paid ? "rgba(34,197,94,0.2)" : isCurrent ? `${color}30` : "rgba(255,255,255,0.06)"}`,
+                          }}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ background: paid ? "#22c55e" : isCurrent ? color : "rgba(255,255,255,0.08)", color: "#fff" }}>
+                            {paid ? "✓" : i + 1}
                           </div>
-                          <span className="text-xs font-bold" style={{ color: paid ? "#22c55e" : isCurrent ? color : "#94a3b8" }}>{paid ? "Paid" : isCurrent ? "Pay now" : "Upcoming"}</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-white">Payment {i + 1} — {fmt(amount, enrollment.currency)}</p>
+                            {paid && paidTxn && (
+                              <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>
+                                {new Date(paidTxn.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} via {paidTxn.gateway}
+                              </p>
+                            )}
+                            {isCurrent && <p className="text-xs font-bold mt-0.5" style={{ color }}>Ready to pay</p>}
+                            {!paid && !isCurrent && <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>Upcoming</p>}
+                          </div>
+                          <span className="text-xs font-bold"
+                            style={{ color: paid ? "#22c55e" : isCurrent ? color : "#4b5563" }}>
+                            {paid ? "Paid" : isCurrent ? "Due now" : "Upcoming"}
+                          </span>
                         </div>
                       );
                     })}
@@ -272,29 +331,113 @@ export default function KidsPaymentPage() {
                 </div>
               )}
             </div>
+
+            {/* ── Right: Payment CTA ── */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)", position: "sticky", top: "80px" }}>
+                <div className="px-6 py-5" style={{ background: `linear-gradient(135deg, ${color}12 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#4b5563" }}>Order Summary</p>
+                  <div className="flex items-baseline gap-1 mt-2">
+                    <span className="text-3xl font-bold" style={{ color, fontFamily: "Poppins, sans-serif" }}>
+                      {fmt(enrollment.next_installment_amount, enrollment.currency)}
+                    </span>
+                    {enrollment.payment_type === "installment" && (
+                      <span className="text-xs" style={{ color: "#6b7280" }}>/ payment</span>
+                    )}
+                  </div>
+                  {enrollment.payment_type === "installment" && (
+                    <p className="text-xs mt-1" style={{ color: "#6b7280" }}>
+                      Payment {enrollment.installments_paid + 1} of {enrollment.total_installments}
+                    </p>
+                  )}
+                </div>
+
+                <div className="px-6 py-5 space-y-4">
+                  <div className="space-y-2 text-sm">
+                    {[
+                      { label: "🏗️ Digital Foundations", val: "Month 1 · included" },
+                      { label: `${enrollment.course?.emoji ?? "📚"} ${trackLabel(enrollment.chosen_track)}`, val: "Months 2–3" },
+                      { label: enrollment.session_type === "one_on_one" ? "🎯 One-on-One" : "👥 Mini Group", val: "Session format" },
+                    ].map((row) => (
+                      <div key={row.label} className="flex justify-between">
+                        <span style={{ color: "#9ca3af" }}>{row.label}</span>
+                        <span className="font-semibold" style={{ color: "#d1d5db" }}>{row.val}</span>
+                      </div>
+                    ))}
+                    <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+                    <div className="flex justify-between font-bold">
+                      <span className="text-white">Due Today</span>
+                      <span style={{ color }}>{fmt(enrollment.next_installment_amount, enrollment.currency)}</span>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="px-4 py-3 text-sm" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
+                      {error}
+                    </div>
+                  )}
+
+                  {!isComplete ? (
+                    <>
+                      <button onClick={handlePay} disabled={paying}
+                        className="w-full py-4 font-bold text-base text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                        style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: color, boxShadow: `0 10px 32px ${color}44`, fontFamily: "Poppins, sans-serif" }}>
+                        {paying ? (
+                          <>
+                            <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                            Redirecting…
+                          </>
+                        ) : (
+                          <>
+                            {enrollment.currency === "USD" ? "💳" : "🏦"} Pay {fmt(enrollment.next_installment_amount, enrollment.currency)}
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                      <p className="text-center text-xs" style={{ color: "#4b5563" }}>
+                        {enrollment.currency === "USD" ? "Powered by Stripe · Card payments" : "Powered by Paystack · Card & bank transfer"}
+                      </p>
+                    </>
+                  ) : (
+                    <button onClick={() => router.push("/kids")}
+                      className="w-full py-4 font-bold text-sm text-white transition-all hover:opacity-90"
+                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" }}>
+                      ← Back to Kids Programme
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Trust badges */}
+              <div className="fade-up-delay-2 grid grid-cols-2 gap-3">
+                {[
+                  { icon: "🔒", title: "Secure", desc: "SSL encrypted" },
+                  { icon: "↩️", title: "Safe", desc: "Verified payments" },
+                ].map((b) => (
+                  <div key={b.title} className="px-4 py-3 text-center"
+                    style={{ borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem", border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.03)" }}>
+                    <div className="text-xl mb-1">{b.icon}</div>
+                    <p className="text-xs font-bold text-white">{b.title}</p>
+                    <p className="text-xs" style={{ color: "#6b7280" }}>{b.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Installment reminder */}
+              {enrollment.payment_type === "installment" && !isComplete && (
+                <div className="fade-up-delay-2 px-4 py-4"
+                  style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: `${BRAND_ORANGE}08`, border: `1px solid ${BRAND_ORANGE}25` }}>
+                  <div className="flex items-start gap-2.5">
+                    <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND_ORANGE }} />
+                    <div>
+                      <p className="text-xs font-bold" style={{ color: BRAND_ORANGE }}>Bookmark this page</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>Return here for your next payment. No account needed — your enrollment is always saved.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-
-          {error && <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
-
-          {!isComplete ? (
-            <div className="space-y-3">
-              <button onClick={handlePay} disabled={paying}
-                className="w-full py-5 rounded-2xl text-white font-bold text-lg transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 flex items-center justify-center gap-3"
-                style={{ background: color, boxShadow: `0 10px 32px ${color}44`, fontFamily: "Poppins, sans-serif" }}>
-                {paying ? (<><div className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />Redirecting to payment…</>) : (<>{enrollment.currency === "USD" ? "💳" : "🏦"} Pay {fmt(enrollment.next_installment_amount, enrollment.currency)} {enrollment.payment_type === "installment" ? `(${enrollment.installments_paid + 1} of ${enrollment.total_installments})` : ""} →</>)}
-              </button>
-              <p className="text-center text-xs text-slate-400">{enrollment.currency === "USD" ? "Powered by Stripe · Card payments" : "Powered by Paystack · Card & bank transfer"} · SSL encrypted</p>
-            </div>
-          ) : (
-            <button onClick={() => { console.log("[KidsPaymentPage] Back to kids (fully paid)"); router.push("/kids"); }} className="w-full py-4 rounded-2xl font-bold text-base border-2 border-slate-200 text-slate-700 hover:bg-slate-100 transition-all">← Back to Kids Programme</button>
-          )}
-
-          {enrollment.payment_type === "installment" && !isComplete && (
-            <div className="mt-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs flex items-start gap-2">
-              <span className="shrink-0">📌</span>
-              <span><strong>Bookmark this page</strong> or save the resume link from your email — you can return here at any time to make your next payment without needing an account.</span>
-            </div>
-          )}
         </div>
       </div>
     </>
