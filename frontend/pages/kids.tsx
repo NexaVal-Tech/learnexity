@@ -910,13 +910,14 @@ export default function Kids() {
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Experience</p>
               <h2 className="text-4xl font-bold text-white mb-4">A Personalised Experience</h2>
               <p className="text-xl text-gray-500 mb-16">No passive learning. Just your child, their mentor, and real projects.</p>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
                 {[
                   { value: "3",        label: "Months" },
                   { value: "60–90",    label: "Min Per Session" },
                   { value: "3–5",      label: "Kids Per Group" },
                   { value: "Flexible", label: "Scheduling" },
                   { value: "Hands-on", label: "Projects" },
+                  { value: "one week", label: "two sessions" },
                 ].map((s, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
                     <div className="text-3xl md:text-4xl font-bold" style={{ color: BRAND }}>{s.value}</div>

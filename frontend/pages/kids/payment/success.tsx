@@ -7,11 +7,12 @@
 import React, { useEffect, useState } from "react";
 import { useRouter }   from "next/router";
 import Head            from "next/head";
-import { ArrowRight, CheckCircle, Mail, Phone, Calendar, Rocket } from "lucide-react";
+import { ArrowRight, CheckCircle, Mail, Phone, MessageCircle, Rocket } from "lucide-react";
 
 const API_URL      = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const BRAND        = "#4A3AFF";
 const BRAND_ORANGE = "#f59e0b";
+const WHATSAPP_URL = "https://chat.whatsapp.com/KJntcErzERgBOfQqECkHCI?mode=gi_t";
 
 interface Enrollment {
   id: number;
@@ -212,6 +213,30 @@ export default function KidsPaymentSuccess() {
             </p>
           </div>
 
+          {/* ── WhatsApp CTA banner ── */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-6 fade-up-1 flex items-center gap-4 px-5 py-4 transition-all hover:opacity-90"
+            style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.25)", textDecoration: "none", display: "flex" }}
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(37,211,102,0.15)", border: "1px solid rgba(37,211,102,0.3)" }}>
+              <MessageCircle className="w-5 h-5" style={{ color: "#25D366" }} />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-white">Join Our Closed group</p>
+              <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>
+                Schedules, session reminders & cohort updates for {enrollment.student_name}
+              </p>
+            </div>
+            <span className="text-xs font-bold px-3 py-1.5 flex-shrink-0"
+              style={{ borderRadius: "1rem 0.25rem 1rem 0.25rem", background: "#25D366", color: "#fff" }}>
+              Join 
+            </span>
+          </a>
+
           <div className="grid lg:grid-cols-5 gap-6 fade-up-2">
 
             {/* ── Left: Course + Payment Summary ── */}
@@ -317,6 +342,25 @@ export default function KidsPaymentSuccess() {
                       title: "Email sent",
                       desc: `Receipt sent to ${enrollment.parent_email}`,
                       done: true,
+                      action: null,
+                    },
+                    {
+                      icon: <MessageCircle className="w-5 h-5" />,
+                      iconColor: "#25D366",
+                      title: "Join the parent group",
+                      desc: "Get updates, schedules & session reminders",
+                      done: false,
+                      action: (
+                        <a
+                          href={WHATSAPP_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 transition-all hover:opacity-90"
+                          style={{ borderRadius: "1rem 0.25rem 1rem 0.25rem", background: "#25D366", color: "#fff", textDecoration: "none" }}
+                        >
+                          Join WhatsApp →
+                        </a>
+                      ),
                     },
                     {
                       icon: <Phone className="w-5 h-5" />,
@@ -326,6 +370,7 @@ export default function KidsPaymentSuccess() {
                         ? `Scheduling sessions for ${enrollment.student_name}`
                         : "You'll be reminded before your next payment",
                       done: false,
+                      action: null,
                     },
                     {
                       icon: <Rocket className="w-5 h-5" />,
@@ -333,6 +378,7 @@ export default function KidsPaymentSuccess() {
                       title: "Sessions begin",
                       desc: `${enrollment.student_name} starts the programme`,
                       done: false,
+                      action: null,
                     },
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -340,9 +386,10 @@ export default function KidsPaymentSuccess() {
                         style={{ background: step.done ? `${step.iconColor}20` : "rgba(255,255,255,0.04)", border: `1px solid ${step.done ? `${step.iconColor}40` : "rgba(255,255,255,0.08)"}`, color: step.iconColor }}>
                         {step.icon}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-bold text-sm text-white">{step.title}</p>
                         <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>{step.desc}</p>
+                        {step.action}
                       </div>
                       {step.done && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 ml-auto" style={{ color: "#22c55e" }} />}
                     </div>
