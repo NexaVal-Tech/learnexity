@@ -736,6 +736,22 @@ export default function Kids() {
             </div>
           </section>
 
+          {/* ── Specialisation Tracks ─────────────────────────────────────── */}
+          <section className="py-10 px-6">
+            <div className="max-w-[1230px] mx-auto">
+              <div className="text-center mb-16">
+                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Chose a Specialised Track</p>
+                <h2 className="text-4xl font-bold text-white mb-4">What Would Your Child Love To Create</h2>
+                <p className="text-gray-400 max-w-lg mx-auto">Pick the track that matches your child's passion. Digital Foundations is always included in month 1.</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-8 items-stretch">
+                {tracks.map((track) => (
+                  <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} />
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* ── Resume Banner ─────────────────────────────────────────────── */}
           <section className="py-4 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="max-w-[1230px] mx-auto">
@@ -746,7 +762,7 @@ export default function Kids() {
           {/* ── What Your Child Will Gain ──────────────────────────────────── */}
           <section className="py-20 px-6" style={{ background: "linear-gradient(135deg, #080808 0%, #0a0818 100%)" }}>
             <div className="max-w-[1230px] mx-auto text-center">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Outcomes</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Program Outcomes</p>
               <h2 className="text-3xl font-bold text-white mb-12">What Your Child Will Gain</h2>
               <div className="grid md:grid-cols-4 gap-6">
                 {[
@@ -788,16 +804,10 @@ export default function Kids() {
                 <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>The Problem</p>
                 <h2 className="text-4xl font-bold text-white leading-tight">From Passive Screens to Active Minds</h2>
                 <p className="text-lg text-gray-400 mt-6">Today, most kids use technology <span className="text-white font-semibold">passively</span>:</p>
-                <ul className="mt-8 space-y-3">
-                  {["Watching", "Scrolling", "Consuming"].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-gray-300">
-                      <span className="text-red-500 font-bold text-lg">✕</span> {item}
-                    </li>
-                  ))}
-                </ul>
+
                 <div className="mt-8 p-5" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: `${BRAND_ORANGE}10`, border: `1px solid ${BRAND_ORANGE}25` }}>
                   <p className="font-bold text-amber-400">Why Join Us:</p>
-                  <p className="text-amber-200/70 mt-1 text-sm leading-relaxed">With Learnexity, screen time becomes skill time. <strong className="text-amber-300">Every</strong> hour spent on a device is a step toward real, lasting creativity, confidence, and problem-solving ability.</p>
+                  <p className="text-amber-200/70 mt-1 text-xl leading-relaxed">With Learnexity, screen time becomes skill time. <strong className="text-amber-300">Every</strong> hour spent on a device is a step toward real, lasting creativity, confidence, and problem-solving ability.</p>
                 </div>
               </div>
             </div>
@@ -806,8 +816,8 @@ export default function Kids() {
           {/* ── How It Works ─────────────────────────────────────────────── */}
           <section className="py-20 px-6" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #0f0a1e 100%)", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="max-w-[1230px] mx-auto text-center">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Structure</p>
-              <h2 className="text-4xl font-bold text-white mb-4">3 Months. One Clear Path.</h2>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Program Structure</p>
+              <h2 className="text-4xl font-bold text-white mb-4">What Your Child Will Learn.</h2>
               <p className="text-gray-500 mb-16 max-w-lg mx-auto">Every enrollment includes Digital Foundations first, then your child's chosen specialisation, beginner friendly. Designed to build real, lifelong skills.</p>
               <div className="grid md:grid-cols-2 gap-8">
                 {[
@@ -831,22 +841,6 @@ export default function Kids() {
                       {stage.items.map((item) => <li key={item} className="text-gray-300 font-medium">{item}</li>)}
                     </ul>
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ── Specialisation Tracks ─────────────────────────────────────── */}
-          <section className="py-20 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <div className="text-center mb-16">
-                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Months 2 &amp; 3</p>
-                <h2 className="text-4xl font-bold text-white mb-4">What Would Your Child Love To Create?</h2>
-                <p className="text-gray-400 max-w-lg mx-auto">Pick the track that matches your child's passion. Digital Foundations is always included in month 1.</p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-8 items-stretch">
-                {tracks.map((track) => (
-                  <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} />
                 ))}
               </div>
             </div>
