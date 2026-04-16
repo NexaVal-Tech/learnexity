@@ -10,29 +10,34 @@ const BRAND        = "#4A3AFF";
 const BRAND_ORANGE = "#f59e0b";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// ── Simplified fixed pricing (per month × 3 months) ──────────────────────────
-const MONTHLY_GROUP    = 100;   // USD per month, mini group
-const MONTHLY_1ON1     = 200;   // USD per month, one-on-one
-const MONTHS           = 3;
-const FULL_GROUP       = MONTHLY_GROUP * MONTHS;   // 300
-const FULL_1ON1        = MONTHLY_1ON1 * MONTHS;    // 600
-const ONETIME_DISCOUNT = 12;                         // %
-const DISC_GROUP       = Math.round(FULL_GROUP  * (1 - ONETIME_DISCOUNT / 100)); // 285
-const DISC_1ON1        = Math.round(FULL_1ON1   * (1 - ONETIME_DISCOUNT / 100)); // 570
-
-// NGN equivalents (kept from seeder, adjust as needed)
-const MONTHLY_GROUP_NGN = 100000;
-const MONTHLY_1ON1_NGN  = 200000;
-const FULL_GROUP_NGN    = MONTHLY_GROUP_NGN * MONTHS;
-const FULL_1ON1_NGN     = MONTHLY_1ON1_NGN  * MONTHS;
-const DISC_GROUP_NGN    = Math.round(FULL_GROUP_NGN  * (1 - ONETIME_DISCOUNT / 100));
-const DISC_1ON1_NGN     = Math.round(FULL_1ON1_NGN   * (1 - ONETIME_DISCOUNT / 100));
+const ONETIME_DISCOUNT = 12; // % — kept only for display label; actual discounted prices come from API
 
 interface KidsCourseAPI {
   id: number; slug: string; name: string; description: string;
   emoji: string; color: string; duration_months: number;
   is_foundation: boolean; onetime_discount_percent: number;
-  pricing: { USD: any; NGN: any };
+  pricing: {
+    USD: {
+      standalone_group: number;
+      standalone_one_on_one: number;
+      bundle_group: number;
+      bundle_one_on_one: number;
+      bundle_group_discounted: number;
+      bundle_one_on_one_discounted: number;
+      installment_bundle_group: number;
+      installment_bundle_one_on_one: number;
+    };
+    NGN: {
+      standalone_group: number;
+      standalone_one_on_one: number;
+      bundle_group: number;
+      bundle_one_on_one: number;
+      bundle_group_discounted: number;
+      bundle_one_on_one_discounted: number;
+      installment_bundle_group: number;
+      installment_bundle_one_on_one: number;
+    };
+  };
 }
 
 interface Track {
@@ -84,26 +89,45 @@ function fmt(amount: number, currency: string): string {
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
 }
 
-function getPricing(currency: string, sessionType: "mini_group" | "one_on_one", paymentType: "onetime" | "installment") {
-  const isNGN = currency === "NGN";
-  const fullG    = isNGN ? FULL_GROUP_NGN    : FULL_GROUP;
-  const full1    = isNGN ? FULL_1ON1_NGN     : FULL_1ON1;
-  const discG    = isNGN ? DISC_GROUP_NGN    : DISC_GROUP;
-  const disc1    = isNGN ? DISC_1ON1_NGN     : DISC_1ON1;
-  const moG      = isNGN ? MONTHLY_GROUP_NGN : MONTHLY_GROUP;
-  const mo1      = isNGN ? MONTHLY_1ON1_NGN  : MONTHLY_1ON1;
+// ── All prices come from the API courses[] state, never from hardcoded constants ──
+function getTrackCourse(courses: KidsCourseAPI[], trackSlug: string): KidsCourseAPI | null {
+  return courses.find(c => c.slug === trackSlug) ?? null;
+}
 
-  const isMini   = sessionType === "mini_group";
-  const fullPrice = isMini ? fullG : full1;
-  const discPrice = isMini ? discG : disc1;
-  const monthly   = isMini ? moG   : mo1;
+function getPricing(
+  courses: KidsCourseAPI[],
+  trackSlug: string,
+  currency: "USD" | "NGN",
+  sessionType: "mini_group" | "one_on_one",
+  paymentType: "onetime" | "installment"
+) {
+  const course = getTrackCourse(courses, trackSlug);
+  if (!course) return null;
 
+  const p = course.pricing[currency];
+  const isGroup = sessionType === "mini_group";
+
+  const fullPrice  = isGroup ? p.bundle_group           : p.bundle_one_on_one;
+  const discPrice  = isGroup ? p.bundle_group_discounted : p.bundle_one_on_one_discounted;
+  const monthly    = isGroup ? p.installment_bundle_group : p.installment_bundle_one_on_one;
+  const todayAmount = paymentType === "onetime" ? discPrice : monthly;
+  const saved      = fullPrice - discPrice;
+
+  return { fullPrice, discPrice, monthly, todayAmount, saved };
+}
+
+// Helper: get prices for the hero / session-format section using the first non-foundation track
+function getDisplayPrices(courses: KidsCourseAPI[], currency: "USD" | "NGN") {
+  const track = courses.find(c => !c.is_foundation);
+  if (!track) return { monthlyGroup: 0, monthly1on1: 0, fullGroup: 0, full1on1: 0, discGroup: 0, disc1on1: 0 };
+  const p = track.pricing[currency];
   return {
-    fullPrice,
-    discPrice,
-    monthly,
-    todayAmount: paymentType === "onetime" ? discPrice : monthly,
-    saved: paymentType === "onetime" ? fullPrice - discPrice : 0,
+    monthlyGroup: p.installment_bundle_group,
+    monthly1on1:  p.installment_bundle_one_on_one,
+    fullGroup:    p.bundle_group,
+    full1on1:     p.bundle_one_on_one,
+    discGroup:    p.bundle_group_discounted,
+    disc1on1:     p.bundle_one_on_one_discounted,
   };
 }
 
@@ -147,7 +171,7 @@ const SectionCTA: React.FC<{ onEnroll: () => void; headline: string; sub: string
 // ─── Registration Modal ───────────────────────────────────────────────────────
 interface RegModalProps {
   isOpen: boolean; onClose: () => void;
-  preselectedTrack: string; currency: string; courses: KidsCourseAPI[];
+  preselectedTrack: string; currency: "USD" | "NGN"; courses: KidsCourseAPI[];
 }
 
 const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselectedTrack, currency, courses }) => {
@@ -170,7 +194,18 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
   useEffect(() => { if (!isOpen) { setStep(1); setError(""); } }, [isOpen]);
 
   const trackSlug = tracks.find(t => t.name === selectedTrack)?.courseSlug ?? "creative-design";
-  const { fullPrice, discPrice, monthly, todayAmount, saved } = getPricing(currency, sessionType, paymentType);
+  const pricing = getPricing(courses, trackSlug, currency, sessionType, paymentType);
+
+  // Fallback display while courses are loading
+  const fullPrice   = pricing?.fullPrice   ?? 0;
+  const discPrice   = pricing?.discPrice   ?? 0;
+  const monthly     = pricing?.monthly     ?? 0;
+  const todayAmount = pricing?.todayAmount ?? 0;
+  const saved       = pricing?.saved       ?? 0;
+
+  // Per-session monthly price for session format cards
+  const groupMonthly  = getTrackCourse(courses, trackSlug)?.pricing[currency].installment_bundle_group ?? 0;
+  const oneOnMonthly  = getTrackCourse(courses, trackSlug)?.pricing[currency].installment_bundle_one_on_one ?? 0;
 
   const handleStep1Next = () => {
     if (!parentName || !parentEmail || !studentName || !studentAge) { setError("Please fill in all required fields."); return; }
@@ -178,14 +213,13 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
   };
 
   const handleSubmit = async () => {
-    // Map mini_group → group_mentorship for backend compatibility
     const backendSessionType = sessionType === "mini_group" ? "group_mentorship" : "one_on_one";
     const payload = {
       parent_name: parentName, parent_email: parentEmail, parent_phone: parentPhone,
       student_name: studentName, student_age: parseInt(studentAge),
       session_type: backendSessionType,
       track_slug: trackSlug,
-      enrollment_type: "bundle",   // always bundle (DF included)
+      enrollment_type: "bundle",
       payment_type: paymentType,
       currency,
     };
@@ -208,6 +242,8 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
   const inputCls   = "w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all placeholder-gray-600";
   const inputStyle = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" };
 
+  const coursesLoaded = courses.length > 0;
+
   return (
     <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -217,7 +253,6 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
         <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "rgba(255,255,255,0.06)" }}>✕</button>
 
         <div className="px-8 pt-8 pb-0">
-          {/* Step indicator */}
           <div className="flex items-center gap-2 mb-6">
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
@@ -233,7 +268,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
           <p className="text-gray-500 text-sm mt-1 mb-6">
             {step === 1 ? "Tell us about your child so we can personalise the experience."
               : step === 2 ? "Pick a specialisation track and your preferred session format. Digital Foundations is always included."
-              : "Choose how you'd like to pay. Pay in full and save 12%."}
+              : `Choose how you'd like to pay. Pay in full and save ${ONETIME_DISCOUNT}%.`}
           </p>
         </div>
 
@@ -242,7 +277,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
             <div className="mb-4 px-4 py-3 text-red-400 text-sm" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>
           )}
 
-          {/* ── Step 1: Parent & Student Info ── */}
+          {/* ── Step 1 ── */}
           {step === 1 && (
             <div className="space-y-5">
               <div>
@@ -280,11 +315,9 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
             </div>
           )}
 
-          {/* ── Step 2: Track + Session Format ── */}
+          {/* ── Step 2 ── */}
           {step === 2 && (
             <div className="space-y-6">
-
-              {/* Always-included DF badge */}
               <div className="flex items-center gap-3 px-4 py-3 text-sm" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(74,58,255,0.08)", border: `1px solid ${BRAND}30` }}>
                 <span className="text-xl">🏗️</span>
                 <div>
@@ -293,7 +326,6 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                 </div>
               </div>
 
-              {/* Track selection */}
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Specialisation Track (Months 2 & 3)</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -313,7 +345,6 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                 </div>
               </div>
 
-              {/* Session format */}
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Session Format</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -324,7 +355,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                       label: "Mini Group",
                       sublabel: "3–5 kids per group",
                       desc: "Learn with others. Collaborative, fun, and social.",
-                      priceNote: `$${MONTHLY_GROUP}/mo`,
+                      priceNote: coursesLoaded ? `${fmt(groupMonthly, currency)}/mo` : "…",
                       badge: "Popular",
                     },
                     {
@@ -333,7 +364,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                       label: "One-on-One",
                       sublabel: "Just your child & mentor",
                       desc: "Fully personalised, at their own pace.",
-                      priceNote: `$${MONTHLY_1ON1}/mo`,
+                      priceNote: coursesLoaded ? `${fmt(oneOnMonthly, currency)}/mo` : "…",
                       badge: "Premium",
                     },
                   ]).map((s) => (
@@ -363,7 +394,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
             </div>
           )}
 
-          {/* ── Step 3: Payment Plan ── */}
+          {/* ── Step 3 ── */}
           {step === 3 && (
             <div className="space-y-6">
               <div>
@@ -390,7 +421,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                 </div>
               </div>
 
-              {/* Price summary */}
+              {/* Price summary — all values from API */}
               <div style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
                 <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Price Summary</p>
@@ -403,33 +434,39 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     <span className="text-gray-600 text-xs italic">included</span>
                   </div>
                   <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.07)" }} />
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">
-                      {sessionType === "mini_group" ? "👥 Mini Group" : "🎯 One-on-One"} · {MONTHS} months
-                    </span>
-                    <span className={`font-semibold ${paymentType === "onetime" && saved > 0 ? "line-through text-gray-600" : "text-white"}`}>
-                      {fmt(fullPrice, currency)}
-                    </span>
-                  </div>
-                  {paymentType === "onetime" && saved > 0 && (
-                    <div className="flex justify-between text-green-400">
-                      <span>Pay-in-full discount ({ONETIME_DISCOUNT}%)</span>
-                      <span className="font-bold">−{fmt(saved, currency)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span className="text-white">{paymentType === "onetime" ? "Total due today" : "Due today (1 of 3)"}</span>
-                    <span style={{ color: BRAND }} className="text-base">{fmt(todayAmount, currency)}</span>
-                  </div>
-                  {paymentType === "installment" && (
-                    <p className="text-[11px] text-gray-600 pt-1">Then {fmt(monthly, currency)}/month for 2 more months.</p>
+                  {coursesLoaded ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">
+                          {sessionType === "mini_group" ? "👥 Mini Group" : "🎯 One-on-One"} · 3 months
+                        </span>
+                        <span className={`font-semibold ${paymentType === "onetime" && saved > 0 ? "line-through text-gray-600" : "text-white"}`}>
+                          {fmt(fullPrice, currency)}
+                        </span>
+                      </div>
+                      {paymentType === "onetime" && saved > 0 && (
+                        <div className="flex justify-between text-green-400">
+                          <span>Pay-in-full discount ({ONETIME_DISCOUNT}%)</span>
+                          <span className="font-bold">−{fmt(saved, currency)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span className="text-white">{paymentType === "onetime" ? "Total due today" : "Due today (1 of 3)"}</span>
+                        <span style={{ color: BRAND }} className="text-base">{fmt(todayAmount, currency)}</span>
+                      </div>
+                      {paymentType === "installment" && (
+                        <p className="text-[11px] text-gray-600 pt-1">Then {fmt(monthly, currency)}/month for 2 more months.</p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="py-4 text-center text-gray-500 text-xs">Loading prices…</div>
                   )}
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <button onClick={() => setStep(2)} className="flex-1 py-4 font-bold text-sm text-gray-400 transition-all hover:text-white" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>← Back</button>
-                <button onClick={handleSubmit} disabled={loading} className="flex-[2] py-4 font-bold text-base text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                <button onClick={handleSubmit} disabled={loading || !coursesLoaded} className="flex-[2] py-4 font-bold text-base text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 8px 24px ${BRAND}44` }}>
                   {loading ? "Processing…" : <><span>Proceed to Payment</span><ArrowRight className="w-4 h-4" /></>}
                 </button>
@@ -444,10 +481,21 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
 };
 
 // ─── Track Detail Modal ───────────────────────────────────────────────────────
-const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll: (trackName: string) => void; currency: string; }> = ({ track, onClose, onEnroll, currency }) => {
+const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll: (trackName: string) => void; currency: "USD" | "NGN"; courses: KidsCourseAPI[]; }> = ({ track, onClose, onEnroll, currency, courses }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   useEffect(() => { document.body.style.overflow = track ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [track]);
   if (!track) return null;
+
+  const course = getTrackCourse(courses, track.courseSlug);
+  const p = course?.pricing[currency];
+
+  const fullGroup  = p?.bundle_group           ?? 0;
+  const full1on1   = p?.bundle_one_on_one      ?? 0;
+  const discGroup  = p?.bundle_group_discounted ?? 0;
+  const disc1on1   = p?.bundle_one_on_one_discounted ?? 0;
+  const moGroup    = p?.installment_bundle_group ?? 0;
+  const mo1on1     = p?.installment_bundle_one_on_one ?? 0;
+  const coursesLoaded = courses.length > 0;
 
   return (
     <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
@@ -468,30 +516,33 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
             <Image src={track.image} alt={track.name} width={500} height={200} className="w-full object-cover" />
           </div>
 
-          {/* Always-included DF note */}
           <div className="flex items-center gap-3 px-4 py-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(74,58,255,0.08)", border: `1px solid ${BRAND}25` }}>
             <span className="text-xl">🏗️</span>
             <p className="text-xs text-gray-400"><span className="text-white font-bold">Digital Foundations included.</span> Month 1 builds essential skills before this track begins in months 2 & 3.</p>
           </div>
 
-          {/* Pricing for this track */}
+          {/* Pricing — from API */}
           <div className="p-4" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: `${BRAND}08`, border: `1px solid ${BRAND}22` }}>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Pricing — 3 months total</p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { icon: "👥", label: "Mini Group", sublabel: "3–5 kids", monthly: MONTHLY_GROUP, full: FULL_GROUP, disc: DISC_GROUP },
-                { icon: "🎯", label: "One-on-One", sublabel: "Your child only", monthly: MONTHLY_1ON1, full: FULL_1ON1, disc: DISC_1ON1 },
-              ].map((row) => (
-                <div key={row.label} className="p-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <p className="text-lg mb-1">{row.icon}</p>
-                  <p className="text-sm font-bold text-white">{row.label}</p>
-                  <p className="text-[10px] text-gray-500 mb-2">{row.sublabel}</p>
-                  <p className="text-xs text-gray-400">${row.monthly}/mo × 3</p>
-                  <p className="font-bold text-white">{fmt(row.full, currency)}</p>
-                  <p className="text-[10px] text-green-400">or {fmt(row.disc, currency)} pay in full</p>
-                </div>
-              ))}
-            </div>
+            {coursesLoaded ? (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: "👥", label: "Mini Group", sublabel: "3–5 kids", monthly: moGroup, full: fullGroup, disc: discGroup },
+                  { icon: "🎯", label: "One-on-One", sublabel: "Your child only", monthly: mo1on1, full: full1on1, disc: disc1on1 },
+                ].map((row) => (
+                  <div key={row.label} className="p-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <p className="text-lg mb-1">{row.icon}</p>
+                    <p className="text-sm font-bold text-white">{row.label}</p>
+                    <p className="text-[10px] text-gray-500 mb-2">{row.sublabel}</p>
+                    <p className="text-xs text-gray-400">{fmt(row.monthly, currency)}/mo × 3</p>
+                    <p className="font-bold text-white">{fmt(row.full, currency)}</p>
+                    <p className="text-[10px] text-green-400">or {fmt(row.disc, currency)} pay in full</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-gray-500 text-xs">Loading prices…</div>
+            )}
             <p className="text-[10px] text-green-400 font-semibold mt-3 px-1">✦ Save {ONETIME_DISCOUNT}% when you pay the full program upfront</p>
           </div>
 
@@ -536,7 +587,7 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
 };
 
 // ─── Track Card ───────────────────────────────────────────────────────────────
-const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; onEnroll: (trackName: string) => void; currency: string; }> = ({ track, onLearnMore, onEnroll, currency }) => (
+const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; onEnroll: (trackName: string) => void; }> = ({ track, onLearnMore, onEnroll }) => (
   <div
     className="flex flex-col h-full cursor-pointer group"
     style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.92)", backdropFilter: "blur(12px)", boxShadow: "0 25px 50px rgba(0,0,0,0.7)", transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s" }}
@@ -649,7 +700,7 @@ export default function Kids() {
   const [preselectedTrack, setPreselectedTrack] = useState("Creative Design");
   const [activeTrack, setActiveTrack]           = useState<Track | null>(null);
   const [resumeOpen, setResumeOpen]             = useState(false);
-  const [currency, setCurrency]                 = useState("USD");
+  const [currency, setCurrency]                 = useState<"USD" | "NGN">("USD");
   const [courses, setCourses]                   = useState<KidsCourseAPI[]>([]);
 
   useEffect(() => {
@@ -665,9 +716,9 @@ export default function Kids() {
     setEnrollOpen(true);
   };
 
-  const isNGN     = currency === "NGN";
-  const heroGroup = isNGN ? MONTHLY_GROUP_NGN : MONTHLY_GROUP;
-  const hero1on1  = isNGN ? MONTHLY_1ON1_NGN  : MONTHLY_1ON1;
+  // All display prices derived from API response
+  const { monthlyGroup, monthly1on1, fullGroup, full1on1, discGroup, disc1on1 } = getDisplayPrices(courses, currency);
+  const coursesLoaded = courses.length > 0;
 
   return (
     <>
@@ -746,7 +797,7 @@ export default function Kids() {
               </div>
               <div className="grid md:grid-cols-3 gap-8 items-stretch">
                 {tracks.map((track) => (
-                  <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} currency={currency} />
+                  <TrackCard key={track.id} track={track} onLearnMore={setActiveTrack} onEnroll={openEnroll} />
                 ))}
               </div>
             </div>
@@ -784,7 +835,7 @@ export default function Kids() {
             </div>
           </section>
 
-          {/* ── CTA between Outcomes & Problem ── */}
+          {/* ── CTA ── */}
           <section className="px-6">
             <SectionCTA
               onEnroll={() => openEnroll()}
@@ -858,14 +909,14 @@ export default function Kids() {
                 {[
                   {
                     icon: "👥", title: "Mini Group", sublabel: "3–5 kids per group",
-                    price: MONTHLY_GROUP, totalPrice: FULL_GROUP, discPrice: DISC_GROUP,
+                    price: monthlyGroup, totalPrice: fullGroup, discPrice: discGroup,
                     color: BRAND,
                     points: ["Learn with peers your child's age", "Collaborative, fun, social environment", "Healthy motivation from group energy", "Structured sessions, same pace for all"],
                     tag: "Most Popular",
                   },
                   {
                     icon: "🎯", title: "One-on-One", sublabel: "Your child & their mentor",
-                    price: MONTHLY_1ON1, totalPrice: FULL_1ON1, discPrice: DISC_1ON1,
+                    price: monthly1on1, totalPrice: full1on1, discPrice: disc1on1,
                     color: BRAND_ORANGE,
                     points: ["Entirely at your child's own pace", "Mentor adapts to their learning style", "More time for questions and depth", "Fastest path to mastery"],
                     tag: "Premium",
@@ -887,11 +938,20 @@ export default function Kids() {
                       ))}
                     </ul>
                     <div className="p-4" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold" style={{ color: s.color }}>${s.price}</span>
-                        <span className="text-gray-500 text-sm">/month</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">${s.totalPrice} for 3 months · or <span className="text-green-400">${s.discPrice} paid in full (save {ONETIME_DISCOUNT}%)</span></p>
+                      {coursesLoaded ? (
+                        <>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-bold" style={{ color: s.color }}>{fmt(s.price, currency)}</span>
+                            <span className="text-gray-500 text-sm">/month</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {fmt(s.totalPrice, currency)} for 3 months · or{" "}
+                            <span className="text-green-400">{fmt(s.discPrice, currency)} paid in full (save {ONETIME_DISCOUNT}%)</span>
+                          </p>
+                        </>
+                      ) : (
+                        <div className="h-10 flex items-center text-gray-600 text-xs">Loading prices…</div>
+                      )}
                     </div>
                     <button onClick={() => openEnroll()}
                       className="mt-4 w-full py-3 font-bold text-sm text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
@@ -930,7 +990,7 @@ export default function Kids() {
 
         </div>
 
-        <TrackModal track={activeTrack} onClose={() => setActiveTrack(null)} onEnroll={(name) => { setActiveTrack(null); openEnroll(name); }} currency={currency} />
+        <TrackModal track={activeTrack} onClose={() => setActiveTrack(null)} onEnroll={(name) => { setActiveTrack(null); openEnroll(name); }} currency={currency} courses={courses} />
         <RegistrationModal isOpen={enrollOpen} onClose={() => setEnrollOpen(false)} preselectedTrack={preselectedTrack} currency={currency} courses={courses} />
         <ResumeModal isOpen={resumeOpen} onClose={() => setResumeOpen(false)} />
         <Footer />

@@ -29,27 +29,25 @@ class KidsCoursesSeeder extends Seeder
     // ──────────────────────────────────────────────────────────────────────────
 
     // ── Digital Foundations (1 month standalone) ──────────────────────────────
-    const DF_ONE_ON_ONE_USD = 200.00;
-    const DF_GROUP_USD      = 150.00;
+    const DF_ONE_ON_ONE_USD = 200.00;   // 1 month × $200
+    const DF_GROUP_USD      = 100.00;   // 1 month × $100
     const DF_ONE_ON_ONE_NGN = 200000.00;
-    const DF_GROUP_NGN      = 150000.00;
+    const DF_GROUP_NGN      = 100000.00;
 
     // ── Specialisation tracks — STANDALONE (2 months, without DF) ─────────────
-    const TRACK_ONE_ON_ONE_USD = 350.00;
-    const TRACK_GROUP_USD      = 280.00;
-    const TRACK_ONE_ON_ONE_NGN = 350000.00;
-    const TRACK_GROUP_NGN      = 280000.00;
+    const TRACK_ONE_ON_ONE_USD = 400.00;   // 2 months × $200
+    const TRACK_GROUP_USD      = 200.00;   // 2 months × $100
+    const TRACK_ONE_ON_ONE_NGN = 400000.00;
+    const TRACK_GROUP_NGN      = 200000.00;
 
     // ── Bundle prices (DF 1 month + Track 2 months = 3 months total) ──────────
-    // Slightly cheaper than buying separately to incentivise the full journey
-    const BUNDLE_ONE_ON_ONE_USD = 500.00;   // vs 200 + 350 = 550 separately
-    const BUNDLE_GROUP_USD      = 400.00;   // vs 150 + 280 = 430 separately
-    const BUNDLE_ONE_ON_ONE_NGN = 500000.00;
-    const BUNDLE_GROUP_NGN      = 400000.00;
+    const BUNDLE_ONE_ON_ONE_USD = 600.00;   // 3 months × $200
+    const BUNDLE_GROUP_USD      = 300.00;   // 3 months × $100
+    const BUNDLE_ONE_ON_ONE_NGN = 600000.00;
+    const BUNDLE_GROUP_NGN      = 300000.00;
 
-    // ── One-time discount (%) — applied when paying in full upfront ────────────
-    // Set to 0 to disable. Installment always pays full price.
-    const ONETIME_DISCOUNT_PERCENT = 5.00;  // 5% off when paying at once
+    // ── One-time discount (%) ──────────────────────────────────────────────────
+    const ONETIME_DISCOUNT_PERCENT = 12.00;
 
     // ──────────────────────────────────────────────────────────────────────────
 
