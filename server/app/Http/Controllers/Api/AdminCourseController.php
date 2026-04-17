@@ -88,6 +88,8 @@ class AdminCourseController extends Controller
                             'id' => $item->id,
                             'title' => $item->title,
                             'type' => $item->type,
+                            'text_content' => $item->text_content,
+                            'file_url' => $item->file_url,
                         ];
                     }),
                 ];
@@ -104,6 +106,7 @@ class AdminCourseController extends Controller
                 'id' => $item->id,
                 'name' => $item->title,
                 'type' => strtoupper($item->type),
+                'text_content' => $item->text_content,
                 'sprint' => 'Sprint ' . $item->courseMaterial->sprint_number,
                 'size' => $item->file_size ?? 'N/A',
                 'access' => $item->type === 'pdf' ? 'Downloadable' : 'View Only',

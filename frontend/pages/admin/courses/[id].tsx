@@ -176,29 +176,28 @@ const CourseDetail = () => {
   };
 
   // Material Upload
-const handleUploadMaterial = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!selectedTopic || !selectedFile) return;
+  const handleUploadMaterial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTopic || !selectedFile) return;
 
-  try {
-    setSubmitting(true);
-    await api.adminResources.uploadMaterialFile(
-      id as string,
-      selectedTopic.id,
-      selectedFile
-    );
-    setIsUploadMaterialModalOpen(false);
-    setSelectedTopic(null);
-    setFormData({});
-    setSelectedFile(null);
-    fetchCourseDetails();
-  } catch (error: any) {
-    alert(handleApiError(error));
-  } finally {
-    setSubmitting(false);
-  }
-};
-
+    try {
+      setSubmitting(true);
+      await api.adminResources.uploadMaterialFile(
+        id as string,
+        selectedTopic.id,
+        selectedFile
+      );
+      setIsUploadMaterialModalOpen(false);
+      setSelectedTopic(null);
+      setFormData({});
+      setSelectedFile(null);
+      fetchCourseDetails();
+    } catch (error: any) {
+      alert(handleApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // External Resource Management
   const handleAddExternalResource = async (e: React.FormEvent) => {
@@ -234,455 +233,6 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
       alert(handleApiError(error));
     }
   };
-
-  // Modals
-  const AddSprintModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Sprint</h2>
-          <button onClick={() => setIsAddSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleAddSprint} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
-            <input 
-              type="text" 
-              required
-              value={formData.sprint_name || ''}
-              onChange={(e) => setFormData({...formData, sprint_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="e.g. Introduction to Product Management"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
-            <input 
-              type="number" 
-              required
-              min="1"
-              value={formData.sprint_number || ''}
-              onChange={(e) => setFormData({...formData, sprint_number: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="1"
-            />
-          </div>
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => setIsAddSprintModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              {submitting ? 'Creating...' : 'Create Sprint'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const EditSprintModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Sprint</h2>
-          <button onClick={() => setIsEditSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleEditSprint} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
-            <input 
-              type="text" 
-              required
-              value={formData.sprint_name || ''}
-              onChange={(e) => setFormData({...formData, sprint_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
-            <input 
-              type="number" 
-              required
-              min="1"
-              value={formData.sprint_number || ''}
-              onChange={(e) => setFormData({...formData, sprint_number: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
-          </div>
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => setIsEditSprintModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-              {submitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const AddTopicModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
-          <button onClick={() => setIsAddTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleAddTopic} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
-            <input 
-              type="text" 
-              required
-              value={formData.title || ''}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="e.g. Introduction to User Research"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
-            <select 
-              value={formData.type || 'text'}
-              onChange={(e) => setFormData({...formData, type: e.target.value, text_content: '', file_url: ''})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            >
-              <option value="text">Text</option>
-              <option value="video">Video</option>
-              <option value="link">Link</option>
-            </select>
-          </div>
-
-          {/* Text content — shown when type is text or unset */}
-          {(!formData.type || formData.type === 'text') && (
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
-              <textarea
-                value={formData.text_content || ''}
-                onChange={(e) => setFormData({...formData, text_content: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                rows={8}
-                placeholder="Paste or type the material content here..."
-              />
-              <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
-            </div>
-          )}
-
-          {/* URL — shown for video and link types */}
-          {(formData.type === 'video' || formData.type === 'link') && (
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1.5">
-                {formData.type === 'video' ? 'Video URL' : 'Link URL'}
-              </label>
-              <input 
-                type="url"
-                value={formData.file_url || ''}
-                onChange={(e) => setFormData({...formData, file_url: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                placeholder="https://..."
-              />
-            </div>
-          )}
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => setIsAddTopicModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              {submitting ? 'Adding...' : 'Add Topic'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const EditTopicModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Topic</h2>
-          <button onClick={() => setIsEditTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleEditTopic} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
-            <input 
-              type="text" 
-              required
-              value={formData.title || ''}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
-            <select 
-              value={formData.type || 'document'}
-              onChange={(e) => setFormData({...formData, type: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            >
-            <option value="text">Text</option>
-            <option value="video">Video</option>
-            <option value="link">Link</option>
-            </select>
-            {formData.type === 'text' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
-                <textarea
-                  value={formData.text_content || ''}
-                  onChange={(e) => setFormData({...formData, text_content: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                  rows={8}
-                  placeholder="Paste or type the material content here..."
-                />
-                <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => setIsEditTopicModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-              {submitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const UploadMaterialModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Upload Material</h2>
-          <button 
-            onClick={() => {
-              setIsUploadMaterialModalOpen(false);
-              setSelectedFile(null);
-              setFormData({});
-            }} 
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleUploadMaterial} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">
-              Select File
-            </label>
-            
-            {/* Hidden file input */}
-            <input  type="file" id="file-upload"onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx"/>
-            
-            {/* Custom file input button */}
-            <label 
-              htmlFor="file-upload"
-              className="w-full block px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors min-h-[100px]"
-            >
-              <div className="flex flex-col items-center justify-center h-full gap-2">
-                {selectedFile ? (
-                  <>
-                    <Upload size={24} className="text-green-500" />
-                    <span className="text-gray-700 font-medium text-center break-all px-2">
-                      {selectedFile.name}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                    </span>
-                    <span className="text-xs text-blue-600">Click to change file</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload size={24} className="text-gray-400" />
-                    <span className="text-gray-600">Click to select file</span>
-                    <span className="text-xs text-gray-500">PDF, DOC, DOCX, PPT, PPTX</span>
-                  </>
-                )}
-              </div>
-            </label>
-            
-            <p className="text-xs text-gray-500 mt-1">Max file size: 50MB</p>
-          </div>
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => {
-                setIsUploadMaterialModalOpen(false);
-                setSelectedFile(null);
-                setFormData({});
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting || !selectedFile}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-              {submitting ? 'Uploading...' : 'Upload'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const AddResourceModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 my-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Add External Resource</h2>
-          <button onClick={() => setIsAddResourceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleAddExternalResource} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Category</label>
-            <select 
-              value={formData.category || 'video_tutorials'}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-            >
-              <option value="video_tutorials">Video Tutorials</option>
-              <option value="industry_articles">Industry Articles</option>
-              <option value="recommended_reading">Recommended Reading</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Title</label>
-            <input 
-              type="text" 
-              required
-              value={formData.title || ''}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="Resource title"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">URL</label>
-            <input 
-              type="url" 
-              required
-              value={formData.url || ''}
-              onChange={(e) => setFormData({...formData, url: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Source/Platform</label>
-            <input 
-              type="text" 
-              required
-              value={formData.source || ''}
-              onChange={(e) => setFormData({...formData, source: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="e.g. YouTube, Medium, etc."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Description (Optional)</label>
-            <textarea 
-              value={formData.description || ''}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              rows={3}
-              placeholder="Brief description..."
-            />
-          </div>
-          
-          <div className="flex items-center gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={() => setIsAddResourceModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              {submitting ? 'Adding...' : 'Add Resource'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -834,25 +384,15 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
                             <span className="text-xs text-gray-500">({topic.type})</span>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {/* <button 
-                              onClick={() => {
-                                setSelectedTopic(topic);
-                                setFormData({});
-                                setSelectedFile(null);
-                                setIsUploadMaterialModalOpen(true);
-                              }}
-                              className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                              title="Upload file"
-                            >
-                              <Upload size={14} />
-                            </button> */}
                             <button 
                               onClick={() => {
+                                console.log('topic data:', topic);
                                 setSelectedTopic(topic);
                                 setFormData({
                                   title: topic.title,
                                   type: topic.type,
                                   text_content: topic.text_content || '',
+                                  file_url: topic.file_url || '',
                                 });
                                 setIsEditTopicModalOpen(true);
                               }}
@@ -897,7 +437,6 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-              {/* Materials Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -1136,21 +675,449 @@ const handleUploadMaterial = async (e: React.FormEvent) => {
             </div>
           )}
 
-          {/* Modals */}
-          {isEditSprintModalOpen && <EditSprintModal />}
-          {isAddSprintModalOpen && <AddSprintModal />}
-          {isAddTopicModalOpen && <AddTopicModal />}
-          {isEditTopicModalOpen && <EditTopicModal />}
-          {isUploadMaterialModalOpen && <UploadMaterialModal />}
-          {isAddResourceModalOpen && <AddResourceModal />}
-          <ComposeMessageModal 
-            isOpen={isMessageModalOpen} 
+          {/* ── MODALS (inlined — never declared as inner components) ── */}
+
+          {/* Add Sprint Modal */}
+          {isAddSprintModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Add New Sprint</h2>
+                  <button onClick={() => setIsAddSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddSprint} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.sprint_name || ''}
+                      onChange={(e) => setFormData({ ...formData, sprint_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="e.g. Introduction to Product Management"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={formData.sprint_number || ''}
+                      onChange={(e) => setFormData({ ...formData, sprint_number: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddSprintModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      {submitting ? 'Creating...' : 'Create Sprint'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Sprint Modal */}
+          {isEditSprintModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Edit Sprint</h2>
+                  <button onClick={() => setIsEditSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleEditSprint} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.sprint_name || ''}
+                      onChange={(e) => setFormData({ ...formData, sprint_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={formData.sprint_number || ''}
+                      onChange={(e) => setFormData({ ...formData, sprint_number: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditSprintModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                      {submitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Add Topic Modal */}
+          {isAddTopicModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
+                  <button onClick={() => setIsAddTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddTopic} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.title || ''}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="e.g. Introduction to User Research"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
+                    <select
+                      value={formData.type || 'text'}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value, text_content: '', file_url: '' })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      <option value="text">Text</option>
+                      <option value="video">Video</option>
+                      <option value="link">Link</option>
+                    </select>
+                  </div>
+                  {(!formData.type || formData.type === 'text') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
+                      <textarea
+                        value={formData.text_content || ''}
+                        onChange={(e) => setFormData({ ...formData, text_content: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                        rows={8}
+                        placeholder="Paste or type the material content here..."
+                      />
+                      <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
+                    </div>
+                  )}
+                  {(formData.type === 'video' || formData.type === 'link') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                        {formData.type === 'video' ? 'Video URL' : 'Link URL'}
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.file_url || ''}
+                        onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddTopicModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      {submitting ? 'Adding...' : 'Add Topic'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Topic Modal */}
+          {isEditTopicModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Edit Topic</h2>
+                  <button onClick={() => setIsEditTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleEditTopic} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.title || ''}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Type</label>
+                    <select
+                      value={formData.type || 'text'}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      <option value="text">Text</option>
+                      <option value="video">Video</option>
+                      <option value="link">Link</option>
+                    </select>
+                  </div>
+                  {(!formData.type || formData.type === 'text') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1.5">Text Content</label>
+                      <textarea
+                        value={formData.text_content || ''}
+                        onChange={(e) => setFormData({ ...formData, text_content: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                        rows={8}
+                        placeholder="Paste or type the material content here..."
+                      />
+                      <p className="text-xs text-gray-400 mt-1">{(formData.text_content || '').length} characters</p>
+                    </div>
+                  )}
+                  {(formData.type === 'video' || formData.type === 'link') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                        {formData.type === 'video' ? 'Video URL' : 'Link URL'}
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.file_url || ''}
+                        onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditTopicModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                      {submitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Upload Material Modal */}
+          {isUploadMaterialModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Upload Material</h2>
+                  <button
+                    onClick={() => {
+                      setIsUploadMaterialModalOpen(false);
+                      setSelectedFile(null);
+                      setFormData({});
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleUploadMaterial} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Select File</label>
+                    <input type="file" id="file-upload" onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx" />
+                    <label
+                      htmlFor="file-upload"
+                      className="w-full block px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors min-h-[100px]"
+                    >
+                      <div className="flex flex-col items-center justify-center h-full gap-2">
+                        {selectedFile ? (
+                          <>
+                            <Upload size={24} className="text-green-500" />
+                            <span className="text-gray-700 font-medium text-center break-all px-2">{selectedFile.name}</span>
+                            <span className="text-xs text-gray-500">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                            <span className="text-xs text-blue-600">Click to change file</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={24} className="text-gray-400" />
+                            <span className="text-gray-600">Click to select file</span>
+                            <span className="text-xs text-gray-500">PDF, DOC, DOCX, PPT, PPTX</span>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">Max file size: 50MB</p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsUploadMaterialModalOpen(false);
+                        setSelectedFile(null);
+                        setFormData({});
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting || !selectedFile}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {submitting ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Add External Resource Modal */}
+          {isAddResourceModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 my-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Add External Resource</h2>
+                  <button onClick={() => setIsAddResourceModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddExternalResource} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Category</label>
+                    <select
+                      value={formData.category || 'video_tutorials'}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      <option value="video_tutorials">Video Tutorials</option>
+                      <option value="industry_articles">Industry Articles</option>
+                      <option value="recommended_reading">Recommended Reading</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.title || ''}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="Resource title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">URL</label>
+                    <input
+                      type="url"
+                      required
+                      value={formData.url || ''}
+                      onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Source/Platform</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.source || ''}
+                      onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      placeholder="e.g. YouTube, Medium, etc."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Description (Optional)</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      rows={3}
+                      placeholder="Brief description..."
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddResourceModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      {submitting ? 'Adding...' : 'Add Resource'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          <ComposeMessageModal
+            isOpen={isMessageModalOpen}
             onClose={() => setIsMessageModalOpen(false)}
             recipientCount={students.length}
-            recipients={students.map(student => ({ 
-              id: student.id, 
-              name: student.name, 
-              email: student.email 
+            recipients={students.map(student => ({
+              id: student.id,
+              name: student.name,
+              email: student.email
             }))}
             onSend={async (data) => {
               try {
