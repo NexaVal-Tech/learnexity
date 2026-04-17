@@ -695,7 +695,7 @@ const CourseDetail = () => {
                       required
                       value={formData.sprint_name || ''}
                       onChange={(e) => setFormData({ ...formData, sprint_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       placeholder="e.g. Introduction to Product Management"
                     />
                   </div>
@@ -707,7 +707,7 @@ const CourseDetail = () => {
                       min="1"
                       value={formData.sprint_number || ''}
                       onChange={(e) => setFormData({ ...formData, sprint_number: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       placeholder="1"
                     />
                   </div>
@@ -751,7 +751,7 @@ const CourseDetail = () => {
                       required
                       value={formData.sprint_name || ''}
                       onChange={(e) => setFormData({ ...formData, sprint_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -762,7 +762,7 @@ const CourseDetail = () => {
                       min="1"
                       value={formData.sprint_number || ''}
                       onChange={(e) => setFormData({ ...formData, sprint_number: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
