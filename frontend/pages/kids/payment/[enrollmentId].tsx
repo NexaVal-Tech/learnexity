@@ -140,9 +140,6 @@ export default function KidsPaymentPage() {
   const isComplete  = enrollment.payment_status === "completed";
   const isPartial   = enrollment.payment_status === "partial";
   const color       = enrollment.course?.color ?? BRAND;
-  const paidPercent = enrollment.total_price > 0
-    ? Math.min(100, (enrollment.amount_paid / enrollment.total_price) * 100)
-    : 0;
 
   return (
     <>
@@ -207,133 +204,10 @@ export default function KidsPaymentPage() {
             </div>
           )}
 
-          <div className="grid lg:grid-cols-5 gap-6">
+          <div className="flex justify-center">
 
-            {/* ── Left: Course info + Progress ── */}
-            <div className="lg:col-span-3 space-y-4">
-
-              {/* Course Card */}
-              <div className="fade-up" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
-                <div className="px-6 py-5 flex items-center gap-4"
-                  style={{ background: `linear-gradient(135deg, ${color}18 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className="text-4xl" style={{ animation: "kidsFloat 4s ease-in-out infinite" }}>{enrollment.course?.emoji ?? "📚"}</div>
-                  <div className="flex-1">
-                    <h1 className="text-lg font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>
-                      {enrollment.course?.name ?? "Course"}
-                    </h1>
-                    <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
-                      {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"}
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold px-3 py-1 rounded-full"
-                    style={{
-                      background: isComplete ? "rgba(34,197,94,0.12)" : isPartial ? "rgba(245,158,11,0.12)" : "rgba(255,255,255,0.06)",
-                      color: isComplete ? "#22c55e" : isPartial ? BRAND_ORANGE : "#9ca3af",
-                      border: `1px solid ${isComplete ? "rgba(34,197,94,0.25)" : isPartial ? `${BRAND_ORANGE}30` : "rgba(255,255,255,0.1)"}`,
-                    }}>
-                    {isComplete ? "✓ Paid" : isPartial ? "Partial" : "Pending"}
-                  </span>
-                </div>
-
-                <div className="px-6 py-5 space-y-5">
-                  {/* Student / Parent */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Student</p>
-                      <p className="font-bold text-sm text-white">{enrollment.student_name}</p>
-                      <p className="text-xs" style={{ color: "#6b7280" }}>Age {enrollment.student_age}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Parent</p>
-                      <p className="font-bold text-sm text-white">{enrollment.parent_name}</p>
-                      <p className="text-xs truncate" style={{ color: "#6b7280" }}>{enrollment.parent_email}</p>
-                    </div>
-                  </div>
-
-                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
-
-                  {/* Payment progress */}
-                  <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>Payment Progress</p>
-                      <span className="text-xs font-bold" style={{ color }}>{paidPercent.toFixed(0)}%</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <div className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${paidPercent}%`, background: isComplete ? "#22c55e" : `linear-gradient(90deg, ${color}, ${BRAND_ORANGE})` }} />
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: "#6b7280" }}>Total Course Fee</span>
-                        <span className="font-bold text-white">{fmt(enrollment.total_price, enrollment.currency)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: "#6b7280" }}>Amount Paid</span>
-                        <span className="font-bold" style={{ color: "#22c55e" }}>{fmt(enrollment.amount_paid, enrollment.currency)}</span>
-                      </div>
-                      {!isComplete && (
-                        <div className="flex justify-between text-sm font-bold pt-2"
-                          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                          <span className="text-white">
-                            {enrollment.payment_type === "installment"
-                              ? `Payment ${enrollment.installments_paid + 1} of ${enrollment.total_installments}`
-                              : "Due Now"}
-                          </span>
-                          <span style={{ color }}>{fmt(enrollment.next_installment_amount, enrollment.currency)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Installment Schedule */}
-              {enrollment.payment_type === "installment" && (
-                <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
-                  <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>Payment Schedule</p>
-                  </div>
-                  <div className="px-6 py-4 space-y-3">
-                    {Array.from({ length: enrollment.total_installments }).map((_, i) => {
-                      const paid      = i < enrollment.installments_paid;
-                      const isCurrent = i === enrollment.installments_paid && !isComplete;
-                      const amount    = enrollment.total_price / enrollment.total_installments;
-                      const paidTxn   = enrollment.payments[i];
-                      return (
-                        <div key={i} className="flex items-center gap-3 px-4 py-3 transition-all"
-                          style={{
-                            borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem",
-                            background: paid ? "rgba(34,197,94,0.06)" : isCurrent ? `${color}0a` : "rgba(255,255,255,0.03)",
-                            border: `1px solid ${paid ? "rgba(34,197,94,0.2)" : isCurrent ? `${color}30` : "rgba(255,255,255,0.06)"}`,
-                          }}>
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                            style={{ background: paid ? "#22c55e" : isCurrent ? color : "rgba(255,255,255,0.08)", color: "#fff" }}>
-                            {paid ? "✓" : i + 1}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-white">Payment {i + 1} — {fmt(amount, enrollment.currency)}</p>
-                            {paid && paidTxn && (
-                              <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>
-                                {new Date(paidTxn.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} via {paidTxn.gateway}
-                              </p>
-                            )}
-                            {isCurrent && <p className="text-xs font-bold mt-0.5" style={{ color }}>Ready to pay</p>}
-                            {!paid && !isCurrent && <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>Upcoming</p>}
-                          </div>
-                          <span className="text-xs font-bold"
-                            style={{ color: paid ? "#22c55e" : isCurrent ? color : "#4b5563" }}>
-                            {paid ? "Paid" : isCurrent ? "Due now" : "Upcoming"}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ── Right: Payment CTA ── */}
-            <div className="lg:col-span-2 space-y-4">
+            {/* ── Order Summary ── */}
+            <div className="w-full max-w-md space-y-4">
               <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)", position: "sticky", top: "80px" }}>
                 <div className="px-6 py-5" style={{ background: `linear-gradient(135deg, ${color}12 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                   <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#4b5563" }}>Order Summary</p>
