@@ -569,4 +569,81 @@ export interface AdminCourseDetail {
   chart_data: AdminCourseChartData;
 }
 
+export interface KidsCourse {
+  id: number;
+  name: string;
+  slug: string;
+  one_on_one_price_usd: number;
+  group_price_usd: number;
+  one_on_one_price_ngn: number;
+  group_price_ngn: number;
+  bundle_one_on_one_usd: number;
+  bundle_group_usd: number;
+  bundle_one_on_one_ngn: number;
+  bundle_group_ngn: number;
+  is_active: boolean;
+}
+
+export interface KidsEnrollment {
+  id: number;
+  kids_course_id: number;
+  parent_name: string;
+  parent_email: string;
+  student_name: string;
+  student_age: number;
+  payment_status: string;
+  enrollment_type: string;
+  session_type: string;
+  total_price: number;
+  amount_paid: number;
+}
+
+export interface ReferralAdminStats {
+  total_referrals: number;
+  successful_referrals: number;
+  pending_referrals: number;
+  total_earnings: number;
+}
+
+export interface ReferralHistoryItem {
+  id: number;
+  referrer_type: string;
+  status: string;
+  created_at: string;
+}
+
+export interface PublicReferrer {
+  id: number;
+  email: string;
+  referral_code: string;
+  total_referrals: number;
+  total_earnings: number;
+}
+
+export interface ScholarshipStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  used: number;
+}
+
+export interface ScholarshipApplication {
+  id: number;
+  user_id: number;
+  course_id: string;
+  course_name: string;
+  status: "pending" | "approved" | "rejected";
+  score: number;
+  location_bonus: number;
+  total_score: number;
+  discount_percentage: number;
+  answers: any;
+  is_used: boolean;
+  used_at?: string;
+  review_notes?: string;
+  applicant_country?: string;
+  created_at: string;
+}
+
 // END OF FILE - NOTHING BELOW THIS

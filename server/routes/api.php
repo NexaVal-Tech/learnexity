@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\AdminCourseResourcesController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminStudentController;
 use App\Http\Controllers\Api\AdminCourseController;
-use App\Http\Controllers\Api\AdminCourseDetailsController; // ⭐ ADD THIS LINE
+use App\Http\Controllers\Api\AdminCourseDetailsController; 
 use App\Http\Controllers\Api\ReferralController;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\URL;
@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\User\ScholarshipController;
+use App\Http\Controllers\Api\AdminKidsController;
+use App\Http\Controllers\Api\AdminReferralController;
+use App\Http\Controllers\Api\AdminScholarshipController;
 
 // Currency Detection (Public Route)
 
@@ -193,7 +196,28 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::get('/{id}', [AdminStudentController::class, 'show']);
         Route::post('/send-message', [AdminStudentController::class, 'sendMessage']);
     });
+
+    // ── Kids Admin Routes ─────────────────────────────────────────────────────
+    Route::prefix('kids')->group(function () {
+        Route::get('/courses',                    [AdminKidsController::class, 'courses']);
+        Route::put('/courses/{id}/prices',        [AdminKidsController::class, 'updatePrices']);
+        Route::get('/enrollments',                [AdminKidsController::class, 'enrollments']);
+    });
+
+    // ── Referral Admin Routes ─────────────────────────────────────────────────
+    Route::prefix('referrals')->group(function () {
+        Route::get('/stats',                      [AdminReferralController::class, 'stats']);
+        Route::get('/history',                    [AdminReferralController::class, 'history']);
+        Route::get('/public-referrers',           [AdminReferralController::class, 'publicReferrers']);
+    });
     
+    // ── Scholarship Admin Routes ──────────────────────────────────────────────
+    Route::prefix('scholarships')->group(function () {
+        Route::get('/',                           [AdminScholarshipController::class, 'index']);
+        Route::get('/stats',                      [AdminScholarshipController::class, 'stats']);
+        Route::patch('/{id}/review',              [AdminScholarshipController::class, 'review']);
+    });
+
     // Courses Management
     Route::prefix('courses')->group(function () {
         Route::get('/', [AdminCourseController::class, 'index']);

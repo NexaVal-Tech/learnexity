@@ -45,11 +45,18 @@ import type {
   StudentDetail,
   AdminCourseListItem,
   AdminCourseDetail,
-    AdminCourseTopic,
+  AdminCourseTopic,
   AdminCourseMaterial,
   AdminCourseExternalResource,
   AdminCourseStudent,
   AdminCourseSprint,
+  KidsCourse,
+  KidsEnrollment,
+  ReferralAdminStats,
+  ReferralHistoryItem,
+  PublicReferrer,
+  ScholarshipApplication,
+  ScholarshipStats
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -606,6 +613,78 @@ export const api = {
         });
       },
     },
+
+      kids: {
+        getCourses: async (): Promise<{ courses: KidsCourse[]; stats: any }> => {
+          return await adminApi.get('/api/admin/kids/courses');
+        },
+    
+        updateCoursePrices: async (
+          courseId: number,
+          data: Partial<KidsCourse>
+        ): Promise<{ message: string; course: KidsCourse }> => {
+          return await adminApi.put(`/api/admin/kids/courses/${courseId}/prices`, data);
+        },
+    
+        getEnrollments: async (params?: {
+          page?: number;
+          per_page?: number;
+          payment_status?: string;
+          track?: string;
+        }): Promise<{ data: KidsEnrollment[]; meta: any }> => {
+          return await adminApi.get('/api/admin/kids/enrollments', { params } as any);
+        },
+      },
+
+      referralAdmin: {
+        getStats: async (): Promise<ReferralAdminStats> => {
+          return await adminApi.get('/api/admin/referrals/stats');
+        },
+    
+        getHistory: async (params?: {
+          page?: number;
+          per_page?: number;
+          search?: string;
+          status?: string;
+          referrer_type?: 'user' | 'public';
+        }): Promise<{ data: ReferralHistoryItem[]; meta: any }> => {
+          return await adminApi.get('/api/admin/referrals/history', { params } as any);
+        },
+    
+        getPublicReferrers: async (params?: {
+          page?: number;
+          per_page?: number;
+          search?: string;
+        }): Promise<{ data: PublicReferrer[]; meta: any }> => {
+          return await adminApi.get('/api/admin/referrals/public-referrers', { params } as any);
+        },
+      },
+
+        scholarships: {
+          getStats: async (): Promise<ScholarshipStats> => {
+            return await adminApi.get('/api/admin/scholarships/stats');
+          },
+      
+          getAll: async (params?: {
+            page?: number;
+            per_page?: number;
+            search?: string;
+            status?: 'pending' | 'approved' | 'rejected';
+          }): Promise<{ data: ScholarshipApplication[]; meta: any }> => {
+            return await adminApi.get('/api/admin/scholarships', { params } as any);
+          },
+      
+          review: async (
+            id: number,
+            data: {
+              status: 'approved' | 'rejected';
+              review_notes?: string;
+              discount_percentage?: number;
+            }
+          ): Promise<{ message: string }> => {
+            return await adminApi.patch<any>(`/api/admin/scholarships/${id}/review`, data);
+          },
+        },
 
     courses: {
       getAll: async (params?: {

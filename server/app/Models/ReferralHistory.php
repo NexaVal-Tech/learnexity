@@ -45,4 +45,14 @@ class ReferralHistory extends Model
     {
         return $this->belongsTo(User::class, 'referred_user_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function publicReferrer()
+    {
+        return $this->belongsTo(PublicReferrer::class);
+    }
 }

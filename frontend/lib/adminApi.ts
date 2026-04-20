@@ -171,6 +171,11 @@ export const adminApi = {
     return response.data;
   },
 
+  patch: async <T = any>(url: string, data?: any, config?: any): Promise<T> => {
+    const response = await axios.patch(url, data, config);
+    return response.data;
+  },
+
   delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await adminApiClient.delete<T>(url, config);
     return response.data;

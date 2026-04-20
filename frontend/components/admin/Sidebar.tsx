@@ -27,6 +27,7 @@ const Sidebar = () => {
     { icon: SlidersHorizontal, label: 'Course Settings', href: '/admin/settings/courses' },
     { icon: GraduationCap, label: 'Kids Management', href: '/admin/kids' },
     { icon: User, label: 'Referral History', href: '/admin/referral-history' },
+    { icon: GraduationCap, label: 'Scholarship Applications', href: '/admin/scholarship-application' },
   ];
 
   const handleLogout = async () => {
