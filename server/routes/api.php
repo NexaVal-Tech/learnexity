@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\User\ScholarshipController;
 
 // Currency Detection (Public Route)
 
@@ -132,6 +133,14 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/{itemId}/complete', [CourseResourcesController::class, 'markItemCompleted']);
         Route::post('/{itemId}/incomplete', [CourseResourcesController::class, 'markItemIncomplete']);
         Route::get('/{itemId}/download', [CourseResourcesController::class, 'downloadMaterial']);
+    });
+
+    // scholarship routes
+    Route::prefix('scholarships')->group(function () {
+        Route::get('/eligibility/{courseId}', [ScholarshipController::class, 'checkEligibility']);
+        Route::post('/apply/{courseId}',      [ScholarshipController::class, 'apply']);
+        Route::get('/course/{courseId}',      [ScholarshipController::class, 'getForCourse']);
+        Route::get('/my-applications',        [ScholarshipController::class, 'myApplications']);
     });
 });
 

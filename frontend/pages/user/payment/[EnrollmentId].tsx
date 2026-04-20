@@ -31,6 +31,17 @@ interface StripeCheckoutSession {
   error?: string;
 }
 
+interface Scholarship {
+  id: number;
+  course_id: string;
+  course_name: string;
+  status: 'pending' | 'approved' | 'rejected';
+  discount_percentage: number;
+  is_used: boolean;
+  total_score: number;
+  review_notes: string;
+}
+
 const TRACK_OPTIONS: TrackOption[] = [
   {
     id: 'one_on_one',
@@ -122,6 +133,9 @@ export default function PaymentPage() {
     self_paced: 0,
   });
 
+  const [scholarship, setScholarship] = useState<Scholarship | null>(null);
+  const [scholarshipLoading, setScholarshipLoading] = useState(false);
+
   const [paymentType, setPaymentType] = useState<'onetime' | 'installment'>('onetime');
   const [currency, setCurrency] = useState<'USD' | 'NGN'>('USD');
   const [currencyDetected, setCurrencyDetected] = useState(false);
@@ -159,12 +173,33 @@ export default function PaymentPage() {
     detectCurrency();
   }, []);
 
+
+  const fetchScholarship = useCallback(async (courseSlug: string) => {
+    try {
+      setScholarshipLoading(true);
+      const response = await api.get(`/scholarships/course/${courseSlug}`);
+      const data = await response.data;
+      if (data.scholarship?.status === 'approved' && !data.scholarship.is_used) {
+        setScholarship(data.scholarship);
+      }
+    } catch {
+      // Non-critical — continue without scholarship
+    } finally {
+      setScholarshipLoading(false);
+    }
+  }, []);
+
   // ─── Course track + pricing ─────────────────────────────────────────────────
   const fetchCourseTrackDetails = useCallback(
     async (courseId: number) => {
       try {
         const courseData = await api.courses.getById(courseId);
         setCourse(courseData);
+
+        // fetching scholarship if avalaible
+        if (courseData.course_id) {
+          await fetchScholarship(courseData.course_id);
+        }
 
         const tracks: LearningTrack[] = [];
         const prices: Record<LearningTrack, number> = {
@@ -328,22 +363,27 @@ export default function PaymentPage() {
   // ─── Price calculation ──────────────────────────────────────────────────────
   const getCurrentPrice = (): number => {
     if (!selectedTrack) return 0;
-
+  
     let price = trackPrices[selectedTrack] || 0;
-
+  
+    // Apply one-time discount first
     if (paymentType === 'onetime' && course) {
-      const discountValue =
-        currency === 'NGN' ? course.onetime_discount_ngn : course.onetime_discount_usd;
-      const discountPercent = parseFloat(discountValue) || 0;
+      const discountPercent =
+        parseFloat(currency === 'NGN' ? course.onetime_discount_ngn : course.onetime_discount_usd) || 0;
       if (discountPercent > 0) {
         price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
       }
     }
-
+  
+    // Apply scholarship discount AFTER standard discount
+    if (scholarship && !scholarship.is_used) {
+      price = Math.max(0, Math.round(price * (1 - scholarship.discount_percentage / 100)));
+    }
+  
     if (paymentType === 'installment') {
       price = Math.round(price / 4);
     }
-
+  
     return price;
   };
 
@@ -392,6 +432,7 @@ export default function PaymentPage() {
             currency: 'usd',
             user_email: user.email,
             user_name: user.name,
+            scholarship_id: scholarship?.id ?? null,
           }),
         }
       );
@@ -440,12 +481,12 @@ export default function PaymentPage() {
       }
 
       // Webhook hasn't fired yet — update manually then redirect
-      await api.enrollment.updatePayment(
-        enrollment!.id,
-        'completed',
-        response.reference,
-        selectedTrack!
-      );
+      await api.post(`/api/courses/enrollments/${enrollment!.id}/payment`, {
+        payment_status: 'completed',
+        transaction_id: response.reference,
+        learning_track: selectedTrack!,
+        scholarship_id: scholarship?.id ?? null,
+      });
 
       alert(
         `Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`
@@ -483,6 +524,7 @@ export default function PaymentPage() {
             learning_track: selectedTrack,
             payment_type: paymentType,
             currency: currency,
+            scholarship_id: scholarship?.id ?? null,
             custom_fields: [
               {
                 display_name: 'Course Name',
@@ -882,6 +924,16 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Payment Type:</span>
                     <span className="font-semibold text-gray-900">Installment (1 of 4)</span>
+                  </div>
+                )}
+
+                {scholarship && !scholarship.is_used && (
+                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-2">
+                    <span className="text-green-600 text-lg">🎓</span>
+                    <div>
+                      <p className="text-xs font-bold text-green-700">Scholarship Applied</p>
+                      <p className="text-xs text-green-600">{scholarship.discount_percentage}% discount active</p>
+                    </div>
                   </div>
                 )}
 

@@ -25,6 +25,8 @@ const Sidebar = () => {
     // { icon: Calendar, label: 'Consultations', href: '/admin/consultations' },
     // { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics' },
     { icon: SlidersHorizontal, label: 'Course Settings', href: '/admin/settings/courses' },
+    { icon: GraduationCap, label: 'Kids Management', href: '/admin/kids' },
+    { icon: User, label: 'Referral History', href: '/admin/referral-history' },
   ];
 
   const handleLogout = async () => {

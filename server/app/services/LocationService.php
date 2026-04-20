@@ -278,4 +278,34 @@ class LocationService
             ];
         }
     }
+
+    public static function detectCurrencyFull(?string $ip = null): array
+    {
+        $ip = $ip ?: self::getRealIpAddress();
+
+        if (self::isLocalIp($ip)) {
+            $publicIp = self::getPublicIp();
+            if ($publicIp && !self::isLocalIp($publicIp)) {
+                $ip = $publicIp;
+            } else {
+                return ['currency' => 'USD', 'country' => 'Unknown', 'country_code' => 'XX'];
+            }
+        }
+
+        return Cache::remember("location_full_{$ip}", 86400, function () use ($ip) {
+            try {
+                $response = Http::timeout(5)->get("http://ip-api.com/json/{$ip}");
+                if ($response->successful()) {
+                    $data        = $response->json();
+                    $countryCode = strtoupper($data['countryCode'] ?? 'XX');
+                    $countryName = $data['country'] ?? 'Unknown';
+                    $currency    = $countryCode === 'NG' ? 'NGN' : 'USD';
+                    return ['currency' => $currency, 'country' => $countryName, 'country_code' => $countryCode];
+                }
+            } catch (\Exception $e) {
+                Log::warning('detectCurrencyFull failed', ['error' => $e->getMessage()]);
+            }
+            return ['currency' => 'USD', 'country' => 'Unknown', 'country_code' => 'XX'];
+        });
+    }
 }

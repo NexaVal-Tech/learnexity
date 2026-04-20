@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
+use App\Models\Scholarship;
 use App\Models\Course;
 use App\Services\LocationService;
 use Illuminate\Http\Request;
@@ -233,6 +234,7 @@ class CourseEnrollmentController extends Controller
         $validator = Validator::make($request->all(), [
             'payment_status' => 'required|in:pending,completed,failed',
             'transaction_id' => 'nullable|string',
+            'scholarship_id' => 'nullable|integer',
             'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
         ]);
 
@@ -278,6 +280,14 @@ class CourseEnrollmentController extends Controller
         }
 
         $enrollment->update($updateData);
+
+        if ($request->payment_status === 'completed' && $request->scholarship_id) {
+            Scholarship::find($request->scholarship_id)?->markAsUsed((int) $enrollmentId);
+        }
+
+        if ($request->payment_status === 'completed' && $request->scholarship_id) {
+            Scholarship::find($request->scholarship_id)?->markAsUsed($enrollmentId);
+        }
 
         Log::info('✅ Payment status updated manually', [
             'enrollment_id' => $enrollmentId,

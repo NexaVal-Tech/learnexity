@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const clearError = () => setError(null);
 
   // LOGIN
+  // LOGIN
   const login = async (email: string, password: string) => {
     try {
       setError(null);
@@ -71,18 +72,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await refreshUser();
 
+      // Scholarship redirect — highest priority
+      const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
+      if (scholarshipRedirect) {
+        sessionStorage.removeItem('scholarship_course_redirect');
+        const safeId = scholarshipRedirect.replace(/[^a-zA-Z0-9_-]/g, '');
+        if (safeId) {
+          router.push(`/scholarships/${safeId}`);
+          return;
+        }
+      }
+
+      // Intended course redirect
       const intendedCourse = sessionStorage.getItem('intended_course');
       const intendedCourseName = sessionStorage.getItem('intended_course_name');
 
       if (intendedCourse && intendedCourseName) {
-          sessionStorage.removeItem('intended_course');
-          sessionStorage.removeItem('intended_course_name');
-          // Only allow safe alphanumeric course IDs
-          const safeCourseId = intendedCourse.replace(/[^a-zA-Z0-9_-]/g, '');
-          if (safeCourseId) {
-              router.push(`/courses/${safeCourseId}`);
-              return;
-          }
+        sessionStorage.removeItem('intended_course');
+        sessionStorage.removeItem('intended_course_name');
+        const safeCourseId = intendedCourse.replace(/[^a-zA-Z0-9_-]/g, '');
+        if (safeCourseId) {
+          router.push(`/courses/${safeCourseId}`);
+          return;
+        }
       }
 
       router.push('/user/dashboard');

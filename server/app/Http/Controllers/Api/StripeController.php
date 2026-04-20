@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\PaymentConfirmation;
 use App\Models\CourseEnrollment;
+use App\Models\Scholarship;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -228,6 +229,11 @@ class StripeController extends Controller
                 }
 
                 $enrollment->update($updateData);
+
+                $scholarshipId = $metadata->scholarship_id ?? null;
+                if ($scholarshipId) {
+                    Scholarship::find($scholarshipId)?->markAsUsed($enrollment->id);
+                }
 
                 Log::info('✅ Payment completed via Stripe webhook', [
                     'enrollment_id' => $enrollmentId,

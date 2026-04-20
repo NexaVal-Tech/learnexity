@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*'],
+    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*', 'scholarships/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'https://learnexity.org',

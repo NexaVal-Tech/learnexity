@@ -10,6 +10,7 @@ import Footer from "@/components/footer/Footer";
 import Courses from "@/components/headercourses/HeaderCourse";
 import { ExpertButton } from "@/components/button/Button";
 import { ArrowRight } from "lucide-react";
+import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
 
 const BRAND = "#4A3AFF";
 
@@ -353,20 +354,31 @@ export default function CoursePage() {
               <p className="text-lg text-gray-400 leading-relaxed">
                 {course.description}
               </p>
-
-              {displayPrice > 0 && (
-                <div
-                  className="dc-card inline-flex items-center gap-4 px-6 py-4"
-                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
-                >
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Price</p>
-                    <p className="text-3xl font-bold" style={{ color: BRAND }}>
-                      {currency === "NGN" ? "₦" : "$"}{displayPrice.toLocaleString()}
-                    </p>
+              
+              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                {displayPrice > 0 && (
+                  <div
+                    className="dc-card flex items-center gap-4 px-6 py-4"
+                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
+                  >
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
+                        Price
+                      </p>
+                      <p className="text-3xl font-bold" style={{ color: BRAND }}>
+                        {currency === "NGN" ? "₦" : "$"}
+                        {displayPrice.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                <ScholarshipBadge
+                  courseId={course.course_id}
+                  isLoggedIn={!!user}
+                  showCta={!enrollmentStatus?.isEnrolled}
+                />
+              </div>
 
               {error && (
                 <div
