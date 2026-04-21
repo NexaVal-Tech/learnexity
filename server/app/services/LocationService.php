@@ -308,4 +308,6 @@ class LocationService
             return ['currency' => 'USD', 'country' => 'Unknown', 'country_code' => 'XX'];
         });
     }
+
+    
 }

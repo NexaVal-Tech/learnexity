@@ -15,13 +15,13 @@ const QUESTIONS = [
     step: 1,
     label: 'Your Current Level',
     question: 'How would you honestly describe your current level in this field?',
-    hint: 'Be honest — beginners are just as eligible as those with some exposure.',
+    hint: 'Be honest, beginners are just as eligible as those with some exposure.',
     type: 'select' as const,
     options: [
-      { value: 'complete_beginner', label: '🌱 Complete Beginner', sub: "I'm starting from zero" },
-      { value: 'some_exposure', label: '📖 Some Exposure', sub: "I've tried a few things but lack structure" },
-      { value: 'intermediate', label: '⚙️ Intermediate', sub: "I know the basics but need to go deeper" },
-      { value: 'advanced', label: '🚀 Advanced', sub: "I'm experienced but want structured mastery" },
+      { value: 'complete_beginner', label: 'Complete Beginner', sub: "I'm starting from zero" },
+      { value: 'some_exposure', label: 'Some Exposure', sub: "I've tried a few things but lack structure" },
+      { value: 'intermediate', label: 'Intermediate', sub: "I know the basics but need to go deeper" },
+      { value: 'advanced', label: 'Advanced', sub: "I'm experienced but want structured mastery" },
     ],
   },
   {
@@ -40,7 +40,7 @@ const QUESTIONS = [
     step: 3,
     label: 'Your Commitment',
     question: 'How many hours per week can you realistically dedicate to this course?',
-    hint: 'Be realistic — commitment consistency matters more than ambition.',
+    hint: 'Be realistic, commitment consistency matters more than ambition.',
     type: 'select' as const,
     options: [
       { value: '1_3', label: '1–3 hrs/week', sub: 'Light pace' },
@@ -53,7 +53,7 @@ const QUESTIONS = [
     id: 'completion_obstacle',
     step: 4,
     label: 'Potential Obstacles',
-    question: 'What might realistically stop you from completing this course — and how will you handle it?',
+    question: 'What might realistically stop you from completing this course and how will you handle it?',
     hint: 'Self-aware answers score higher than "nothing will stop me." We want to understand your resilience.',
     type: 'textarea' as const,
     placeholder:
@@ -64,7 +64,7 @@ const QUESTIONS = [
     id: 'financial_context',
     step: 5,
     label: 'Financial Context',
-    question: "Why is the full course fee difficult for you right now — and if you received a 25% discount instead of full scholarship, could you cover the rest?",
+    question: "Why is the full course fee difficult for you right now, and if you received a 25% discount instead of full scholarship, could you cover the rest?",
     hint: "Be specific and honest. This is the most important question. Mentioning actual numbers or circumstances strengthens your application significantly.",
     type: 'textarea' as const,
     placeholder:
@@ -459,12 +459,6 @@ export default function ScholarshipPage() {
               <div className="brand-line mb-8" />
 
               <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: `${BRAND}20`, border: `1px solid ${BRAND}30` }}
-                >
-                  🎓
-                </div>
                 <div>
                   <p className="text-xs uppercase tracking-widest font-bold" style={{ color: BRAND }}>
                     Scholarship Application
@@ -474,15 +468,15 @@ export default function ScholarshipPage() {
               </div>
 
               <p className="text-gray-400 leading-relaxed mb-6">
-                Our scholarship program exists to remove financial barriers for determined learners. Applications are assessed automatically based on commitment, context, and effort — not just financial need.
+                Our scholarship program exists to remove financial barriers for determined learners. Applications are assessed automatically based on commitment, context, and effort, not just financial need.
               </p>
 
               <div className="space-y-3 mb-8">
                 {[
-                  { icon: '⚡', text: 'Decision in under 2 minutes — fully automated' },
-                  { icon: '🔒', text: 'Tied to your account and this course only — non-transferable' },
-                  { icon: '📝', text: '6 focused questions — no essays, no tasks' },
-                  { icon: '🇳🇬', text: 'Nigerian applicants receive a location support bonus' },
+                  { icon: '', text: 'Decision in under 2 minutes, fully automated' },
+                  { icon: '', text: 'Tied to your account and this course only, non-transferable' },
+                  { icon: '', text: '6 focused questions, no essays, no tasks' },
+                  // { icon: '🇳🇬', text: 'Nigerian applicants receive a location support bonus' },
                 ].map((item) => (
                   <div
                     key={item.text}
@@ -516,7 +510,7 @@ export default function ScholarshipPage() {
               </div>
 
               <button onClick={() => setStep(1)} className="s-btn-primary w-full text-center">
-                Begin Application →
+                Begin Application
               </button>
             </div>
           )}
@@ -615,11 +609,11 @@ export default function ScholarshipPage() {
               <div className="flex items-center justify-between gap-4">
                 {step > 1 ? (
                   <button className="s-btn-ghost" onClick={() => setStep((s) => s - 1)}>
-                    ← Back
+                    Back
                   </button>
                 ) : (
                   <button className="s-btn-ghost" onClick={() => setStep(0)}>
-                    ← Intro
+                    Intro
                   </button>
                 )}
 
@@ -634,9 +628,9 @@ export default function ScholarshipPage() {
                       Reviewing…
                     </>
                   ) : step === totalSteps ? (
-                    'Submit Application →'
+                    'Submit Application'
                   ) : (
-                    'Next →'
+                    'Next'
                   )}
                 </button>
               </div>
