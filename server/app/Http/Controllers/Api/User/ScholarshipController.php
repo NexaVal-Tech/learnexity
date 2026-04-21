@@ -66,6 +66,7 @@ class ScholarshipController extends Controller
         ]);
     }
 
+    
     /**
      * Submit a scholarship application.
      * Auto-scores and auto-decides immediately.

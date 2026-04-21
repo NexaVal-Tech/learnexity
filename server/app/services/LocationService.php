@@ -209,6 +209,7 @@ class LocationService
         };
     }
 
+    
     public static function detectCurrencyFull(?string $ip = null): array
     {
         $ip = $ip ?: self::getRealIpAddress();
