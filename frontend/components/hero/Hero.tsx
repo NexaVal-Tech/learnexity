@@ -11,22 +11,24 @@ export default function Hero() {
         <style>{`
           @media (max-width: 768px) {
             .hero-section {
-              height: 45vh !important;
+              height: 47vh !important;
+              padding-top: 0 !important;
             }
             .hero-video {
-              height: 100% !important;
-              top: 0 !important;
+              height: calc(100% - 56px) !important;
+              top: 56px !important;
             }
           }
         `}</style>
 
-        <video className="hero-video"
+        <video
+          className="hero-video"
           style={{
             position: "absolute",
             top: 60,
             left: 0,
             width: "100%",
-            height: "90%",
+            height: "calc(100% - 60px)",
             objectFit: "fill",
           }}
           src="/videos/hero-video.mp4"
