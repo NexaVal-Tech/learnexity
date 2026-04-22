@@ -1,13 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-
   reactStrictMode: false,
-  // output: "export", // enables static export with /out folder
+  // Remove output: "export" — switching to Next.js server mode
   images: {
-    unoptimized: true, // allow <Image /> without needing Next.js image optimizer
+    unoptimized: true,
   },
-  basePath: "", // set to subfolder if needed
+  basePath: "",
   assetPrefix: "/",
 };
 
