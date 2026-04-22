@@ -32,6 +32,24 @@ const data = [
     video: "/videos/testimonial-video.mp4",
     thumbnail: "/thumbnails/thumbnail-2.png",
   },
+  {
+    name: "Daniel Ugwusiani",
+    role: "UI/Ux Designer",
+    video: "/videos/testimonial-vid-5.mp4",
+    thumbnail: "/thumbnails/thumbnail-6.png",
+  },
+  {
+    name: "Mercy Aleke",
+    role: "Digital Marketing",
+    video: "/videos/testimonial-vid-6.mp4",
+    thumbnail: "/thumbnails/thumbnail-5.png",
+  },
+  {
+    name: "Amadineze Christain Chinonso",
+    role: "Digital Marketing",
+    video: "/videos/testimonial-vid-7.mp4",
+    thumbnail: "/thumbnails/thumbnail-7.png",
+  },
 ];
 
 function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
