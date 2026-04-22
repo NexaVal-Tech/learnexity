@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 
   reactStrictMode: false,
-  output: "export", // enables static export with /out folder
+  // output: "export", // enables static export with /out folder
   images: {
     unoptimized: true, // allow <Image /> without needing Next.js image optimizer
   },
