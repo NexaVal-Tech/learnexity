@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Clock, TrendingUp, Award, Share2, Link2, BookOpen, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
@@ -8,10 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
 import { AccessBlockedBanner, PaymentWarningBanner } from '@/components/user/AccessBlockedBanner';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-// -------------------------
-// TypeScript interfaces
-// -------------------------
 interface CourseResourceItem {
   id: number;
   title: string;
@@ -19,7 +17,7 @@ interface CourseResourceItem {
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
-  text_content?: string | null; 
+  text_content?: string | null;
 }
 
 interface Sprint {
@@ -54,13 +52,9 @@ interface ExternalResource {
 
 interface CourseResourcesData {
   materials: Sprint[];
-  statistics: {
-    overall_progress: number;
-  };
+  statistics: { overall_progress: number };
   course_average: number;
-  leaderboard: {
-    participants: LeaderboardParticipant[];
-  };
+  leaderboard: { participants: LeaderboardParticipant[] };
   external_resources: {
     video_tutorials: ExternalResource[];
     industry_articles: ExternalResource[];
@@ -75,112 +69,142 @@ interface EnrolledCourse {
   course_name?: string;
 }
 
+// ─── Storage helpers ──────────────────────────────────────────────────────────
+
+function saveLastCourseId(id: string) {
+  try { localStorage.setItem('rp_last_course', id); } catch {}
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function ResourcesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { courseId: queryCourseId } = router.query;
-  
+
   const [courseId, setCourseId] = useState<string | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [activeTab, setActiveTab] = useState('all-resources');
   const [data, setData] = useState<CourseResourcesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedSprints, setExpandedSprints] = useState<number[]>([1]);
+  const [expandedSprints, setExpandedSprints] = useState<number[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
+  // Track which items are currently being auto-completed (debounce API calls)
+  const completingRef = useRef<Set<number>>(new Set());
 
-  // Get courseId from query or fetch user's first enrolled course
+  // ── Init course ID ─────────────────────────────────────────────────────────
+
   useEffect(() => {
-    const initializeCourseId = async () => {
+    const init = async () => {
       if (queryCourseId) {
-        // Handle the case where queryCourseId might be an array
         const id = Array.isArray(queryCourseId) ? queryCourseId[0] : queryCourseId;
         setCourseId(id);
       } else {
         try {
           const enrollments = await api.enrollment.getUserEnrollments();
-          if (enrollments.enrollments && enrollments.enrollments.length > 0) {
-            // Store all enrolled courses
+          if (enrollments.enrollments?.length > 0) {
             const courses = enrollments.enrollments.map((e: any) => ({
               course_id: e.course_id,
               course_title: e.course_title || e.course_name || `Course ${e.course_id}`,
-              course_name: e.course_name
+              course_name: e.course_name,
             }));
             setEnrolledCourses(courses);
-            
-            // Set the first course as active
             setCourseId(courses[0].course_id.toString());
           } else {
             setError('You are not enrolled in any courses yet.');
             setLoading(false);
           }
-        } catch (err) {
+        } catch {
           setError('Failed to fetch enrollments.');
           setLoading(false);
         }
       }
     };
-
-    if (user) {
-      initializeCourseId();
-    }
+    if (user) init();
   }, [queryCourseId, user]);
 
-  // Add this useEffect to fetch enrollment status
-  useEffect(() => {
-    const fetchEnrollmentStatus = async () => {
-      if (!courseId) return;
-      
-      try {
-        const response = await api.enrollment.checkStatus(courseId);
-        
-        if (response.enrollment) {
-          setCurrentEnrollment(response.enrollment);
-        }
-      } catch (error) {
-        console.error('Failed to fetch enrollment status:', error);
-        // Don't block loading — set a default open enrollment so loadData can run
-        setCurrentEnrollment({ has_access: true } as CourseEnrollment);
-      }
-    };
+  // ── Enrollment status ──────────────────────────────────────────────────────
 
-    fetchEnrollmentStatus();
-  }, [courseId]);
-
-  // Update useEffect for loading data
   useEffect(() => {
     if (!courseId) return;
-    
-    // Wait for enrollment check before loading data
-    if (currentEnrollment === null) return; // still fetching
-    
+    (async () => {
+      try {
+        const response = await api.enrollment.checkStatus(courseId);
+        if (response.enrollment) setCurrentEnrollment(response.enrollment);
+      } catch {
+        setCurrentEnrollment({ has_access: true } as CourseEnrollment);
+      }
+    })();
+  }, [courseId]);
+
+  // ── Load data ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!courseId || currentEnrollment === null) return;
     loadData();
   }, [courseId, currentEnrollment]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      
       if (currentEnrollment && !currentEnrollment.has_access) {
-        setData(null);
-        setError(null);
-        setLoading(false);
-        return;
+        setData(null); setError(null); setLoading(false); return;
       }
-      
       const response = await api.courseResources.getAll(courseId!);
       setData(response as CourseResourcesData);
       setError(null);
-    } catch (err) {
+
+      // Auto-expand first sprint with uncompleted items
+      const materials = (response as CourseResourcesData).materials;
+      if (materials.length > 0) {
+        const firstUncompleted = materials.find(s => s.progress_percentage < 100);
+        setExpandedSprints([firstUncompleted?.id ?? materials[0].id]);
+      }
+    } catch {
       setError('Failed to load course resources. Please try again.');
-      console.error('Failed to load resources:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // ── Auto-progress tracking ─────────────────────────────────────────────────
+  // Called from ResourcePreviewModal when a topic is auto-completed.
+  // Also exposed to the list view for items the user interacts with.
+
+  const handleAutoComplete = useCallback(async (itemId: number) => {
+    if (completingRef.current.has(itemId)) return;
+    completingRef.current.add(itemId);
+    try {
+      await api.courseResources.markItemCompleted(itemId);
+      setToast({ message: '✓ Progress saved automatically!', type: 'success' });
+      setTimeout(() => setToast(null), 2500);
+      // Optimistic UI update
+      setData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          materials: prev.materials.map(sprint => ({
+            ...sprint,
+            items: sprint.items.map(item =>
+              item.id === itemId ? { ...item, is_completed: true } : item
+            ),
+          })),
+        };
+      });
+      // Refresh full data in background
+      setTimeout(loadData, 1000);
+    } catch {
+      // Silent fail — don't bother user with auto-tracking errors
+    } finally {
+      completingRef.current.delete(itemId);
+    }
+  }, [courseId, currentEnrollment]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   const toggleSprint = (sprintId: number) => {
     setExpandedSprints(prev =>
@@ -188,22 +212,10 @@ export default function ResourcesPage() {
     );
   };
 
-  const handleItemToggle = async (itemId: number, currentStatus: boolean) => {
-    try {
-      if (currentStatus) {
-        await api.courseResources.markItemIncomplete(itemId);
-        setToast({ message: 'Item marked as incomplete', type: 'success' });
-      } else {
-        await api.courseResources.markItemCompleted(itemId);
-        setToast({ message: '✓ Item completed! Great progress!', type: 'success' });
-      }
-      await loadData();
-      setTimeout(() => setToast(null), 3000);
-    } catch (error) {
-      console.error('Failed to update item:', error);
-      setToast({ message: 'Failed to update progress. Please try again.', type: 'error' });
-      setTimeout(() => setToast(null), 3000);
-    }
+  const handleCourseSwitch = (newCourseId: number) => {
+    setCourseId(newCourseId.toString());
+    setActiveTab('all-resources');
+    setExpandedSprints([]);
   };
 
   const handleDownload = async (itemId: number, title: string) => {
@@ -212,63 +224,29 @@ export default function ResourcesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      
-      // Extract file extension from title or use a default
-      const extension = title.split('.').pop() || 'pdf';
-      a.download = title.endsWith(`.${extension}`) ? title : `${title}.${extension}`;
-      
+      const ext = title.split('.').pop() || 'pdf';
+      a.download = title.endsWith(`.${ext}`) ? title : `${title}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
       setToast({ message: '✓ Download started!', type: 'success' });
       setTimeout(() => setToast(null), 3000);
-    } catch (error) {
-      console.error('Failed to download:', error);
-      setToast({ message: 'Failed to download file. Please try again.', type: 'error' });
+    } catch {
+      setToast({ message: 'Failed to download file.', type: 'error' });
       setTimeout(() => setToast(null), 3000);
     }
   };
 
-  const handleCourseSwitch = (newCourseId: number) => {
-    setCourseId(newCourseId.toString());
-    setActiveTab('all-resources'); // Reset to all-resources tab when switching courses
-    setExpandedSprints([1]); // Reset expanded sprints
-  };
-
-  // course resources preview
-  const [preview, setPreview] = useState<{
-      url: string;
-      title: string;
-    } | null>(null);
-
-  // adding an open click
-  const handlePreview = async (itemId: number, title: string) => {
-    try {
-      const blob = await api.courseResources.downloadMaterial(itemId);
-      const url = window.URL.createObjectURL(blob);
-
-      setPreview({ url, title });
-    } catch (err) {
-      console.error('Failed to preview file', err);
-      setToast({ message: 'Unable to open file', type: 'error' });
-      setTimeout(() => setToast(null), 3000);
-    }
-  };
-
-  const handleOpenModal = () => {
-    setShowPreviewModal(true);
-  };
-
-  // Check if course materials are empty
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
+
+  // ── Loading / Error ────────────────────────────────────────────────────────
 
   if (loading && !data) {
     return (
       <UserDashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg text-gray-600">Loading resources...</div>
+          <div className="text-lg text-gray-600">Loading resources…</div>
         </div>
       </UserDashboardLayout>
     );
@@ -280,75 +258,52 @@ export default function ResourcesPage() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="text-red-600 text-xl mb-2">{error}</div>
-            <button onClick={loadData} className="text-purple-600 hover:underline">
-              Try Again
-            </button>
+            <button onClick={loadData} className="text-purple-600 hover:underline">Try Again</button>
           </div>
         </div>
       </UserDashboardLayout>
     );
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <UserDashboardLayout>
-
-      {/* Access Blocked Overlay - Shows when access is suspended */}
       {currentEnrollment && !currentEnrollment.has_access && (
-        <AccessBlockedBanner 
+        <AccessBlockedBanner
           enrollment={currentEnrollment}
           onPayNow={() => router.push(`/user/payment/${currentEnrollment.id}`)}
         />
       )}
 
       <div className="max-w-[1541px] mx-auto px-6 py-8 pt-25">
-
-        {/* Payment Warning Banner - Shows during grace period */}
-        {currentEnrollment && currentEnrollment.has_access && currentEnrollment.access_blocked_reason && (
+        {currentEnrollment?.has_access && currentEnrollment?.access_blocked_reason && (
           <PaymentWarningBanner enrollment={currentEnrollment} />
         )}
 
         {/* Tab Navigation */}
         <div className="bg-white rounded-lg border border-gray-200 mb-6 inline-block">
           <div className="inline-flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('all-resources')}
-              className={`px-6 py-3 text-sm font-medium transition ${
-                activeTab === 'all-resources'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              All Resources
-            </button>
-            <button
-              onClick={() => setActiveTab('progress-ranking')}
-              className={`px-6 py-3 text-sm font-medium transition ${
-                activeTab === 'progress-ranking'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Progress Ranking
-            </button>
-            <button
-              onClick={() => setActiveTab('certificates')}
-              className={`px-6 py-3 text-sm font-medium transition ${
-                activeTab === 'certificates'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Certificates
-            </button>
+            {['all-resources', 'progress-ranking', 'certificates'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-3 text-sm font-medium transition capitalize ${
+                  activeTab === tab ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </button>
+            ))}
           </div>
         </div>
 
-         {/* Course Switcher - Horizontal Tabs */}
+        {/* Course Switcher */}
         {enrolledCourses.length > 1 && (
           <div className="block mb-6">
             <div className="w-full overflow-x-auto">
               <div className="flex border-b-2 border-gray-400 min-w-max">
-                {enrolledCourses.map((course) => (
+                {enrolledCourses.map(course => (
                   <button
                     key={course.course_id}
                     onClick={() => handleCourseSwitch(course.course_id)}
@@ -366,17 +321,32 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* All Resources Tab */}
+        {/* ─── ALL RESOURCES TAB ──────────────────────────────────────────── */}
         {activeTab === 'all-resources' && data && (
           <div>
+            {/* Open Full Preview Button */}
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={() => setShowPreviewModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+              >
+                <BookOpen size={16} /> Open Learning View
+              </button>
+            </div>
+
+            {/* Auto-tracking notice */}
+            <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+              <Clock size={14} className="flex-shrink-0" />
+              <span>Progress is tracked automatically — just read and watch. No need to mark anything manually.</span>
+            </div>
+
             {/* Course Materials */}
             <div className="bg-white rounded-lg border border-gray-200 mb-6">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
-                <p className="text-sm text-gray-500 mt-1">Downloadable PDFs, templates, and presentations organized by sprint</p>
+                <p className="text-sm text-gray-500 mt-1">Organized by sprint — expand to view content</p>
               </div>
-              
-              {/* Empty State */}
+
               {isMaterialsEmpty ? (
                 <div className="p-12">
                   <div className="text-center max-w-md mx-auto">
@@ -384,9 +354,7 @@ export default function ResourcesPage() {
                       <BookOpen className="w-10 h-10 text-gray-400" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No Materials Yet</h3>
-                    <p className="text-gray-600">
-                      Your course materials will appear here when the class starts
-                    </p>
+                    <p className="text-gray-600">Your course materials will appear here when the class starts</p>
                   </div>
                 </div>
               ) : (
@@ -401,85 +369,78 @@ export default function ResourcesPage() {
                           <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
                             sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
                           }`}>
-                            {sprint.progress_percentage === 100 ? (
-                              <Check className="w-6 h-6" />
-                            ) : (
-                              `S${sprint.sprint_number}`
-                            )}
+                            {sprint.progress_percentage === 100 ? <Check className="w-6 h-6" /> : `S${sprint.sprint_number}`}
                           </div>
                           <div className="text-left">
                             <div className="font-medium text-gray-900">{sprint.sprint_name}</div>
                             <div className="text-xs text-gray-500">
-                              {sprint.completed_items || 0} of {sprint.total_items || sprint.items.length} completed ({sprint.progress_percentage}%)
+                              {sprint.completed_items ?? 0} of {sprint.total_items ?? sprint.items.length} completed ({sprint.progress_percentage}%)
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {/* Progress bar */}
                           <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full transition-all ${
-                                sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'
-                              }`}
+                            <div
+                              className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
                               style={{ width: `${sprint.progress_percentage}%` }}
-                            ></div>
+                            />
                           </div>
-                          {expandedSprints.includes(sprint.id) ? 
-                            <ChevronUp className="w-5 h-5 text-gray-400" /> : 
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                          {expandedSprints.includes(sprint.id)
+                            ? <ChevronUp className="w-5 h-5 text-gray-400" />
+                            : <ChevronDown className="w-5 h-5 text-gray-400" />
                           }
                         </div>
                       </button>
+
                       {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
                         <div className="bg-white divide-y divide-gray-100">
                           {sprint.items.map(item => (
-                            <div key={item.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                            <div key={item.id} className={`flex items-center justify-between p-4 hover:bg-gray-50 transition ${item.is_completed ? 'bg-green-50/30' : ''}`}>
                               <div className="flex items-center gap-3 flex-1">
-                                {/* Completion Checkbox */}
-                                <button
-                                  onClick={() => handleItemToggle(item.id, item.is_completed || false)}
-                                  className={`w-6 h-6 rounded border-2 flex items-center justify-center transition flex-shrink-0 ${
-                                    item.is_completed 
-                                      ? 'bg-green-500 border-green-500' 
-                                      : 'border-gray-300 hover:border-green-500'
-                                  }`}
-                                  title={item.is_completed ? 'Mark as incomplete' : 'Mark as complete'}
-                                >
-                                  {item.is_completed && (
-                                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                                  )}
-                                </button>
+                                {/* Completion indicator (read-only — auto-tracked) */}
+                                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                  item.is_completed ? 'bg-green-500 border-green-500' : 'border-gray-200 bg-white'
+                                }`}>
+                                  {item.is_completed && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                                </div>
 
                                 <div className={`w-8 h-8 rounded flex items-center justify-center ${
-                                  item.type === 'pdf' ? 'bg-red-100' : 
-                                  item.type === 'document' ? 'bg-orange-100' : 
-                                  item.type === 'video' ? 'bg-purple-100' : 'bg-green-100'
+                                  item.type === 'pdf' ? 'bg-red-100' :
+                                  item.type === 'document' ? 'bg-orange-100' :
+                                  item.type === 'video' ? 'bg-purple-100' : 'bg-blue-100'
                                 }`}>
-                                  {item.type === 'pdf' && <span className="text-red-600 text-xs font-bold">PDF</span>}
-                                  {item.type === 'document' && <span className="text-orange-600 text-xs font-bold">DOC</span>}
-                                  {item.type === 'video' && <span className="text-purple-600 text-xs font-bold">VID</span>}
-                                  {item.type === 'link' && <span className="text-green-600 text-xs font-bold">LNK</span>}
+                                  <span className={`text-xs font-bold ${
+                                    item.type === 'pdf' ? 'text-red-600' :
+                                    item.type === 'document' ? 'text-orange-600' :
+                                    item.type === 'video' ? 'text-purple-600' : 'text-blue-600'
+                                  }`}>
+                                    {item.type === 'pdf' ? 'PDF' :
+                                     item.type === 'document' ? 'DOC' :
+                                     item.type === 'video' ? 'VID' : 'TXT'}
+                                  </span>
                                 </div>
+
                                 <div className="flex-1">
-                                    <button onClick={handleOpenModal}>
-                                      {item.title}
-                                    </button>
-                                  <div className="text-xs text-gray-500">{item.file_size}</div>
+                                  <button
+                                    onClick={() => setShowPreviewModal(true)}
+                                    className="text-sm font-medium text-gray-800 hover:text-purple-700 text-left transition"
+                                  >
+                                    {item.title}
+                                  </button>
+                                  {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {item.is_completed && (
-                                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                                    Completed
+
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {item.is_completed ? (
+                                  <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                    <CheckCircle size={11} /> Completed
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                    <Clock size={11} /> Auto-tracks
                                   </span>
                                 )}
-                                {/* <button 
-                                  onClick={() => item.download_url && handleDownload(item.id, item.title)}
-                                  className="px-4 py-2 text-sm text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center gap-2"
-                                >
-                                  <Download className="w-4 h-4" />
-                                  Download
-                                </button> */}
                               </div>
                             </div>
                           ))}
@@ -491,213 +452,125 @@ export default function ResourcesPage() {
               )}
             </div>
 
-            {/* Evaluation & Leaderboard */}
-            <div className="bg-white rounded-lg border border-gray-200 mb-6">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-purple-600" />
-                  Evaluation & Leaderboard
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">Real-time performance tracking and cohort rankings</p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-3 gap-6 mb-6">
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Your Average Score</div>
-                    <div className="text-3xl font-bold text-gray-900">{data.statistics.overall_progress}%</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Cohort Average</div>
-                    <div className="text-3xl font-bold text-gray-900">{data.course_average}%</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Difference</div>
-                    <div className="text-3xl font-bold text-green-600">+{(data.statistics.overall_progress - data.course_average).toFixed(1)}%</div>
-                  </div>
+            {/* Leaderboard */}
+            {data.leaderboard && (
+              <div className="bg-white rounded-lg border border-gray-200 mb-6">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-purple-600" />
+                    Evaluation & Leaderboard
+                  </h2>
                 </div>
-
-                <div className="text-sm text-gray-700 mb-2">You're performing {((data.statistics.overall_progress - data.course_average) / data.course_average * 100).toFixed(1)}% above the cohort average</div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                  <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${data.statistics.overall_progress}%` }}></div>
-                </div>
-
-                {data.leaderboard && (
-                  <div className="border-t border-gray-200 pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900">Cohort Leaderboard</h3>
-                      <button className="text-sm text-purple-600 hover:underline flex items-center gap-1">
-                        <ExternalLink className="w-4 h-4" />
-                        Open in Google Sheets
-                      </button>
+                <div className="p-6">
+                  <div className="grid grid-cols-3 gap-6 mb-6">
+                    <div>
+                      <div className="text-sm text-gray-500 mb-1">Your Average Score</div>
+                      <div className="text-3xl font-bold text-gray-900">{data.statistics.overall_progress}%</div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-gray-200">
-                            <th className="text-left text-xs font-medium text-gray-500 py-3 px-2">Rank</th>
-                            <th className="text-left text-xs font-medium text-gray-500 py-3 px-2">Student Name</th>
-                            <th className="text-center text-xs font-medium text-gray-500 py-3 px-2">Sprint 1</th>
-                            <th className="text-center text-xs font-medium text-gray-500 py-3 px-2">Sprint 2</th>
-                            <th className="text-center text-xs font-medium text-gray-500 py-3 px-2">Sprint 3</th>
-                            <th className="text-center text-xs font-medium text-gray-500 py-3 px-2">Sprint 4</th>
-                            <th className="text-center text-xs font-medium text-gray-500 py-3 px-2">Overall</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.leaderboard.participants.map((participant, index) => (
-                            <tr
-                              key={participant.user_id}
-                              className={`border-b border-gray-100 ${participant.is_current_user ? 'bg-green-50' : ''}`}
-                            >
-                              <td className="py-3 px-2">
-                                {index === 0 ? (
-                                  <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-full">
-                                    <Trophy className="w-4 h-4 text-yellow-600" />
-                                  </div>
-                                ) : index === 1 ? (
-                                  <div className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full">
-                                    <span className="text-sm font-bold text-gray-600">#{participant.rank}</span>
-                                  </div>
-                                ) : index === 2 ? (
-                                  <div className="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full">
-                                    <span className="text-sm font-bold text-orange-600">#{participant.rank}</span>
-                                  </div>
-                                ) : (
-                                  <div className="text-sm text-gray-600 pl-2">#{participant.rank}</div>
-                                )}
-                              </td>
-                              <td className="py-3 px-2 text-sm font-medium text-gray-900">{participant.user_name}</td>
-                              <td className="py-3 px-2 text-center text-sm text-gray-600">{participant.sprint1_score}%</td>
-                              <td className="py-3 px-2 text-center text-sm text-gray-600">{participant.sprint2_score}%</td>
-                              <td className="py-3 px-2 text-center text-sm text-gray-600">{participant.sprint3_score}%</td>
-                              <td className="py-3 px-2 text-center text-sm text-gray-600">{participant.sprint4_score}%</td>
-                              <td className="py-3 px-2 text-center text-sm font-semibold text-gray-900">{participant.overall_score}%</td>
-                            </tr>
+                    <div>
+                      <div className="text-sm text-gray-500 mb-1">Cohort Average</div>
+                      <div className="text-3xl font-bold text-gray-900">{data.course_average}%</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500 mb-1">Difference</div>
+                      <div className="text-3xl font-bold text-green-600">
+                        +{(data.statistics.overall_progress - data.course_average).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${data.statistics.overall_progress}%` }} />
+                  </div>
+                  <div className="overflow-x-auto border-t border-gray-200 pt-6">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          {['Rank', 'Student Name', 'Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Overall'].map(h => (
+                            <th key={h} className="text-left text-xs font-medium text-gray-500 py-3 px-2">{h}</th>
                           ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.leaderboard.participants.map((p, idx) => (
+                          <tr key={p.user_id} className={`border-b border-gray-100 ${p.is_current_user ? 'bg-green-50' : ''}`}>
+                            <td className="py-3 px-2">
+                              {idx === 0 ? <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600" /></div>
+                               : <div className="text-sm text-gray-600 pl-2">#{p.rank}</div>}
+                            </td>
+                            <td className="py-3 px-2 text-sm font-medium text-gray-900">{p.user_name}</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint1_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint2_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint3_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint4_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm font-semibold text-gray-900">{p.overall_score}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* External Learning Resources */}
+            {/* External Resources */}
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <ExternalLink className="w-5 h-5 text-purple-600" />
                   External Learning Resources
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">Curated videos, articles, tutorials, and recommended reading</p>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-8">
-                  {/* Video Tutorials */}
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      Video Tutorials
-                    </h3>
-                    <div className="space-y-3">
-                      {data.external_resources.video_tutorials.map(resource => (
-                        <a
-                          key={resource.id}
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 rounded-lg hover:bg-gray-50 transition group"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{resource.title}</div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                <span className="mr-2">▷ {resource.source}</span>
-                                <span>• {resource.duration}</span>
+                  {[
+                    { label: 'Video Tutorials', items: data.external_resources.video_tutorials },
+                    { label: 'Industry Articles', items: data.external_resources.industry_articles },
+                  ].map(({ label, items }) => (
+                    <div key={label}>
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-600 rounded-full" /> {label}
+                      </h3>
+                      <div className="space-y-3">
+                        {items.map(r => (
+                          <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{r.title}</div>
+                                <div className="text-xs text-gray-500 mt-1">{r.source}{r.duration ? ` · ${r.duration}` : ''}</div>
                               </div>
+                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
                             </div>
-                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
-                          </div>
-                        </a>
-                      ))}
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Industry Articles */}
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      Industry Articles
-                    </h3>
-                    <div className="space-y-3">
-                      {data.external_resources.industry_articles.map(resource => (
-                        <a
-                          key={resource.id}
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 rounded-lg hover:bg-gray-50 transition group"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{resource.title}</div>
-                              <div className="text-xs text-gray-500 mt-1">{resource.source}</div>
-                            </div>
-                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Tool Guides & Recommended Reading */}
                 <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-gray-200">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      Tool Guides
+                      <div className="w-2 h-2 bg-purple-600 rounded-full" /> Tool Guides
                     </h3>
                     <div className="space-y-3">
-                      {data.external_resources.recommended_reading.slice(0, 3).map(resource => (
-                        <a
-                          key={resource.id}
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 rounded-lg hover:bg-gray-50 transition group"
-                        >
+                      {data.external_resources.recommended_reading.slice(0, 3).map(r => (
+                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{resource.title}</div>
-                              <div className="text-xs text-gray-500 mt-1">{resource.source}</div>
-                            </div>
+                            <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
                             <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
                           </div>
                         </a>
                       ))}
                     </div>
                   </div>
-
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      Recommended Reading
+                      <div className="w-2 h-2 bg-purple-600 rounded-full" /> Recommended Reading
                     </h3>
                     <div className="space-y-3">
-                      {data.external_resources.recommended_reading.slice(3).map(resource => (
-                        <a
-                          key={resource.id}
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 rounded-lg hover:bg-gray-50 transition group"
-                        >
+                      {data.external_resources.recommended_reading.slice(3).map(r => (
+                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{resource.title}</div>
-                              <div className="text-xs text-gray-500 mt-1">{resource.source}</div>
-                            </div>
+                            <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
                             <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
                           </div>
                         </a>
@@ -710,21 +583,17 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Progress Ranking Tab */}
-        {activeTab === 'progress-ranking' && data && (
-          <div>
-            <div className="text-center py-12">
-              <p className="text-gray-600">Progress Ranking tab content coming soon...</p>
-            </div>
-          </div>
+        {/* ─── PROGRESS RANKING TAB ───────────────────────────────────────── */}
+        {activeTab === 'progress-ranking' && (
+          <div className="text-center py-12 text-gray-600">Progress Ranking coming soon…</div>
         )}
 
-        {/* Certificates Tab */}
+        {/* ─── CERTIFICATES TAB ───────────────────────────────────────────── */}
         {activeTab === 'certificates' && (
           <div>
-            {data && data.badges && data.badges.filter(b => b.is_unlocked).length > 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600">You have {data.badges.filter(b => b.is_unlocked).length} badges!</p>
+            {data?.badges?.filter(b => b.is_unlocked).length ? (
+              <div className="text-center py-12 text-gray-600">
+                You have {data.badges.filter(b => b.is_unlocked).length} badge(s)!
               </div>
             ) : (
               <div className="bg-white rounded-lg border border-gray-200 p-12">
@@ -733,13 +602,8 @@ export default function ResourcesPage() {
                     <Award className="w-10 h-10 text-gray-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">No Certificates Yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    Complete your first sprint to unlock your achievement badge. Keep learning to earn more certificates!
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('all-resources')}
-                    className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition"
-                  >
+                  <p className="text-gray-600 mb-6">Complete your first sprint to unlock your achievement badge.</p>
+                  <button onClick={() => setActiveTab('all-resources')} className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition">
                     Start Learning
                   </button>
                 </div>
@@ -748,27 +612,22 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Toast Notification */}
+        {/* Toast */}
         {toast && (
-          <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-            toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white`}>
+          <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
             {toast.message}
           </div>
         )}
 
-        {/* preview component */}
-
+        {/* Preview Modal */}
         {showPreviewModal && (
           <ResourcePreviewModal
             url={null}
             title={null}
             onClose={() => setShowPreviewModal(false)}
             sprints={data?.materials}
-            externalVideos={data?.external_resources?.video_tutorials}   // <-- ADD THIS
-            onMarkComplete={async (itemId, currentStatus) => {
-              await handleItemToggle(itemId, currentStatus);
-            }}
+            externalVideos={data?.external_resources?.video_tutorials}
+            onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
             onPreviewFile={async (itemId, _title) => {
               const blob = await api.courseResources.downloadMaterial(itemId);

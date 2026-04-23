@@ -64,7 +64,7 @@ const cards = [
 export default function Experience() {
   return (
     <FadeUpOnScroll>
-      <section className="py-16">
+      <section className="py-4">
         <style>{`
           .experience-card:hover {
             border-color: ${BRAND}66 !important;
