@@ -171,6 +171,7 @@ export interface CourseEnrollment {
   id: number;
   user_id: number;
   course_id: number;
+  course_slug: string
   course_name: string;
   course_price?: number;
   learning_track: 'one_on_one' | 'group_mentorship' | 'self_paced';

@@ -177,13 +177,13 @@ export default function PaymentPage() {
   const fetchScholarship = useCallback(async (courseSlug: string) => {
     try {
       setScholarshipLoading(true);
-      const response = await api.get(`/scholarships/course/${courseSlug}`);
-      const data = await response.data;
-      if (data.scholarship?.status === 'approved' && !data.scholarship.is_used) {
+      // api.get already returns the parsed data in your setup
+      const data = await api.get(`/api/scholarships/course/${courseSlug}`);
+      if (data?.scholarship?.status === 'approved' && !data.scholarship.is_used) {
         setScholarship(data.scholarship);
       }
     } catch {
-      // Non-critical — continue without scholarship
+      // non-critical
     } finally {
       setScholarshipLoading(false);
     }
@@ -353,12 +353,26 @@ export default function PaymentPage() {
     }
   }, [router.isReady, enrollmentId, user, currencyDetected, authLoading]);
 
-  // Refetch pricing when currency changes
+  // Force one-time payment when scholarship is active
   useEffect(() => {
-    if (enrollment && currency && currencyDetected) {
+    if (scholarship && !scholarship.is_used) {
+      setPaymentType('onetime');
+    }
+  }, [scholarship]);
+
+  // Replace your scholarship fetch — make it parallel, not nested
+  useEffect(() => {
+    if (enrollment && currencyDetected) {
       fetchCourseTrackDetails(enrollment.course_id);
     }
-  }, [currency, currencyDetected]);
+  }, [currency, currencyDetected, enrollment?.id]);
+
+  // Separate effect for scholarship
+  useEffect(() => {
+    if (enrollment?.course_id) {
+      fetchScholarship(enrollment.course_slug); // pass course_id slug
+    }
+  }, [enrollment?.course_id]);
 
   // ─── Price calculation ──────────────────────────────────────────────────────
   const getCurrentPrice = (): number => {
@@ -386,6 +400,7 @@ export default function PaymentPage() {
   
     return price;
   };
+
 
   // ─── Stripe payment ─────────────────────────────────────────────────────────
   // Stripe redirects the user away to its hosted checkout page, then redirects
@@ -766,6 +781,14 @@ export default function PaymentPage() {
                   <h2 className="text-2xl font-bold text-gray-900">Choose Payment Method</h2>
                 </div>
 
+                    {/* Scholarship notice */}
+                {scholarship && !scholarship.is_used && (
+                  <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                    <span>🎓</span>
+                    <p>Scholarship recipients must pay in full (one-time). Installments are not available.</p>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* One-Time Payment */}
                   <button
@@ -848,51 +871,53 @@ export default function PaymentPage() {
                   </button>
 
                   {/* Installment Payment */}
-                  <button
-                    onClick={() => setPaymentType('installment')}
-                    className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
-                      paymentType === 'installment'
-                        ? 'border-indigo-600 bg-indigo-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="text-4xl">📅</div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          Installment Payment
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3">Split payment across 4 months</p>
-                        <div className="text-2xl font-bold text-blue-600 mb-2">
-                          {currency === 'NGN' ? '₦' : ''}
-                          {selectedTrack && trackPrices[selectedTrack]
-                            ? Math.round(trackPrices[selectedTrack] / 4).toLocaleString()
-                            : '0'}
-                          <span className="text-sm font-normal text-gray-600">/month × 4</span>
+                  {(!scholarship || scholarship.is_used) && (
+                    <button
+                      onClick={() => setPaymentType('installment')}
+                      className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
+                        paymentType === 'installment'
+                          ? 'border-indigo-600 bg-indigo-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="text-4xl">📅</div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            Installment Payment
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-3">Split payment across 4 months</p>
+                          <div className="text-2xl font-bold text-blue-600 mb-2">
+                            {currency === 'NGN' ? '₦' : ''}
+                            {selectedTrack && trackPrices[selectedTrack]
+                              ? Math.round(trackPrices[selectedTrack] / 4).toLocaleString()
+                              : '0'}
+                            <span className="text-sm font-normal text-gray-600">/month × 4</span>
+                          </div>
+                          <p className="text-xs text-gray-500 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+                            ⚠️ Must pay on time each month to maintain access
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-500 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
-                          ⚠️ Must pay on time each month to maintain access
-                        </p>
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            paymentType === 'installment'
+                              ? 'border-indigo-600 bg-indigo-600'
+                              : 'border-gray-300'
+                          }`}
+                        >
+                          {paymentType === 'installment' && (
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
                       </div>
-                      <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                          paymentType === 'installment'
-                            ? 'border-indigo-600 bg-indigo-600'
-                            : 'border-gray-300'
-                        }`}
-                      >
-                        {paymentType === 'installment' && (
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
