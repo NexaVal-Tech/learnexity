@@ -325,20 +325,20 @@ export default function ResourcesPage() {
         {activeTab === 'all-resources' && data && (
           <div>
             {/* Open Full Preview Button */}
-            <div className="mb-4 flex justify-end">
+            {/* <div className="mb-4 flex justify-end">
               <button
                 onClick={() => setShowPreviewModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
               >
                 <BookOpen size={16} /> Open Learning View
               </button>
-            </div>
+            </div> */}
 
             {/* Auto-tracking notice */}
-            <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+            {/* <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
               <Clock size={14} className="flex-shrink-0" />
               <span>Progress is tracked automatically — just read and watch. No need to mark anything manually.</span>
-            </div>
+            </div> */}
 
             {/* Course Materials */}
             <div className="bg-white rounded-lg border border-gray-200 mb-6">
@@ -398,11 +398,11 @@ export default function ResourcesPage() {
                             <div key={item.id} className={`flex items-center justify-between p-4 hover:bg-gray-50 transition ${item.is_completed ? 'bg-green-50/30' : ''}`}>
                               <div className="flex items-center gap-3 flex-1">
                                 {/* Completion indicator (read-only — auto-tracked) */}
-                                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                {/* <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
                                   item.is_completed ? 'bg-green-500 border-green-500' : 'border-gray-200 bg-white'
                                 }`}>
                                   {item.is_completed && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
-                                </div>
+                                </div> */}
 
                                 <div className={`w-8 h-8 rounded flex items-center justify-center ${
                                   item.type === 'pdf' ? 'bg-red-100' :

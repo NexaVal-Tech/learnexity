@@ -67,16 +67,15 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
   if (scholarship?.status === 'approved' && !scholarship.is_used) {
     return (
       <div
-        className=" items-center gap-3 px-4 py-3 rounded-2xl text-sm"
+        className=" items-center gap-3 px-4 py-4 rounded-2xl text-sm"
         style={{
           background: 'rgba(22,163,74,0.1)',
           border: '1px solid rgba(22,163,74,0.3)',
           borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
         }}
       >
-        <span className="text-green-400 text-xl">🎓</span>
         <div>
-          <p className="font-bold text-green-400">{scholarship.discount_percentage}% Scholarship Active</p>
+          <p className="font-bold text-green-400">{scholarship.discount_percentage}% Scholarship Approved</p>
           <p className="text-green-600 text-xs">Applied automatically at checkout</p>
         </div>
       </div>
@@ -94,7 +93,6 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           borderRadius: '1rem 0.5rem 1rem 0.5rem',
         }}
       >
-        <span>🎓</span>
         <span>Scholarship already redeemed</span>
       </div>
     );
@@ -111,7 +109,6 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           borderRadius: '1rem 0.5rem 1rem 0.5rem',
         }}
       >
-        <span>📋</span>
         <span>Scholarship not awarded for this course</span>
       </div>
     );
@@ -127,15 +124,14 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
           border: `1px dashed ${BRAND}55`,
           background: `${BRAND}08`,
-          color: BRAND,
+          color: "rgb(255, 255, 255)",
         }}
       >
-        <span className="text-xl">🎓</span>
         <div className="text-left">
           <p className="font-bold text-sm">Can't afford the full price?</p>
-          <p className="text-xs opacity-70">Apply for a scholarship — 2 min, instant decision</p>
+          <p className="text-xs opacity-70">Apply for a scholarship, 2 min, instant decision</p>
         </div>
-        <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+        
       </button>
     );
   }
@@ -148,15 +144,14 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           sessionStorage.setItem('scholarship_course_redirect', courseId);
           router.push('/user/auth/register');
         }}
-        className="items-center gap-2 px-4 py-8 text-sm transition-all lg:ml-6"
-        style={{
-          borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
-          border: `1px dashed ${BRAND}44`,
-          background: `${BRAND}06`,
-          color: `${BRAND}cc`,
-        }}
+        className="items-center gap-2 px-4 py-3 lg:py-6 text-sm transition-all lg:ml-6"
+          style={{
+            borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
+            border: `1px dashed ${BRAND}44`,
+            background: `${BRAND}06`,
+            color: '#ffffff',
+          }}
       >
-        <span>🎓</span>
         <span>Need financial support? Apply for a scholarship</span>
       </button>
     );

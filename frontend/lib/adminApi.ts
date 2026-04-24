@@ -33,31 +33,74 @@ adminApiClient.interceptors.request.use(
 );
 
 // Response interceptor — handle expired or invalid admin token
+// Response interceptor — handle expired or invalid admin token
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value: any) => void; reject: (reason?: any) => void }> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 adminApiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
     if (error.code === 'ERR_NETWORK') {
-      return Promise.reject({
-        ...error,
-        friendlyMessage: 'Server is unresponsive. Please try again later.',
-      });
+      return Promise.reject({ ...error, friendlyMessage: 'Server is unresponsive. Please try again later.' });
     }
 
     if (error.code === 'ECONNABORTED') {
-      return Promise.reject({
-        ...error,
-        friendlyMessage: 'Request timed out. Please check your connection and try again.',
-      });
+      return Promise.reject({ ...error, friendlyMessage: 'Request timed out. Please check your connection and try again.' });
     }
 
-    // Handle unauthorized admin token
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
+    // Handle 401 — try to refresh token once
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return adminApiClient(originalRequest);
+        }).catch(err => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Attempt token refresh
+        const response = await adminApiClient.post('/api/admin/refresh');
+        const newToken = response.data?.data?.token;
+
+        if (newToken) {
+          localStorage.setItem('admin_token', newToken);
+          adminApiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          processQueue(null, newToken);
+          return adminApiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed — clear everything and redirect to login
+        processQueue(refreshError, null);
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/admin/auth/login';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
-
 
     return Promise.reject(error);
   }

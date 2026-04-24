@@ -361,7 +361,7 @@ export default function CoursePage() {
                     className="dc-card flex items-center gap-4 px-6 py-4"
                     style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
                   >
-                    <div>
+                    <div className="flex gap-4 items-center">
                       <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
                         Price
                       </p>
@@ -393,14 +393,14 @@ export default function CoursePage() {
                 </div>
               )}
 
-              <div className="flex flex-row flex-wrap items-center gap-3 pt-2">
+              <div className="flex flex-row items-center gap-3 pt-2">
                 {enrollmentStatus?.isEnrolled ? (
                   <button
                     onClick={() => router.push(`/user/courses/${course.course_id}`)}
                     className="dc-btn-brand"
                     style={{ background: "#16a34a" }}
                   >
-                    Continue Learning <ArrowRight className="w-4 h-4" />
+                    Continue Learning 
                   </button>
                 ) : (
                   <button
@@ -414,9 +414,9 @@ export default function CoursePage() {
                         Enrolling…
                       </span>
                     ) : user ? (
-                      <>Purchase Course <ArrowRight className="w-4 h-4" /></>
+                      <>Purchase Course </>
                     ) : (
-                      <>Get Started <ArrowRight className="w-4 h-4" /></>
+                      <>Get Started </>
                     )}
                   </button>
                 )}

@@ -14,7 +14,7 @@ const QUESTIONS = [
     id: 'experience_level',
     step: 1,
     label: 'Your Current Level',
-    question: 'How would you honestly describe your current level in this field?',
+    question: 'How would you describe your current level in this field?',
     hint: 'Be honest, beginners are just as eligible as those with some exposure.',
     type: 'select' as const,
     options: [
@@ -39,7 +39,7 @@ const QUESTIONS = [
     id: 'weekly_hours',
     step: 3,
     label: 'Your Commitment',
-    question: 'How many hours per week can you realistically dedicate to this course?',
+    question: 'How many hours per week can you dedicate to this course?',
     hint: 'Be realistic, commitment consistency matters more than ambition.',
     type: 'select' as const,
     options: [
@@ -53,7 +53,7 @@ const QUESTIONS = [
     id: 'completion_obstacle',
     step: 4,
     label: 'Potential Obstacles',
-    question: 'What might realistically stop you from completing this course and how will you handle it?',
+    question: 'What might stop you from completing this course and how will you handle it?',
     hint: 'Self-aware answers score higher than "nothing will stop me." We want to understand your resilience.',
     type: 'textarea' as const,
     placeholder:
