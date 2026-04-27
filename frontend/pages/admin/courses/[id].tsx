@@ -944,21 +944,21 @@ const CourseDetail = () => {
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-900 mb-1.5">{field.label}</label>
                       {field.type === 'select' ? (
-                        <select value={formData[field.name] || field.options![0][0]} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                        <select value={formData[field.name] || field.options![0][0]} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                           {field.options!.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                         </select>
                       ) : (
-                        <input type={field.type} required={field.required} value={formData[field.name] || ''} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder={field.placeholder} />
+                        <input type={field.type} required={field.required} value={formData[field.name] || ''} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder={field.placeholder} />
                       )}
                     </div>
                   ))}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1.5">Description (Optional)</label>
-                    <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" rows={3} placeholder="Brief description…" />
+                    <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" rows={3} placeholder="Brief description…" />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
                     <button type="button" onClick={() => setIsAddResourceModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm  font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                       {submitting ? 'Adding…' : 'Add Resource'}
                     </button>

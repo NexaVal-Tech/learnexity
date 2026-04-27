@@ -97,7 +97,7 @@ class StripeController extends Controller
                     'quantity' => 1,
                 ]],
                 'mode'          => 'payment',
-                'success_url'   => config('app.frontend_url') . '/user/payment/success?session_id={CHECKOUT_SESSION_ID}',
+               'success_url' => config('app.frontend_url') . '/user/payment/success?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url'    => config('app.frontend_url') . '/user/payment/' . $enrollment->id,
                 'customer_email' => auth()->user()->email,
                 'metadata'      => [

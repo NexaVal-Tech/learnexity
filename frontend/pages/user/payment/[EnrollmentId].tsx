@@ -175,12 +175,15 @@ export default function PaymentPage() {
 
 
   const fetchScholarship = useCallback(async (courseSlug: string) => {
+    if (!courseSlug) return;
     try {
       setScholarshipLoading(true);
-      // api.get already returns the parsed data in your setup
       const data = await api.get(`/api/scholarships/course/${courseSlug}`);
       if (data?.scholarship?.status === 'approved' && !data.scholarship.is_used) {
         setScholarship(data.scholarship);
+      } else {
+        // Explicitly clear so stale state doesn't linger
+        setScholarship(null);
       }
     } catch {
       // non-critical
@@ -362,25 +365,28 @@ export default function PaymentPage() {
 
   // Replace your scholarship fetch — make it parallel, not nested
   useEffect(() => {
-    if (enrollment && currencyDetected) {
-      fetchCourseTrackDetails(enrollment.course_id);
-    }
+    if (!enrollment || !currencyDetected) return;
+
+    // Re-fetch track prices whenever currency changes
+    fetchCourseTrackDetails(enrollment.course_id);
   }, [currency, currencyDetected, enrollment?.id]);
 
-  // Separate effect for scholarship
   useEffect(() => {
-    if (enrollment?.course_id) {
-      fetchScholarship(enrollment.course_slug); // pass course_id slug
+    // Fetch scholarship using the course SLUG (course_id field), not numeric id
+    if (enrollment?.course_slug) {
+      fetchScholarship(enrollment.course_slug);
+    } else if (course?.course_id) {
+      // Fallback once course is loaded
+      fetchScholarship(course.course_id);
     }
-  }, [enrollment?.course_id]);
+  }, [enrollment?.course_slug, course?.course_id]);
 
   // ─── Price calculation ──────────────────────────────────────────────────────
   const getCurrentPrice = (): number => {
     if (!selectedTrack) return 0;
-  
     let price = trackPrices[selectedTrack] || 0;
-  
-    // Apply one-time discount first
+
+    // 1. One-time discount
     if (paymentType === 'onetime' && course) {
       const discountPercent =
         parseFloat(currency === 'NGN' ? course.onetime_discount_ngn : course.onetime_discount_usd) || 0;
@@ -388,16 +394,17 @@ export default function PaymentPage() {
         price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
       }
     }
-  
-    // Apply scholarship discount AFTER standard discount
+
+    // 2. Scholarship discount applied on top
     if (scholarship && !scholarship.is_used) {
       price = Math.max(0, Math.round(price * (1 - scholarship.discount_percentage / 100)));
     }
-  
+
+    // 3. Installment split
     if (paymentType === 'installment') {
       price = Math.round(price / 4);
     }
-  
+
     return price;
   };
 
@@ -496,7 +503,7 @@ export default function PaymentPage() {
       }
 
       // Webhook hasn't fired yet — update manually then redirect
-      await api.post(`/api/courses/enrollments/${enrollment!.id}/payment`, {
+      await api.patch(`/api/courses/enrollments/${enrollment!.id}/payment`, {
         payment_status: 'completed',
         transaction_id: response.reference,
         learning_track: selectedTrack!,
@@ -719,26 +726,44 @@ export default function PaymentPage() {
                             <div className="flex items-center justify-between mb-2">
                               <h3 className="text-xl font-bold text-gray-900">{track.name}</h3>
                               <div className="text-right">
-                                <div className="text-2xl font-bold text-indigo-600">
-                                  {currency === 'NGN' ? '₦' : '$'}
-                                  {trackPrices[track.id]?.toLocaleString()}
-                                </div>
+                                {/* Original track price — shown struck through if scholarship active */}
+                                {scholarship && !scholarship.is_used ? (
+                                  <div>
+                                    <div className="text-sm text-gray-900 line-through">
+                                      {currency === 'NGN' ? '₦' : '$'}{trackPrices[track.id]?.toLocaleString()}
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-600">
+                                      {currency === 'NGN' ? '₦' : '$'}
+                                      {Math.max(0, Math.round(
+                                        trackPrices[track.id] * (1 - scholarship.discount_percentage / 100)
+                                      )).toLocaleString()}
+                                    </div>
+                                    <div className="text-xs font-bold text-indigo-600">
+                                      {scholarship.discount_percentage}% scholarship applied
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-2xl font-bold text-indigo-600">
+                                    {currency === 'NGN' ? '₦' : '$'}
+                                    {trackPrices[track.id]?.toLocaleString()}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
                             <p className="text-sm font-semibold text-indigo-600 mb-2">
                               {track.title}
                             </p>
-                            <p className="text-gray-600 text-sm mb-4">{track.description}</p>
+                            {/* <p className="text-gray-600 text-sm mb-4">{track.description}</p> */}
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                               {track.features.map((feature, idx) => (
                                 <div key={idx} className="flex items-start gap-2 text-sm">
                                   <span className="text-green-600 mt-0.5">✓</span>
                                   <span className="text-gray-700">{feature}</span>
                                 </div>
                               ))}
-                            </div>
+                            </div> */}
                           </div>
 
                           <div
@@ -784,7 +809,6 @@ export default function PaymentPage() {
                     {/* Scholarship notice */}
                 {scholarship && !scholarship.is_used && (
                   <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    <span>🎓</span>
                     <p>Scholarship recipients must pay in full (one-time). Installments are not available.</p>
                   </div>
                 )}
@@ -954,7 +978,6 @@ export default function PaymentPage() {
 
                 {scholarship && !scholarship.is_used && (
                   <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-2">
-                    <span className="text-green-600 text-lg">🎓</span>
                     <div>
                       <p className="text-xs font-bold text-green-700">Scholarship Applied</p>
                       <p className="text-xs text-green-600">{scholarship.discount_percentage}% discount active</p>
@@ -962,19 +985,35 @@ export default function PaymentPage() {
                   </div>
                 )}
 
-                <div className="border-t border-gray-300 pt-3 mt-3">
+                <div className="border-t border-gray-300 pt-3 mt-3 space-y-1">
+                  {selectedTrack && scholarship && !scholarship.is_used && (
+                    <>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>Track price:</span>
+                        <span className="line-through">
+                          {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-600 font-semibold">
+                        <span>{scholarship.discount_percentage}% scholarship:</span>
+                        <span>
+                          -{currency === 'NGN' ? '₦' : '$'}
+                          {Math.round(trackPrices[selectedTrack] * scholarship.discount_percentage / 100).toLocaleString()}
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-lg font-bold text-gray-900">
                       {paymentType === 'installment' ? 'Pay Now:' : 'Total:'}
                     </span>
                     <span className="text-lg font-bold text-indigo-600">
-                      {currency === 'NGN' ? '₦' : ''}
-                      {getCurrentPrice().toLocaleString()}
+                      {currency === 'NGN' ? '₦' : '$'}{getCurrentPrice().toLocaleString()}
                     </span>
                   </div>
                   {paymentType === 'installment' && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      Full price: {currency === 'NGN' ? '₦' : ''}
+                    <div className="text-xs text-gray-600">
+                      Full price: {currency === 'NGN' ? '₦' : '$'}
                       {selectedTrack ? trackPrices[selectedTrack].toLocaleString() : '0'}
                     </div>
                   )}
@@ -1012,7 +1051,7 @@ export default function PaymentPage() {
                 ) : (
                   <>
                     <span>
-                      Pay {currency === 'NGN' ? '₦' : ''}
+                      Pay {currency === 'NGN' ? '₦' : '$'}
                       {getCurrentPrice().toLocaleString()}
                     </span>
                     <span className="text-xs opacity-75">

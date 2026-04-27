@@ -397,12 +397,6 @@ export default function ResourcesPage() {
                           {sprint.items.map(item => (
                             <div key={item.id} className={`flex items-center justify-between p-4 hover:bg-gray-50 transition ${item.is_completed ? 'bg-green-50/30' : ''}`}>
                               <div className="flex items-center gap-3 flex-1">
-                                {/* Completion indicator (read-only — auto-tracked) */}
-                                {/* <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                  item.is_completed ? 'bg-green-500 border-green-500' : 'border-gray-200 bg-white'
-                                }`}>
-                                  {item.is_completed && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
-                                </div> */}
 
                                 <div className={`w-8 h-8 rounded flex items-center justify-center ${
                                   item.type === 'pdf' ? 'bg-red-100' :

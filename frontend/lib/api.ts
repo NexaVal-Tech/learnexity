@@ -253,6 +253,7 @@ export const api = {
       return response.data;
     },
 
+    // In api.ts, enrollment.updatePayment — fix the URL
     updatePayment: async (
       enrollmentId: number,
       paymentStatus: 'pending' | 'completed' | 'failed',
@@ -260,7 +261,7 @@ export const api = {
       learningTrack?: LearningTrack
     ): Promise<{ message: string; enrollment: CourseEnrollment }> => {
       const response = await apiClient.patch(
-        `/api/enrollments/${enrollmentId}/payment`,
+        `/api/courses/enrollments/${enrollmentId}/payment`,  // ✅ fixed
         {
           payment_status: paymentStatus,
           transaction_id: transactionId,

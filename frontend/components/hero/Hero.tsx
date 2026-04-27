@@ -44,10 +44,10 @@ export default function Hero() {
           {/* Left: text */}
           <div className="flex-1 text-left">
             <h1
-              className="text-4xl sm:text-5xl md:text-5xl font-bold leading-tight text-white mb-6"
+              className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-white mb-6"
               style={{ letterSpacing: "-0.01em" }}
             >
-              Learn in-demand skill.{" "}<br />
+              Learn in-demand Tech skills.{" "}<br />
               <span>Gain practical experience.</span>{" "}<br />
               Land real opportunities.
             </h1>
@@ -59,7 +59,7 @@ export default function Hero() {
           </div>
 
           {/* Right: foreground video */}
-          <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-2xl" style={{ maxHeight: "520px" }}>
+          {/* <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-2xl" style={{ maxHeight: "520px" }}>
             <video
               className="w-full h-full object-cover"
               style={{ maxHeight: "520px" }}
@@ -70,7 +70,7 @@ export default function Hero() {
               muted
               playsInline
             />
-          </div>
+          </div> */}
 
         </div>
       </div>

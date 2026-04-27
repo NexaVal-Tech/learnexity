@@ -17,8 +17,8 @@ const data = [
   {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
-    video: "/videos/testimonial-5.mp4",
-    thumbnail: "/thumbnails/thumbnail-4.png",
+    video: "/videos/testimony.mp4",
+    thumbnail: "/thumbnails/lilian-thumbnail.png",
   },
   {
     name: "Ogechi",

@@ -95,10 +95,10 @@ export default function Method() {
                 </div>
 
                 {/* Text below */}
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-2xl font-semibold text-white mb-2">
                   {card.label}
                 </h3>
-                <p className="text-gray-400 text-base overflow-hidden line-clamp-4">
+                <p className="text-gray-400 text-xl overflow-hidden line-clamp-4">
                   {card.description}
                 </p>
               </div>

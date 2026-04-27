@@ -55,9 +55,27 @@ const handleAuth = async () => {
 
     await setUserFromToken(data.token);
 
+    // Scholarship redirect — highest priority
+    const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
+    if (scholarshipRedirect) {
+      sessionStorage.removeItem('scholarship_course_redirect');
+      const safeId = scholarshipRedirect.replace(/[^a-zA-Z0-9_-]/g, '');
+      if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+    }
+
+    // Also check query params echoed back from backend
+    const { scholarship_redirect, intended_course: qIntendedCourse } = router.query;
+    if (scholarship_redirect) {
+      const safeId = (scholarship_redirect as string).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+    }
+    if (qIntendedCourse) {
+      const safeId = (qIntendedCourse as string).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (safeId) { router.push(`/courses/${safeId}`); return; }
+    }
+
     const intendedCourse = sessionStorage.getItem('intended_course');
     const intendedCourseName = sessionStorage.getItem('intended_course_name');
-
     if (intendedCourse && intendedCourseName) {
       sessionStorage.removeItem('intended_course');
       sessionStorage.removeItem('intended_course_name');
