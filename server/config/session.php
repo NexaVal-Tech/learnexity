@@ -36,6 +36,18 @@ return [
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
+    // payments 
+
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),       
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'paystack' => [
+        'secret' => env('PAYSTACK_SECRET_KEY'),
+        'public' => env('PAYSTACK_PUBLIC_KEY'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Session Encryption
