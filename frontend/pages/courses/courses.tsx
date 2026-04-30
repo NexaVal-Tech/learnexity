@@ -1,6 +1,8 @@
 // pages/courses/courses.tsx
+// Added: ScholarshipCoursePrompt — shown once when user arrives from ScholarshipBanner
+
 import Head from "next/head";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Course } from "@/lib/api";
@@ -8,6 +10,7 @@ import { subscribeCourses } from "@/lib/courseCache";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
 import { ArrowRight } from "lucide-react";
+import ScholarshipCoursePrompt from "@/components/Scholarship/ScholarshipCoursePrompt";
 
 const BRAND = "#4A3AFF";
 
@@ -88,6 +91,12 @@ export default function CoursesPage() {
       </Head>
 
       <AppLayout>
+        {/* ── Scholarship course-selection prompt ─────────────────────────
+            Renders as a portal-style overlay. Shows only when the user
+            arrives from the homepage ScholarshipBanner (flag in sessionStorage).
+            Disappears after "Got it" is clicked and never shows again.        */}
+        <ScholarshipCoursePrompt />
+
         <style>{`
           .course-card {
             border-radius: 2rem 0.75rem 2rem 0.75rem;
@@ -133,14 +142,9 @@ export default function CoursesPage() {
           {/* ── HERO SECTION ─────────────────────────────────────────── */}
           <section className="relative">
 
-            {/* Image block — swap the inner div for your <Image> tag */}
             <div className="relative w-full" style={{ height: "clamp(380px, 58vw, 640px)" }}>
-
               <Image src="/images/coures.jpg" alt="Courses hero" fill className="object-cover object-center" priority />
 
-              {/* ↑↑↑  REPLACE THIS DIV WITH YOUR IMAGE  ↑↑↑ */}
-
-              {/* Gradient overlay — keeps text readable over any photo */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -149,7 +153,6 @@ export default function CoursesPage() {
                 }}
               />
 
-              {/* Hero headline — bottom-left, matching the screenshot */}
               <div className="absolute top-28 md:top-38 left-0 right-0 px-6 md:px-10 lg:px-16">
                 <div className="max-w-screen-xl mx-auto">
                   <h1
@@ -166,26 +169,15 @@ export default function CoursesPage() {
               </div>
             </div>
 
-            {/* 
-              Cards container — negative margin pulls it UP over the image bottom.
-              Desktop: ~9rem overlap → ~3 card tops visible over the image.
-              Mobile:  ~4.5rem overlap → only ~1 card peeks up.
-            */}
             <div
               className="relative z-10 px-6 md:px-10 lg:px-16"
-              style={{
-                marginTop: "clamp(-8rem, -14vw, -18rem)",
-              }}
+              style={{ marginTop: "clamp(-8rem, -14vw, -18rem)" }}
             >
               <div className="max-w-screen-xl mx-auto">
 
-                {/* "Available Programmes" label */}
                 <p
                   className="font-semibold mb-6"
-                  style={{
-                    color: BRAND,
-                    fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)",
-                  }}
+                  style={{ color: BRAND, fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)" }}
                 >
                   Available Programmes
                 </p>
@@ -214,7 +206,7 @@ export default function CoursesPage() {
                   </div>
                 )}
 
-                {/* ── Course grid — COMPLETELY UNCHANGED ── */}
+                {/* ── Course grid ── */}
                 {!loading && !error && courses.length > 0 && (
                   <div className="grid md:grid-cols-3 gap-8 items-stretch">
                     {courses.map((course) => (

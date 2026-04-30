@@ -30,6 +30,8 @@ export const PrimaryButton2 = ({ label = "Enroll Now", href = "/user/auth/regist
     </Link>
   );
 };
+
+
 // Sign up button
 export const SignUpButton = ({ label = "Sign Up", href = "/user/auth/register" }) => {
   return (

@@ -1,4 +1,7 @@
 // pages/user/auth/callback.tsx
+// Handles Google OAuth callback.
+// Now also supports scholarship_browse_courses query param echoed back from backend.
+
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,87 +16,96 @@ export default function AuthCallback() {
     if (hasProcessed.current) return;
     if (!router.isReady) return;
 
-const handleAuth = async () => {
-  hasProcessed.current = true;
+    const handleAuth = async () => {
+      hasProcessed.current = true;
 
-  try {
-    setStatus('Verifying authentication...');
+      try {
+        setStatus('Verifying authentication...');
 
-    const isProd = process.env.NODE_ENV === 'production';
-    const oauthTokenFromUrl = router.query.oauth_token as string | undefined;
+        const oauthTokenFromUrl = router.query.oauth_token as string | undefined;
 
-    // Local dev: token comes via URL param
-    // Production: token comes via HttpOnly cookie automatically
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/auth/exchange-token`,
-      {
-        method: 'POST',
-        credentials: 'include',  // always include — sends cookie in prod automatically
-        headers: { 'Content-Type': 'application/json' },
-        body: oauthTokenFromUrl
-          ? JSON.stringify({ oauth_token: oauthTokenFromUrl })
-          : undefined,
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/exchange-token`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: oauthTokenFromUrl
+              ? JSON.stringify({ oauth_token: oauthTokenFromUrl })
+              : undefined,
+          }
+        );
+
+        if (oauthTokenFromUrl) {
+          router.replace('/user/auth/callback', undefined, { shallow: true });
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Exchange failed:', response.status, errorData);
+          throw new Error(errorData.message || 'Token exchange failed');
+        }
+
+        const data = await response.json();
+
+        if (!data.token) {
+          throw new Error('No token in exchange response');
+        }
+
+        await setUserFromToken(data.token);
+
+        // ── Redirect priority (mirrors resolvePostLoginRedirect in AuthContext) ──
+
+        // 1. Scholarship application for a specific course
+        const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
+        if (scholarshipRedirect) {
+          sessionStorage.removeItem('scholarship_course_redirect');
+          const safeId = scholarshipRedirect.replace(/[^a-zA-Z0-9_-]/g, '');
+          if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+        }
+
+        // Also check query params echoed back from backend
+        const { scholarship_redirect, scholarship_browse_courses, intended_course: qIntendedCourse } = router.query;
+
+        if (scholarship_redirect) {
+          const safeId = (scholarship_redirect as string).replace(/[^a-zA-Z0-9_-]/g, '');
+          if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+        }
+
+        // 2. Scholarship banner → courses listing
+        const browseCourses = sessionStorage.getItem('scholarship_browse_courses');
+        if (browseCourses || scholarship_browse_courses === 'true') {
+          sessionStorage.removeItem('scholarship_browse_courses');
+          router.push('/courses/courses');
+          return;
+        }
+
+        // 3. Intended course (mid-enrolment)
+        if (qIntendedCourse) {
+          const safeId = (qIntendedCourse as string).replace(/[^a-zA-Z0-9_-]/g, '');
+          if (safeId) { router.push(`/courses/${safeId}`); return; }
+        }
+
+        const intendedCourse = sessionStorage.getItem('intended_course');
+        if (intendedCourse) {
+          sessionStorage.removeItem('intended_course');
+          sessionStorage.removeItem('intended_course_name');
+          router.push(`/courses/${intendedCourse}`);
+          return;
+        }
+
+        // 4. Default
+        setStatus('Redirecting to dashboard...');
+        router.push('/user/dashboard');
+
+      } catch (err) {
+        console.error('Auth callback error:', err);
+        setStatus('Authentication failed. Redirecting to login...');
+        setTimeout(() => {
+          router.push('/user/auth/login?error=oauth_failed');
+        }, 1500);
       }
-    );
-
-    // Remove token from URL immediately if present (local dev)
-    if (oauthTokenFromUrl) {
-      router.replace('/user/auth/callback', undefined, { shallow: true });
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Exchange failed:', response.status, errorData);
-      throw new Error(errorData.message || 'Token exchange failed');
-    }
-
-    const data = await response.json();
-
-    if (!data.token) {
-      throw new Error('No token in exchange response');
-    }
-
-    await setUserFromToken(data.token);
-
-    // Scholarship redirect — highest priority
-    const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
-    if (scholarshipRedirect) {
-      sessionStorage.removeItem('scholarship_course_redirect');
-      const safeId = scholarshipRedirect.replace(/[^a-zA-Z0-9_-]/g, '');
-      if (safeId) { router.push(`/scholarships/${safeId}`); return; }
-    }
-
-    // Also check query params echoed back from backend
-    const { scholarship_redirect, intended_course: qIntendedCourse } = router.query;
-    if (scholarship_redirect) {
-      const safeId = (scholarship_redirect as string).replace(/[^a-zA-Z0-9_-]/g, '');
-      if (safeId) { router.push(`/scholarships/${safeId}`); return; }
-    }
-    if (qIntendedCourse) {
-      const safeId = (qIntendedCourse as string).replace(/[^a-zA-Z0-9_-]/g, '');
-      if (safeId) { router.push(`/courses/${safeId}`); return; }
-    }
-
-    const intendedCourse = sessionStorage.getItem('intended_course');
-    const intendedCourseName = sessionStorage.getItem('intended_course_name');
-    if (intendedCourse && intendedCourseName) {
-      sessionStorage.removeItem('intended_course');
-      sessionStorage.removeItem('intended_course_name');
-      router.push(`/courses/${intendedCourse}`);
-      return;
-    }
-
-    setStatus('Redirecting to dashboard...');
-    router.push('/user/dashboard');
-
-  } catch (err) {
-    console.error('Auth callback error:', err);
-    setStatus('Authentication failed. Redirecting to login...');
-    setTimeout(() => {
-      router.push('/user/auth/login?error=oauth_failed');
-    }, 1500);
-  }
-};
+    };
 
     handleAuth();
   }, [router.isReady]);

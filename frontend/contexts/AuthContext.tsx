@@ -1,5 +1,6 @@
 // contexts/AuthContext.tsx
 // FIXED: scholarship redirect persists through all auth flows
+// Added: scholarship_browse_courses flag → redirects to /courses/courses after login
 
 'use client';
 
@@ -31,8 +32,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ── Helper: handle all post-login redirects in one place ──────────────────────
+//
+// Priority order (highest → lowest):
+//   1. scholarship_course_redirect  — user came from a specific course page wanting a scholarship
+//   2. scholarship_browse_courses   — user came from the homepage ScholarshipBanner, needs to pick a course
+//   3. intended_course              — user was mid-enrolment before hitting auth
+//   4. /user/dashboard              — default fallback
+//
 function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
-  // 1. Scholarship application — highest priority
+  // 1. Scholarship application for a specific course — highest priority
   const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
   if (scholarshipRedirect) {
     sessionStorage.removeItem('scholarship_course_redirect');
@@ -40,7 +48,15 @@ function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
     if (safeId) { router.push(`/scholarships/${safeId}`); return; }
   }
 
-  // 2. Intended course
+  // 2. Scholarship banner CTA — send to courses listing so user picks a course
+  const browseCourses = sessionStorage.getItem('scholarship_browse_courses');
+  if (browseCourses) {
+    sessionStorage.removeItem('scholarship_browse_courses');
+    router.push('/courses/courses');
+    return;
+  }
+
+  // 3. Intended course (mid-enrolment auth gate)
   const intendedCourse = sessionStorage.getItem('intended_course');
   if (intendedCourse) {
     sessionStorage.removeItem('intended_course');
@@ -49,7 +65,7 @@ function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
     if (safeId) { router.push(`/courses/${safeId}`); return; }
   }
 
-  // 3. Default
+  // 4. Default
   router.push('/user/dashboard');
 }
 
@@ -122,8 +138,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setError(err);
       throw new Error(err);
     }
-    // NOTE: scholarship_course_redirect stays in sessionStorage intentionally —
-    // the login page will pick it up after email verification + login.
+    // NOTE: all sessionStorage flags (scholarship_course_redirect,
+    // scholarship_browse_courses, intended_course) are intentionally kept here —
+    // the login page will pick them up after email verification + login.
     await router.replace(
       `/user/auth/login?message=verify_email&email=${encodeURIComponent(email)}`
     );
@@ -147,18 +164,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Google login — scholarship redirect is encoded in the state param so it
-  // survives the full OAuth round-trip (sessionStorage is wiped on redirect).
+  // Google login — all redirect flags are encoded in the state param so they
+  // survive the full OAuth round-trip (sessionStorage is wiped on redirect).
   const loginWithGoogle = () => {
-    const scholarshipId = sessionStorage.getItem('scholarship_course_redirect');
-    const intendedCourse = sessionStorage.getItem('intended_course');
-    const ref = sessionStorage.getItem('pending_referral_code');
+    const scholarshipId    = sessionStorage.getItem('scholarship_course_redirect');
+    const browseCourses    = sessionStorage.getItem('scholarship_browse_courses');
+    const intendedCourse   = sessionStorage.getItem('intended_course');
+    const ref              = sessionStorage.getItem('pending_referral_code');
 
-    // Build a query string the backend can read and pass through the callback
     const params = new URLSearchParams();
-    if (scholarshipId) params.set('scholarship_redirect', scholarshipId);
+    if (scholarshipId)  params.set('scholarship_redirect', scholarshipId);
+    if (browseCourses)  params.set('scholarship_browse_courses', 'true');
     if (intendedCourse) params.set('intended_course', intendedCourse);
-    if (ref) params.set('ref', ref);
+    if (ref)            params.set('ref', ref);
 
     const queryString = params.toString();
     const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/redirect${queryString ? `?${queryString}` : ''}`;

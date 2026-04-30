@@ -15,6 +15,7 @@ import TechCompany from "@/components/techcompany/TechCompany";
 import Footer from "@/components/footer/Footer";
 import InstallmentBanner from "@/components/installment/InstallmentBanner";
 import ProbStatement from "@/components/probstatement/ProbStatement";
+import ScholarshipBanner from "@/components/Scholarship/ScholarshipBanner";
 
 export default function Home() {
   return (
@@ -54,6 +55,7 @@ export default function Home() {
       <InstallmentBanner />
       <ProbStatement />
       <Courses />
+      <ScholarshipBanner />
       {/* <Skills /> */}
       <TechCompany />
       <Method />

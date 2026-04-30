@@ -251,32 +251,57 @@ class KidsController extends Controller
             'onetime_discount_percent' => $c->onetime_discount_percent,
             'pricing' => [
                 'USD' => [
-                    'standalone_group'                   => $c->group_price_usd,
-                    'standalone_one_on_one'              => $c->one_on_one_price_usd,
-                    'bundle_group'                       => $c->bundle_group_usd,
-                    'bundle_one_on_one'                  => $c->bundle_one_on_one_usd,
-                    'standalone_group_discounted'        => $c->getFinalPrice('group_mentorship', 'USD', 'onetime', false),
-                    'standalone_one_on_one_discounted'   => $c->getFinalPrice('one_on_one', 'USD', 'onetime', false),
-                    'bundle_group_discounted'            => $c->getFinalPrice('group_mentorship', 'USD', 'onetime', true),
-                    'bundle_one_on_one_discounted'       => $c->getFinalPrice('one_on_one', 'USD', 'onetime', true),
-                    'installment_standalone_group'       => $c->getInstallmentAmount('group_mentorship', 'USD', false),
-                    'installment_standalone_one_on_one'  => $c->getInstallmentAmount('one_on_one', 'USD', false),
-                    'installment_bundle_group'           => $c->getInstallmentAmount('group_mentorship', 'USD', true),
-                    'installment_bundle_one_on_one'      => $c->getInstallmentAmount('one_on_one', 'USD', true),
+                    // ── Standalone ──────────────────────────────────────────────
+                    'standalone_starter_group'            => $c->starter_group_price_usd,
+                    'standalone_group'                    => $c->group_price_usd,
+                    'standalone_one_on_one'               => $c->one_on_one_price_usd,
+    
+                    // ── Bundle (DF + track) ──────────────────────────────────────
+                    'bundle_starter_group'                => $c->bundle_starter_group_usd,
+                    'bundle_group'                        => $c->bundle_group_usd,
+                    'bundle_one_on_one'                   => $c->bundle_one_on_one_usd,
+    
+                    // ── One-time discounted bundle prices ────────────────────────
+                    'bundle_starter_group_discounted'     => $c->getFinalPrice('starter_group',    'USD', 'onetime', true),
+                    'bundle_group_discounted'             => $c->getFinalPrice('group_mentorship', 'USD', 'onetime', true),
+                    'bundle_one_on_one_discounted'        => $c->getFinalPrice('one_on_one',       'USD', 'onetime', true),
+    
+                    // ── Installment amounts (per month, no discount) ─────────────
+                    'installment_bundle_starter_group'    => $c->getInstallmentAmount('starter_group',    'USD', true),
+                    'installment_bundle_group'            => $c->getInstallmentAmount('group_mentorship', 'USD', true),
+                    'installment_bundle_one_on_one'       => $c->getInstallmentAmount('one_on_one',       'USD', true),
+    
+                    // Kept for backward compatibility with track-only flows
+                    'standalone_starter_group_discounted' => $c->getFinalPrice('starter_group',    'USD', 'onetime', false),
+                    'standalone_group_discounted'         => $c->getFinalPrice('group_mentorship', 'USD', 'onetime', false),
+                    'standalone_one_on_one_discounted'    => $c->getFinalPrice('one_on_one',       'USD', 'onetime', false),
+                    'installment_standalone_starter_group'=> $c->getInstallmentAmount('starter_group',    'USD', false),
+                    'installment_standalone_group'        => $c->getInstallmentAmount('group_mentorship', 'USD', false),
+                    'installment_standalone_one_on_one'   => $c->getInstallmentAmount('one_on_one',       'USD', false),
                 ],
                 'NGN' => [
-                    'standalone_group'                   => $c->group_price_ngn,
-                    'standalone_one_on_one'              => $c->one_on_one_price_ngn,
-                    'bundle_group'                       => $c->bundle_group_ngn,
-                    'bundle_one_on_one'                  => $c->bundle_one_on_one_ngn,
-                    'standalone_group_discounted'        => $c->getFinalPrice('group_mentorship', 'NGN', 'onetime', false),
-                    'standalone_one_on_one_discounted'   => $c->getFinalPrice('one_on_one', 'NGN', 'onetime', false),
-                    'bundle_group_discounted'            => $c->getFinalPrice('group_mentorship', 'NGN', 'onetime', true),
-                    'bundle_one_on_one_discounted'       => $c->getFinalPrice('one_on_one', 'NGN', 'onetime', true),
-                    'installment_standalone_group'       => $c->getInstallmentAmount('group_mentorship', 'NGN', false),
-                    'installment_standalone_one_on_one'  => $c->getInstallmentAmount('one_on_one', 'NGN', false),
-                    'installment_bundle_group'           => $c->getInstallmentAmount('group_mentorship', 'NGN', true),
-                    'installment_bundle_one_on_one'      => $c->getInstallmentAmount('one_on_one', 'NGN', true),
+                    'standalone_starter_group'            => $c->starter_group_price_ngn,
+                    'standalone_group'                    => $c->group_price_ngn,
+                    'standalone_one_on_one'               => $c->one_on_one_price_ngn,
+    
+                    'bundle_starter_group'                => $c->bundle_starter_group_ngn,
+                    'bundle_group'                        => $c->bundle_group_ngn,
+                    'bundle_one_on_one'                   => $c->bundle_one_on_one_ngn,
+    
+                    'bundle_starter_group_discounted'     => $c->getFinalPrice('starter_group',    'NGN', 'onetime', true),
+                    'bundle_group_discounted'             => $c->getFinalPrice('group_mentorship', 'NGN', 'onetime', true),
+                    'bundle_one_on_one_discounted'        => $c->getFinalPrice('one_on_one',       'NGN', 'onetime', true),
+    
+                    'installment_bundle_starter_group'    => $c->getInstallmentAmount('starter_group',    'NGN', true),
+                    'installment_bundle_group'            => $c->getInstallmentAmount('group_mentorship', 'NGN', true),
+                    'installment_bundle_one_on_one'       => $c->getInstallmentAmount('one_on_one',       'NGN', true),
+    
+                    'standalone_starter_group_discounted' => $c->getFinalPrice('starter_group',    'NGN', 'onetime', false),
+                    'standalone_group_discounted'         => $c->getFinalPrice('group_mentorship', 'NGN', 'onetime', false),
+                    'standalone_one_on_one_discounted'    => $c->getFinalPrice('one_on_one',       'NGN', 'onetime', false),
+                    'installment_standalone_starter_group'=> $c->getInstallmentAmount('starter_group',    'NGN', false),
+                    'installment_standalone_group'        => $c->getInstallmentAmount('group_mentorship', 'NGN', false),
+                    'installment_standalone_one_on_one'   => $c->getInstallmentAmount('one_on_one',       'NGN', false),
                 ],
             ],
         ];

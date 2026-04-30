@@ -45,56 +45,62 @@ class KidsCourse extends Model
     public function getStandalonePrice(string $sessionType, string $currency): float
     {
         return match (true) {
-            $sessionType === 'one_on_one' && $currency === 'USD' => $this->one_on_one_price_usd,
-            $sessionType === 'one_on_one' && $currency === 'NGN' => $this->one_on_one_price_ngn,
-            $sessionType === 'group_mentorship' && $currency === 'USD' => $this->group_price_usd,
-            $sessionType === 'group_mentorship' && $currency === 'NGN' => $this->group_price_ngn,
-            default => $this->group_price_usd,
+            $sessionType === 'one_on_one'       && $currency === 'USD' => (float) $this->one_on_one_price_usd,
+            $sessionType === 'one_on_one'       && $currency === 'NGN' => (float) $this->one_on_one_price_ngn,
+            $sessionType === 'group_mentorship' && $currency === 'USD' => (float) $this->group_price_usd,
+            $sessionType === 'group_mentorship' && $currency === 'NGN' => (float) $this->group_price_ngn,
+            $sessionType === 'starter_group'    && $currency === 'USD' => (float) $this->starter_group_price_usd,
+            $sessionType === 'starter_group'    && $currency === 'NGN' => (float) $this->starter_group_price_ngn,
+            default                                                     => 0.0,
         };
     }
-
-    /**
-     * Bundle price (DF + this track combined — only valid on track rows).
-     */
+    
+    // ── getBundlePrice ────────────────────────────────────────────────────────────
     public function getBundlePrice(string $sessionType, string $currency): float
     {
         return match (true) {
-            $sessionType === 'one_on_one' && $currency === 'USD' => $this->bundle_one_on_one_usd,
-            $sessionType === 'one_on_one' && $currency === 'NGN' => $this->bundle_one_on_one_ngn,
-            $sessionType === 'group_mentorship' && $currency === 'USD' => $this->bundle_group_usd,
-            $sessionType === 'group_mentorship' && $currency === 'NGN' => $this->bundle_group_ngn,
-            default => $this->bundle_group_usd,
+            $sessionType === 'one_on_one'       && $currency === 'USD' => (float) $this->bundle_one_on_one_usd,
+            $sessionType === 'one_on_one'       && $currency === 'NGN' => (float) $this->bundle_one_on_one_ngn,
+            $sessionType === 'group_mentorship' && $currency === 'USD' => (float) $this->bundle_group_usd,
+            $sessionType === 'group_mentorship' && $currency === 'NGN' => (float) $this->bundle_group_ngn,
+            $sessionType === 'starter_group'    && $currency === 'USD' => (float) $this->bundle_starter_group_usd,
+            $sessionType === 'starter_group'    && $currency === 'NGN' => (float) $this->bundle_starter_group_ngn,
+            default                                                     => 0.0,
         };
     }
-
-    /**
-     * Final price after applying one-time discount (if paymentType = 'onetime').
-     * Installment = full price, no discount.
-     */
-    public function getFinalPrice(string $sessionType, string $currency, string $paymentType, bool $isBundle = false): float
-    {
-        $base = $isBundle
+    
+    // ── getFinalPrice ─────────────────────────────────────────────────────────────
+    public function getFinalPrice(
+        string $sessionType,
+        string $currency,
+        string $paymentType,
+        bool   $isBundle
+    ): float {
+        $basePrice = $isBundle
             ? $this->getBundlePrice($sessionType, $currency)
             : $this->getStandalonePrice($sessionType, $currency);
-
-        if ($paymentType === 'onetime' && $this->onetime_discount_percent > 0) {
-            return round($base * (1 - $this->onetime_discount_percent / 100), 2);
+    
+        if ($paymentType === 'onetime' && $basePrice > 0) {
+            $discount = (float) $this->onetime_discount_percent / 100;
+            return round($basePrice * (1 - $discount), 2);
         }
-
-        return $base;
+    
+        return $basePrice;
     }
-
-    /**
-     * Per-installment amount (full price ÷ 3, no discount).
-     */
-    public function getInstallmentAmount(string $sessionType, string $currency, bool $isBundle = false): float
+    
+    // ── getInstallmentAmount ──────────────────────────────────────────────────────
+    public function getInstallmentAmount(string $sessionType, string $currency, bool $isBundle): float
     {
-        $base = $isBundle
+        $total = $isBundle
             ? $this->getBundlePrice($sessionType, $currency)
             : $this->getStandalonePrice($sessionType, $currency);
-
-        return round($base / 3, 2);
+    
+        // Installments are always 3 payments for the bundle, or duration_months for standalone
+        $months = $isBundle ? 3 : (int) $this->duration_months;
+    
+        return $months > 0 ? round($total / $months, 2) : $total;
     }
+    
 
     /**
      * Discount amount in currency units.
