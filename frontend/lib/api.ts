@@ -773,7 +773,7 @@ export const api = {
         file_url?: string;
         file_size?: string;
         order?: number;
-        text_content?: string;
+        text_content?: string | null;
       }) => {
         return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}/items`,

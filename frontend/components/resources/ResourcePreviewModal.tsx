@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  X, ChevronDown, Play, AlertCircle, FileX, ExternalLink, Check,
-  Clock, CheckCircle,
+  X, ChevronDown, Play, FileX, ExternalLink, Check,
+  Clock, CheckCircle, Download, FileText, File, Loader2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,7 +57,6 @@ interface ResourcePreviewModalProps {
 function toEmbedUrl(url: string): string | null {
   if (!url) return null;
 
-  // Google Drive
   if (url.includes('drive.google.com')) {
     if (url.includes('/preview')) return url;
     const fileMatch = url.match(/\/file\/d\/([^/]+)/);
@@ -66,15 +65,12 @@ function toEmbedUrl(url: string): string | null {
     if (idMatch) return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
   }
 
-  // YouTube
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
   if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1&rel=0`;
 
-  // Loom
   const loomMatch = url.match(/loom\.com\/share\/([^?]+)/);
   if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}`;
 
-  // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
 
@@ -89,7 +85,6 @@ function parseBlocks(raw: string | null | undefined): ContentBlock[] {
       return parsed.filter(b => b.type && b.content !== undefined);
     }
   } catch {
-    // Legacy plain text
     if (raw.trim()) {
       const html = raw
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -102,39 +97,24 @@ function parseBlocks(raw: string | null | undefined): ContentBlock[] {
 
 function getFileTypeLabel(type: string) {
   const map: Record<string, { label: string; bg: string; text: string }> = {
-    pdf:      { label: 'PDF', bg: 'bg-red-50',    text: 'text-red-500' },
-    document: { label: 'DOC', bg: 'bg-orange-50', text: 'text-orange-500' },
-    video:    { label: 'VID', bg: 'bg-violet-50', text: 'text-violet-500' },
+    pdf:      { label: 'PDF', bg: 'bg-red-50',     text: 'text-red-500' },
+    document: { label: 'DOC', bg: 'bg-orange-50',  text: 'text-orange-500' },
+    video:    { label: 'VID', bg: 'bg-violet-50',  text: 'text-violet-500' },
     link:     { label: 'LNK', bg: 'bg-emerald-50', text: 'text-emerald-500' },
-    text:     { label: 'TXT', bg: 'bg-blue-50',   text: 'text-blue-500' },
+    text:     { label: 'TXT', bg: 'bg-blue-50',    text: 'text-blue-500' },
   };
   return map[type] ?? { label: type.slice(0, 3).toUpperCase(), bg: 'bg-gray-100', text: 'text-gray-500' };
 }
 
-const READING_TIME_MS = 30_000; // 30 seconds minimum reading time
-
-// ─── Storage helpers for scroll position ─────────────────────────────────────
-
-function saveScrollPos(itemId: number, pos: number) {
-  try { localStorage.setItem(`rp_scroll_${itemId}`, String(Math.round(pos))); } catch {}
-}
-
-function loadScrollPos(itemId: number): number {
-  try { return parseInt(localStorage.getItem(`rp_scroll_${itemId}`) || '0', 10) || 0; } catch { return 0; }
-}
+const READING_TIME_MS = 30_000;
 
 // ─── Video Block ──────────────────────────────────────────────────────────────
 
 function VideoBlock({
-  url,
-  title,
-  itemId,
-  isCompleted,
-  onComplete,
+  url, title, isCompleted, onComplete,
 }: {
   url: string;
   title?: string;
-  itemId?: number;
   isCompleted?: boolean;
   onComplete?: () => void;
 }) {
@@ -142,19 +122,13 @@ function VideoBlock({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasCompleted = useRef(isCompleted || false);
 
-  // For YouTube — use postMessage API to detect ~90% watched
   useEffect(() => {
     if (!embedUrl?.includes('youtube.com/embed') || hasCompleted.current) return;
-
     const handler = (e: MessageEvent) => {
       try {
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
         if (data?.event === 'onStateChange' && data?.info === 0) {
-          // state 0 = ended
-          if (!hasCompleted.current) {
-            hasCompleted.current = true;
-            onComplete?.();
-          }
+          if (!hasCompleted.current) { hasCompleted.current = true; onComplete?.(); }
         }
       } catch {}
     };
@@ -173,7 +147,7 @@ function VideoBlock({
 
   return (
     <div className="rounded-xl overflow-hidden border border-gray-100 bg-black">
-      <div className="relative" style={{ paddingBottom: '56.25%' /* 16:9 */ }}>
+      <div className="relative" style={{ paddingBottom: '56.25%' }}>
         <iframe
           ref={iframeRef}
           src={embedUrl}
@@ -200,12 +174,7 @@ function ImageBlock({ url }: { url: string }) {
   if (failed) return null;
   return (
     <div className="rounded-xl overflow-hidden border border-gray-100">
-      <img
-        src={url}
-        alt=""
-        className="w-full object-contain max-h-[500px]"
-        onError={() => setFailed(true)}
-      />
+      <img src={url} alt="" className="w-full object-contain max-h-[500px]" onError={() => setFailed(true)} />
     </div>
   );
 }
@@ -232,19 +201,231 @@ function TextBlock({ html }: { html: string }) {
   );
 }
 
-// ─── Topic Content Renderer ───────────────────────────────────────────────────
-// Renders all blocks inline (text → image → video → text…).
-// Auto-marks complete when: all text scrolled past + 30s elapsed.
+// ─── PDF Viewer ───────────────────────────────────────────────────────────────
+// KEY FIX: fetches a blob URL via the authenticated API (onPreviewFile) instead
+// of using the raw download_url which would 404 if it's a backend-internal path.
+
+function PdfViewer({
+  itemId, title, isCompleted, onComplete, onPreviewFile,
+}: {
+  itemId: number;
+  title: string;
+  isCompleted?: boolean;
+  onComplete: (id: number) => void;
+  onPreviewFile: (itemId: number, title: string) => Promise<string>;
+}) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completed = useRef(isCompleted || false);
+  const objectUrlRef = useRef<string | null>(null);
+
+  const doFetch = useCallback(async () => {
+    try {
+      setFetching(true);
+      setLoadError(false);
+      // Revoke any previous blob URL
+      if (objectUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+      const url = await onPreviewFile(itemId, title);
+      objectUrlRef.current = url;
+      setBlobUrl(url);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setFetching(false);
+    }
+  }, [itemId, title, onPreviewFile]);
+
+  useEffect(() => {
+    doFetch();
+    return () => {
+      if (objectUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, [doFetch]);
+
+  // Mark complete after 60s of reading
+  useEffect(() => {
+    if (isCompleted || completed.current || !blobUrl) return;
+    timerRef.current = setTimeout(() => {
+      if (!completed.current) {
+        completed.current = true;
+        onComplete(itemId);
+      }
+    }, 60_000);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [itemId, isCompleted, onComplete, blobUrl]);
+
+  if (fetching) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
+        <Loader2 size={24} className="animate-spin text-violet-500" />
+        <p className="text-sm text-gray-500">Loading PDF…</p>
+      </div>
+    );
+  }
+
+  if (loadError || !blobUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
+        <FileX size={24} className="text-red-400" />
+        <p className="text-sm text-red-500">Failed to load PDF. Please try again.</p>
+        <button
+          onClick={doFetch}
+          className="text-xs text-violet-600 hover:underline"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div style={{ height: '500px' }} className="bg-gray-100">
+        <iframe
+          src={`${blobUrl}#toolbar=0&view=FitH`}
+          className="w-full h-full border-0"
+          title={title}
+        />
+      </div>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-100">
+        <span className="text-xs text-gray-400 flex items-center gap-1.5">
+          <Clock size={11} />
+          {isCompleted ? 'Completed' : 'Marked complete after 60s of reading'}
+        </span>
+        {isCompleted && (
+          <span className="flex items-center gap-1 text-xs text-emerald-600">
+            <CheckCircle size={11} /> Completed
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Document Viewer ──────────────────────────────────────────────────────────
+// Same fix: uses onPreviewFile to get an authenticated blob URL.
+// .docx files can't be embedded natively; we try <object> with a fallback message.
+
+function DocViewer({
+  itemId, title, isCompleted, onComplete, onPreviewFile,
+}: {
+  itemId: number;
+  title: string;
+  isCompleted?: boolean;
+  onComplete: (id: number) => void;
+  onPreviewFile: (itemId: number, title: string) => Promise<string>;
+}) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const completed = useRef(isCompleted || false);
+  const objectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const doFetch = async () => {
+      try {
+        setFetching(true);
+        setLoadError(false);
+        if (objectUrlRef.current?.startsWith('blob:')) {
+          URL.revokeObjectURL(objectUrlRef.current);
+        }
+        const url = await onPreviewFile(itemId, title);
+        if (cancelled) return;
+        objectUrlRef.current = url;
+        setBlobUrl(url);
+        // Mark complete as soon as file loads successfully
+        if (!completed.current && !isCompleted) {
+          completed.current = true;
+          onComplete(itemId);
+        }
+      } catch {
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    };
+    doFetch();
+    return () => {
+      cancelled = true;
+      if (objectUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, [itemId, title, onPreviewFile, isCompleted, onComplete]);
+
+  if (fetching) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
+        <Loader2 size={24} className="animate-spin text-violet-500" />
+        <p className="text-sm text-gray-500">Loading document…</p>
+      </div>
+    );
+  }
+
+  if (loadError || !blobUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
+        <FileX size={24} className="text-red-400" />
+        <p className="text-sm text-red-500">Failed to load document. Please try again.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div style={{ height: '500px' }} className="bg-gray-100">
+        <object
+          data={blobUrl}
+          type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="w-full h-full"
+          title={title}
+        >
+          {/* Fallback: browser can't render .docx inline — show a read-only notice */}
+          <div className="flex flex-col items-center justify-center h-full gap-4 bg-gray-50">
+            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
+              <File size={28} className="text-orange-500" />
+            </div>
+            <div className="text-center px-6">
+              <p className="text-sm font-semibold text-gray-900">{title}</p>
+              <p className="text-xs text-gray-400 mt-2">
+                Your browser cannot preview this document type inline.
+                Please contact your instructor if you need access.
+              </p>
+            </div>
+          </div>
+        </object>
+      </div>
+      <div className="flex items-center px-4 py-2.5 bg-gray-50 border-t border-gray-100">
+        <span className="text-xs text-gray-400 flex items-center gap-1.5">
+          <Clock size={11} />
+          {isCompleted ? 'Completed' : 'Marked complete when opened'}
+        </span>
+        {isCompleted && (
+          <span className="flex items-center gap-1 text-xs text-emerald-600 ml-auto">
+            <CheckCircle size={11} /> Completed
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Topic Content (Rich Blocks) ──────────────────────────────────────────────
 
 function TopicContent({
-  item,
-  onComplete,
+  item, onComplete,
 }: {
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
 }) {
   const blocks = parseBlocks(item.text_content);
-  const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrolledToBottom = useRef(false);
@@ -259,7 +440,6 @@ function TopicContent({
     }
   }, [item.id, item.is_completed, onComplete]);
 
-  // Start 30s timer when component mounts (student opened the topic)
   useEffect(() => {
     if (item.is_completed) return;
     timerRef.current = setTimeout(() => {
@@ -269,7 +449,6 @@ function TopicContent({
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [item.id, item.is_completed, tryComplete]);
 
-  // IntersectionObserver on sentinel at bottom of content
   useEffect(() => {
     if (item.is_completed || !sentinelRef.current) return;
     const observer = new IntersectionObserver(
@@ -286,7 +465,6 @@ function TopicContent({
     return () => observer.disconnect();
   }, [item.is_completed, tryComplete]);
 
-  // Video completion handler
   const handleVideoComplete = useCallback(() => {
     if (!item.is_completed && !completed.current) {
       completed.current = true;
@@ -304,7 +482,7 @@ function TopicContent({
   }
 
   return (
-    <div ref={containerRef} className="space-y-4">
+    <div className="space-y-4">
       {blocks.map((block, i) => {
         if (block.type === 'text') return <TextBlock key={i} html={block.content} />;
         if (block.type === 'image') return <ImageBlock key={i} url={block.content} />;
@@ -313,14 +491,12 @@ function TopicContent({
             key={i}
             url={block.content}
             title={item.title}
-            itemId={item.id}
             isCompleted={item.is_completed}
             onComplete={handleVideoComplete}
           />
         );
         return null;
       })}
-      {/* Sentinel for IntersectionObserver */}
       <div ref={sentinelRef} className="h-1" aria-hidden />
     </div>
   );
@@ -329,25 +505,34 @@ function TopicContent({
 // ─── Material Card ────────────────────────────────────────────────────────────
 
 function MaterialCard({
-  item,
-  onComplete,
+  item, onComplete, onPreviewFile,
 }: {
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
+  // onPreviewFile must be passed down; it calls the authenticated API
+  onPreviewFile?: (itemId: number, title: string) => Promise<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const typeInfo = getFileTypeLabel(item.type);
-  const blocks = parseBlocks(item.text_content);
-  const hasContent = blocks.length > 0;
+
+  const isPdf     = item.type === 'pdf';
+  const isDoc     = item.type === 'document';
+  const hasBlocks = parseBlocks(item.text_content).length > 0;
+
+  // Expandable if: has rich text blocks, OR is a file type with a fetch function
+  const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
 
   return (
     <div className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
       item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
     }`}>
-      {/* Header row */}
+      {/* ── Header row ── */}
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50/50 transition"
-        onClick={() => hasContent && setExpanded(e => !e)}
+        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
+          isExpandable ? 'hover:bg-gray-50/70 cursor-pointer' : 'cursor-default'
+        }`}
+        onClick={() => isExpandable && setExpanded(e => !e)}
+        disabled={!isExpandable}
       >
         <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${typeInfo.bg}`}>
           <span className={`text-[10px] font-bold tracking-wide ${typeInfo.text}`}>{typeInfo.label}</span>
@@ -358,6 +543,11 @@ function MaterialCard({
             {item.title}
           </p>
           {item.file_size && <p className="text-xs text-gray-400 mt-0.5">{item.file_size}</p>}
+          {!item.is_completed && isExpandable && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {isPdf ? 'Click to read PDF' : isDoc ? 'Click to view document' : 'Click to read'}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -370,18 +560,44 @@ function MaterialCard({
               <Clock size={11} /> Auto-tracks
             </span>
           )}
-          {hasContent && (
-            <ChevronDown size={14} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {isExpandable && (
+            <ChevronDown
+              size={14}
+              className={`text-gray-400 transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`}
+            />
           )}
         </div>
       </button>
 
-      {/* Expandable content */}
-      {expanded && hasContent && (
-        <div className="px-4 pb-4 border-t border-gray-50">
-          <div className="pt-4">
-            <TopicContent item={item} onComplete={onComplete} />
-          </div>
+      {/* ── Expanded content ── */}
+      {expanded && isExpandable && (
+        <div className="border-t border-gray-100">
+          {/* PDF: authenticated blob fetch → iframe */}
+          {isPdf && onPreviewFile && (
+            <PdfViewer
+              itemId={item.id}
+              title={item.title}
+              isCompleted={item.is_completed}
+              onComplete={onComplete}
+              onPreviewFile={onPreviewFile}
+            />
+          )}
+          {/* Document: authenticated blob fetch → object embed */}
+          {isDoc && !isPdf && onPreviewFile && (
+            <DocViewer
+              itemId={item.id}
+              title={item.title}
+              isCompleted={item.is_completed}
+              onComplete={onComplete}
+              onPreviewFile={onPreviewFile}
+            />
+          )}
+          {/* Rich text/image/video blocks */}
+          {!isPdf && !isDoc && hasBlocks && (
+            <div className="px-4 pb-4 pt-4">
+              <TopicContent item={item} onComplete={onComplete} />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -391,13 +607,12 @@ function MaterialCard({
 // ─── Sprint Section ───────────────────────────────────────────────────────────
 
 function SprintSection({
-  sprint,
-  onComplete,
-  initiallyExpanded = false,
+  sprint, onComplete, initiallyExpanded = false, onPreviewFile,
 }: {
   sprint: Sprint;
   onComplete: (itemId: number) => void;
   initiallyExpanded?: boolean;
+  onPreviewFile?: (itemId: number, title: string) => Promise<string>;
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
@@ -439,7 +654,12 @@ function SprintSection({
             </div>
           ) : (
             sprint.items.map(item => (
-              <MaterialCard key={item.id} item={item} onComplete={onComplete} />
+              <MaterialCard
+                key={item.id}
+                item={item}
+                onComplete={onComplete}
+                onPreviewFile={onPreviewFile}
+              />
             ))
           )}
         </div>
@@ -451,31 +671,21 @@ function SprintSection({
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function ResourcePreviewModal({
-  url,
-  title,
-  onClose,
-  sprints,
-  onMarkComplete,
-  onDownload,
-  onPreviewFile,
-  externalVideos,
+  url, title, onClose, sprints, onMarkComplete, onDownload, onPreviewFile, externalVideos,
 }: ResourcePreviewModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Keyboard close
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [onClose]);
 
-  // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  // Restore scroll position
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -486,12 +696,8 @@ export default function ResourcePreviewModal({
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Auto-complete handler: calls the markComplete API
   const handleAutoComplete = useCallback(async (itemId: number) => {
-    if (onMarkComplete) {
-      // Pass false as currentStatus since we're marking as complete (not toggling)
-      await onMarkComplete(itemId, false);
-    }
+    if (onMarkComplete) await onMarkComplete(itemId, false);
   }, [onMarkComplete]);
 
   if (!url && !sprints) return null;
@@ -520,7 +726,6 @@ export default function ResourcePreviewModal({
         className="bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{ height: '95vh' }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 flex-shrink-0 bg-white">
           <div>
             <h2 className="font-semibold text-gray-900 text-sm">Course Materials</h2>
@@ -531,10 +736,8 @@ export default function ResourcePreviewModal({
           </button>
         </div>
 
-        {/* Scrollable body — everything flows together */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 px-4 sm:px-5 py-5">
 
-          {/* External videos notice (non-embeddable) */}
           {externalVideos && externalVideos.some(v => !toEmbedUrl(v.url)) && (
             <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
               <p className="text-xs text-amber-700 flex items-start gap-2">
@@ -549,7 +752,6 @@ export default function ResourcePreviewModal({
             </div>
           )}
 
-          {/* Sprint materials */}
           {(!sprints || sprints.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-400">
               <FileX className="w-8 h-8 text-gray-200" />
@@ -564,12 +766,12 @@ export default function ResourcePreviewModal({
                   sprint={sprint}
                   onComplete={handleAutoComplete}
                   initiallyExpanded={idx === 0}
+                  onPreviewFile={onPreviewFile}
                 />
               ))}
             </>
           )}
 
-          {/* External resources section */}
           {externalVideos && externalVideos.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-100">
               <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-4">External Resources</p>
@@ -613,7 +815,6 @@ export default function ResourcePreviewModal({
             </div>
           )}
 
-          {/* Bottom padding for comfortable scrolling */}
           <div className="h-8" />
         </div>
       </div>

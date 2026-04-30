@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
@@ -69,12 +69,6 @@ interface EnrolledCourse {
   course_name?: string;
 }
 
-// ─── Storage helpers ──────────────────────────────────────────────────────────
-
-function saveLastCourseId(id: string) {
-  try { localStorage.setItem('rp_last_course', id); } catch {}
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ResourcesPage() {
@@ -91,9 +85,10 @@ export default function ResourcesPage() {
   const [expandedSprints, setExpandedSprints] = useState<number[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Track which items are currently being auto-completed (debounce API calls)
+  // Modal: null = closed, 'all' = open on full list, number = open scrolled to that item
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+
   const completingRef = useRef<Set<number>>(new Set());
 
   // ── Init course ID ─────────────────────────────────────────────────────────
@@ -158,7 +153,6 @@ export default function ResourcesPage() {
       setData(response as CourseResourcesData);
       setError(null);
 
-      // Auto-expand first sprint with uncompleted items
       const materials = (response as CourseResourcesData).materials;
       if (materials.length > 0) {
         const firstUncompleted = materials.find(s => s.progress_percentage < 100);
@@ -171,9 +165,7 @@ export default function ResourcesPage() {
     }
   };
 
-  // ── Auto-progress tracking ─────────────────────────────────────────────────
-  // Called from ResourcePreviewModal when a topic is auto-completed.
-  // Also exposed to the list view for items the user interacts with.
+  // ── Auto-complete ──────────────────────────────────────────────────────────
 
   const handleAutoComplete = useCallback(async (itemId: number) => {
     if (completingRef.current.has(itemId)) return;
@@ -182,7 +174,6 @@ export default function ResourcesPage() {
       await api.courseResources.markItemCompleted(itemId);
       setToast({ message: '✓ Progress saved automatically!', type: 'success' });
       setTimeout(() => setToast(null), 2500);
-      // Optimistic UI update
       setData(prev => {
         if (!prev) return prev;
         return {
@@ -195,10 +186,9 @@ export default function ResourcesPage() {
           })),
         };
       });
-      // Refresh full data in background
       setTimeout(loadData, 1000);
     } catch {
-      // Silent fail — don't bother user with auto-tracking errors
+      // silent fail
     } finally {
       completingRef.current.delete(itemId);
     }
@@ -236,6 +226,17 @@ export default function ResourcesPage() {
       setToast({ message: 'Failed to download file.', type: 'error' });
       setTimeout(() => setToast(null), 3000);
     }
+  };
+
+  // Get item type badge colors (matches modal)
+  const getItemColors = (type: string) => {
+    const map: Record<string, { bg: string; text: string; label: string }> = {
+      pdf:      { bg: 'bg-red-100',    text: 'text-red-600',    label: 'PDF' },
+      document: { bg: 'bg-orange-100', text: 'text-orange-600', label: 'DOC' },
+      video:    { bg: 'bg-purple-100', text: 'text-purple-600', label: 'VID' },
+      text:     { bg: 'bg-blue-100',   text: 'text-blue-600',   label: 'TXT' },
+    };
+    return map[type] ?? { bg: 'bg-gray-100', text: 'text-gray-600', label: type.slice(0, 3).toUpperCase() };
   };
 
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
@@ -324,27 +325,19 @@ export default function ResourcesPage() {
         {/* ─── ALL RESOURCES TAB ──────────────────────────────────────────── */}
         {activeTab === 'all-resources' && data && (
           <div>
-            {/* Open Full Preview Button */}
-            {/* <div className="mb-4 flex justify-end">
-              <button
-                onClick={() => setShowPreviewModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
-              >
-                <BookOpen size={16} /> Open Learning View
-              </button>
-            </div> */}
-
-            {/* Auto-tracking notice */}
-            {/* <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
-              <Clock size={14} className="flex-shrink-0" />
-              <span>Progress is tracked automatically — just read and watch. No need to mark anything manually.</span>
-            </div> */}
-
             {/* Course Materials */}
             <div className="bg-white rounded-lg border border-gray-200 mb-6">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
-                <p className="text-sm text-gray-500 mt-1">Organized by sprint — expand to view content</p>
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
+                  <p className="text-sm text-gray-500 mt-1">Click any item to view or download</p>
+                </div>
+                <button
+                  onClick={() => setPreviewModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+                >
+                  <BookOpen size={15} /> Learning View
+                </button>
               </div>
 
               {isMaterialsEmpty ? (
@@ -361,6 +354,7 @@ export default function ResourcesPage() {
                 <div className="p-6 space-y-4">
                   {data.materials.map(sprint => (
                     <div key={sprint.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      {/* Sprint header */}
                       <button
                         onClick={() => toggleSprint(sprint.id)}
                         className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
@@ -392,52 +386,57 @@ export default function ResourcesPage() {
                         </div>
                       </button>
 
+                      {/* Sprint items */}
                       {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
                         <div className="bg-white divide-y divide-gray-100">
-                          {sprint.items.map(item => (
-                            <div key={item.id} className={`flex items-center justify-between p-4 hover:bg-gray-50 transition ${item.is_completed ? 'bg-green-50/30' : ''}`}>
-                              <div className="flex items-center gap-3 flex-1">
+                          {sprint.items.map(item => {
+                            const colors = getItemColors(item.type);
+                            const isPdf = item.type === 'pdf' && !!item.download_url;
+                            const isDoc = item.type === 'document' && !!item.download_url;
+                            const hasText = !!item.text_content;
+                            const isClickable = isPdf || isDoc || hasText;
 
-                                <div className={`w-8 h-8 rounded flex items-center justify-center ${
-                                  item.type === 'pdf' ? 'bg-red-100' :
-                                  item.type === 'document' ? 'bg-orange-100' :
-                                  item.type === 'video' ? 'bg-purple-100' : 'bg-blue-100'
-                                }`}>
-                                  <span className={`text-xs font-bold ${
-                                    item.type === 'pdf' ? 'text-red-600' :
-                                    item.type === 'document' ? 'text-orange-600' :
-                                    item.type === 'video' ? 'text-purple-600' : 'text-blue-600'
-                                  }`}>
-                                    {item.type === 'pdf' ? 'PDF' :
-                                     item.type === 'document' ? 'DOC' :
-                                     item.type === 'video' ? 'VID' : 'TXT'}
-                                  </span>
+                            return (
+                              <div
+                                key={item.id}
+                                className={`flex items-center justify-between p-4 transition ${
+                                  item.is_completed ? 'bg-green-50/30' : ''
+                                } ${isClickable ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
+                                onClick={() => isClickable && setPreviewModalOpen(true)}
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  {/* Type badge */}
+                                  <div className={`w-8 h-8 rounded flex items-center justify-center ${colors.bg}`}>
+                                    <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>
+                                  </div>
+
+                                  {/* Title */}
+                                  <div className="flex-1">
+                                    <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700' : 'text-gray-800'}`}>
+                                      {item.title}
+                                    </p>
+                                    {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
+                                    {/* Hint text for file types */}
+                                    {/* {isPdf && <div className="text-xs text-red-400 mt-0.5">Click to view PDF</div>} */}
+                                    {/* {isDoc && <div className="text-xs text-orange-400 mt-0.5">Click to download document</div>} */}
+                                  </div>
                                 </div>
 
-                                <div className="flex-1">
-                                  <button
-                                    onClick={() => setShowPreviewModal(true)}
-                                    className="text-sm font-medium text-gray-800 hover:text-purple-700 text-left transition"
-                                  >
-                                    {item.title}
-                                  </button>
-                                  {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
+                                {/* Status */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {item.is_completed ? (
+                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                      <CheckCircle size={11} /> Completed
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                      <Clock size={11} /> Auto-tracks
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                {item.is_completed ? (
-                                  <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                    <CheckCircle size={11} /> Completed
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-                                    <Clock size={11} /> Auto-tracks
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -488,8 +487,9 @@ export default function ResourcesPage() {
                         {data.leaderboard.participants.map((p, idx) => (
                           <tr key={p.user_id} className={`border-b border-gray-100 ${p.is_current_user ? 'bg-green-50' : ''}`}>
                             <td className="py-3 px-2">
-                              {idx === 0 ? <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600" /></div>
-                               : <div className="text-sm text-gray-600 pl-2">#{p.rank}</div>}
+                              {idx === 0
+                                ? <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600" /></div>
+                                : <div className="text-sm text-gray-600 pl-2">#{p.rank}</div>}
                             </td>
                             <td className="py-3 px-2 text-sm font-medium text-gray-900">{p.user_name}</td>
                             <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint1_score}%</td>
@@ -614,11 +614,11 @@ export default function ResourcesPage() {
         )}
 
         {/* Preview Modal */}
-        {showPreviewModal && (
+        {previewModalOpen && (
           <ResourcePreviewModal
             url={null}
             title={null}
-            onClose={() => setShowPreviewModal(false)}
+            onClose={() => setPreviewModalOpen(false)}
             sprints={data?.materials}
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}

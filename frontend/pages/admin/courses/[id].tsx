@@ -6,7 +6,7 @@ import {
   ArrowLeft, Plus, Edit, Trash, GripVertical, X, Upload,
   Loader2, AlertCircle, Bold, Italic, List, Heading2,
   Heading3, Image as ImageIcon, Video, Type, AlignLeft,
-  MoveUp, MoveDown, ListOrdered,
+  MoveUp, MoveDown, ListOrdered, FileText, File,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -14,16 +14,16 @@ import {
 } from 'recharts';
 import ComposeMessageModal from '@/components/admin/students/ComposeMessageModal';
 import { api, handleApiError } from '@/lib/api';
-import type { AdminCourseDetail, AdminCourseSprint, AdminCourseTopic } from '@/lib/types';
+import type { AdminCourseDetail, AdminCourseSprint } from '@/lib/types';
 
 // ─── Content Block Types ──────────────────────────────────────────────────────
 
 type BlockType = 'text' | 'image' | 'video';
 
 interface ContentBlock {
-  id: string;           // local-only UUID for React key / manipulation
+  id: string;
   type: BlockType;
-  content: string;      // html for text, url for image/video
+  content: string;
 }
 
 function generateBlockId() {
@@ -42,7 +42,6 @@ function parseBlocks(raw: string | null | undefined): ContentBlock[] {
       return parsed.map((b: any) => ({ id: generateBlockId(), type: b.type || 'text', content: b.content || '' }));
     }
   } catch {
-    // Legacy plain-text — wrap in a text block
     if (raw.trim()) {
       const html = raw
         .replace(/&/g, '&amp;')
@@ -68,7 +67,6 @@ function RichTextBlock({
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalUpdate = useRef(false);
 
-  // Sync external changes (e.g. when block is first created) without clobbering cursor
   useEffect(() => {
     if (!editorRef.current) return;
     if (editorRef.current.innerHTML !== block.content && !isInternalUpdate.current) {
@@ -100,7 +98,6 @@ function RichTextBlock({
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
-      {/* Toolbar */}
       <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border-b border-gray-200 flex-wrap">
         {toolbar.map(({ icon, cmd, val, title }) => (
           <button
@@ -114,19 +111,16 @@ function RichTextBlock({
           </button>
         ))}
       </div>
-      {/* Editable area */}
       <div
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
         onPaste={e => {
-          // Strip external styles/fonts but keep structure
           e.preventDefault();
           const html = e.clipboardData.getData('text/html');
           const plain = e.clipboardData.getData('text/plain');
           if (html) {
-            // Clean: remove style/class/font attributes
             const clean = html
               .replace(/style="[^"]*"/gi, '')
               .replace(/class="[^"]*"/gi, '')
@@ -137,7 +131,6 @@ function RichTextBlock({
               .replace(/<span>/gi, '');
             document.execCommand('insertHTML', false, clean);
           } else {
-            // Plain text — convert newlines to paragraphs
             const paragraphs = plain.split('\n').map(l => l.trim() ? `<p>${l}</p>` : '<p><br></p>').join('');
             document.execCommand('insertHTML', false, paragraphs);
           }
@@ -194,7 +187,6 @@ function ContentBlockEditor({
     <div className="space-y-3">
       {blocks.map((block, index) => (
         <div key={block.id} className="relative group">
-          {/* Block controls */}
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wide flex items-center gap-1">
               {block.type === 'text' && <><Type size={11} /> Text</>}
@@ -217,7 +209,6 @@ function ContentBlockEditor({
             </div>
           </div>
 
-          {/* Block content */}
           {block.type === 'text' && (
             <RichTextBlock
               block={block}
@@ -264,7 +255,6 @@ function ContentBlockEditor({
         </div>
       ))}
 
-      {/* Add block buttons */}
       <div className="flex items-center gap-2 pt-1">
         <span className="text-xs text-gray-400">Add block:</span>
         <button type="button" onClick={() => addBlock('text')}
@@ -280,6 +270,110 @@ function ContentBlockEditor({
           <Video size={12} /> Video
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── Topic Input Mode Toggle ──────────────────────────────────────────────────
+
+function TopicModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: 'blocks' | 'file';
+  onChange: (m: 'blocks' | 'file') => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-900 mb-2">Content Type</label>
+      <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
+        <button
+          type="button"
+          onClick={() => onChange('blocks')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition ${
+            mode === 'blocks'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Type size={12} /> Rich Content
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange('file')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition ${
+            mode === 'file'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Upload size={12} /> Upload File
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── File Upload Input ────────────────────────────────────────────────────────
+
+function FileUploadInput({
+  file,
+  existingFileName,
+  onChange,
+}: {
+  file: File | null;
+  existingFileName?: string | null;
+  onChange: (f: File | null) => void;
+}) {
+  const inputId = 'topic-file-upload-' + Math.random().toString(36).slice(2);
+  const ref = useRef<HTMLInputElement>(null);
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-900 mb-1.5">File</label>
+      <p className="text-xs text-gray-500 mb-3">Accepted: PDF, DOC, DOCX — max 50 MB</p>
+      <input
+        ref={ref}
+        type="file"
+        accept=".pdf,.doc,.docx"
+        onChange={e => onChange(e.target.files?.[0] ?? null)}
+        className="hidden"
+        id="topic-file-upload"
+      />
+      <label
+        htmlFor="topic-file-upload"
+        className="w-full flex flex-col items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition"
+      >
+        {file ? (
+          <>
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              {file.name.endsWith('.pdf') ? (
+                <FileText size={20} className="text-red-500" />
+              ) : (
+                <File size={20} className="text-blue-500" />
+              )}
+            </div>
+            <span className="text-sm font-medium text-gray-800 text-center break-all px-2">{file.name}</span>
+            <span className="text-xs text-blue-600">Click to change file</span>
+          </>
+        ) : existingFileName ? (
+          <>
+            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+              <File size={20} className="text-gray-400" />
+            </div>
+            <span className="text-sm text-gray-600">Current: <span className="font-medium">{existingFileName}</span></span>
+            <span className="text-xs text-blue-600">Click to replace file</span>
+          </>
+        ) : (
+          <>
+            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+              <Upload size={20} className="text-gray-400" />
+            </div>
+            <span className="text-sm text-gray-600">Click to select file</span>
+            <span className="text-xs text-gray-400">PDF, DOC, DOCX — max 50 MB</span>
+          </>
+        )}
+      </label>
     </div>
   );
 }
@@ -314,6 +408,10 @@ const CourseDetail = () => {
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
     { id: generateBlockId(), type: 'text', content: '' },
   ]);
+
+  // Topic input mode: 'blocks' = rich content, 'file' = upload PDF/doc
+  const [topicInputMode, setTopicInputMode] = useState<'blocks' | 'file'>('blocks');
+  const [topicFile, setTopicFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (id) fetchCourseDetails();
@@ -377,21 +475,44 @@ const CourseDetail = () => {
 
   // ── Topic CRUD ───────────────────────────────────────────────────────────────
 
+  const resetTopicForm = () => {
+    setFormData({});
+    setContentBlocks([{ id: generateBlockId(), type: 'text', content: '' }]);
+    setTopicInputMode('blocks');
+    setTopicFile(null);
+  };
+
   const handleAddTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSprint) return;
     try {
       setSubmitting(true);
-      await api.admin.courses.createTopic(id as string, selectedSprint.id, {
+
+      // Determine file type
+      let fileType: 'text' | 'pdf' | 'document' = 'text';
+      if (topicInputMode === 'file' && topicFile) {
+        const ext = topicFile.name.split('.').pop()?.toLowerCase();
+        fileType = ext === 'pdf' ? 'pdf' : 'document';
+      }
+
+      const result: any = await api.admin.courses.createTopic(id as string, selectedSprint.id, {
         title: formData.title,
-        type: 'text',                               // always 'text' — content embedded in text_content
+        type: fileType,
         order: parseInt(formData.order || '0'),
-        text_content: serializeBlocks(contentBlocks),
+        text_content: topicInputMode === 'blocks' ? serializeBlocks(contentBlocks) : null,
       });
+
+      // If a file was selected, upload it using the returned item id
+      if (topicInputMode === 'file' && topicFile) {
+        const itemId = result?.item?.id ?? result?.id;
+        if (itemId) {
+          await api.adminResources.uploadMaterialFile(id as string, itemId, topicFile);
+        }
+      }
+
       setIsAddTopicModalOpen(false);
       setSelectedSprint(null);
-      setFormData({});
-      setContentBlocks([{ id: generateBlockId(), type: 'text', content: '' }]);
+      resetTopicForm();
       fetchCourseDetails();
     } catch (error: any) { alert(handleApiError(error)); }
     finally { setSubmitting(false); }
@@ -402,14 +523,30 @@ const CourseDetail = () => {
     if (!selectedTopic) return;
     try {
       setSubmitting(true);
+
+      // Determine updated file type
+      let fileType = selectedTopic.type;
+      if (topicInputMode === 'file' && topicFile) {
+        const ext = topicFile.name.split('.').pop()?.toLowerCase();
+        fileType = ext === 'pdf' ? 'pdf' : 'document';
+      } else if (topicInputMode === 'blocks') {
+        fileType = 'text';
+      }
+
       await api.admin.courses.updateTopic(id as string, selectedTopic.id, {
         title: formData.title,
-        text_content: serializeBlocks(contentBlocks),
+        type: fileType,
+        text_content: topicInputMode === 'blocks' ? serializeBlocks(contentBlocks) : null,
       });
+
+      // Upload new file if one was selected
+      if (topicInputMode === 'file' && topicFile) {
+        await api.adminResources.uploadMaterialFile(id as string, selectedTopic.id, topicFile);
+      }
+
       setIsEditTopicModalOpen(false);
       setSelectedTopic(null);
-      setFormData({});
-      setContentBlocks([{ id: generateBlockId(), type: 'text', content: '' }]);
+      resetTopicForm();
       fetchCourseDetails();
     } catch (error: any) { alert(handleApiError(error)); }
     finally { setSubmitting(false); }
@@ -500,6 +637,13 @@ const CourseDetail = () => {
 
   const { course, sprints, materials, external_resources, statistics, students, chart_data } = courseData;
 
+  // Helper to get a display label for existing topic type
+  const getTopicTypeLabel = (type: string) => {
+    if (type === 'pdf') return 'PDF';
+    if (type === 'document') return 'Document';
+    return 'rich content';
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -581,14 +725,28 @@ const CourseDetail = () => {
                             <div className="p-1.5 bg-gray-50 rounded text-gray-400"><GripVertical size={14} /></div>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                             <span className="text-sm text-gray-700">{topic.title}</span>
-                            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">rich content</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              topic.type === 'pdf' ? 'bg-red-50 text-red-500' :
+                              topic.type === 'document' ? 'bg-orange-50 text-orange-500' :
+                              'bg-gray-50 text-gray-400'
+                            }`}>
+                              {getTopicTypeLabel(topic.type)}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => {
                                 setSelectedTopic(topic);
                                 setFormData({ title: topic.title });
-                                setContentBlocks(parseBlocks(topic.text_content));
+                                // Auto-detect mode from topic type
+                                const isFileType = topic.type === 'pdf' || topic.type === 'document';
+                                setTopicInputMode(isFileType ? 'file' : 'blocks');
+                                setTopicFile(null);
+                                if (!isFileType) {
+                                  setContentBlocks(parseBlocks(topic.text_content));
+                                } else {
+                                  setContentBlocks([{ id: generateBlockId(), type: 'text', content: '' }]);
+                                }
                                 setIsEditTopicModalOpen(true);
                               }}
                               className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
@@ -599,7 +757,11 @@ const CourseDetail = () => {
                       ))}
 
                       <button
-                        onClick={() => { setSelectedSprint(sprint); setFormData({}); setContentBlocks([{ id: generateBlockId(), type: 'text', content: '' }]); setIsAddTopicModalOpen(true); }}
+                        onClick={() => {
+                          setSelectedSprint(sprint);
+                          resetTopicForm();
+                          setIsAddTopicModalOpen(true);
+                        }}
                         className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-dashed border-gray-300 hover:border-gray-400 mt-4"
                       >
                         <Plus size={16} /> Add Topic
@@ -831,29 +993,53 @@ const CourseDetail = () => {
             </div>
           )}
 
-          {/* ── Add Topic Modal (wide, scrollable) ─────────────────────────────── */}
+          {/* ── Add Topic Modal ─────────────────────────────────────────────────── */}
           {isAddTopicModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                   <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
-                  <button onClick={() => setIsAddTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <button onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleAddTopic} className="flex flex-col flex-1 min-h-0">
                   <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                    {/* Title */}
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
-                      <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="e.g. Introduction to User Research" />
+                      <input
+                        type="text"
+                        required
+                        value={formData.title || ''}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        placeholder="e.g. Introduction to User Research"
+                      />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
-                      <p className="text-xs text-gray-500 mb-3">Build your topic by adding text, images, and videos in any order.</p>
-                      <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
-                    </div>
+
+                    {/* Content type toggle */}
+                    <TopicModeToggle mode={topicInputMode} onChange={setTopicInputMode} />
+
+                    {/* Content area based on mode */}
+                    {topicInputMode === 'blocks' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
+                        <p className="text-xs text-gray-500 mb-3">Build your topic by adding text, images, and videos in any order.</p>
+                        <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
+                      </div>
+                    ) : (
+                      <FileUploadInput
+                        file={topicFile}
+                        onChange={setTopicFile}
+                      />
+                    )}
                   </div>
                   <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onClick={() => setIsAddTopicModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
+                    <button type="button" onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button
+                      type="submit"
+                      disabled={submitting || (topicInputMode === 'file' && !topicFile)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                       {submitting ? 'Adding…' : 'Add Topic'}
                     </button>
@@ -869,23 +1055,57 @@ const CourseDetail = () => {
               <div className="bg-white rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                   <h2 className="text-xl font-semibold text-gray-900">Edit Topic</h2>
-                  <button onClick={() => setIsEditTopicModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <button onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleEditTopic} className="flex flex-col flex-1 min-h-0">
                   <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                    {/* Title */}
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
-                      <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                      <input
+                        type="text"
+                        required
+                        value={formData.title || ''}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
-                      <p className="text-xs text-gray-500 mb-3">Rearrange, edit, or add new blocks below.</p>
-                      <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
-                    </div>
+
+                    {/* Content type toggle */}
+                    <TopicModeToggle mode={topicInputMode} onChange={mode => {
+                      setTopicInputMode(mode);
+                      // When switching to blocks mode on an existing text topic, restore content
+                      if (mode === 'blocks' && selectedTopic?.text_content) {
+                        setContentBlocks(parseBlocks(selectedTopic.text_content));
+                      }
+                    }} />
+
+                    {/* Content area */}
+                    {topicInputMode === 'blocks' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
+                        <p className="text-xs text-gray-500 mb-3">Rearrange, edit, or add new blocks below.</p>
+                        <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
+                      </div>
+                    ) : (
+                      <FileUploadInput
+                        file={topicFile}
+                        existingFileName={
+                          selectedTopic?.type === 'pdf' || selectedTopic?.type === 'document'
+                            ? selectedTopic?.title
+                            : null
+                        }
+                        onChange={setTopicFile}
+                      />
+                    )}
                   </div>
                   <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onClick={() => setIsEditTopicModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
+                    <button type="button" onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50"
+                    >
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
                       {submitting ? 'Saving…' : 'Save Changes'}
                     </button>
@@ -958,7 +1178,7 @@ const CourseDetail = () => {
                   </div>
                   <div className="flex items-center gap-3 pt-2">
                     <button type="button" onClick={() => setIsAddResourceModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm  font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                       {submitting ? 'Adding…' : 'Add Resource'}
                     </button>

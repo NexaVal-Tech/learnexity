@@ -5,8 +5,8 @@ import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 export default function AdminLogin() {
   const router = useRouter();
-  const { admin, login, error: authError, clearError } = useAdminAuth();
-  
+  const { admin, login, error: authError, clearError, loading: authLoading } = useAdminAuth();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,9 +15,9 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect if already logged in
+  // Only redirect once auth check is complete and admin is confirmed logged in
   useEffect(() => {
-    if (admin) {
+    if (!authLoading && admin) {
       const intendedRoute = sessionStorage.getItem('admin_intended_route');
       if (intendedRoute) {
         sessionStorage.removeItem('admin_intended_route');
@@ -26,7 +26,7 @@ export default function AdminLogin() {
         router.push('/admin/dashboard');
       }
     }
-  }, [admin, router]);
+  }, [admin, authLoading, router]);
 
   // Sync authError with local error state
   useEffect(() => {
@@ -50,6 +50,33 @@ export default function AdminLogin() {
       setLoading(false);
     }
   };
+
+  // Show spinner while auth state is being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <svg
+          className="animate-spin h-8 w-8 text-indigo-600"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
