@@ -63,14 +63,14 @@ adminApiClient.interceptors.response.use(
 
     // Handle 401 — try to refresh token once
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // If already refreshing, queue this request
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return adminApiClient(originalRequest);
-        }).catch(err => Promise.reject(err));
+      // ✅ Don't try to refresh if the refresh endpoint itself failed
+      if (originalRequest.url?.includes('/api/admin/refresh')) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/admin/auth/login';
+        }
+        return Promise.reject(error);
       }
 
       originalRequest._retry = true;
@@ -214,8 +214,8 @@ export const adminApi = {
     return response.data;
   },
 
-  patch: async <T = any>(url: string, data?: any, config?: any): Promise<T> => {
-    const response = await axios.patch(url, data, config);
+  patch: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    const response = await adminApiClient.patch<T>(url, data, config); // ✅ use adminApiClient
     return response.data;
   },
 
