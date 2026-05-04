@@ -485,21 +485,18 @@ export default function PaymentPage() {
     setProcessing(true);
 
     try {
-      // Fire-and-forget: try to update via API as a fallback
-      // The Paystack webhook is the source of truth — don't block on this
-      api.patch(`/api/enrollments/${enrollment!.id}/payment`, {
-        payment_status: 'completed',
-        transaction_id: response.reference,
-        learning_track: selectedTrack!,
-        scholarship_id: scholarship?.id ?? null,
-      }).catch(() => {
-        // Silently ignore — webhook will handle it
-      });
-    } finally {
-      // Always redirect — never leave user stuck on payment page
+      await api.post(
+        `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
+        { reference: response.reference }
+      );
+
       alert(
         `Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`
       );
+      redirectToDashboard('?tab=your-course&payment=success');
+
+    } catch (err) {
+      alert('Payment received! Redirecting to your dashboard...');
       redirectToDashboard('?tab=your-course&payment=success');
     }
   };
