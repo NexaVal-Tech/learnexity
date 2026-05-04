@@ -485,45 +485,23 @@ export default function PaymentPage() {
     setProcessing(true);
 
     try {
-      // Give the webhook a moment to fire before we check
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      const enrollmentsResponse = await api.enrollment.getUserEnrollments();
-      const updatedEnrollment = enrollmentsResponse.enrollments.find(
-        (e: CourseEnrollment) => e.id === enrollment!.id
-      );
-
-      if (updatedEnrollment?.payment_status === 'completed') {
-        // Webhook already processed — go straight to dashboard
-        alert(
-          `Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`
-        );
-        redirectToDashboard('?tab=your-course&payment=success');
-        return;
-      }
-
-      // Webhook hasn't fired yet — update manually then redirect
-      await api.patch(`/api/courses/enrollments/${enrollment!.id}/payment`, {
+      // Fire-and-forget: try to update via API as a fallback
+      // The Paystack webhook is the source of truth — don't block on this
+      api.patch(`/api/enrollments/${enrollment!.id}/payment`, {
         payment_status: 'completed',
         transaction_id: response.reference,
         learning_track: selectedTrack!,
         scholarship_id: scholarship?.id ?? null,
+      }).catch(() => {
+        // Silently ignore — webhook will handle it
       });
-
+    } finally {
+      // Always redirect — never leave user stuck on payment page
       alert(
         `Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`
       );
       redirectToDashboard('?tab=your-course&payment=success');
-    } catch {
-      // Payment was received but verification failed — still redirect gracefully
-      alert(
-        `Payment received! Reference: ${response.reference}\n\nYou'll receive a confirmation email shortly. Redirecting to your dashboard...`
-      );
-      redirectToDashboard('?tab=your-course&payment=pending');
     }
-    // Note: no finally block here — we never want to unset `processing` because
-    // redirectToDashboard is already navigating away. Unsetting it would cause a
-    // flicker where the payment button re-enables for a split second.
   };
 
   const onClose = () => {

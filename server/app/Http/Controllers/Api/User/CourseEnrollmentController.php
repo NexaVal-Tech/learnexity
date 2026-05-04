@@ -285,10 +285,6 @@ class CourseEnrollmentController extends Controller
             Scholarship::find($request->scholarship_id)?->markAsUsed((int) $enrollmentId);
         }
 
-        if ($request->payment_status === 'completed' && $request->scholarship_id) {
-            Scholarship::find($request->scholarship_id)?->markAsUsed($enrollmentId);
-        }
-
         Log::info('✅ Payment status updated manually', [
             'enrollment_id' => $enrollmentId,
             'payment_status' => $request->payment_status,
