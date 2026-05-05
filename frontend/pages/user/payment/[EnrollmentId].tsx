@@ -489,14 +489,10 @@ export default function PaymentPage() {
         `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
         { reference: response.reference }
       );
-
-      alert(
-        `Payment successful! Welcome to ${enrollment!.course_name}. Check your email for confirmation.`
-      );
-      redirectToDashboard('?tab=your-course&payment=success');
-
     } catch (err) {
-      alert('Payment received! Redirecting to your dashboard...');
+      // Webhook is the safety net — still redirect
+    } finally {
+      // Always redirect — never alert before redirecting
       redirectToDashboard('?tab=your-course&payment=success');
     }
   };
