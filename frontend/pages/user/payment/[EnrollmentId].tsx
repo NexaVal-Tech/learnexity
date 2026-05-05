@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
-import { usePaystack, PaystackResponse } from '@/hooks/usePaystack';
 import { loadStripe } from '@stripe/stripe-js';
 
 // Initialize Stripe
@@ -481,109 +480,106 @@ export default function PaymentPage() {
   };
 
   // ─── Paystack handlers ──────────────────────────────────────────────────────
-const onSuccess = async (response: PaystackResponse) => {
-  setProcessing(true);
-  console.log('✅ onSuccess fired', response);
+  // const onSuccess = async (response: PaystackResponse) => {
+  //   setProcessing(true);
+  //   console.log('✅ onSuccess fired', response);
 
-  try {
-    console.log('📡 Calling verify-payment...');
-    await api.post(
-      `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
-      { reference: response.reference }
-    );
-    console.log('✅ verify-payment done');
-  } catch (err) {
-    console.error('❌ verify-payment failed:', err);
-  } finally {
-    console.log('🔀 Redirecting now...');
-    const url = `${window.location.origin}/user/dashboard?tab=your-course&payment=success`;
-    console.log('URL:', url);
-    window.location.replace(url);
-  }
-};
+  //   try {
+  //     console.log('📡 Calling verify-payment...');
+  //     await api.post(
+  //       `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
+  //       { reference: response.reference }
+  //     );
+  //     console.log('✅ verify-payment done');
+  //   } catch (err) {
+  //     console.error('❌ verify-payment failed:', err);
+  //   } finally {
+  //     console.log('🔀 Redirecting now...');
+  //     const url = `${window.location.origin}/user/dashboard?tab=your-course&payment=success`;
+  //     console.log('URL:', url);
+  //     window.location.replace(url);
+  //   }
+  // };
 
-  const onClose = () => {
-    setProcessing(false);
-  };
+  // const onClose = () => {
+  //   setProcessing(false);
+  // };
 
-  const paystackConfig =
-    enrollment && user && selectedTrack
-      ? {
-          key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-          email: user.email,
-          amount: Math.round(getCurrentPrice() * 100),
-          ref: `PAY-${crypto.randomUUID().replace(/-/g, '').substring(0, 20).toUpperCase()}`,
-          currency: currency === 'NGN' ? 'NGN' : 'USD',
-          metadata: {
-            enrollment_id: enrollment.id,
-            course_id: enrollment.course_id,
-            course_name: enrollment.course_name,
-            user_id: user.id,
-            learning_track: selectedTrack,
-            payment_type: paymentType,
-            currency: currency,
-            scholarship_id: scholarship?.id ?? null,
-            custom_fields: [
-              {
-                display_name: 'Course Name',
-                variable_name: 'course_name',
-                value: enrollment.course_name,
-              },
-              {
-                display_name: 'User Name',
-                variable_name: 'user_name',
-                value: user.name,
-              },
-              {
-                display_name: 'Learning Track',
-                variable_name: 'learning_track',
-                value: TRACK_OPTIONS.find((t) => t.id === selectedTrack)?.name || selectedTrack,
-              },
-              {
-                display_name: 'Payment Type',
-                variable_name: 'payment_type',
-                value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)',
-              },
-            ],
-          },
-          onSuccess,
-          onClose,
-        }
-      : null;
+    // Remove the paystackConfig const and usePaystack hook entirely
+    // Replace handlePaystackPayment with this:
 
-  const { initializePayment } = usePaystack(paystackConfig || ({} as any));
+    const handlePaystackPayment = () => {
+      if (!selectedTrack) {
+        alert('Please select a learning track before proceeding with payment.');
+        return;
+      }
+      if (!user?.email) {
+        alert('User email is required for payment. Please log in again.');
+        router.push('/user/auth/login');
+        return;
+      }
+      if (!enrollment) {
+        alert('Enrollment information missing. Please try again.');
+        router.push('/user/dashboard');
+        return;
+      }
+      if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
+        alert('Paystack is not configured. Please contact support.');
+        return;
+      }
 
-  const handlePaystackPayment = () => {
-    if (!selectedTrack) {
-      alert('Please select a learning track before proceeding with payment.');
-      return;
-    }
-    if (!paystackConfig) {
-      alert('Payment configuration error. Please try again.');
-      return;
-    }
-    if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-      alert('Paystack is not configured. Please contact support.');
-      return;
-    }
-    if (!user?.email) {
-      alert('User email is required for payment. Please log in again.');
-      router.push('/user/auth/login');
-      return;
-    }
-    if (!enrollment) {
-      alert('Enrollment information missing. Please try again.');
-      router.push('/user/dashboard');
-      return;
-    }
+      const PaystackPop = (window as any).PaystackPop;
+      if (!PaystackPop) {
+        alert('Paystack failed to load. Please refresh and try again.');
+        return;
+      }
 
-    try {
-      initializePayment();
-    } catch {
-      alert('Failed to open payment window. Please try again.');
-      setProcessing(false);
-    }
-  };
+      setProcessing(true);
+
+      const handler = PaystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        email: user.email,
+        amount: Math.round(getCurrentPrice() * 100),
+        ref: `PAY-${crypto.randomUUID().replace(/-/g, '').substring(0, 20).toUpperCase()}`,
+        currency: currency === 'NGN' ? 'NGN' : 'USD',
+        metadata: {
+          enrollment_id: enrollment.id,
+          course_id: enrollment.course_id,
+          course_name: enrollment.course_name,
+          user_id: user.id,
+          learning_track: selectedTrack,
+          payment_type: paymentType,
+          currency: currency,
+          scholarship_id: scholarship?.id ?? null,
+          custom_fields: [
+            { display_name: 'Course Name', variable_name: 'course_name', value: enrollment.course_name },
+            { display_name: 'User Name', variable_name: 'user_name', value: user.name },
+            { display_name: 'Learning Track', variable_name: 'learning_track', value: TRACK_OPTIONS.find((t) => t.id === selectedTrack)?.name || selectedTrack },
+            { display_name: 'Payment Type', variable_name: 'payment_type', value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)' },
+          ],
+        },
+        callback: async (response: any) => {
+          console.log('✅ Paystack callback fired', response);
+          try {
+            await api.post(
+              `/api/courses/enrollments/${enrollment.id}/verify-payment`,
+              { reference: response.reference }
+            );
+          } catch (err) {
+            console.error('verify-payment failed:', err);
+          } finally {
+            window.location.replace(
+              `${window.location.origin}/user/dashboard?tab=your-course&payment=success`
+            );
+          }
+        },
+        onClose: () => {
+          setProcessing(false);
+        },
+      });
+
+      handler.openIframe();
+    };
 
   const handlePayment = () => {
     if (paymentGateway === 'stripe') {
