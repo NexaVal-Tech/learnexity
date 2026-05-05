@@ -479,32 +479,6 @@ export default function PaymentPage() {
     }
   };
 
-  // ─── Paystack handlers ──────────────────────────────────────────────────────
-  // const onSuccess = async (response: PaystackResponse) => {
-  //   setProcessing(true);
-  //   console.log('✅ onSuccess fired', response);
-
-  //   try {
-  //     console.log('📡 Calling verify-payment...');
-  //     await api.post(
-  //       `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
-  //       { reference: response.reference }
-  //     );
-  //     console.log('✅ verify-payment done');
-  //   } catch (err) {
-  //     console.error('❌ verify-payment failed:', err);
-  //   } finally {
-  //     console.log('🔀 Redirecting now...');
-  //     const url = `${window.location.origin}/user/dashboard?tab=your-course&payment=success`;
-  //     console.log('URL:', url);
-  //     window.location.replace(url);
-  //   }
-  // };
-
-  // const onClose = () => {
-  //   setProcessing(false);
-  // };
-
     // Remove the paystackConfig const and usePaystack hook entirely
     // Replace handlePaystackPayment with this:
 
@@ -558,20 +532,22 @@ export default function PaymentPage() {
             { display_name: 'Payment Type', variable_name: 'payment_type', value: paymentType === 'onetime' ? 'One-Time Payment' : 'Installment (1 of 4)' },
           ],
         },
-        callback: async (response: any) => {
+        callback: (response: any) => {
           console.log('✅ Paystack callback fired', response);
-          try {
-            await api.post(
-              `/api/courses/enrollments/${enrollment.id}/verify-payment`,
-              { reference: response.reference }
-            );
-          } catch (err) {
+          
+          // Don't use async here — Paystack v1 doesn't support it
+          // Fire the verify call without awaiting, then redirect immediately
+          api.post(
+            `/api/courses/enrollments/${enrollment.id}/verify-payment`,
+            { reference: response.reference }
+          ).catch((err) => {
             console.error('verify-payment failed:', err);
-          } finally {
-            window.location.replace(
-              `${window.location.origin}/user/dashboard?tab=your-course&payment=success`
-            );
-          }
+          });
+
+          // Redirect immediately — webhook is the safety net for DB update
+          window.location.replace(
+            `${window.location.origin}/user/dashboard?tab=your-course&payment=success`
+          );
         },
         onClose: () => {
           setProcessing(false);
