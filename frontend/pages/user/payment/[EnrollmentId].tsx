@@ -481,21 +481,26 @@ export default function PaymentPage() {
   };
 
   // ─── Paystack handlers ──────────────────────────────────────────────────────
-  const onSuccess = async (response: PaystackResponse) => {
-    setProcessing(true);
+const onSuccess = async (response: PaystackResponse) => {
+  setProcessing(true);
+  console.log('✅ onSuccess fired', response);
 
-    try {
-      await api.post(
-        `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
-        { reference: response.reference }
-      );
-    } catch (err) {
-      // Webhook is the safety net — still redirect
-    } finally {
-      // Always redirect — never alert before redirecting
-      redirectToDashboard('?tab=your-course&payment=success');
-    }
-  };
+  try {
+    console.log('📡 Calling verify-payment...');
+    await api.post(
+      `/api/courses/enrollments/${enrollment!.id}/verify-payment`,
+      { reference: response.reference }
+    );
+    console.log('✅ verify-payment done');
+  } catch (err) {
+    console.error('❌ verify-payment failed:', err);
+  } finally {
+    console.log('🔀 Redirecting now...');
+    const url = `${window.location.origin}/user/dashboard?tab=your-course&payment=success`;
+    console.log('URL:', url);
+    window.location.replace(url);
+  }
+};
 
   const onClose = () => {
     setProcessing(false);
