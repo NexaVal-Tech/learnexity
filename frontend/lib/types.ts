@@ -508,6 +508,7 @@ export interface AdminCourseTopic {
   id: number;
   title: string;
   type: string;
+  order: number;
   text_content?: string | null; 
   file_url?: string;
 }
