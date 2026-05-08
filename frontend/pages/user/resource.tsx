@@ -49,6 +49,7 @@ interface ExternalResource {
   url: string;
   source: string;
   duration?: string | null;
+  order?: number;
 }
 
 interface CourseResourcesData {
@@ -73,6 +74,10 @@ interface EnrolledCourse {
 // ─── Helper: sort items by order, then id ────────────────────────────────────
 
 function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
+}
+
+function sortExternal(items: ExternalResource[]): ExternalResource[] {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
 }
 
@@ -607,8 +612,8 @@ export default function ResourcesPage() {
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-8">
                   {[
-                    { label: 'Video Tutorials', items: data.external_resources.video_tutorials },
-                    { label: 'Industry Articles', items: data.external_resources.industry_articles },
+                    { label: 'Video Tutorials', items: sortExternal(data.external_resources.video_tutorials) },
+                    { label: 'Industry Articles', items: sortExternal(data.external_resources.industry_articles) },
                   ].map(({ label, items }) => (
                     <div key={label}>
                       <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -636,7 +641,7 @@ export default function ResourcesPage() {
                       <div className="w-2 h-2 bg-purple-600 rounded-full" /> Tool Guides
                     </h3>
                     <div className="space-y-3">
-                      {data.external_resources.recommended_reading.slice(0, 3).map(r => (
+                      {sortExternal(data.external_resources.recommended_reading).slice(0, 3).map(r => (
                         <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
                           <div className="flex items-start justify-between">
                             <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
@@ -651,7 +656,7 @@ export default function ResourcesPage() {
                       <div className="w-2 h-2 bg-purple-600 rounded-full" /> Recommended Reading
                     </h3>
                     <div className="space-y-3">
-                      {data.external_resources.recommended_reading.slice(3).map(r => (
+                      {sortExternal(data.external_resources.recommended_reading).slice(3).map(r => (
                         <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
                           <div className="flex items-start justify-between">
                             <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
