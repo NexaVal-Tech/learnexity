@@ -719,7 +719,7 @@ const CourseDetail = () => {
                     </div>
 
                     <div className="p-4 bg-gray-50/50 space-y-2">
-                      {sprint.topics.map(topic => (
+                     {[...sprint.topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id).map(topic => (
                         <div key={topic.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 group hover:border-gray-200 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="p-1.5 bg-gray-50 rounded text-gray-400"><GripVertical size={14} /></div>

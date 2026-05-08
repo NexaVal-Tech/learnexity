@@ -117,44 +117,48 @@ export default function CoursePage() {
 
   const getDisplayPrice = () => {
     if (!course) return 0;
- 
-    // ✅ FIX: Pick the lowest non-zero price from whichever tracks are enabled,
-    //    so courses that don't offer self_paced still show a price.
+
     const candidates: number[] = [];
- 
+
     if (course.offers_self_paced) {
       const p = parseFloat(
         (currency === 'NGN' ? course.self_paced_price_ngn : course.self_paced_price_usd)?.toString() || '0'
       );
       if (p > 0) candidates.push(p);
     }
- 
+
     if (course.offers_group_mentorship) {
       const p = parseFloat(
         (currency === 'NGN' ? course.group_mentorship_price_ngn : course.group_mentorship_price_usd)?.toString() || '0'
       );
       if (p > 0) candidates.push(p);
     }
- 
+
     if (course.offers_one_on_one) {
       const p = parseFloat(
         (currency === 'NGN' ? course.one_on_one_price_ngn : course.one_on_one_price_usd)?.toString() || '0'
       );
       if (p > 0) candidates.push(p);
     }
- 
-    // Fall back to legacy price_usd / price_ngn if none of the track prices are set
+
     if (candidates.length === 0) {
       const fallback = parseFloat(
         (currency === 'NGN' ? course.price_ngn : course.price_usd)?.toString() || '0'
       );
       return fallback;
     }
- 
+
     return Math.min(...candidates);
   };
 
-  // ── Loading state ───────────────────────────────────────────────────────
+  // ── Determine if the student has paid and has access ─────────────────
+  // We check: isEnrolled AND payment_status === 'completed' OR has_access is true
+  const hasPaidAccess =
+    enrollmentStatus?.isEnrolled &&
+    (enrollmentStatus?.enrollment?.payment_status === "completed" ||
+      enrollmentStatus?.enrollment?.has_access === true);
+
+  // ── Loading state ─────────────────────────────────────────────────────
   if (!currencyDetected || loading) {
     return (
       <AppLayout>
@@ -202,9 +206,6 @@ export default function CoursePage() {
   return (
     <AppLayout>
       <style>{`
-        // body, .course-detail-root { background: #080808; }
-
-        /* ── Shared card shape ── */
         .dc-card {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           border: 1px solid rgba(255,255,255,0.08);
@@ -217,8 +218,6 @@ export default function CoursePage() {
           border-color: ${BRAND}55;
           box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px ${BRAND}22;
         }
-
-        /* ── Brand button ── */
         .dc-btn-brand {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           background: ${BRAND};
@@ -239,8 +238,35 @@ export default function CoursePage() {
           cursor: not-allowed;
           transform: none;
         }
-
-        /* ── Outline button ── */
+        .dc-btn-success {
+          border-radius: 2rem 0.75rem 2rem 0.75rem;
+          background: #16a34a;
+          color: #fff;
+          font-weight: 700;
+          padding: 0.75rem 2rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: box-shadow 0.3s, transform 0.3s, background 0.2s;
+        }
+        .dc-btn-success:hover {
+          background: #15803d;
+          box-shadow: 0 8px 28px rgba(22,163,74,0.4);
+          transform: translateY(-2px);
+        }
+        .dc-enrolled-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border-radius: 2rem 0.75rem 2rem 0.75rem;
+          background: rgba(22,163,74,0.12);
+          border: 1px solid rgba(22,163,74,0.3);
+          color: #4ade80;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 0.35rem 0.85rem;
+          letter-spacing: 0.05em;
+        }
         .dc-btn-outline {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           border: 2px solid ${BRAND}55;
@@ -253,8 +279,6 @@ export default function CoursePage() {
           background: ${BRAND}15;
           border-color: ${BRAND};
         }
-
-        /* ── Learning pill ── */
         .dc-pill {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           border: 1px solid rgba(255,255,255,0.08);
@@ -269,8 +293,6 @@ export default function CoursePage() {
           border-color: ${BRAND}44;
           background: ${BRAND}0a;
         }
-
-        /* ── Section header accent ── */
         .dc-section-label {
           font-size: 0.7rem;
           font-weight: 700;
@@ -279,11 +301,7 @@ export default function CoursePage() {
           color: ${BRAND};
           margin-bottom: 0.5rem;
         }
-
-        /* ── Divider ── */
         .dc-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); }
-
-        /* ── Tool logo hover ── */
         .dc-tool {
           padding: 1rem;
           border-radius: 1rem 0.5rem 1rem 0.5rem;
@@ -292,8 +310,6 @@ export default function CoursePage() {
           transition: border-color 0.25s, background 0.25s, transform 0.25s;
         }
         .dc-tool:hover { border-color: ${BRAND}44; background: ${BRAND}0d; transform: translateY(-3px); }
-
-        /* ── Career level card ── */
         .dc-career {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
           border: 1px solid rgba(255,255,255,0.08);
@@ -302,8 +318,6 @@ export default function CoursePage() {
           transition: border-color 0.25s, background 0.25s;
         }
         .dc-career:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
-
-        /* ── Industry card ── */
         .dc-industry {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
           border: 1px solid rgba(255,255,255,0.08);
@@ -312,8 +326,6 @@ export default function CoursePage() {
           transition: border-color 0.25s, background 0.25s;
         }
         .dc-industry:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
-
-        /* ── Salary block ── */
         .dc-salary-grid {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           border: 1px solid rgba(255,255,255,0.08);
@@ -322,17 +334,13 @@ export default function CoursePage() {
         }
         .dc-salary-cell { border-right: 1px solid rgba(255,255,255,0.07); }
         .dc-salary-cell:last-child { border-right: none; }
-
-        /* ── Benefits dark strip ── */
         .dc-benefits-bg {
-          // background: linear-gradient(135deg, #0a0a0a 0%, #0f0a1e 100%);
           border-top: 1px solid rgba(255,255,255,0.06);
           border-bottom: 1px solid rgba(255,255,255,0.06);
         }
         .dc-benefit-card {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
           border: 1px solid rgba(255,255,255,0.08);
-          // background: rgba(255,255,255,0.04);
           padding: 1.5rem;
           transition: border-color 0.25s, background 0.25s;
         }
@@ -354,31 +362,46 @@ export default function CoursePage() {
               <p className="text-lg text-gray-400 leading-relaxed">
                 {course.description}
               </p>
-              
-              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                {displayPrice > 0 && (
-                  <div
-                    className="dc-card flex items-center gap-4 px-6 py-4"
-                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
-                  >
-                    <div className="flex gap-4 items-center">
-                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
-                        Price
-                      </p>
-                      <p className="text-3xl font-bold" style={{ color: BRAND }}>
-                        {currency === "NGN" ? "₦" : "$"}
-                        {displayPrice.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
-                <ScholarshipBadge
-                  courseId={course.course_id}
-                  isLoggedIn={!!user}
-                  showCta={!enrollmentStatus?.isEnrolled}
-                />
-              </div>
+              {/* ── Price block — hidden when the student has paid access ── */}
+              {!hasPaidAccess && (
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                  {displayPrice > 0 && (
+                    <div
+                      className="dc-card flex items-center gap-4 px-6 py-4"
+                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
+                    >
+                      <div className="flex gap-4 items-center">
+                        <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
+                          Price
+                        </p>
+                        <p className="text-3xl font-bold" style={{ color: BRAND }}>
+                          {currency === "NGN" ? "₦" : "$"}
+                          {displayPrice.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <ScholarshipBadge
+                    courseId={course.course_id}
+                    isLoggedIn={!!user}
+                    showCta={!enrollmentStatus?.isEnrolled}
+                  />
+                </div>
+              )}
+
+              {/* ── "You're enrolled" confirmation badge ── */}
+              {hasPaidAccess && (
+                <div className="flex items-center gap-3">
+                  <span className="dc-enrolled-badge">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    You're enrolled in this course
+                  </span>
+                </div>
+              )}
 
               {error && (
                 <div
@@ -393,16 +416,38 @@ export default function CoursePage() {
                 </div>
               )}
 
+              {/* ── CTA buttons ── */}
               <div className="flex flex-row items-center gap-3 pt-2">
-                {enrollmentStatus?.isEnrolled ? (
+                {hasPaidAccess ? (
+                  /* Student is enrolled & paid → show only Continue Learning */
                   <button
-                    onClick={() => router.push(`/user/courses/${course.course_id}`)}
-                    className="dc-btn-brand"
-                    style={{ background: "#16a34a" }}
+                    onClick={() =>
+                      router.push({
+                        pathname: "/user/resource",
+                        query: { courseId: course.course_id },
+                      })
+                    }
+                    className="dc-btn-success"
                   >
-                    Continue Learning 
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Continue Learning
+                  </button>
+                ) : enrollmentStatus?.isEnrolled ? (
+                  /* Enrolled but payment not complete → pay button */
+                  <button
+                    onClick={() =>
+                      router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)
+                    }
+                    className="dc-btn-brand"
+                    style={{ background: "#d97706" }}
+                  >
+                    Complete Payment
                   </button>
                 ) : (
+                  /* Not enrolled yet → purchase / get started */
                   <button
                     onClick={handleEnrollClick}
                     disabled={checkingEnrollment || enrolling}
@@ -414,13 +459,15 @@ export default function CoursePage() {
                         Enrolling…
                       </span>
                     ) : user ? (
-                      <>Purchase Course </>
+                      <>Purchase Course</>
                     ) : (
-                      <>Get Started </>
+                      <>Get Started</>
                     )}
                   </button>
                 )}
-                <ExpertButton />
+
+                {/* Only show ExpertButton when not enrolled */}
+                {!hasPaidAccess && <ExpertButton />}
               </div>
             </div>
 

@@ -15,6 +15,7 @@ interface CourseResourceItem {
   id: number;
   title: string;
   type: string;
+  order?: number;
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
@@ -104,6 +105,12 @@ function getFileTypeLabel(type: string) {
     text:     { label: 'TXT', bg: 'bg-blue-50',    text: 'text-blue-500' },
   };
   return map[type] ?? { label: type.slice(0, 3).toUpperCase(), bg: 'bg-gray-100', text: 'text-gray-500' };
+}
+
+// ─── Sort items by order field, then by id as tiebreaker ─────────────────────
+
+function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
 }
 
 const READING_TIME_MS = 30_000;
@@ -202,8 +209,6 @@ function TextBlock({ html }: { html: string }) {
 }
 
 // ─── PDF Viewer ───────────────────────────────────────────────────────────────
-// KEY FIX: fetches a blob URL via the authenticated API (onPreviewFile) instead
-// of using the raw download_url which would 404 if it's a backend-internal path.
 
 function PdfViewer({
   itemId, title, isCompleted, onComplete, onPreviewFile,
@@ -225,7 +230,6 @@ function PdfViewer({
     try {
       setFetching(true);
       setLoadError(false);
-      // Revoke any previous blob URL
       if (objectUrlRef.current?.startsWith('blob:')) {
         URL.revokeObjectURL(objectUrlRef.current);
       }
@@ -248,7 +252,6 @@ function PdfViewer({
     };
   }, [doFetch]);
 
-  // Mark complete after 60s of reading
   useEffect(() => {
     if (isCompleted || completed.current || !blobUrl) return;
     timerRef.current = setTimeout(() => {
@@ -274,12 +277,7 @@ function PdfViewer({
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
         <FileX size={24} className="text-red-400" />
         <p className="text-sm text-red-500">Failed to load PDF. Please try again.</p>
-        <button
-          onClick={doFetch}
-          className="text-xs text-violet-600 hover:underline"
-        >
-          Retry
-        </button>
+        <button onClick={doFetch} className="text-xs text-violet-600 hover:underline">Retry</button>
       </div>
     );
   }
@@ -309,8 +307,6 @@ function PdfViewer({
 }
 
 // ─── Document Viewer ──────────────────────────────────────────────────────────
-// Same fix: uses onPreviewFile to get an authenticated blob URL.
-// .docx files can't be embedded natively; we try <object> with a fallback message.
 
 function DocViewer({
   itemId, title, isCompleted, onComplete, onPreviewFile,
@@ -340,7 +336,6 @@ function DocViewer({
         if (cancelled) return;
         objectUrlRef.current = url;
         setBlobUrl(url);
-        // Mark complete as soon as file loads successfully
         if (!completed.current && !isCompleted) {
           completed.current = true;
           onComplete(itemId);
@@ -387,7 +382,6 @@ function DocViewer({
           className="w-full h-full"
           title={title}
         >
-          {/* Fallback: browser can't render .docx inline — show a read-only notice */}
           <div className="flex flex-col items-center justify-center h-full gap-4 bg-gray-50">
             <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
               <File size={28} className="text-orange-500" />
@@ -505,27 +499,40 @@ function TopicContent({
 // ─── Material Card ────────────────────────────────────────────────────────────
 
 function MaterialCard({
-  item, onComplete, onPreviewFile,
+  item, onComplete, onPreviewFile, initiallyExpanded = false,
 }: {
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
-  // onPreviewFile must be passed down; it calls the authenticated API
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
+  // FIX: new prop — when true this card opens pre-expanded and scrolls into view
+  initiallyExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
+  const cardRef = useRef<HTMLDivElement>(null);
   const typeInfo = getFileTypeLabel(item.type);
 
   const isPdf     = item.type === 'pdf';
   const isDoc     = item.type === 'document';
   const hasBlocks = parseBlocks(item.text_content).length > 0;
 
-  // Expandable if: has rich text blocks, OR is a file type with a fetch function
   const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
 
+  // FIX: scroll this card into view when it was pre-opened via initiallyExpanded
+  useEffect(() => {
+    if (initiallyExpanded && cardRef.current) {
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  }, [initiallyExpanded]);
+
   return (
-    <div className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
-      item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
-    }`}>
+    <div
+      ref={cardRef}
+      className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
+        item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
+      }`}
+    >
       {/* ── Header row ── */}
       <button
         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
@@ -572,7 +579,6 @@ function MaterialCard({
       {/* ── Expanded content ── */}
       {expanded && isExpandable && (
         <div className="border-t border-gray-100">
-          {/* PDF: authenticated blob fetch → iframe */}
           {isPdf && onPreviewFile && (
             <PdfViewer
               itemId={item.id}
@@ -582,7 +588,6 @@ function MaterialCard({
               onPreviewFile={onPreviewFile}
             />
           )}
-          {/* Document: authenticated blob fetch → object embed */}
           {isDoc && !isPdf && onPreviewFile && (
             <DocViewer
               itemId={item.id}
@@ -592,7 +597,6 @@ function MaterialCard({
               onPreviewFile={onPreviewFile}
             />
           )}
-          {/* Rich text/image/video blocks */}
           {!isPdf && !isDoc && hasBlocks && (
             <div className="px-4 pb-4 pt-4">
               <TopicContent item={item} onComplete={onComplete} />
@@ -607,14 +611,21 @@ function MaterialCard({
 // ─── Sprint Section ───────────────────────────────────────────────────────────
 
 function SprintSection({
-  sprint, onComplete, initiallyExpanded = false, onPreviewFile,
+  sprint, onComplete, initiallyExpanded = false, onPreviewFile, initialItemId,
 }: {
   sprint: Sprint;
   onComplete: (itemId: number) => void;
   initiallyExpanded?: boolean;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
+  // FIX: if a specific item in this sprint should be opened, its id goes here
+  initialItemId?: number;
 }) {
-  const [expanded, setExpanded] = useState(initiallyExpanded);
+  // FIX: auto-expand this sprint if it contains the target item
+  const containsInitialItem = initialItemId != null && sprint.items.some(i => i.id === initialItemId);
+  const [expanded, setExpanded] = useState(initiallyExpanded || containsInitialItem);
+
+  // FIX: sort items by order field before rendering
+  const sortedItems = sortItems(sprint.items);
 
   return (
     <div className="mb-4">
@@ -648,17 +659,19 @@ function SprintSection({
 
       {expanded && (
         <div className="pl-2">
-          {sprint.items.length === 0 ? (
+          {sortedItems.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
               No materials in this sprint yet.
             </div>
           ) : (
-            sprint.items.map(item => (
+            // FIX: pass initiallyExpanded and scroll target down to each card
+            sortedItems.map(item => (
               <MaterialCard
                 key={item.id}
                 item={item}
                 onComplete={onComplete}
                 onPreviewFile={onPreviewFile}
+                initiallyExpanded={item.id === initialItemId}
               />
             ))
           )}
@@ -671,7 +684,7 @@ function SprintSection({
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function ResourcePreviewModal({
-  url, title, onClose, sprints, onMarkComplete, onDownload, onPreviewFile, externalVideos,
+  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos,
 }: ResourcePreviewModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -689,12 +702,15 @@ export default function ResourcePreviewModal({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const saved = parseInt(localStorage.getItem('rp_modal_scroll') || '0', 10);
-    if (saved) el.scrollTop = saved;
+    // FIX: only restore scroll position when opening without a specific target item
+    if (!initialItemId) {
+      const saved = parseInt(localStorage.getItem('rp_modal_scroll') || '0', 10);
+      if (saved) el.scrollTop = saved;
+    }
     const onScroll = () => { try { localStorage.setItem('rp_modal_scroll', String(el.scrollTop)); } catch {} };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [initialItemId]);
 
   const handleAutoComplete = useCallback(async (itemId: number) => {
     if (onMarkComplete) await onMarkComplete(itemId, false);
@@ -765,8 +781,11 @@ export default function ResourcePreviewModal({
                   key={sprint.id}
                   sprint={sprint}
                   onComplete={handleAutoComplete}
-                  initiallyExpanded={idx === 0}
+                  // FIX: only auto-expand first sprint when no specific item is targeted
+                  initiallyExpanded={initialItemId == null ? idx === 0 : false}
                   onPreviewFile={onPreviewFile}
+                  // FIX: pass target item id so sprint + card auto-expand
+                  initialItemId={initialItemId}
                 />
               ))}
             </>

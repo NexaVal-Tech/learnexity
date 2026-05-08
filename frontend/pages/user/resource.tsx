@@ -14,6 +14,7 @@ interface CourseResourceItem {
   id: number;
   title: string;
   type: string;
+  order?: number;
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
@@ -69,6 +70,12 @@ interface EnrolledCourse {
   course_name?: string;
 }
 
+// ─── Helper: sort items by order, then id ────────────────────────────────────
+
+function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ResourcesPage() {
@@ -86,8 +93,9 @@ export default function ResourcesPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
 
-  // Modal: null = closed, 'all' = open on full list, number = open scrolled to that item
+  // FIX: track modal open state AND which item (if any) was clicked to open it
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [initialItemId, setInitialItemId] = useState<number | undefined>(undefined);
 
   const completingRef = useRef<Set<number>>(new Set());
 
@@ -143,6 +151,7 @@ export default function ResourcesPage() {
     loadData();
   }, [courseId, currentEnrollment]);
 
+  // Initial load — shows spinner, sets first expanded sprint
   const loadData = async () => {
     try {
       setLoading(true);
@@ -150,13 +159,13 @@ export default function ResourcesPage() {
         setData(null); setError(null); setLoading(false); return;
       }
       const response = await api.courseResources.getAll(courseId!);
-      setData(response as CourseResourcesData);
+      const fresh = response as CourseResourcesData;
+      setData(fresh);
       setError(null);
 
-      const materials = (response as CourseResourcesData).materials;
-      if (materials.length > 0) {
-        const firstUncompleted = materials.find(s => s.progress_percentage < 100);
-        setExpandedSprints([firstUncompleted?.id ?? materials[0].id]);
+      if (fresh.materials.length > 0) {
+        const firstUncompleted = fresh.materials.find(s => s.progress_percentage < 100);
+        setExpandedSprints([firstUncompleted?.id ?? fresh.materials[0].id]);
       }
     } catch {
       setError('Failed to load course resources. Please try again.');
@@ -164,6 +173,69 @@ export default function ResourcesPage() {
       setLoading(false);
     }
   };
+
+  // Silent refresh — no spinner, no expanded-sprint reset, preserves completion state
+  // Automatically expands any brand-new sprints that didn't exist before.
+  const silentRefresh = useCallback(async () => {
+    if (!courseId || !currentEnrollment?.has_access) return;
+    try {
+      const response = await api.courseResources.getAll(courseId);
+      const fresh = response as CourseResourcesData;
+
+      setData(prev => {
+        if (!prev) return fresh;
+
+        // Build a map of existing completion states so we don't flicker
+        // completed items back to incomplete between poll cycles.
+        const completedIds = new Set<number>();
+        prev.materials.forEach(s => s.items.forEach(i => { if (i.is_completed) completedIds.add(i.id); }));
+
+        // Merge: keep is_completed=true if we already marked it locally,
+        // regardless of what the API says (API will catch up on the next cycle).
+        const mergedMaterials = fresh.materials.map(sprint => ({
+          ...sprint,
+          items: sprint.items.map(item => ({
+            ...item,
+            is_completed: completedIds.has(item.id) ? true : item.is_completed,
+          })),
+        }));
+
+        return { ...fresh, materials: mergedMaterials };
+      });
+
+      // Expand any sprint IDs that are new (weren't in state before)
+      setExpandedSprints(prev => {
+        const existingIds = new Set(prev);
+        const newSprintIds = fresh.materials
+          .filter(s => !existingIds.has(s.id))
+          .map(s => s.id);
+        return newSprintIds.length > 0 ? [...prev, ...newSprintIds] : prev;
+      });
+    } catch {
+      // Silent — don't show an error for background polls
+    }
+  }, [courseId, currentEnrollment]);
+
+  // Poll every 30 seconds while the page is visible
+  useEffect(() => {
+    if (!courseId || !currentEnrollment?.has_access) return;
+
+    const interval = setInterval(() => {
+      // Only poll when the tab is in the foreground
+      if (!document.hidden) silentRefresh();
+    }, 30_000);
+
+    // Also refresh immediately when the user returns to this tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) silentRefresh();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [courseId, currentEnrollment, silentRefresh]);
 
   // ── Auto-complete ──────────────────────────────────────────────────────────
 
@@ -186,13 +258,14 @@ export default function ResourcesPage() {
           })),
         };
       });
-      setTimeout(loadData, 1000);
+      // Use silentRefresh instead of loadData so progress state isn't lost
+      setTimeout(silentRefresh, 1000);
     } catch {
       // silent fail
     } finally {
       completingRef.current.delete(itemId);
     }
-  }, [courseId, currentEnrollment]);
+  }, [courseId, currentEnrollment, silentRefresh]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -228,7 +301,25 @@ export default function ResourcesPage() {
     }
   };
 
-  // Get item type badge colors (matches modal)
+  // FIX: helper to open modal targeting a specific item
+  const openModalAtItem = (itemId: number) => {
+    setInitialItemId(itemId);
+    setPreviewModalOpen(true);
+  };
+
+  // FIX: helper to open modal at the top (Learning View button)
+  const openModalAtTop = () => {
+    setInitialItemId(undefined);
+    setPreviewModalOpen(true);
+  };
+
+  // FIX: close modal and clear target item
+  const closeModal = () => {
+    setPreviewModalOpen(false);
+    setInitialItemId(undefined);
+  };
+
+  // Get item type badge colors
   const getItemColors = (type: string) => {
     const map: Record<string, { bg: string; text: string; label: string }> = {
       pdf:      { bg: 'bg-red-100',    text: 'text-red-600',    label: 'PDF' },
@@ -332,8 +423,9 @@ export default function ResourcesPage() {
                   <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
                   <p className="text-sm text-gray-500 mt-1">Click any item to view or download</p>
                 </div>
+                {/* FIX: Learning View button opens modal at top with no specific target */}
                 <button
-                  onClick={() => setPreviewModalOpen(true)}
+                  onClick={openModalAtTop}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
                 >
                   <BookOpen size={15} /> Learning View
@@ -386,10 +478,10 @@ export default function ResourcesPage() {
                         </div>
                       </button>
 
-                      {/* Sprint items */}
+                      {/* Sprint items — FIX: sorted by order before render */}
                       {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
                         <div className="bg-white divide-y divide-gray-100">
-                          {sprint.items.map(item => {
+                          {sortItems(sprint.items).map(item => {
                             const colors = getItemColors(item.type);
                             const isPdf = item.type === 'pdf' && !!item.download_url;
                             const isDoc = item.type === 'document' && !!item.download_url;
@@ -402,7 +494,8 @@ export default function ResourcesPage() {
                                 className={`flex items-center justify-between p-4 transition ${
                                   item.is_completed ? 'bg-green-50/30' : ''
                                 } ${isClickable ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
-                                onClick={() => isClickable && setPreviewModalOpen(true)}
+                                // FIX: open modal targeting this specific item
+                                onClick={() => isClickable && openModalAtItem(item.id)}
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   {/* Type badge */}
@@ -416,9 +509,6 @@ export default function ResourcesPage() {
                                       {item.title}
                                     </p>
                                     {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
-                                    {/* Hint text for file types */}
-                                    {/* {isPdf && <div className="text-xs text-red-400 mt-0.5">Click to view PDF</div>} */}
-                                    {/* {isDoc && <div className="text-xs text-orange-400 mt-0.5">Click to download document</div>} */}
                                   </div>
                                 </div>
 
@@ -613,13 +703,14 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Preview Modal */}
+        {/* Preview Modal — FIX: pass initialItemId and use closeModal */}
         {previewModalOpen && (
           <ResourcePreviewModal
             url={null}
             title={null}
-            onClose={() => setPreviewModalOpen(false)}
+            onClose={closeModal}
             sprints={data?.materials}
+            initialItemId={initialItemId}
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
