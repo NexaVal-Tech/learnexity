@@ -269,10 +269,6 @@ class ScholarshipController extends Controller
      */
     private function autoDecide(int $totalScore, bool $isNigeria): array
     {
-        if ($totalScore >= 75) {
-            return ['approved', 100, 'Excellent application. Full scholarship awarded.'];
-        }
-
         if ($totalScore >= 55) {
             return ['approved', 50, '50% scholarship awarded based on strong application.'];
         }

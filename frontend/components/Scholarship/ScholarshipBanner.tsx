@@ -284,11 +284,7 @@ export default function ScholarshipBanner() {
             <div className="schb-body">
               <p className="schb-body-line accent">We believe cost should never be a barrier to learning.</p>
               <p className="schb-body-line">
-                Learnexity offers need based scholarships across all courses, covering up to 50% of tuition.
-              </p>
-              <p className="schb-body-line highlight">Takes 2 minutes. Instant decision.</p>
-              <p className="schb-body-line">
-                No essays, no waitlists. Just answer a few questions and get your result right away.
+                Learnexity offers need based scholarships across all courses, covering 25 to 50% of tuition.
               </p>
             </div>
 
@@ -310,8 +306,8 @@ export default function ScholarshipBanner() {
           {/* ── Right panel: big discount badge + CTA note ── */}
           <div className="schb-right">
             <div className="schb-badge">
-              <span className="schb-badge-pct">50%</span>
-              <span className="schb-badge-label">Off Available</span>
+<span className="schb-badge-pct">25–50%</span>
+<span className="schb-badge-label">Off Available</span>
             </div>
             <p className="schb-social-note">
               Hundreds of students have already received scholarships

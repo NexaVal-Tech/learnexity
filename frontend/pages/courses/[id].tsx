@@ -347,7 +347,7 @@ export default function CoursePage() {
         .dc-benefit-card:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
       `}</style>
 
-      <div className="course-detail-root" style={{ background: "", minHeight: "100vh" }}>
+      <div className="course-detail-root" style={{ background: "", minHeight: "100vh", position: "relative", zIndex: 1 }}>
         <Courses variant="white" />
 
         {/* ── Hero ──────────────────────────────────────────────────────── */}
@@ -513,7 +513,7 @@ export default function CoursePage() {
                 {course.tools.map((tool) => (
                   <div key={tool.id} className="dc-tool flex flex-col items-center gap-2">
                     <img src={tool.icon} alt={tool.name} className="w-12 h-12 object-contain" />
-                    <span className="text-xs text-gray-500 font-medium">{tool.name}</span>
+                    {/* <span className="text-xs text-gray-500 font-medium">{tool.name}</span> */}
                   </div>
                 ))}
               </div>

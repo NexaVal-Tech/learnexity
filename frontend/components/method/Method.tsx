@@ -6,28 +6,28 @@ const BRAND = "#4A3AFF";
 
 const cards = [
   {
-    label: "Real World Projects",
+    label: "Turn Your Skills Into Income",
     icon: "/icons/black_folder.png",
     description:
-      "Work on real-life projects just like in a professional workplace. This hands on experience builds a portfolio that hiring managers want to see.",
+      "We do not just teach tech skills; we help you start earning with them.",
   },
   {
-    label: "Mentored Internships",
+    label: "Get Job Placement",
     icon: "/icons/hugeicons_mentoring.png",
     description:
-      "Our internships provide hands-on experience under the guidance of industrial experts. Learn industry best practices and what it takes to thrive in a professional role.",
+      "Get matched with our local and international partners for your dream job.  ",
   },
   {
-    label: "One-On-One",
+    label: "Gain Real-World Internship Experience",
     icon: "/icons/job.png",
     description:
-      "Work directly with a mentor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.",
+      "We provide the hands-on experience employers are looking for.",
   },
   {
-    label: "Career Support",
+    label: "Job Support:",
     icon: "/icons/job.png",
     description:
-      "Our ultimate goal is your success. We connect our best candidates with a network of hiring partners and prepare you for interviews to help you secure your first tech role.",
+      "We help you with resume reviews, LinkedIn optimization, interview preparation, and access to remote and global job opportunities.",
   },
 ];
 
@@ -73,13 +73,13 @@ export default function Method() {
           {cards.map((card, index) => (
             <ScrollFadeIn key={card.label} delay={index * 0.15} duration={0.3}>
               <div
-                className="method-card flex flex-col items-center text-center px-6 py-8
+                className="h-full method-card flex flex-col items-center text-center px-6 py-8
                   border border-white/10
                   bg-[#0f0f0f]/90 backdrop-blur-sm
                   shadow-2xl shadow-black/80
                   hover:-translate-y-2
                   cursor-pointer transition-all duration-300
-                  h-[280px]"
+                  min-h-[280px]"
               >
                 {/* Icon centered on top in brand color */}
                 <div
@@ -98,7 +98,7 @@ export default function Method() {
                 <h3 className="text-2xl font-semibold text-white mb-2">
                   {card.label}
                 </h3>
-                <p className="text-gray-400 text-xl overflow-hidden line-clamp-4">
+                <p className="text-gray-400 text-xl">
                   {card.description}
                 </p>
               </div>
