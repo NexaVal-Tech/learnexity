@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BookOpen, DollarSign, Clock, BarChart3, Crown, Sparkles, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { X, BookOpen, DollarSign, Clock, BarChart3, Crown, Sparkles, ArrowRight, ArrowLeft, Check, Upload } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 
@@ -58,10 +58,23 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
   });
 
   // Step 3: Images
-  const [imageData, setImageData] = useState({
-    hero_image: '',
-    secondary_image: '',
-  });
+  // Replace imageData state with:
+  const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [heroPreview, setHeroPreview] = useState<string | null>(null);
+  const [secondaryFile, setSecondaryFile] = useState<File | null>(null);
+  const [secondaryPreview, setSecondaryPreview] = useState<string | null>(null);
+
+  const onHeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setHeroFile(f);
+    setHeroPreview(f ? URL.createObjectURL(f) : null);
+  };
+
+  const onSecondaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setSecondaryFile(f);
+    setSecondaryPreview(f ? URL.createObjectURL(f) : null);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -90,17 +103,6 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     setPricingData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    
-    setImageData((prev) => ({
-      ...prev,
-      [name]: value,
     }));
   };
 
@@ -151,97 +153,59 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-
     try {
-      // Create the course with all data
-      const courseData = {
-        // Basic info
-        title: formData.title,
-        course_id: formData.course_id,
-        description: formData.description,
-        project: formData.project || undefined,
-        duration: formData.duration || undefined,
-        level: formData.level || undefined,
-        is_freemium: formData.is_freemium,
-        is_premium: formData.is_premium,
-        
-        // Images
-        hero_image: imageData.hero_image || undefined,
-        secondary_image: imageData.secondary_image || undefined,
-        
-        // Pricing
-        price: parseFloat(pricingData.price_usd),
-        price_usd: parseFloat(pricingData.price_usd),
-        price_ngn: parseFloat(pricingData.price_ngn),
-        
-        // Track availability
-        offers_one_on_one: pricingData.offers_one_on_one,
-        offers_group_mentorship: pricingData.offers_group_mentorship,
-        offers_self_paced: pricingData.offers_self_paced,
-        
-        // Track prices (USD)
-        one_on_one_price_usd: pricingData.one_on_one_price_usd ? parseFloat(pricingData.one_on_one_price_usd) : undefined,
-        group_mentorship_price_usd: pricingData.group_mentorship_price_usd ? parseFloat(pricingData.group_mentorship_price_usd) : undefined,
-        self_paced_price_usd: pricingData.self_paced_price_usd ? parseFloat(pricingData.self_paced_price_usd) : undefined,
-        
-        // Track prices (NGN)
-        one_on_one_price_ngn: pricingData.one_on_one_price_ngn ? parseFloat(pricingData.one_on_one_price_ngn) : undefined,
-        group_mentorship_price_ngn: pricingData.group_mentorship_price_ngn ? parseFloat(pricingData.group_mentorship_price_ngn) : undefined,
-        self_paced_price_ngn: pricingData.self_paced_price_ngn ? parseFloat(pricingData.self_paced_price_ngn) : undefined,
-        
-        // Discounts
-        onetime_discount_usd: pricingData.onetime_discount_usd ? parseFloat(pricingData.onetime_discount_usd) : undefined,
-        onetime_discount_ngn: pricingData.onetime_discount_ngn ? parseFloat(pricingData.onetime_discount_ngn) : undefined,
-      };
+      const formDataPayload = new FormData();
 
-      const response = await api.admin.courses.create(courseData);
+      // Basic info
+      formDataPayload.append('title', formData.title);
+      formDataPayload.append('course_id', formData.course_id);
+      formDataPayload.append('description', formData.description);
+      if (formData.project) formDataPayload.append('project', formData.project);
+      if (formData.duration) formDataPayload.append('duration', formData.duration);
+      if (formData.level) formDataPayload.append('level', formData.level);
+      formDataPayload.append('is_freemium', String(formData.is_freemium ? 1 : 0));
+      formDataPayload.append('is_premium', String(formData.is_premium ? 1 : 0));
 
-      toast.success('Course created successfully! Add more details?', {
-        duration: 5000,
-      });
-      
-      // Pass the created course info to parent so it can show AddCourseDetailsModal
+      // Images
+      if (heroFile) formDataPayload.append('hero_image', heroFile);
+      if (secondaryFile) formDataPayload.append('secondary_image', secondaryFile);
+
+      // Pricing
+      formDataPayload.append('price', pricingData.price_usd);
+      formDataPayload.append('price_usd', pricingData.price_usd);
+      formDataPayload.append('price_ngn', pricingData.price_ngn);
+      formDataPayload.append('offers_one_on_one', String(pricingData.offers_one_on_one ? 1 : 0));
+      formDataPayload.append('offers_group_mentorship', String(pricingData.offers_group_mentorship ? 1 : 0));
+      formDataPayload.append('offers_self_paced', String(pricingData.offers_self_paced ? 1 : 0));
+
+      if (pricingData.one_on_one_price_usd) formDataPayload.append('one_on_one_price_usd', pricingData.one_on_one_price_usd);
+      if (pricingData.group_mentorship_price_usd) formDataPayload.append('group_mentorship_price_usd', pricingData.group_mentorship_price_usd);
+      if (pricingData.self_paced_price_usd) formDataPayload.append('self_paced_price_usd', pricingData.self_paced_price_usd);
+      if (pricingData.one_on_one_price_ngn) formDataPayload.append('one_on_one_price_ngn', pricingData.one_on_one_price_ngn);
+      if (pricingData.group_mentorship_price_ngn) formDataPayload.append('group_mentorship_price_ngn', pricingData.group_mentorship_price_ngn);
+      if (pricingData.self_paced_price_ngn) formDataPayload.append('self_paced_price_ngn', pricingData.self_paced_price_ngn);
+      if (pricingData.onetime_discount_usd) formDataPayload.append('onetime_discount_usd', pricingData.onetime_discount_usd);
+      if (pricingData.onetime_discount_ngn) formDataPayload.append('onetime_discount_ngn', pricingData.onetime_discount_ngn);
+
+      const response = await api.admin.courses.createFormData(formDataPayload);
+
+      toast.success('Course created successfully!', { duration: 5000 });
       onSuccess(response.course);
       handleClose();
     } catch (error) {
-      const errorMessage = handleApiError(error);
-      toast.error(errorMessage);
+      toast.error(handleApiError(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   const handleClose = () => {
     setCurrentStep(1);
-    setFormData({
-      title: '',
-      course_id: '',
-      description: '',
-      project: '',
-      duration: '',
-      level: 'Beginner',
-      is_freemium: false,
-      is_premium: false,
-    });
-    setPricingData({
-      price_usd: '',
-      price_ngn: '',
-      offers_one_on_one: true,
-      offers_group_mentorship: true,
-      offers_self_paced: true,
-      one_on_one_price_usd: '',
-      group_mentorship_price_usd: '',
-      self_paced_price_usd: '',
-      one_on_one_price_ngn: '',
-      group_mentorship_price_ngn: '',
-      self_paced_price_ngn: '',
-      onetime_discount_usd: '',
-      onetime_discount_ngn: '',
-    });
-    setImageData({
-      hero_image: '',
-      secondary_image: '',
-    });
+    setFormData({ title: '', course_id: '', description: '', project: '', duration: '', level: 'Beginner', is_freemium: false, is_premium: false });
+    setPricingData({ price_usd: '', price_ngn: '', offers_one_on_one: true, offers_group_mentorship: true, offers_self_paced: true, one_on_one_price_usd: '', group_mentorship_price_usd: '', self_paced_price_usd: '', one_on_one_price_ngn: '', group_mentorship_price_ngn: '', self_paced_price_ngn: '', onetime_discount_usd: '', onetime_discount_ngn: '' });
+    setHeroFile(null); setHeroPreview(null);
+    setSecondaryFile(null); setSecondaryPreview(null);
     onClose();
   };
 
@@ -693,74 +657,84 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
           {/* Step 3: Images */}
           {currentStep === 3 && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Images should be uploaded to your storage and their URLs provided here. 
-                  Make sure images are publicly accessible.
+                  Upload image files directly. Supported formats: PNG, JPG, WebP up to 5MB.
                 </p>
               </div>
 
+              {/* Hero Image */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hero Image URL
-                </label>
-                <input
-                  type="url"
-                  name="hero_image"
-                  value={imageData.hero_image}
-                  onChange={handleImageChange}
-                  className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
-                  placeholder="https://example.com/images/course-hero.jpg"
-                />
-                {imageData.hero_image && (
-                  <div className="mt-3">
-                    <img 
-                      src={imageData.hero_image} 
-                      alt="Hero preview" 
-                      className="w-full h-48 object-cover rounded-lg"
-onError={(e) => {
-  const img = e.target as HTMLImageElement;
-  img.onerror = null; // prevent infinite loop
-  img.style.display = 'none'; // just hide it instead
-}}
-                    />
-                  </div>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
+                <div
+                  onClick={() => document.getElementById('hero-upload')?.click()}
+                  className="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
+                  style={{ minHeight: '180px' }}
+                >
+                  {heroPreview ? (
+                    <>
+                      <img src={heroPreview} alt="Hero" className="w-full h-48 object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">Click to replace</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setHeroFile(null); setHeroPreview(null); }}
+                        className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow text-red-500 hover:bg-red-50"
+                      >
+                        <X size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                      <Upload size={28} className="mb-2" />
+                      <span className="text-sm">Click or drag to upload hero image</span>
+                      <span className="text-xs mt-1 text-gray-300">PNG, JPG, WebP up to 5MB</span>
+                    </div>
+                  )}
+                </div>
+                <input id="hero-upload" type="file" accept="image/*" className="hidden" onChange={onHeroChange} />
+                {heroFile && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><Check size={12} /> {heroFile.name} ready to upload</p>}
               </div>
 
+              {/* Secondary Image */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Secondary Image URL
-                </label>
-                <input
-                  type="url"
-                  name="secondary_image"
-                  value={imageData.secondary_image}
-                  onChange={handleImageChange}
-                  className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
-                  placeholder="https://example.com/images/course-secondary.jpg"
-                />
-                {imageData.secondary_image && (
-                  <div className="mt-3">
-                    <img 
-                      src={imageData.secondary_image} 
-                      alt="Secondary preview" 
-                      className="w-full h-48 object-cover rounded-lg"
-onError={(e) => {
-  const img = e.target as HTMLImageElement;
-  img.onerror = null; // prevent infinite loop
-  img.style.display = 'none'; // just hide it instead
-}}
-                    />
-                  </div>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Image</label>
+                <div
+                  onClick={() => document.getElementById('secondary-upload')?.click()}
+                  className="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
+                  style={{ minHeight: '180px' }}
+                >
+                  {secondaryPreview ? (
+                    <>
+                      <img src={secondaryPreview} alt="Secondary" className="w-full h-48 object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">Click to replace</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setSecondaryFile(null); setSecondaryPreview(null); }}
+                        className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow text-red-500 hover:bg-red-50"
+                      >
+                        <X size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                      <Upload size={28} className="mb-2" />
+                      <span className="text-sm">Click or drag to upload secondary image</span>
+                      <span className="text-xs mt-1 text-gray-300">PNG, JPG, WebP up to 5MB</span>
+                    </div>
+                  )}
+                </div>
+                <input id="secondary-upload" type="file" accept="image/*" className="hidden" onChange={onSecondaryChange} />
+                {secondaryFile && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><Check size={12} /> {secondaryFile.name} ready to upload</p>}
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>Tip:</strong> After creating the course, you can add additional details like tools, 
-                  learnings, benefits, career paths, industries, and salary expectations from the course detail page.
+                  <strong>Tip:</strong> After creating the course, you can add tools, learnings, benefits, career paths, industries, and salary from the edit modal.
                 </p>
               </div>
             </div>

@@ -6,35 +6,31 @@ import CoursesTable from '@/components/admin/courses/CoursesTable';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
 import CreateCourseModal from '@/components/admin/courses/CreateCourseModal';
 import AddCourseDetailsModal from '@/components/admin/courses/AdminCourseDetailsModal';
+import EditCourseModal from '@/components/admin/courses/EditCourseModal';
 import { Plus } from 'lucide-react';
 
 const CoursesPage = () => {
-  const [filters, setFilters] = useState<{
-    search?: string;
-    status?: 'active' | 'inactive';
-  }>({});
+  const [filters, setFilters] = useState<{ search?: string; status?: 'active' | 'inactive' }>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [createdCourse, setCreatedCourse] = useState<any>(null);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleCourseCreated = (course?: any) => {
-    // Refresh the courses table
     setRefreshKey((prev) => prev + 1);
-    
-    // If course data is provided, offer to add details
     if (course) {
       setCreatedCourse(course);
-      // Small delay to let the create modal close first
-      setTimeout(() => {
-        setIsDetailsModalOpen(true);
-      }, 300);
+      setTimeout(() => setIsDetailsModalOpen(true), 300);
     }
   };
 
-  const handleDetailsAdded = () => {
-    // Refresh the table again after details are added
-    setRefreshKey((prev) => prev + 1);
+  const handleDetailsAdded = () => setRefreshKey((prev) => prev + 1);
+
+  const handleEditCourse = (course: any) => {
+    setEditingCourse(course);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -57,7 +53,11 @@ const CoursesPage = () => {
 
           <CourseStats />
           <CourseFilters onFilterChange={setFilters} />
-          <CoursesTable filters={filters} key={refreshKey} />
+          <CoursesTable
+            filters={filters}
+            key={refreshKey}
+            onEditCourse={handleEditCourse}
+          />
         </div>
 
         <CreateCourseModal
@@ -69,15 +69,19 @@ const CoursesPage = () => {
         {createdCourse && (
           <AddCourseDetailsModal
             isOpen={isDetailsModalOpen}
-            onClose={() => {
-              setIsDetailsModalOpen(false);
-              setCreatedCourse(null);
-            }}
+            onClose={() => { setIsDetailsModalOpen(false); setCreatedCourse(null); }}
             courseId={createdCourse.course_id}
             courseName={createdCourse.title}
             onSuccess={handleDetailsAdded}
           />
         )}
+
+        <EditCourseModal
+          isOpen={isEditModalOpen}
+          onClose={() => { setIsEditModalOpen(false); setEditingCourse(null); }}
+          onSuccess={() => setRefreshKey((prev) => prev + 1)}
+          course={editingCourse}
+        />
       </AdminLayout>
     </AdminRouteGuard>
   );

@@ -33,6 +33,14 @@ export default function CoursePage() {
   const [currencyDetected, setCurrencyDetected] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
 
+  const getImageUrl = (path: string | null | undefined) => {
+  if (!path) return "/images/default-course.jpg";
+    // Already a full URL (http/https) or absolute path
+    if (path.startsWith("http") || path.startsWith("/")) return path;
+    // Relative storage path — prefix with your API base URL
+    return `${process.env.NEXT_PUBLIC_API_URL}/storage/${path}`;
+  };
+
   useEffect(() => {
     getCourses().catch(() => {});
   }, []);
@@ -474,7 +482,7 @@ export default function CoursePage() {
             {/* Right — hero images */}
             <div className="flex justify-center md:justify-end gap-4">
               <img
-                src={course.hero_image || "/images/default-course.jpg"}
+                src={getImageUrl(course.hero_image)}
                 alt={course.title}
                 className="object-cover -mt-8"
                 style={{
@@ -486,7 +494,7 @@ export default function CoursePage() {
                 }}
               />
               <img
-                src={course.secondary_image || course.hero_image || "/images/default-course.jpg"}
+                src={getImageUrl(course.secondary_image || course.hero_image)}
                 alt={course.title}
                 className="object-cover"
                 style={{

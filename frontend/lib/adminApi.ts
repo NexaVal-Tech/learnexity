@@ -204,8 +204,16 @@ export const adminApi = {
     return response.data;
   },
 
+  // Replace the post method in adminApi.ts:
   post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    const response = await adminApiClient.post<T>(url, data, config);
+    const isFormData = data instanceof FormData;
+    const response = await adminApiClient.post<T>(url, data, {
+      ...config,
+      headers: {
+        ...(isFormData ? { 'Content-Type': 'multipart/form-data' } : {}),
+        ...config?.headers,
+      },
+    });
     return response.data;
   },
 

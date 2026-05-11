@@ -17,13 +17,11 @@ interface Course {
 }
 
 interface CoursesTableProps {
-  filters?: {
-    search?: string;
-    status?: 'active' | 'inactive';
-  };
+  filters: { search?: string; status?: 'active' | 'inactive' };
+  onEditCourse: (course: any) => void;
 }
 
-const CoursesTable: React.FC<CoursesTableProps> = ({ filters }) => {
+const CoursesTable: React.FC<CoursesTableProps> = ({filters,  onEditCourse,}) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -92,7 +90,9 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters }) => {
         <FileText size={16} className="text-gray-500" />
         Manage Content
       </Link>
-      <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5">
+      <button onClick={() => {onEditCourse(course); setActiveDropdown(null);}}
+        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+      >
         <Edit size={16} className="text-gray-500" />
         Edit Course
       </button>

@@ -2,12 +2,10 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { adminApi } from './adminApi';
 
-// ✅ ADD: Fail loudly if API URL is missing in production
 if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
-    throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
 }
 
-// Import all types from the types file
 import type {
   User,
   RegisterData,
@@ -56,25 +54,20 @@ import type {
   ReferralHistoryItem,
   PublicReferrer,
   ScholarshipApplication,
-  ScholarshipStats
+  ScholarshipStats,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Re-export the LearningTrack type for convenience
 export type { LearningTrack };
 
-// Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
   timeout: 20000,
   withCredentials: false,
 });
 
-// 🧩 Request interceptor — attach JWT token
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -88,41 +81,31 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🧱 Response interceptor — handle expired or invalid token
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    // 🔹 Handle network or connection issues
     if (error.code === 'ERR_NETWORK') {
       return Promise.reject({
         ...error,
         friendlyMessage: 'Server is unresponsive. Please try again later.',
       });
     }
-
-    // 🔹 Handle timeouts
     if (error.code === 'ECONNABORTED') {
       return Promise.reject({
         ...error,
         friendlyMessage: 'Request timed out. Please check your connection and try again.',
       });
     }
-
-    // 🔹 Handle unauthorized token
-  if (error.response?.status === 401) {
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      // ✅ Add register page to the exclusion list
-      const isAuthPage = currentPath.includes('/auth/');
-      localStorage.removeItem('token');
-      if (!isAuthPage) {
-        window.location.href = '/user/auth/login';
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isAuthPage = currentPath.includes('/auth/');
+        localStorage.removeItem('token');
+        if (!isAuthPage) {
+          window.location.href = '/user/auth/login';
+        }
       }
-      // If it IS an auth page (login, register, verify-email), do nothing
     }
-  }
-
-    // 🔹 Default: pass through
     return Promise.reject(error);
   }
 );
@@ -132,24 +115,18 @@ apiClient.interceptors.response.use(
 // ===============================
 
 export const api = {
+
+  // ── AUTH ────────────────────────────────────────────────────────────────────
   auth: {
     register: async (data: RegisterData): Promise<AuthResponse> => {
       const response = await apiClient.post<AuthResponse>('/api/register', data);
-      
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-      
+      if (response.data?.token) localStorage.setItem('token', response.data.token);
       return response.data;
     },
 
     login: async (data: LoginData): Promise<AuthResponse> => {
       const response = await apiClient.post<AuthResponse>('/api/login', data);
-      
-      if (response.data?.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-      
+      if (response.data?.token) localStorage.setItem('token', response.data.token);
       return response.data;
     },
 
@@ -186,13 +163,8 @@ export const api = {
 
     googleRedirect: () => {
       const referralCode = sessionStorage.getItem('pending_referral_code');
-      
       let redirectUrl = `${API_URL}/api/auth/google/redirect`;
-      
-      if (referralCode) {
-        redirectUrl += `?ref=${encodeURIComponent(referralCode)}`;
-      }
-      
+      if (referralCode) redirectUrl += `?ref=${encodeURIComponent(referralCode)}`;
       window.location.href = redirectUrl;
     },
 
@@ -202,6 +174,7 @@ export const api = {
     },
   },
 
+  // ── COURSES ─────────────────────────────────────────────────────────────────
   courses: {
     getAll: async (): Promise<Course[]> => {
       const response = await apiClient.get<Course[]>('/api/courses');
@@ -214,6 +187,7 @@ export const api = {
     },
   },
 
+  // ── ENROLLMENT ──────────────────────────────────────────────────────────────
   enrollment: {
     checkStatus: async (courseId: string): Promise<EnrollmentStatusResponse> => {
       const response = await apiClient.get<EnrollmentStatusResponse>(
@@ -223,28 +197,18 @@ export const api = {
     },
 
     enroll: async (
-      courseId: string, 
+      courseId: string,
       learningTrack?: LearningTrack,
       paymentType?: 'onetime' | 'installment'
     ): Promise<EnrollmentResponse> => {
-      // Log what we're sending
       const payload = {
         learning_track: learningTrack || 'self_paced',
         payment_type: paymentType || 'onetime',
       };
-      
-      // console.log('📤 Sending enrollment request:', {
-      //   url: `/api/courses/${courseId}/enroll`,
-      //   payload
-      // });
-
       const response = await apiClient.post<EnrollmentResponse>(
         `/api/courses/${courseId}/enroll`,
         payload
       );
-      
-      // console.log('📥 Enrollment response:', response.data);
-      
       return response.data;
     },
 
@@ -253,7 +217,6 @@ export const api = {
       return response.data;
     },
 
-    // In api.ts, enrollment.updatePayment — fix the URL
     updatePayment: async (
       enrollmentId: number,
       paymentStatus: 'pending' | 'completed' | 'failed',
@@ -261,7 +224,7 @@ export const api = {
       learningTrack?: LearningTrack
     ): Promise<{ message: string; enrollment: CourseEnrollment }> => {
       const response = await apiClient.patch(
-        `/api/courses/enrollments/${enrollmentId}/payment`,  // ✅ fixed
+        `/api/courses/enrollments/${enrollmentId}/payment`,
         {
           payment_status: paymentStatus,
           transaction_id: transactionId,
@@ -272,6 +235,7 @@ export const api = {
     },
   },
 
+  // ── COURSE RESOURCES ────────────────────────────────────────────────────────
   courseResources: {
     getAll: async (courseId: string): Promise<CourseResourcesResponse> => {
       const response = await apiClient.get<CourseResourcesResponse>(
@@ -291,22 +255,12 @@ export const api = {
     },
 
     downloadMaterial: async (itemId: number) => {
-      const response = await fetch(
-        `${API_URL}/api/materials/${itemId}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Download failed (${response.status})`);
-      }
-
+      const response = await fetch(`${API_URL}/api/materials/${itemId}/download`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!response.ok) throw new Error(`Download failed (${response.status})`);
       return await response.blob();
     },
-
 
     updateTimeSpent: async (
       courseId: string,
@@ -320,6 +274,7 @@ export const api = {
     },
   },
 
+  // ── REFERRALS ───────────────────────────────────────────────────────────────
   referrals: {
     checkReferralStatus: async (): Promise<{ has_referral: boolean }> => {
       const response = await apiClient.get('/api/referrals/status');
@@ -342,6 +297,7 @@ export const api = {
     },
   },
 
+  // ── ADMIN RESOURCES ─────────────────────────────────────────────────────────
   adminResources: {
     createMaterial: async (
       courseId: string,
@@ -409,28 +365,18 @@ export const api = {
     },
 
     deleteMaterialItem: async (itemId: number) => {
-      const response = await apiClient.delete(
-        `/api/admin/courses/resources/items/${itemId}`
-      );
+      const response = await apiClient.delete(`/api/admin/courses/resources/items/${itemId}`);
       return response.data;
     },
 
-    uploadMaterialFile: async (
-      courseId: string,
-      itemId: number,
-      file: File
-    ) => {
+    uploadMaterialFile: async (courseId: string, itemId: number, file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-
       const response = await adminApi.post(
         `/api/admin/courses/${courseId}/resources/items/${itemId}/upload`,
         formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-
       return response.data;
     },
 
@@ -555,6 +501,7 @@ export const api = {
     },
   },
 
+  // ── ADMIN ───────────────────────────────────────────────────────────────────
   admin: {
     getDashboard: async (): Promise<DashboardData> => {
       return await adminApi.get<DashboardData>('/api/admin/dashboard');
@@ -593,99 +540,87 @@ export const api = {
         attachment?: File;
       }): Promise<{ message: string }> => {
         const formData = new FormData();
-        
-        // Option 1: Send as JSON string (Laravel will parse it)
         formData.append('student_ids', JSON.stringify(data.student_ids));
-        
-        // OR Option 2: Append each ID separately (keep the [] notation)
-        // data.student_ids.forEach((id) => {
-        //   formData.append('student_ids[]', id.toString());
-        // });
-        
         formData.append('subject', data.subject);
         formData.append('message', data.message);
-        
-        if (data.attachment) {
-          formData.append('attachment', data.attachment);
-        }
-
+        if (data.attachment) formData.append('attachment', data.attachment);
         return await adminApi.post('/api/admin/students/send-message', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       },
     },
 
-      kids: {
-        getCourses: async (): Promise<{ courses: KidsCourse[]; stats: any }> => {
-          return await adminApi.get('/api/admin/kids/courses');
-        },
-    
-        updateCoursePrices: async (
-          courseId: number,
-          data: Partial<KidsCourse>
-        ): Promise<{ message: string; course: KidsCourse }> => {
-          return await adminApi.put(`/api/admin/kids/courses/${courseId}/prices`, data);
-        },
-    
-        getEnrollments: async (params?: {
-          page?: number;
-          per_page?: number;
-          payment_status?: string;
-          track?: string;
-        }): Promise<{ data: KidsEnrollment[]; meta: any }> => {
-          return await adminApi.get('/api/admin/kids/enrollments', { params } as any);
-        },
+    kids: {
+      getCourses: async (): Promise<{ courses: KidsCourse[]; stats: any }> => {
+        return await adminApi.get('/api/admin/kids/courses');
       },
 
-      referralAdmin: {
-        getStats: async (): Promise<ReferralAdminStats> => {
-          return await adminApi.get('/api/admin/referrals/stats');
-        },
-    
-        getHistory: async (params?: {
-          page?: number;
-          per_page?: number;
-          search?: string;
-          status?: string;
-          referrer_type?: 'user' | 'public';
-        }): Promise<{ data: ReferralHistoryItem[]; meta: any }> => {
-          return await adminApi.get('/api/admin/referrals/history', { params } as any);
-        },
-    
-        getPublicReferrers: async (params?: {
-          page?: number;
-          per_page?: number;
-          search?: string;
-        }): Promise<{ data: PublicReferrer[]; meta: any }> => {
-          return await adminApi.get('/api/admin/referrals/public-referrers', { params } as any);
-        },
+      updateCoursePrices: async (
+        courseId: number,
+        data: Partial<KidsCourse>
+      ): Promise<{ message: string; course: KidsCourse }> => {
+        return await adminApi.put(`/api/admin/kids/courses/${courseId}/prices`, data);
       },
 
-        scholarships: {
-          getStats: async (): Promise<ScholarshipStats> => {
-            return await adminApi.get('/api/admin/scholarships/stats');
-          },
-      
-          getAll: async (params?: {
-            page?: number;
-            per_page?: number;
-            search?: string;
-            status?: 'pending' | 'approved' | 'rejected';
-          }): Promise<{ data: ScholarshipApplication[]; meta: any }> => {
-            return await adminApi.get('/api/admin/scholarships', { params } as any);
-          },
-      
-          review: async (
-            id: number,
-            data: {
-              status: 'approved' | 'rejected';
-              review_notes?: string;
-              discount_percentage?: number;
-            }
-          ): Promise<{ message: string }> => {
-            return await adminApi.patch<any>(`/api/admin/scholarships/${id}/review`, data);
-          },
-        },
+      getEnrollments: async (params?: {
+        page?: number;
+        per_page?: number;
+        payment_status?: string;
+        track?: string;
+      }): Promise<{ data: KidsEnrollment[]; meta: any }> => {
+        return await adminApi.get('/api/admin/kids/enrollments', { params } as any);
+      },
+    },
+
+    referralAdmin: {
+      getStats: async (): Promise<ReferralAdminStats> => {
+        return await adminApi.get('/api/admin/referrals/stats');
+      },
+
+      getHistory: async (params?: {
+        page?: number;
+        per_page?: number;
+        search?: string;
+        status?: string;
+        referrer_type?: 'user' | 'public';
+      }): Promise<{ data: ReferralHistoryItem[]; meta: any }> => {
+        return await adminApi.get('/api/admin/referrals/history', { params } as any);
+      },
+
+      getPublicReferrers: async (params?: {
+        page?: number;
+        per_page?: number;
+        search?: string;
+      }): Promise<{ data: PublicReferrer[]; meta: any }> => {
+        return await adminApi.get('/api/admin/referrals/public-referrers', { params } as any);
+      },
+    },
+
+    scholarships: {
+      getStats: async (): Promise<ScholarshipStats> => {
+        return await adminApi.get('/api/admin/scholarships/stats');
+      },
+
+      getAll: async (params?: {
+        page?: number;
+        per_page?: number;
+        search?: string;
+        status?: 'pending' | 'approved' | 'rejected';
+      }): Promise<{ data: ScholarshipApplication[]; meta: any }> => {
+        return await adminApi.get('/api/admin/scholarships', { params } as any);
+      },
+
+      review: async (
+        id: number,
+        data: {
+          status: 'approved' | 'rejected';
+          review_notes?: string;
+          discount_percentage?: number;
+        }
+      ): Promise<{ message: string }> => {
+        return await adminApi.patch<any>(`/api/admin/scholarships/${id}/review`, data);
+      },
+    },
 
     courses: {
       getAll: async (params?: {
@@ -710,51 +645,117 @@ export const api = {
         return await adminApi.get('/api/admin/courses/statistics');
       },
 
-      create: async (data: {
-        title: string;
-        course_id: string;
-        description: string;
-        duration?: string;
-        level?: string;
-        price: number;
-        is_freemium?: boolean;
-        is_premium?: boolean;
-      }): Promise<{ message: string; course: Course }> => {
+      create: async (data: Record<string, any>): Promise<{ message: string; course: any }> => {
         return await adminApi.post('/api/admin/courses', data);
       },
 
-      update: async (courseId: string, data: Partial<{
-        title: string;
-        description: string;
-        duration: string;
-        level: string;
-        price: number;
-        is_freemium: boolean;
-        is_premium: boolean;
-      }>): Promise<{ message: string; course: Course }> => {
+      createFormData: async (data: FormData): Promise<{ message: string; course: any }> => {
+        return await adminApi.post('/api/admin/courses', data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      },
+
+      update: async (
+        courseId: string,
+        data: Record<string, any>
+      ): Promise<{ message: string; course: any }> => {
         return await adminApi.put(`/api/admin/courses/${courseId}`, data);
+      },
+
+      updateFormData: async (
+        courseId: string,
+        data: FormData
+      ): Promise<{ message: string; course: any }> => {
+        return await adminApi.post(`/api/admin/courses/${courseId}`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       },
 
       delete: async (courseId: string): Promise<{ message: string }> => {
         return await adminApi.delete(`/api/admin/courses/${courseId}`);
       },
 
-      createSprint: async (courseId: string, data: {
-        sprint_name: string;
-        sprint_number: number;
-        order?: number;
-      }) => {
+      getDetails: async (courseId: string): Promise<{
+        tools: any[];
+        learnings: any[];
+        benefits: any[];
+        career_paths: any[];
+        industries: any[];
+        salary: any;
+      }> => {
+        return await adminApi.get(`/api/admin/courses/${courseId}/details`);
+      },
+
+      syncTools: async (courseId: string, data: FormData): Promise<{ message: string }> => {
+        return await adminApi.post(
+          `/api/admin/courses/${courseId}/details/tools/sync`,
+          data,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+      },
+
+      syncLearnings: async (
+        courseId: string,
+        data: { learnings: { learning_point: string }[] }
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(
+          `/api/admin/courses/${courseId}/details/learnings/sync`,
+          data
+        );
+      },
+
+      syncBenefits: async (
+        courseId: string,
+        data: { benefits: { title: string; text: string }[] }
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(
+          `/api/admin/courses/${courseId}/details/benefits/sync`,
+          data
+        );
+      },
+
+      syncCareerPaths: async (
+        courseId: string,
+        data: { career_paths: { level: string; position: string }[] }
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(
+          `/api/admin/courses/${courseId}/details/career-paths/sync`,
+          data
+        );
+      },
+
+      syncIndustries: async (
+        courseId: string,
+        data: { industries: { title: string; text: string }[] }
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(
+          `/api/admin/courses/${courseId}/details/industries/sync`,
+          data
+        );
+      },
+
+      upsertSalary: async (
+        courseId: string,
+        data: { entry_level?: string; mid_level?: string; senior_level?: string }
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(`/api/admin/courses/${courseId}/details/salary`, data);
+      },
+
+      createSprint: async (
+        courseId: string,
+        data: { sprint_name: string; sprint_number: number; order?: number }
+      ) => {
         return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials`,
           data
         );
       },
 
-      updateSprint: async (courseId: string, sprintId: number, data: {
-        sprint_name?: string;
-        sprint_number?: number;
-        order?: number;
-      }) => {
+      updateSprint: async (
+        courseId: string,
+        sprintId: number,
+        data: { sprint_name?: string; sprint_number?: number; order?: number }
+      ) => {
         return await adminApi.put(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}`,
           data
@@ -767,28 +768,36 @@ export const api = {
         );
       },
 
-      createTopic: async (courseId: string, sprintId: number, data: {
-        title: string;
-        type: 'pdf' | 'video' | 'document' | 'link' | 'text';
-        file_url?: string;
-        file_size?: string;
-        order?: number;
-        text_content?: string | null;
-      }) => {
+      createTopic: async (
+        courseId: string,
+        sprintId: number,
+        data: {
+          title: string;
+          type: 'pdf' | 'video' | 'document' | 'link' | 'text';
+          file_url?: string;
+          file_size?: string;
+          order?: number;
+          text_content?: string | null;
+        }
+      ) => {
         return await adminApi.post(
           `/api/admin/courses/${courseId}/resources/materials/${sprintId}/items`,
           data
         );
       },
 
-      updateTopic: async (courseId: string, topicId: number, data: Partial<{
-        title: string;
-        type: 'pdf' | 'video' | 'document' | 'link';
-        file_url: string;
-        file_size: string;
-        order: number;
-         text_content?: string | null;
-      }>) => {
+      updateTopic: async (
+        courseId: string,
+        topicId: number,
+        data: Partial<{
+          title: string;
+          type: 'pdf' | 'video' | 'document' | 'link';
+          file_url: string;
+          file_size: string;
+          order: number;
+          text_content: string | null;
+        }>
+      ) => {
         return await adminApi.put(
           `/api/admin/courses/${courseId}/resources/items/${topicId}`,
           data
@@ -803,36 +812,48 @@ export const api = {
     },
   },
 
+  // ── ADMIN COURSE DETAILS ─────────────────────────────────────────────────────
   adminCourseDetails: {
     addTool: async (courseId: string, formData: FormData) => {
       return await adminApi.post(
         `/api/admin/courses/${courseId}/details/tools`,
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
     },
 
-    addLearning: async (courseId: string, data: { learning_point: string; order: number }) => {
+    addLearning: async (
+      courseId: string,
+      data: { learning_point: string; order: number }
+    ) => {
       return await adminApi.post(`/api/admin/courses/${courseId}/details/learnings`, data);
     },
 
-    addBenefit: async (courseId: string, data: { title: string; text: string; order: number }) => {
+    addBenefit: async (
+      courseId: string,
+      data: { title: string; text: string; order: number }
+    ) => {
       return await adminApi.post(`/api/admin/courses/${courseId}/details/benefits`, data);
     },
 
-    addCareerPath: async (courseId: string, data: { level: string; position: string; order: number }) => {
+    addCareerPath: async (
+      courseId: string,
+      data: { level: string; position: string; order: number }
+    ) => {
       return await adminApi.post(`/api/admin/courses/${courseId}/details/career-paths`, data);
     },
 
-    addIndustry: async (courseId: string, data: { title: string; text: string; order: number }) => {
+    addIndustry: async (
+      courseId: string,
+      data: { title: string; text: string; order: number }
+    ) => {
       return await adminApi.post(`/api/admin/courses/${courseId}/details/industries`, data);
     },
 
-    addSalary: async (courseId: string, data: { entry_level?: string; mid_level?: string; senior_level?: string }) => {
+    addSalary: async (
+      courseId: string,
+      data: { entry_level?: string; mid_level?: string; senior_level?: string }
+    ) => {
       return await adminApi.post(`/api/admin/courses/${courseId}/details/salary`, data);
     },
 
@@ -841,22 +862,31 @@ export const api = {
     },
 
     deleteLearning: async (courseId: string, learningId: number) => {
-      return await adminApi.delete(`/api/admin/courses/${courseId}/details/learnings/${learningId}`);
+      return await adminApi.delete(
+        `/api/admin/courses/${courseId}/details/learnings/${learningId}`
+      );
     },
 
     deleteBenefit: async (courseId: string, benefitId: number) => {
-      return await adminApi.delete(`/api/admin/courses/${courseId}/details/benefits/${benefitId}`);
+      return await adminApi.delete(
+        `/api/admin/courses/${courseId}/details/benefits/${benefitId}`
+      );
     },
 
     deleteCareerPath: async (courseId: string, careerPathId: number) => {
-      return await adminApi.delete(`/api/admin/courses/${courseId}/details/career-paths/${careerPathId}`);
+      return await adminApi.delete(
+        `/api/admin/courses/${courseId}/details/career-paths/${careerPathId}`
+      );
     },
 
     deleteIndustry: async (courseId: string, industryId: number) => {
-      return await adminApi.delete(`/api/admin/courses/${courseId}/details/industries/${industryId}`);
+      return await adminApi.delete(
+        `/api/admin/courses/${courseId}/details/industries/${industryId}`
+      );
     },
   },
 
+  // ── GENERIC HTTP HELPERS ────────────────────────────────────────────────────
   get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response = await apiClient.get<T>(url, config);
     return response.data;
@@ -881,64 +911,65 @@ export const api = {
     const response = await apiClient.delete<T>(url, config);
     return response.data;
   },
+
+}; // ← end of api object
+
+// ===============================
+// Legacy Exports
+// ===============================
+
+export const coursesApi = {
+  getAll: api.courses.getAll,
+  getById: api.courses.getById,
+  getFeatured: async (limit: number = 4): Promise<Course[]> => {
+    const response = await apiClient.get(`/api/courses?limit=${limit}`);
+    return response.data;
+  },
 };
 
-  // Legacy export for backward compatibility
-  export const coursesApi = {
-    getAll: api.courses.getAll,
-    getById: api.courses.getById,
-    getFeatured: async (limit: number = 4): Promise<Course[]> => {
-      const response = await apiClient.get(`/api/courses?limit=${limit}`);
-      return response.data;
-    },
-  };
-
-  export type { ReferralResponse, CreateReferralResponse, ReferralCode, ReferralHistory, ReferralStats, Course, CourseEnrollment, DashboardData, StudentDetail   };
+export type {
+  ReferralResponse,
+  CreateReferralResponse,
+  ReferralCode,
+  ReferralHistory,
+  ReferralStats,
+  Course,
+  CourseEnrollment,
+  DashboardData,
+  StudentDetail,
+};
 
 // ===============================
 // Error Handler
 // ===============================
 
-  export const handleApiError = (error: unknown): string => {
-    if (axios.isAxiosError(error)) {
-      if (!error.response) {
-        if (error.code === 'ECONNABORTED') {
-          return 'Request timeout. Please check your connection and try again.';
-        }
-        return 'Unable to connect to server. Please check your internet connection.';
+export const handleApiError = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      if (error.code === 'ECONNABORTED') {
+        return 'Request timeout. Please check your connection and try again.';
       }
-
-      const apiError = error.response?.data as ApiError;
-
-      if (error.response.status === 422 && apiError?.errors) {
-        const firstError = Object.values(apiError.errors)[0];
-        return Array.isArray(firstError) ? firstError[0] : 'Validation error';
-      }
-
-      if (error.response.status === 401) {
-        return 'Invalid credentials. Please try again.';
-      }
-
-      if (error.response.status >= 500) {
-        return 'Server error. Please try again later.';
-      }
-
-      if (apiError?.error) {
-        return apiError.error;
-      }
-
-      if (apiError?.message) {
-        return apiError.message;
-      }
-
-      return error.message || 'An error occurred';
+      return 'Unable to connect to server. Please check your internet connection.';
     }
 
-    if (error instanceof Error) {
-      return error.message;
+    const apiError = error.response?.data as ApiError;
+
+    if (error.response.status === 422 && apiError?.errors) {
+      const firstError = Object.values(apiError.errors)[0];
+      return Array.isArray(firstError) ? firstError[0] : 'Validation error';
     }
 
-    return 'An unexpected error occurred';
-  };
+    if (error.response.status === 401) return 'Invalid credentials. Please try again.';
+    if (error.response.status >= 500) return 'Server error. Please try again later.';
+    if (apiError?.error) return apiError.error;
+    if (apiError?.message) return apiError.message;
+
+    return error.message || 'An error occurred';
+  }
+
+  if (error instanceof Error) return error.message;
+
+  return 'An unexpected error occurred';
+};
 
 export default api;

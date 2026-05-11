@@ -227,6 +227,14 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::put('/{courseId}', [AdminCourseController::class, 'update']);
         Route::delete('/{courseId}', [AdminCourseController::class, 'destroy']);
         Route::put('/{courseId}/pricing', [AdminCourseController::class, 'updatePricingAndSettings']);
+        // Add inside your admin routes group:
+        Route::get('/{courseId}/details', [AdminCourseController::class, 'getDetails']);
+        Route::post('/{courseId}/details/tools/sync', [AdminCourseController::class, 'syncTools']);
+        Route::post('/{courseId}/details/learnings/sync', [AdminCourseController::class, 'syncLearnings']);
+        Route::post('/{courseId}/details/benefits/sync', [AdminCourseController::class, 'syncBenefits']);
+        Route::post('/{courseId}/details/career-paths/sync', [AdminCourseController::class, 'syncCareerPaths']);
+        Route::post('/{courseId}/details/industries/sync', [AdminCourseController::class, 'syncIndustries']);
+        Route::post('/{courseId}/details/salary', [AdminCourseController::class, 'upsertSalary']);
         
         // ⭐⭐⭐ NEW: Course Details Routes (ADD THIS SECTION) ⭐⭐⭐
         Route::prefix('{courseId}/details')->group(function () {

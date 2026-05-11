@@ -11,6 +11,7 @@ use App\Models\CourseMaterial;
 use App\Models\MaterialItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminCourseController extends Controller
 {
@@ -187,8 +188,6 @@ class AdminCourseController extends Controller
                 ];
             }
             
-            $completedStudents = 0;
-            
             return [
                 'sprint' => (string)($index + 1),
                 'completion' => rand(15, 85),
@@ -200,10 +199,18 @@ class AdminCourseController extends Controller
                 'id' => $course->id,
                 'course_id' => $course->course_id,
                 'name' => $course->title,
+                'title' => $course->title,
+                'description' => $course->description,
+                'project' => $course->project,
+                'duration' => $course->duration,
+                'level' => $course->level,
+                'is_freemium' => $course->is_freemium,
+                'is_premium' => $course->is_premium,
+                'hero_image' => $course->hero_image,
+                'secondary_image' => $course->secondary_image,
                 'instructor' => 'Sarah Chen',
                 'sprints_count' => $sprints->count(),
                 'weeks_count' => $sprints->count(),
-                        // ✅ Add all pricing fields
                 'offers_one_on_one' => $course->offers_one_on_one,
                 'offers_group_mentorship' => $course->offers_group_mentorship,
                 'offers_self_paced' => $course->offers_self_paced,
@@ -267,7 +274,7 @@ class AdminCourseController extends Controller
     public function store(Request $request): JsonResponse
     {
         Log::info('📝 Course creation request received', [
-            'data' => $request->all()
+            'data' => $request->except(['hero_image', 'secondary_image']) // don't log file data
         ]);
 
         $validated = $request->validate([
@@ -281,9 +288,9 @@ class AdminCourseController extends Controller
             'is_freemium' => 'boolean',
             'is_premium' => 'boolean',
             
-            // Images
-            'hero_image' => 'nullable|string',
-            'secondary_image' => 'nullable|string',
+            // Images — accept either uploaded file OR a URL string
+            'hero_image' => 'nullable',
+            'secondary_image' => 'nullable',
             
             // Base Prices (Currency-specific)
             'price_usd' => 'required|numeric|min:0',
@@ -304,10 +311,14 @@ class AdminCourseController extends Controller
             'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
             'self_paced_price_ngn' => 'nullable|numeric|min:0',
             
-            // One-time Discounts
-           'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
-            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
+            // One-time Discounts — stored as currency amounts, NOT percentages
+            'onetime_discount_usd' => 'nullable|numeric|min:0',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0',
         ]);
+
+        // Handle image uploads (file takes priority over URL string)
+        $validated['hero_image'] = $this->handleImageInput($request, 'hero_image');
+        $validated['secondary_image'] = $this->handleImageInput($request, 'secondary_image');
 
         // Set default values for track availability if not provided
         $validated['offers_one_on_one'] = $validated['offers_one_on_one'] ?? true;
@@ -322,7 +333,6 @@ class AdminCourseController extends Controller
 
             Log::info('✅ Course created successfully', [
                 'course_id' => $course->id,
-                // 'id' => $course->id
             ]);
 
             return response()->json([
@@ -345,7 +355,7 @@ class AdminCourseController extends Controller
     }
 
     /**
-     * Update course
+     * Update course basic info + pricing
      */
     public function update(Request $request, string $courseId): JsonResponse
     {
@@ -359,8 +369,8 @@ class AdminCourseController extends Controller
             'level' => 'nullable|string',
             'is_freemium' => 'boolean',
             'is_premium' => 'boolean',
-            'hero_image' => 'nullable|string',
-            'secondary_image' => 'nullable|string',
+            'hero_image' => 'nullable',
+            'secondary_image' => 'nullable',
             
             // Prices
             'price_usd' => 'nullable|numeric|min:0',
@@ -379,10 +389,21 @@ class AdminCourseController extends Controller
             'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
             'self_paced_price_ngn' => 'nullable|numeric|min:0',
             
-            // Discounts
-            'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
-            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
+            // Discounts — currency amounts, no max:100
+            'onetime_discount_usd' => 'nullable|numeric|min:0',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0',
         ]);
+
+        // Handle image uploads
+        $heroImage = $this->handleImageInput($request, 'hero_image');
+        if ($heroImage !== null) {
+            $validated['hero_image'] = $heroImage;
+        }
+
+        $secondaryImage = $this->handleImageInput($request, 'secondary_image');
+        if ($secondaryImage !== null) {
+            $validated['secondary_image'] = $secondaryImage;
+        }
 
         // Update legacy price field if price_usd is provided
         if (isset($validated['price_usd'])) {
@@ -419,21 +440,7 @@ class AdminCourseController extends Controller
     }
 
     /**
-     * Extract platform from URL
-     */
-    private function extractPlatform(string $url): ?string
-    {
-        if (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) {
-            return 'YouTube';
-        }
-        if (strpos($url, 'vimeo.com') !== false) {
-            return 'Vimeo';
-        }
-        return null;
-    }
-
-    /**
-     * Update pricing and settings (backward compatibility)
+     * Update pricing and settings (dedicated endpoint)
      */
     public function updatePricingAndSettings(Request $request, string $courseId): JsonResponse
     {
@@ -459,9 +466,9 @@ class AdminCourseController extends Controller
             'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
             'self_paced_price_ngn' => 'nullable|numeric|min:0',
 
-            // One-time discounts
-            'onetime_discount_usd' => 'nullable|numeric|min:0|max:100',
-            'onetime_discount_ngn' => 'nullable|numeric|min:0|max:100',
+            // One-time discounts — currency amounts
+            'onetime_discount_usd' => 'nullable|numeric|min:0',
+            'onetime_discount_ngn' => 'nullable|numeric|min:0',
         ]);
 
         // Update legacy price if price_usd is set
@@ -475,5 +482,262 @@ class AdminCourseController extends Controller
             'message' => 'Course pricing and settings updated successfully',
             'course' => $course->fresh(),
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Course Detail Sections — Edit endpoints
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Get all editable details for a course (tools, learnings, etc.)
+     */
+    public function getDetails(string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+
+        $tools = DB::table('course_tools')
+            ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+
+        $learnings = DB::table('course_learnings')
+            ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+
+        $benefits = DB::table('course_benefits')
+            ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+
+        $careerPaths = DB::table('course_career_paths')
+            ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+
+        $industries = DB::table('course_industries')
+            ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+
+        $salary = DB::table('course_salaries')
+            ->where('course_id', $courseId)
+            ->first();
+
+        return response()->json([
+            'tools' => $tools,
+            'learnings' => $learnings,
+            'benefits' => $benefits,
+            'career_paths' => $careerPaths,
+            'industries' => $industries,
+            'salary' => $salary,
+        ]);
+    }
+
+    /**
+     * Sync tools (replace all existing)
+     */
+    public function syncTools(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+
+        // Handle multipart/form-data with multiple tools
+        $tools = $request->input('tools', []);
+
+        DB::table('course_tools')->where('course_id', $courseId)->delete();
+
+        foreach ($tools as $index => $tool) {
+            $iconPath = null;
+
+            // Handle icon upload for this tool
+            if ($request->hasFile("tool_icons.{$index}")) {
+                $iconPath = $request->file("tool_icons.{$index}")
+                    ->store('course-tools', 'public');
+            } elseif (!empty($tool['icon_url'])) {
+                $iconPath = $tool['icon_url'];
+            }
+
+            DB::table('course_tools')->insert([
+                'course_id' => $courseId,
+                'name' => $tool['name'],
+                'icon' => $iconPath,
+                'order' => $index,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Tools updated successfully']);
+    }
+
+    /**
+     * Sync learnings (replace all existing)
+     */
+    public function syncLearnings(Request $request, string $courseId): JsonResponse
+    {
+        Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            'learnings' => 'required|array',
+            'learnings.*.learning_point' => 'required|string',
+        ]);
+
+        DB::table('course_learnings')->where('course_id', $courseId)->delete();
+
+        foreach ($validated['learnings'] as $index => $learning) {
+            DB::table('course_learnings')->insert([
+                'course_id' => $courseId,
+                'learning_point' => $learning['learning_point'],
+                'order' => $index,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Learnings updated successfully']);
+    }
+
+    /**
+     * Sync benefits (replace all existing)
+     */
+    public function syncBenefits(Request $request, string $courseId): JsonResponse
+    {
+        Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            'benefits' => 'required|array',
+            'benefits.*.title' => 'required|string',
+            'benefits.*.text' => 'required|string',
+        ]);
+
+        DB::table('course_benefits')->where('course_id', $courseId)->delete();
+
+        foreach ($validated['benefits'] as $index => $benefit) {
+            DB::table('course_benefits')->insert([
+                'course_id' => $courseId,
+                'title' => $benefit['title'],
+                'text' => $benefit['text'],
+                'order' => $index,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Benefits updated successfully']);
+    }
+
+    /**
+     * Sync career paths (replace all existing)
+     */
+    public function syncCareerPaths(Request $request, string $courseId): JsonResponse
+    {
+        Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            'career_paths' => 'required|array',
+            'career_paths.*.level' => 'required|in:entry,mid,advanced,specialized',
+            'career_paths.*.position' => 'required|string',
+        ]);
+
+        DB::table('course_career_paths')->where('course_id', $courseId)->delete();
+
+        foreach ($validated['career_paths'] as $index => $path) {
+            DB::table('course_career_paths')->insert([
+                'course_id' => $courseId,
+                'level' => $path['level'],
+                'position' => $path['position'],
+                'order' => $index,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Career paths updated successfully']);
+    }
+
+    /**
+     * Sync industries (replace all existing)
+     */
+    public function syncIndustries(Request $request, string $courseId): JsonResponse
+    {
+        Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            'industries' => 'required|array',
+            'industries.*.title' => 'required|string',
+            'industries.*.text' => 'required|string',
+        ]);
+
+        DB::table('course_industries')->where('course_id', $courseId)->delete();
+
+        foreach ($validated['industries'] as $index => $industry) {
+            DB::table('course_industries')->insert([
+                'course_id' => $courseId,
+                'title' => $industry['title'],
+                'text' => $industry['text'],
+                'order' => $index,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Industries updated successfully']);
+    }
+
+    /**
+     * Upsert salary info
+     */
+    public function upsertSalary(Request $request, string $courseId): JsonResponse
+    {
+        Course::where('course_id', $courseId)->firstOrFail();
+
+        $validated = $request->validate([
+            'entry_level' => 'nullable|string',
+            'mid_level' => 'nullable|string',
+            'senior_level' => 'nullable|string',
+        ]);
+
+        DB::table('course_salaries')->updateOrInsert(
+            ['course_id' => $courseId],
+            array_merge($validated, [
+                'course_id' => $courseId,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ])
+        );
+
+        return response()->json(['message' => 'Salary info updated successfully']);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Handle image input: uploaded file takes priority, then string URL.
+     * Returns the stored path/URL, or null if nothing provided.
+     */
+    private function handleImageInput(Request $request, string $field): ?string
+    {
+        if ($request->hasFile($field)) {
+            return $request->file($field)->store('course-images', 'public');
+        }
+
+        $value = $request->input($field);
+        return $value ?: null;
+    }
+
+    /**
+     * Extract platform from URL
+     */
+    private function extractPlatform(string $url): ?string
+    {
+        if (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) {
+            return 'YouTube';
+        }
+        if (strpos($url, 'vimeo.com') !== false) {
+            return 'Vimeo';
+        }
+        return null;
     }
 }

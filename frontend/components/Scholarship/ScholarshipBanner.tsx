@@ -306,8 +306,8 @@ export default function ScholarshipBanner() {
           {/* ── Right panel: big discount badge + CTA note ── */}
           <div className="schb-right">
             <div className="schb-badge">
-<span className="schb-badge-pct">25–50%</span>
-<span className="schb-badge-label">Off Available</span>
+              <span className="schb-badge-pct">25–50%</span>
+              <span className="schb-badge-label">Off Available</span>
             </div>
             <p className="schb-social-note">
               Hundreds of students have already received scholarships
