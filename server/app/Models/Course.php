@@ -189,4 +189,36 @@ class Course extends Model
         $discountField = $currency === 'NGN' ? 'onetime_discount_ngn' : 'onetime_discount_usd';
         return (float) ($this->$discountField ?? 0);
     }
+
+    /**
+     * Get full URL for hero image
+     */
+    public function getHeroImageUrlAttribute(): ?string
+    {
+        if (!$this->hero_image) {
+            return null;
+        }
+
+        if (filter_var($this->hero_image, FILTER_VALIDATE_URL)) {
+            return $this->hero_image;
+        }
+
+        return url('/storage/' . ltrim($this->hero_image, '/'));
+    }
+
+    /**
+     * Get full URL for secondary image
+     */
+    public function getSecondaryImageUrlAttribute(): ?string
+    {
+        if (!$this->secondary_image) {
+            return null;
+        }
+
+        if (filter_var($this->secondary_image, FILTER_VALIDATE_URL)) {
+            return $this->secondary_image;
+        }
+
+        return url('/storage/' . ltrim($this->secondary_image, '/'));
+    }
 }

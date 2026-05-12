@@ -5,9 +5,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 // Create separate axios instance for admin
 const adminApiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // headers: {
+  //   'Content-Type': 'application/json',
+  // },
   timeout: 20000,
   withCredentials: false,
 });
@@ -205,21 +205,25 @@ export const adminApi = {
   },
 
   // Replace the post method in adminApi.ts:
+// adminApi.ts — fix the post method
   post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     const isFormData = data instanceof FormData;
-    const response = await adminApiClient.post<T>(url, data, {
+
+    const finalConfig: AxiosRequestConfig = {
       ...config,
       headers: {
-        ...(isFormData ? { 'Content-Type': 'multipart/form-data' } : {}),
         ...config?.headers,
+        // ✅ Remove Content-Type for FormData so axios sets it with the boundary
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       },
-    });
+    };
+
+    const response = await adminApiClient.post<T>(url, data, finalConfig);
     return response.data;
   },
-
   put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     const response = await adminApiClient.put<T>(url, data, config);
-    return response.data;
+     return response.data;
   },
 
   patch: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {

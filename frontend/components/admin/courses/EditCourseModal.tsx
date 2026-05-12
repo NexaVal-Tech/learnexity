@@ -1,3 +1,14 @@
+// Add this helper near the top of the file
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+function normalizeImageUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  // Already a full URL
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Relative storage path — prepend backend storage URL
+  return `${API_URL}/storage/${url.replace(/^\/?(storage\/)?/, '')}`;
+}
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X, BookOpen, DollarSign, Clock, BarChart3, Crown, Sparkles,
@@ -273,7 +284,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
       const res = await api.admin.courses.getDetails(courseId);
       const d = res;
 
-      if (d.tools?.length)        setTools(d.tools.map((t: any) => ({ id: t.id, name: t.name, icon: null, iconPreview: null, icon_url: t.icon })));
+      if (d.tools?.length)        setTools(d.tools.map((t: any) => ({ id: t.id, name: t.name, icon: null, iconPreview: null, icon_url: t.icon_url || t.icon })));
       if (d.learnings?.length)    setLearnings(d.learnings.map((l: any) => ({ id: l.id, learning_point: l.learning_point })));
       if (d.benefits?.length)     setBenefits(d.benefits.map((b: any) => ({ id: b.id, title: b.title, text: b.text })));
       if (d.career_paths?.length) setCareerPaths(d.career_paths.map((c: any) => ({ id: c.id, level: c.level, position: c.position })));
@@ -356,6 +367,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
       }
       toast.success('Changes saved successfully');
       onSuccess();
+      handleClose();
     } catch (err) {
       toast.error(handleApiError(err));
     } finally {
@@ -503,22 +515,22 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                     <p className="text-sm text-gray-500">
                       Upload image files directly. Existing images are shown below — click to replace.
                     </p>
-                    <ImageDropZone
-                      label="Hero Image"
-                      file={heroFile}
-                      preview={heroPreview}
-                      existingUrl={course.hero_image}
-                      onFileChange={onHeroChange}
-                      onClear={() => { setHeroFile(null); setHeroPreview(null); }}
-                    />
-                    <ImageDropZone
-                      label="Secondary Image"
-                      file={secondaryFile}
-                      preview={secondaryPreview}
-                      existingUrl={course.secondary_image}
-                      onFileChange={onSecondaryChange}
-                      onClear={() => { setSecondaryFile(null); setSecondaryPreview(null); }}
-                    />
+                      <ImageDropZone
+                        label="Hero Image"
+                        file={heroFile}
+                        preview={heroPreview}
+                        existingUrl={normalizeImageUrl(course.hero_image)}  // ← wrap here
+                        onFileChange={onHeroChange}
+                        onClear={() => { setHeroFile(null); setHeroPreview(null); }}
+                      />
+                      <ImageDropZone
+                        label="Secondary Image"
+                        file={secondaryFile}
+                        preview={secondaryPreview}
+                        existingUrl={normalizeImageUrl(course.secondary_image)}  // ← wrap here
+                        onFileChange={onSecondaryChange}
+                        onClear={() => { setSecondaryFile(null); setSecondaryPreview(null); }}
+                      />
                   </div>
                 )}
 

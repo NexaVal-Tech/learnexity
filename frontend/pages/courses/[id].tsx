@@ -13,6 +13,7 @@ import { ArrowRight } from "lucide-react";
 import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
 
 const BRAND = "#4A3AFF";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function CoursePage() {
   const router = useRouter();
@@ -33,12 +34,29 @@ export default function CoursePage() {
   const [currencyDetected, setCurrencyDetected] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
 
-  const getImageUrl = (path: string | null | undefined) => {
-  if (!path) return "/images/default-course.jpg";
-    // Already a full URL (http/https) or absolute path
-    if (path.startsWith("http") || path.startsWith("/")) return path;
-    // Relative storage path — prefix with your API base URL
-    return `${process.env.NEXT_PUBLIC_API_URL}/storage/${path}`;
+  /**
+   * Resolve any image path/URL to a fully-qualified public URL.
+   *
+   * Handles all four formats the backend may return:
+   *   1. Already a full URL:   "https://example.com/storage/course-images/abc.jpg"
+   *   2. Absolute path:        "/storage/course-images/abc.jpg"
+   *   3. Relative storage:     "course-images/abc.jpg"
+   *   4. Prefixed with storage: "storage/course-images/abc.jpg"
+   *   5. null / undefined      → fallback image
+   */
+  const getImageUrl = (path: string | null | undefined): string => {
+    if (!path) return "/images/default-course.jpg";
+
+    // Already a full URL
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+    // Absolute path starting with /storage/ or just /
+    if (path.startsWith("/storage/")) return `${API_URL}${path}`;
+    if (path.startsWith("/")) return path; // serve from Next.js public folder
+
+    // Relative path — strip any leading "storage/" prefix then prepend
+    const normalized = path.replace(/^storage\//, "");
+    return `${API_URL}/storage/${normalized}`;
   };
 
   useEffect(() => {
@@ -48,9 +66,7 @@ export default function CoursePage() {
   useEffect(() => {
     const detectCurrency = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/detect-currency`
-        );
+        const response = await fetch(`${API_URL}/api/detect-currency`);
         const data = await response.json();
         setCurrency(data.currency);
         setDetectedLocation(data.country);
@@ -150,23 +166,19 @@ export default function CoursePage() {
     }
 
     if (candidates.length === 0) {
-      const fallback = parseFloat(
+      return parseFloat(
         (currency === 'NGN' ? course.price_ngn : course.price_usd)?.toString() || '0'
       );
-      return fallback;
     }
 
     return Math.min(...candidates);
   };
 
-  // ── Determine if the student has paid and has access ─────────────────
-  // We check: isEnrolled AND payment_status === 'completed' OR has_access is true
   const hasPaidAccess =
     enrollmentStatus?.isEnrolled &&
     (enrollmentStatus?.enrollment?.payment_status === "completed" ||
       enrollmentStatus?.enrollment?.has_access === true);
 
-  // ── Loading state ─────────────────────────────────────────────────────
   if (!currencyDetected || loading) {
     return (
       <AppLayout>
@@ -353,6 +365,19 @@ export default function CoursePage() {
           transition: border-color 0.25s, background 0.25s;
         }
         .dc-benefit-card:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
+
+        /* Tool icon placeholder shown when image fails to load */
+        .dc-tool-placeholder {
+          width: 48px;
+          height: 48px;
+          border-radius: 8px;
+          background: ${BRAND}20;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+        }
       `}</style>
 
       <div className="course-detail-root" style={{ background: "", minHeight: "100vh", position: "relative", zIndex: 1 }}>
@@ -371,7 +396,6 @@ export default function CoursePage() {
                 {course.description}
               </p>
 
-              {/* ── Price block — hidden when the student has paid access ── */}
               {!hasPaidAccess && (
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   {displayPrice > 0 && (
@@ -399,7 +423,6 @@ export default function CoursePage() {
                 </div>
               )}
 
-              {/* ── "You're enrolled" confirmation badge ── */}
               {hasPaidAccess && (
                 <div className="flex items-center gap-3">
                   <span className="dc-enrolled-badge">
@@ -424,10 +447,8 @@ export default function CoursePage() {
                 </div>
               )}
 
-              {/* ── CTA buttons ── */}
               <div className="flex flex-row items-center gap-3 pt-2">
                 {hasPaidAccess ? (
-                  /* Student is enrolled & paid → show only Continue Learning */
                   <button
                     onClick={() =>
                       router.push({
@@ -444,7 +465,6 @@ export default function CoursePage() {
                     Continue Learning
                   </button>
                 ) : enrollmentStatus?.isEnrolled ? (
-                  /* Enrolled but payment not complete → pay button */
                   <button
                     onClick={() =>
                       router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)
@@ -455,7 +475,6 @@ export default function CoursePage() {
                     Complete Payment
                   </button>
                 ) : (
-                  /* Not enrolled yet → purchase / get started */
                   <button
                     onClick={handleEnrollClick}
                     disabled={checkingEnrollment || enrolling}
@@ -474,7 +493,6 @@ export default function CoursePage() {
                   </button>
                 )}
 
-                {/* Only show ExpertButton when not enrolled */}
                 {!hasPaidAccess && <ExpertButton />}
               </div>
             </div>
@@ -518,12 +536,47 @@ export default function CoursePage() {
                 Key Tools &amp; Technologies
               </h2>
               <div className="flex flex-wrap justify-center items-center gap-6">
-                {course.tools.map((tool) => (
-                  <div key={tool.id} className="dc-tool flex flex-col items-center gap-2">
-                    <img src={tool.icon} alt={tool.name} className="w-12 h-12 object-contain" />
-                    {/* <span className="text-xs text-gray-500 font-medium">{tool.name}</span> */}
-                  </div>
-                ))}
+                {course.tools.map((tool) => {
+                  // Resolve icon URL — prefer icon_url accessor, fall back to raw icon field
+                  const resolvedIconUrl = tool.icon_url
+                    ? getImageUrl(tool.icon_url)
+                    : tool.icon
+                    ? getImageUrl(tool.icon)
+                    : null;
+
+                  return (
+                    <div
+                      key={tool.id}
+                      className="dc-tool flex flex-col items-center gap-2"
+                      title={tool.name}
+                    >
+                      {resolvedIconUrl ? (
+                        <img
+                          src={resolvedIconUrl}
+                          alt={tool.name}
+                          className="w-12 h-12 object-contain"
+                          onError={(e) => {
+                            // If image fails to load, replace with letter placeholder
+                            const target = e.currentTarget;
+                            target.style.display = "none";
+                            const placeholder = target.nextElementSibling as HTMLElement | null;
+                            if (placeholder) placeholder.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      {/* Fallback placeholder — visible when no icon or image fails */}
+                      <div
+                        className="dc-tool-placeholder"
+                        style={{ display: resolvedIconUrl ? "none" : "flex" }}
+                      >
+                        {tool.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium text-center max-w-[80px] truncate">
+                        {tool.name}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>

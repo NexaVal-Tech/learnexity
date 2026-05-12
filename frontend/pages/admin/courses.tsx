@@ -26,8 +26,12 @@ const CoursesPage = () => {
     }
   };
 
-  const handleDetailsAdded = () => setRefreshKey((prev) => prev + 1);
-
+  const handleDetailsAdded = () => {
+    setRefreshKey((prev) => prev + 1);
+    setIsDetailsModalOpen(false);  // ← add this
+    setCreatedCourse(null);        // ← and this, to clean up
+  };
+  
   const handleEditCourse = (course: any) => {
     setEditingCourse(course);
     setIsEditModalOpen(true);

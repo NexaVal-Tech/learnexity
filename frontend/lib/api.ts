@@ -374,8 +374,7 @@ export const api = {
       formData.append('file', file);
       const response = await adminApi.post(
         `/api/admin/courses/${courseId}/resources/items/${itemId}/upload`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        formData
       );
       return response.data;
     },
@@ -544,9 +543,7 @@ export const api = {
         formData.append('subject', data.subject);
         formData.append('message', data.message);
         if (data.attachment) formData.append('attachment', data.attachment);
-        return await adminApi.post('/api/admin/students/send-message', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        return await adminApi.post('/api/admin/students/send-message', formData);
       },
     },
 
@@ -650,9 +647,7 @@ export const api = {
       },
 
       createFormData: async (data: FormData): Promise<{ message: string; course: any }> => {
-        return await adminApi.post('/api/admin/courses', data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        return await adminApi.post('/api/admin/courses', data);
       },
 
       update: async (
@@ -666,9 +661,7 @@ export const api = {
         courseId: string,
         data: FormData
       ): Promise<{ message: string; course: any }> => {
-        return await adminApi.post(`/api/admin/courses/${courseId}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        return await adminApi.post(`/api/admin/courses/${courseId}`, data);
       },
 
       delete: async (courseId: string): Promise<{ message: string }> => {
@@ -689,8 +682,7 @@ export const api = {
       syncTools: async (courseId: string, data: FormData): Promise<{ message: string }> => {
         return await adminApi.post(
           `/api/admin/courses/${courseId}/details/tools/sync`,
-          data,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          data
         );
       },
 
@@ -817,8 +809,7 @@ export const api = {
     addTool: async (courseId: string, formData: FormData) => {
       return await adminApi.post(
         `/api/admin/courses/${courseId}/details/tools`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        formData
       );
     },
 

@@ -59,7 +59,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
   const [activeSection, setActiveSection] = useState<DetailSection>('tools');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Tools state - now with File objects
+  // Tools state
   const [tools, setTools] = useState<Tool[]>([{ name: '', icon: null, iconPreview: null, order: 0 }]);
 
   // Learnings state
@@ -178,31 +178,30 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const promises = [];
+      const promises: Promise<any>[] = [];
 
-      // Tools - using FormData for file upload
-      const validTools = tools.filter(t => t.name && t.icon);
-      if (validTools.length > 0) {
-        for (let index = 0; index < validTools.length; index++) {
-          const tool = validTools[index];
-          const formData = new FormData();
-          formData.append('name', tool.name);
-          if (tool.icon) {
-            formData.append('icon', tool.icon);
-          }
-          formData.append('order', index.toString());
+      // Tools — icon is optional (controller has nullable|image)
+      // Filter: only need a name to submit; icon is optional
+      const validTools = tools.filter(t => t.name.trim());
+      for (let index = 0; index < validTools.length; index++) {
+        const tool = validTools[index];
+        const formData = new FormData();
+        formData.append('name', tool.name);
+        formData.append('order', index.toString());
 
-          // ✅ USE api.adminCourseDetails.addTool (not api.post)
-          promises.push(api.adminCourseDetails.addTool(courseId, formData));
+        // ✅ FIX: was `iconFile` (undefined) — now correctly `tool.icon`
+        if (tool.icon) {
+          formData.append('icon', tool.icon);
         }
+
+        promises.push(api.adminCourseDetails.addTool(courseId, formData));
       }
 
       // Learnings
-      const validLearnings = learnings.filter(l => l.learning_point);
+      const validLearnings = learnings.filter(l => l.learning_point.trim());
       if (validLearnings.length > 0) {
         promises.push(
           ...validLearnings.map((learning, index) =>
-            // ✅ USE api.adminCourseDetails.addLearning
             api.adminCourseDetails.addLearning(courseId, {
               ...learning,
               order: index,
@@ -212,11 +211,10 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
       }
 
       // Benefits
-      const validBenefits = benefits.filter(b => b.title && b.text);
+      const validBenefits = benefits.filter(b => b.title.trim() && b.text.trim());
       if (validBenefits.length > 0) {
         promises.push(
           ...validBenefits.map((benefit, index) =>
-            // ✅ USE api.adminCourseDetails.addBenefit
             api.adminCourseDetails.addBenefit(courseId, {
               ...benefit,
               order: index,
@@ -226,11 +224,10 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
       }
 
       // Career Paths
-      const validCareerPaths = careerPaths.filter(c => c.position);
+      const validCareerPaths = careerPaths.filter(c => c.position.trim());
       if (validCareerPaths.length > 0) {
         promises.push(
           ...validCareerPaths.map((path, index) =>
-            // ✅ USE api.adminCourseDetails.addCareerPath
             api.adminCourseDetails.addCareerPath(courseId, {
               ...path,
               order: index,
@@ -240,11 +237,10 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
       }
 
       // Industries
-      const validIndustries = industries.filter(i => i.title && i.text);
+      const validIndustries = industries.filter(i => i.title.trim() && i.text.trim());
       if (validIndustries.length > 0) {
         promises.push(
           ...validIndustries.map((industry, index) =>
-            // ✅ USE api.adminCourseDetails.addIndustry
             api.adminCourseDetails.addIndustry(courseId, {
               ...industry,
               order: index,
@@ -255,15 +251,14 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
 
       // Salary
       if (salary.entry_level || salary.mid_level || salary.senior_level) {
-        // ✅ USE api.adminCourseDetails.addSalary
         promises.push(api.adminCourseDetails.addSalary(courseId, salary));
       }
 
       await Promise.all(promises);
 
       toast.success('Course details added successfully!');
-      onSuccess();
       handleClose();
+      onSuccess();
     } catch (error) {
       const errorMessage = handleApiError(error);
       toast.error(errorMessage);
@@ -271,7 +266,6 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
       setIsSubmitting(false);
     }
   };
-
 
   const handleClose = () => {
     setActiveSection('tools');
@@ -368,12 +362,14 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                         </button>
                       )}
                     </div>
-                    
-                    {/* Icon Upload */}
+
+                    {/* Icon Upload — optional */}
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
                         <Upload size={18} className="text-gray-600" />
-                        <span className="text-sm text-gray-700">Upload Icon</span>
+                        <span className="text-sm text-gray-700">
+                          {tool.icon ? 'Change Icon' : 'Upload Icon (optional)'}
+                        </span>
                         <input
                           type="file"
                           accept="image/*"
@@ -385,9 +381,9 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                         />
                       </label>
                       {tool.iconPreview && (
-                        <img 
-                          src={tool.iconPreview} 
-                          alt="Icon preview" 
+                        <img
+                          src={tool.iconPreview}
+                          alt="Icon preview"
                           className="w-12 h-12 object-contain rounded-lg border border-gray-200"
                         />
                       )}

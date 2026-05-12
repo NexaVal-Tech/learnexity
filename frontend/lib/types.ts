@@ -76,6 +76,7 @@ export interface Tool {
   id: number;
   name: string;
   icon: string;
+  icon_url: string | null;
   order: number;
 }
 
