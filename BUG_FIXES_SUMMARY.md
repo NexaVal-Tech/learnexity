@@ -139,3 +139,11 @@ The fix ensures the code:
 1. Uses `course_id` string to find the Course model
 2. Extracts the numeric `id` from the found Course
 3. Uses the numeric `id` for all subsequent database operations
+
+
+
+
+
+php artisan migrate --path=database/migrations/2026_05_14_205925_create_instructors_and_instructor_courses_tables.php
+
+php artisan migrate --path=database/migrations/2026_05_14_210544_create_performance_email_and_project_tables.php

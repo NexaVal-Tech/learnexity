@@ -16,7 +16,12 @@ use App\Models\AchievementBadge;
 use App\Models\UserBadge;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\UserPerformanceTracker;
+use App\Models\EmailSequenceLog;
+use App\Mail\SprintCompletedMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+
 
 class CourseResourcesController extends Controller
 {
@@ -189,36 +194,99 @@ class CourseResourcesController extends Controller
     public function markItemCompleted(Request $request, int $itemId): JsonResponse
     {
         $userId = $request->user()->id;
-
+ 
         $materialItem = MaterialItem::findOrFail($itemId);
-
+ 
         // Mark item as completed
-        $progress = MaterialItemProgress::updateOrCreate(
-            [
-                'user_id' => $userId,
-                'material_item_id' => $itemId,
-            ],
-            [
-                'is_completed' => true,
-                'completed_at' => now(),
-            ]
+        MaterialItemProgress::updateOrCreate(
+            ['user_id' => $userId, 'material_item_id' => $itemId],
+            ['is_completed' => true, 'completed_at' => now()]
         );
-
+ 
         // Update sprint progress
         $this->updateSprintProgress($userId, $materialItem->course_material_id);
-
-        // Update overall statistics
-        $courseMaterial = CourseMaterial::find($materialItem->course_material_id);
-        $this->updateCourseStatistics($userId, $courseMaterial->course_id);
-
-        // Check for badge unlocks
-        $this->checkAndUnlockBadges($userId, $courseMaterial->course_id);
-
-        return response()->json([
-            'message' => 'Item marked as completed',
-            'progress' => $progress,
-        ]);
+ 
+        // Check if the SPRINT is now 100% complete
+        $courseMaterial = CourseMaterial::with('items')->find($materialItem->course_material_id);
+        $courseId       = $courseMaterial->course_id;
+ 
+        $this->updateCourseStatistics($userId, $courseId);
+        $this->checkAndUnlockBadges($userId, $courseId);
+ 
+        // ── Sprint completion email + performance tracking ────────────────────
+        $sprintProgress = SprintProgress::where('user_id', $userId)
+            ->where('course_material_id', $materialItem->course_material_id)
+            ->first();
+ 
+        if ($sprintProgress && $sprintProgress->progress_percentage >= 100) {
+            $this->firSprintCompletedEmail($userId, $courseId, $courseMaterial);
+        }
+ 
+        return response()->json(['message' => 'Item marked as completed']);
     }
+
+
+    private function firSprintCompletedEmail(int $userId, string $courseId, CourseMaterial $sprint): void
+    {
+        $emailKey = "sprint_completed_{$sprint->id}";
+ 
+        // Don't double-send for the same sprint
+        if (EmailSequenceLog::sentWithinHours($userId, $emailKey, 1, $courseId)) {
+            return;
+        }
+ 
+        $user = \App\Models\User::find($userId);
+        if (!$user) return;
+ 
+        $totalSprints     = CourseMaterial::where('course_id', $courseId)->count();
+        $completedSprints = SprintProgress::where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->where('progress_percentage', 100)
+            ->count();
+ 
+        $progressPercent = $totalSprints > 0
+            ? round(($completedSprints / $totalSprints) * 100)
+            : 0;
+ 
+        $courseName = \DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
+ 
+        try {
+            Mail::to($user->email)->queue(
+                new SprintCompletedMail(
+                    user:            $user,
+                    sprintName:      $sprint->sprint_name,
+                    sprintNumber:    $sprint->sprint_number,
+                    courseName:      $courseName,
+                    progressPercent: $progressPercent,
+                    totalSprints:    $totalSprints
+                )
+            );
+ 
+            EmailSequenceLog::record($userId, $emailKey, $courseId, [
+                'sprint_number' => $sprint->sprint_number,
+                'progress'      => $progressPercent,
+            ]);
+ 
+            Log::info('✅ Sprint completed email queued', [
+                'user_id'       => $userId,
+                'sprint_number' => $sprint->sprint_number,
+                'course_id'     => $courseId,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to queue sprint completed email', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+ 
+        // Update performance scores (rule engine)
+        try {
+            app(UserPerformanceTracker::class)
+                ->onSprintCompleted($userId, $courseId, $sprint->sprint_number);
+        } catch (\Exception $e) {
+            Log::error('❌ Performance tracker failed', ['error' => $e->getMessage()]);
+        }
+    }
+ 
 
     /**
      * Mark material item as incomplete

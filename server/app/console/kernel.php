@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
+use App\Jobs\SendDailyCheckinEmailsJob;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -12,12 +13,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        dd('SCHEDULE METHOD HIT');
         // Send payment reminders daily at 9 AM
         $schedule->command('payments:send-reminders')
                  ->dailyAt('09:00')
                  ->withoutOverlapping()
                  ->appendOutputTo(storage_path('logs/payment-reminders.log'));
+                 
+        // Send daily check-in emails to students at 7 AM
+       $schedule->job(new SendDailyCheckinEmailsJob)
+                ->dailyAt('07:00')
+                ->withoutOverlapping();
 
         // Check and block overdue payments daily at 2 AM
         $schedule->command('payments:check-overdue')

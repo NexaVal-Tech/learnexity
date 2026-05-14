@@ -16,6 +16,13 @@ use Socialite;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Log;
+use App\Models\EmailSequenceLog;
+use App\Models\CourseEnrollment;
+use App\Models\SprintProgress;
+use App\Models\CourseMaterial;
+use App\Mail\LoginWelcomeBackMail;
+use App\Services\UserPerformanceTracker;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -180,13 +187,63 @@ class AuthController extends Controller
 
         Log::info('✅ [LOGIN] Login successful', [
             'user_id' => $user->id,
-            'email' => $user->email,
+            'email'   => $user->email,
         ]);
-
+ 
+        // ── Update performance tracker (login streak) ─────────────────────────
+        try {
+            app(UserPerformanceTracker::class)->onLogin($user->id);
+        } catch (\Exception $e) {
+            Log::error('❌ Performance tracker onLogin failed', ['error' => $e->getMessage()]);
+        }
+ 
+        // ── Send welcome-back email (once per day max) ────────────────────────
+        dispatch(function () use ($user) {
+            try {
+                if (EmailSequenceLog::sentTodayFor($user->id, 'login_welcome_back')) {
+                    return;
+                }
+ 
+                $enrollments = CourseEnrollment::where('user_id', $user->id)
+                    ->where('payment_status', 'completed')
+                    ->get();
+ 
+                if ($enrollments->isEmpty()) return;
+ 
+                $courseProgress = $enrollments->map(function ($e) use ($user) {
+                    $totalSprints     = CourseMaterial::where('course_id', $e->course_id)->count();
+                    $completedSprints = SprintProgress::where('user_id', $user->id)
+                        ->where('course_id', $e->course_id)
+                        ->where('progress_percentage', 100)
+                        ->count();
+ 
+                    return [
+                        'name'     => $e->course_name ?? "Course #{$e->course_id}",
+                        'progress' => $totalSprints > 0 ? round(($completedSprints / $totalSprints) * 100) : 0,
+                    ];
+                })->toArray();
+ 
+                $streak = \App\Models\UserPerformanceScore::where('user_id', $user->id)
+                    ->max('login_streak_days') ?? 0;
+ 
+                Mail::to($user->email)->queue(
+                    new LoginWelcomeBackMail($user, $streak, $courseProgress)
+                );
+ 
+                EmailSequenceLog::record($user->id, 'login_welcome_back', null, [
+                    'streak' => $streak,
+                ]);
+ 
+                Log::info('✅ Login welcome-back email queued', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('❌ Login welcome-back email failed', ['error' => $e->getMessage()]);
+            }
+        })->afterResponse();
+ 
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token
+            'user'    => $user,
+            'token'   => $token,
         ]);
     }
 

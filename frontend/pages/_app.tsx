@@ -5,11 +5,13 @@ import { GeistSans } from "geist/font/sans";
 import { useRouter } from "next/router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
+import { InstructorAuthProvider } from '@/contexts/InstructorAuthContext';
 import Head from "next/head";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isAdminRoute = router.pathname.startsWith("/admin");
+  const isInstructorRoute = router.pathname.startsWith("/instructors");
 
   return (
     <>
@@ -73,6 +75,10 @@ export default function App({ Component, pageProps }: AppProps) {
           <AdminAuthProvider>
             <Component {...pageProps} />
           </AdminAuthProvider>
+        ) : isInstructorRoute ? (
+          <InstructorAuthProvider>
+            <Component {...pageProps} />
+          </InstructorAuthProvider>
         ) : (
           <AuthProvider>
             <Component {...pageProps} />

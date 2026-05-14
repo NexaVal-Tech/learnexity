@@ -20,6 +20,10 @@ return [
             'driver' => 'jwt',
             'provider' => 'admins',
         ],
+        'instructor' => [
+            'driver'   => 'jwt',
+            'provider' => 'instructors',
+        ],
     ],
 
     'providers' => [
@@ -28,10 +32,10 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'instructors' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\Instructor::class,
+        ],
 
         'admins' => [
             'driver' => 'eloquent',
