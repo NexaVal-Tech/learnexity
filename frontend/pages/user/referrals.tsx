@@ -1,3 +1,5 @@
+// pages/user/referrals.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';

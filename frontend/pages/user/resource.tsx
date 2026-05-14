@@ -1,3 +1,5 @@
+// pages/user/resource.tsx
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
@@ -719,7 +721,20 @@ export default function ResourcesPage() {
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
-            onPreviewFile={async (itemId, _title) => {
+            onPreviewFile={async (itemId, title) => {
+              const lowerTitle = title.toLowerCase();
+              const isOffice =
+                lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
+                lowerTitle.endsWith('.pptx') || lowerTitle.endsWith('.ppt') ||
+                lowerTitle.endsWith('.xlsx') || lowerTitle.endsWith('.xls');
+
+              if (isOffice) {
+                // Get the direct storage URL — MS viewer fetches it server-side
+                const { url } = await api.courseResources.getPreviewUrl(itemId);
+                return url;
+              }
+
+              // PDFs: blob URL works fine in iframes
               const blob = await api.courseResources.downloadMaterial(itemId);
               return window.URL.createObjectURL(blob);
             }}

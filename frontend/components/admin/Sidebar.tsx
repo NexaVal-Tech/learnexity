@@ -1,3 +1,5 @@
+// Components/admin/sidebar.tsx
+
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -10,7 +12,8 @@ import {
   SlidersHorizontal, 
   User, 
   LogOut,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Component
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 

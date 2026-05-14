@@ -317,11 +317,10 @@ function DocViewer({
   onComplete: (id: number) => void;
   onPreviewFile: (itemId: number, title: string) => Promise<string>;
 }) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [fetching, setFetching] = useState(true);
   const completed = useRef(isCompleted || false);
-  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -329,13 +328,22 @@ function DocViewer({
       try {
         setFetching(true);
         setLoadError(false);
-        if (objectUrlRef.current?.startsWith('blob:')) {
-          URL.revokeObjectURL(objectUrlRef.current);
-        }
-        const url = await onPreviewFile(itemId, title);
+        const rawUrl = await onPreviewFile(itemId, title);
         if (cancelled) return;
-        objectUrlRef.current = url;
-        setBlobUrl(url);
+
+        // Office files can't render as blob URLs — pipe through MS Office viewer
+        const lowerTitle = title.toLowerCase();
+        const isOffice =
+          lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
+          lowerTitle.endsWith('.pptx') || lowerTitle.endsWith('.ppt') ||
+          lowerTitle.endsWith('.xlsx') || lowerTitle.endsWith('.xls');
+
+        const finalUrl = isOffice
+          ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`
+          : rawUrl;
+
+        setViewUrl(finalUrl);
+
         if (!completed.current && !isCompleted) {
           completed.current = true;
           onComplete(itemId);
@@ -347,12 +355,7 @@ function DocViewer({
       }
     };
     doFetch();
-    return () => {
-      cancelled = true;
-      if (objectUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(objectUrlRef.current);
-      }
-    };
+    return () => { cancelled = true; };
   }, [itemId, title, onPreviewFile, isCompleted, onComplete]);
 
   if (fetching) {
@@ -364,7 +367,7 @@ function DocViewer({
     );
   }
 
-  if (loadError || !blobUrl) {
+  if (loadError || !viewUrl) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
         <FileX size={24} className="text-red-400" />
@@ -376,25 +379,12 @@ function DocViewer({
   return (
     <div className="flex flex-col">
       <div style={{ height: '500px' }} className="bg-gray-100">
-        <object
-          data={blobUrl}
-          type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="w-full h-full"
+        <iframe
+          src={viewUrl}
+          className="w-full h-full border-0"
           title={title}
-        >
-          <div className="flex flex-col items-center justify-center h-full gap-4 bg-gray-50">
-            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
-              <File size={28} className="text-orange-500" />
-            </div>
-            <div className="text-center px-6">
-              <p className="text-sm font-semibold text-gray-900">{title}</p>
-              <p className="text-xs text-gray-400 mt-2">
-                Your browser cannot preview this document type inline.
-                Please contact your instructor if you need access.
-              </p>
-            </div>
-          </div>
-        </object>
+          allow="autoplay"
+        />
       </div>
       <div className="flex items-center px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <span className="text-xs text-gray-400 flex items-center gap-1.5">
@@ -410,6 +400,7 @@ function DocViewer({
     </div>
   );
 }
+
 
 // ─── Topic Content (Rich Blocks) ──────────────────────────────────────────────
 

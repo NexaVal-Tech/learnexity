@@ -136,6 +136,8 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/{itemId}/complete', [CourseResourcesController::class, 'markItemCompleted']);
         Route::post('/{itemId}/incomplete', [CourseResourcesController::class, 'markItemIncomplete']);
         Route::get('/{itemId}/download', [CourseResourcesController::class, 'downloadMaterial']);
+        // Add this alongside your existing materials routes
+        Route::get('/{itemId}/preview-url', [CourseResourcesController::class, 'getPreviewUrl']);
     });
 
     // scholarship routes

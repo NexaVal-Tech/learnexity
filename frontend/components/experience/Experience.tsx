@@ -8,7 +8,7 @@ const BRAND = "#4A3AFF";
 const cards = [
   {
     id: "experts",
-    label: "Led by industry experts",
+    label: "Led By Industry Experts",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" />
@@ -22,7 +22,7 @@ const cards = [
     id: "partners",
     label: (
       <div className="flex flex-col items-center gap-3">
-        <span>In partnership with</span>
+        <span>In Partnership With</span>
 
         <div className="flex items-center gap-4">
           <Image
@@ -50,7 +50,7 @@ const cards = [
   },
   {
     id: "global",
-    label: "Collaborating with global partners",
+    label: "Collaborating With Global Partners",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" />
@@ -60,6 +60,34 @@ const cards = [
     ),
   },
 ];
+
+<style>{`
+  .experience-card:hover {
+    border-color: ${BRAND}66 !important;
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 30px ${BRAND}33 !important;
+  }
+
+  .prob-headline {
+    font-size: 2.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .experience-label {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .experience-label {
+      font-size: 1rem;
+    }
+  }
+`}</style>
 
 export default function Experience() {
   return (
@@ -88,7 +116,8 @@ export default function Experience() {
                     cursor-pointer transition-all duration-300 min-h-[200px]"
                 >
                   <span className="mb-5">{card.icon}</span>
-                  <span className="text-white font-bold text-lg leading-snug tracking-wide">
+
+                  <span className="prob-headline experience-label">
                     {card.label}
                   </span>
                 </div>

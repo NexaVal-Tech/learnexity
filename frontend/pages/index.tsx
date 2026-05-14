@@ -13,7 +13,7 @@ import FAQs from "@/components/FAQs/FAQs";
 import TechCompany from "@/components/techcompany/TechCompany";
 // import Community from "@/components/community/Community";
 import Footer from "@/components/footer/Footer";
-import InstallmentBanner from "@/components/installment/InstallmentBanner";
+// import InstallmentBanner from "@/components/installment/InstallmentBanner";
 import ProbStatement from "@/components/probstatement/ProbStatement";
 import ScholarshipBanner from "@/components/Scholarship/ScholarshipBanner";
 
@@ -50,15 +50,15 @@ export default function Home() {
       {/* <Navbar /> */}
       <Hero />
       <Experience />
-      <Testimonials />
-      <Pathways />
-      <InstallmentBanner />
       <ProbStatement />
       <Courses />
+      <Method />
+      <Pathways />
+      <TechCompany />
+      <Testimonials />
+      {/* <InstallmentBanner /> */}
       <ScholarshipBanner />
       {/* <Skills /> */}
-      <TechCompany />
-      <Method />
       {/* <Community /> */}
       <FAQs />
       <Footer />

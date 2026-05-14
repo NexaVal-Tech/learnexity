@@ -16,6 +16,7 @@ use App\Models\AchievementBadge;
 use App\Models\UserBadge;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class CourseResourcesController extends Controller
 {
@@ -258,32 +259,36 @@ class CourseResourcesController extends Controller
     /**
      * Download course material file
      */
-   public function downloadMaterial(Request $request, int $itemId): mixed
-   {
-       $materialItem = MaterialItem::findOrFail($itemId);
+    public function downloadMaterial(Request $request, int $itemId): mixed
+    {
+        $materialItem = MaterialItem::findOrFail($itemId);
 
-       // TEXT type: return text_content as a plain text response
-       if ($materialItem->type === 'text') {
-           if (empty($materialItem->text_content)) {
-               return response()->json(['error' => 'No text content available'], 404);
-           }
-           return response($materialItem->text_content, 200, [
-               'Content-Type' => 'text/plain; charset=UTF-8',
-               'Content-Disposition' => 'inline; filename="' . $materialItem->title . '.txt"',
-           ]);
-       }
+        // TEXT type
+        if ($materialItem->type === 'text') {
+            if (empty($materialItem->text_content)) {
+                return response()->json(['error' => 'No text content available'], 404);
+            }
+            return response($materialItem->text_content, 200, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $materialItem->title . '.txt"',
+            ]);
+        }
 
-       // Check if file_path exists (for pdf/doc etc)
-       if (!$materialItem->file_path) {
-           return response()->json([
-               'error' => 'No file available for download'
-           ], 404);
-       }
+        // No file path at all
+        if (!$materialItem->file_path) {
+            return response()->json(['error' => 'No file available for download'], 404);
+        }
 
-        // Get the file extension
-        $extension = pathinfo($materialItem->file_path, PATHINFO_EXTENSION);
-        
-        // Generate download filename
+        // ← THIS IS THE KEY FIX: check existence before attempting download
+        if (!Storage::disk('public')->exists($materialItem->file_path)) {
+            Log::error('Material file missing from storage', [
+                'item_id'   => $itemId,
+                'file_path' => $materialItem->file_path,
+            ]);
+            return response()->json(['error' => 'File not found on server'], 404);
+        }
+
+        $extension    = pathinfo($materialItem->file_path, PATHINFO_EXTENSION);
         $downloadName = $materialItem->title;
         if (!str_ends_with(strtolower($downloadName), '.' . strtolower($extension))) {
             $downloadName .= '.' . $extension;
@@ -293,6 +298,37 @@ class CourseResourcesController extends Controller
             $materialItem->file_path,
             $downloadName
         );
+    }
+
+
+        /**
+     * Get a temporary preview URL for a material item (for inline viewing)
+     */
+    public function getPreviewUrl(Request $request, int $itemId): JsonResponse
+    {
+        $materialItem = MaterialItem::findOrFail($itemId);
+
+        if (!$materialItem->file_path) {
+            return response()->json(['error' => 'No file available'], 404);
+        }
+
+        if (!Storage::disk('public')->exists($materialItem->file_path)) {
+            return response()->json(['error' => 'File not found on server'], 404);
+        }
+
+        // Returns the full public URL e.g. http://localhost:8000/storage/materials/file.docx
+        $url = Storage::disk('public')->url($materialItem->file_path);
+
+        // Make sure it's an absolute URL (needed for MS Office viewer)
+        if (!str_starts_with($url, 'http')) {
+            $url = config('app.url') . $url;
+        }
+
+        return response()->json([
+            'url'   => $url,
+            'type'  => $materialItem->type,
+            'title' => $materialItem->title,
+        ]);
     }
 
     /**

@@ -1,3 +1,5 @@
+// pages/admin/students/index.tsx
+
 import React, { useState } from 'react';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';

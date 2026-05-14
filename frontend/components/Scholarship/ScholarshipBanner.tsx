@@ -278,25 +278,25 @@ export default function ScholarshipBanner() {
 
             <h2 className="schb-headline">
               Can't Afford the Full Price?<br />
-              <em>Scholarships Are Available.</em>
+              <em>Scholarships And Installment Payments Are Available.</em>
             </h2>
 
             <div className="schb-body">
               <p className="schb-body-line accent">We believe cost should never be a barrier to learning.</p>
               <p className="schb-body-line">
-                Learnexity offers need based scholarships across all courses, covering 25 to 50% of tuition.
+                Learnexity offers need based scholarships across all courses, covering up to 75% of tuition.
               </p>
             </div>
 
             {/* Tier pills */}
-            <div className="schb-tiers">
+            {/* <div className="schb-tiers">
               {[
                 { label: '50% Half Scholarship' },
                 { label: '25% Partial Discount' },
               ].map(({ label}) => (
                 <span key={label} className="schb-tier-pill">{label}</span>
               ))}
-            </div>
+            </div> */}
 
             <div onClick={handleApply}>
               <PrimaryButton2 label="Apply for a Scholarship" />
@@ -306,8 +306,8 @@ export default function ScholarshipBanner() {
           {/* ── Right panel: big discount badge + CTA note ── */}
           <div className="schb-right">
             <div className="schb-badge">
-              <span className="schb-badge-pct">25–50%</span>
-              <span className="schb-badge-label">Off Available</span>
+              <span className="schb-badge-label">Up to</span>
+              <span className="schb-badge-pct">75%</span>
             </div>
             <p className="schb-social-note">
               Hundreds of students have already received scholarships

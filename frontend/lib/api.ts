@@ -254,6 +254,11 @@ export const api = {
       return response.data;
     },
 
+    getPreviewUrl: async (itemId: number): Promise<{ url: string; type: string; title: string }> => {
+      const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
+      return response.data;
+    },
+
     downloadMaterial: async (itemId: number) => {
       const response = await fetch(`${API_URL}/api/materials/${itemId}/download`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

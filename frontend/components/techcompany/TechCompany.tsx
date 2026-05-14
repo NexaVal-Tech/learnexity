@@ -9,13 +9,13 @@ export default function CurriculumPartners() {
   const partners = [
     { name: "Microsoft", logo: "/partners/microsoft.png" },
     { name: "Google Cloud", logo: "/partners/google.png" },
-    { name: "AWS", logo: "/partners/aws.png" },
+    // { name: "AWS", logo: "/partners/aws.png" },
     { name: "Cisco", logo: "/partners/cisco.png" },
-    { name: "IBM", logo: "/partners/IBM.png" },
+    // { name: "IBM", logo: "/partners/IBM.png" },
     // { name: "Oracle", logo: "/partners/oracle.png" },
-    { name: "Udacity", logo: "/partners/udacity.png" },
+    // { name: "Udacity", logo: "/partners/udacity.png" },
     // { name: "edX", logo: "/partners/edx.png" },
-    { name: "CompTIA", logo: "/partners/comptia.png" },
+    // { name: "CompTIA", logo: "/partners/comptia.png" },
     { name: "Coursera", logo: "/partners/coursera.png" },
   ];
 
