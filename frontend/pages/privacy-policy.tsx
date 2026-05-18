@@ -1,3 +1,5 @@
+// pages/privacy-policy.tsx
+
 import React from 'react';
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";

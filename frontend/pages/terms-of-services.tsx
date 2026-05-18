@@ -1,3 +1,5 @@
+// pages/terms-of-service.tsx
+
 import React, { useState } from 'react';
 import Footer from '@/components/footer/Footer';
 

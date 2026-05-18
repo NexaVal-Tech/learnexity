@@ -1,3 +1,5 @@
+// pages/contact.tsx
+
 import Head from "next/head";
 import AppLayout from "@/components/layouts/AppLayout";
 import Courses from "@/components/headercourses/HeaderCourse";

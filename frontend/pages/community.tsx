@@ -1,3 +1,5 @@
+// pages/community.tsx
+
 "use client";
 import Head from "next/head";
 import React, { useState } from 'react';
@@ -5,6 +7,7 @@ import { Briefcase, FolderOpen, Users, Layers, Target, GraduationCap } from 'luc
 import Footer from "@/components/footer/Footer";
 import AppLayout from "@/components/layouts/AppLayout";
 import { ScrollFadeIn, FadeUpOnScroll } from "@/components/animations/Animation";
+import { p } from "framer-motion/client";
 
 const BRAND = "#4A3AFF";
 

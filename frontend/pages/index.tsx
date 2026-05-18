@@ -1,3 +1,5 @@
+// pages/index.tsx
+
 // import ScrollFadeIn  from "@/components/animations/Animation";
 import Head from "next/head";
 import AppLayout from "@/components/layouts/AppLayout";

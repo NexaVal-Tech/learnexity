@@ -1,3 +1,5 @@
+// pages/refer%26earn.tsx
+
 'use client';
 
 import Head from "next/head";

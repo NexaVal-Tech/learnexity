@@ -1,3 +1,5 @@
+// pages/landing.tsx
+
 import Testimonials from "@/components/testimonials/Testimonials";
 import AnimatedHeroSection from "@/components/landing/AnimatedHeroSection";
 import InstallmentBanner from "@/components/installment/InstallmentBanner";

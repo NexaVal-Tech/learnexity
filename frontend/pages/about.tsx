@@ -1,3 +1,5 @@
+// pages/about.tsx
+
 import Head from "next/head";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";

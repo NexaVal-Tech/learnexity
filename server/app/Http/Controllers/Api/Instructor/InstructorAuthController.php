@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -78,7 +79,7 @@ class InstructorAuthController extends Controller
             }
 
             // Eager-load assigned course IDs
-            $courseIds = \DB::table('instructor_courses')
+            $courseIds = DB::table('instructor_courses')
                 ->where('instructor_id', $instructor->id)
                 ->pluck('course_id');
 

@@ -11,6 +11,7 @@ use App\Models\ProjectSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -35,7 +36,7 @@ class InstructorCourseController extends Controller
     private function assertCourseAccess(string $courseId): void
     {
         $instructor = $this->instructor();
-        $hasAccess = \DB::table('instructor_courses')
+        $hasAccess = DB::table('instructor_courses')
             ->where('instructor_id', $instructor->id)
             ->where('course_id', $courseId)
             ->exists();
@@ -55,7 +56,7 @@ class InstructorCourseController extends Controller
     {
         $instructor = $this->instructor();
 
-        $courseIds = \DB::table('instructor_courses')
+        $courseIds = DB::table('instructor_courses')
             ->where('instructor_id', $instructor->id)
             ->pluck('course_id');
 
@@ -354,14 +355,14 @@ class InstructorCourseController extends Controller
 
     private function getStudentProgress(int $userId, string $courseId): int
     {
-        $total = \DB::table('material_items')
+        $total = DB::table('material_items')
             ->join('course_materials', 'material_items.course_material_id', '=', 'course_materials.id')
             ->where('course_materials.course_id', $courseId)
             ->count();
 
         if ($total === 0) return 0;
 
-        $completed = \DB::table('material_item_progress')
+        $completed = DB::table('material_item_progress')
             ->where('user_id', $userId)
             ->where('is_completed', true)
             ->whereIn('material_item_id', function ($q) use ($courseId) {

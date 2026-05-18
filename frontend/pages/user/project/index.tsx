@@ -74,7 +74,7 @@ export default function StudentProjectsPage() {
                 <div
                   key={project.id}
                   className="bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow cursor-pointer p-6"
-                  onClick={() => router.push(`/user/projects/${project.id}`)}
+                  onClick={() => router.push(`/user/project/${project.id}`)}
                 >
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1">

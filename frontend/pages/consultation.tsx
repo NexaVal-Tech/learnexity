@@ -1,3 +1,5 @@
+// pages/consultation.tsx
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layouts/AppLayout";
