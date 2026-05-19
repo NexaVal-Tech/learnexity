@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
+import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
 import { loadStripe } from '@stripe/stripe-js';
 
 // Initialize Stripe
@@ -43,19 +44,19 @@ interface Scholarship {
 
 const TRACK_OPTIONS: TrackOption[] = [
   {
-    id: 'one_on_one',
-    name: 'One-on-One Coaching',
-    title: 'Our most personalized learning experience',
+    id: 'self_paced',
+    name: 'Self-Paced Learning + Community Support',
+    title: 'Maximum flexibility without losing the guidance you need',
     description:
-      "You'll work directly with an instructor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.",
+      "Learn on your own schedule with full course access, and get support from our active community and team whenever you need help. You'll still join build sessions, participate in discussions, and take part in soft-skills development activities.",
     features: [
-      'Private 1-on-1 sessions with instructor',
-      'Personalized learning path',
-      'Flexible scheduling',
-      'Direct feedback and mentorship',
-      'Accelerated progress tracking',
+      'Learn at your own pace',
+      'Full course material access',
+      'Community forum support',
+      // 'Build sessions and workshops',
+      // 'Soft-skills development activities',
     ],
-    icon: '👤',
+    icon: '📚',
   },
   {
     id: 'group_mentorship',
@@ -67,26 +68,26 @@ const TRACK_OPTIONS: TrackOption[] = [
       'Full access to all course materials',
       'Weekly live sessions with instructor',
       'Peer learning and discussions',
-      'Community support network',
-      'Group Q&A sessions',
+      // 'Community support network',
+      // 'Group Q&A sessions',
     ],
     icon: '👥',
     popular: true,
   },
   {
-    id: 'self_paced',
-    name: 'Self-Paced Learning + Community Support',
-    title: 'Maximum flexibility without losing the guidance you need',
+    id: 'one_on_one',
+    name: 'One-on-One Coaching',
+    title: 'Our most personalized learning experience',
     description:
-      "Learn on your own schedule with full course access, and get support from our active community and team whenever you need help. You'll still join build sessions, participate in discussions, and take part in soft-skills development activities.",
+      "You'll work directly with an instructor in private, focused sessions tailored to your goals. Expect clear direction, accelerated progress, and increased confidence as you build mastery in your chosen path.",
     features: [
-      'Learn at your own pace',
-      'Full course material access',
-      'Community forum support',
-      'Build sessions and workshops',
-      'Soft-skills development activities',
+      'Private 1-on-1 sessions with instructor',
+      'Personalized learning path',
+      // 'Flexible scheduling',
+      'Direct feedback and mentorship',
+      // 'Accelerated progress tracking',
     ],
-    icon: '📚',
+    icon: '👤',
   },
 ];
 
@@ -143,35 +144,36 @@ export default function PaymentPage() {
   const [paymentGateway, setPaymentGateway] = useState<'stripe' | 'paystack'>('paystack');
 
   // ─── Currency / gateway detection ──────────────────────────────────────────
+  // ─── Currency / gateway detection ──────────────────────────────────────────
   useEffect(() => {
     const detectCurrency = async () => {
+      // ✅ Set a fast default immediately so the page doesn't wait
+      setCurrency('USD');
+      setPaymentGateway('stripe');
+      setCurrencyDetected(true); // ← unblock rendering immediately with default
+
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`
         );
         const data = await response.json();
 
+        // ✅ Update silently if detection returns something different
         setCurrency(data.currency);
         setDetectedLocation(data.country);
-        setCurrencyDetected(true);
-
         if (data.currency === 'NGN') {
           setPaymentGateway('paystack');
         } else {
           setPaymentGateway('stripe');
         }
       } catch {
-        // Default to Stripe/USD on detection failure
-        setCurrency('USD');
-        setPaymentGateway('stripe');
+        // Already set defaults above — nothing to do
         setDetectedLocation('Unknown');
-        setCurrencyDetected(true);
       }
     };
 
     detectCurrency();
   }, []);
-
 
   const fetchScholarship = useCallback(async (courseSlug: string) => {
     if (!courseSlug) return;
@@ -335,13 +337,21 @@ export default function PaymentPage() {
     }
   }, [enrollmentId, fetchCourseTrackDetails, router]);
 
+  // to refecth course track details now showing loading state has been removed
+  useEffect(() => {
+    if (!enrollment || !currencyDetected) return;
+    fetchCourseTrackDetails(enrollment.course_id);
+  }, [currency, currencyDetected, enrollment?.id]);
+
+  // ─── Main gate effect ───────────────────────────────────────────────────────
   // ─── Main gate effect ───────────────────────────────────────────────────────
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.push('/user/auth/login'); return; }
     if (!router.isReady) return;
-    if (!currencyDetected) return;
 
+    // ✅ Remove the currencyDetected gate — start fetching enrollment immediately
+    // Currency detection runs in parallel via its own useEffect
     if (!enrollmentId) {
       fetchPendingEnrollment();
       return;
@@ -353,7 +363,7 @@ export default function PaymentPage() {
       setError('Invalid enrollment ID');
       setLoading(false);
     }
-  }, [router.isReady, enrollmentId, user, currencyDetected, authLoading]);
+  }, [router.isReady, enrollmentId, user, authLoading]); // ← removed currencyDetected
 
   // Force one-time payment when scholarship is active
   useEffect(() => {
@@ -572,13 +582,14 @@ export default function PaymentPage() {
         <div className="max-w-2xl mx-auto p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
-            <p className="text-gray-600">
+            {/* <p className="text-gray-600">
               {authLoading
                 ? 'Loading...'
                 : !currencyDetected
                 ? 'Detecting your location...'
                 : 'Loading payment details...'}
-            </p>
+            </p> */}
+            <p className="text-gray-600">Loading payment details...</p>
           </div>
         </div>
       </UserDashboardLayout>
@@ -968,11 +979,16 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 mb-4">
-                <p className="font-semibold mb-1">✓ Lifetime Access</p>
-                <p>Get unlimited access to all course materials</p>
-              </div>
-
+              {!scholarship && course && (
+                <div className="mb-4">
+                  <ScholarshipBadge
+                    courseId={course.course_id}
+                    isLoggedIn={true}
+                    showCta={true}
+                  />
+                </div>
+              )}
+{/* 
               {detectedLocation && (
                 <div className="mb-4 text-center">
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm">
@@ -982,7 +998,7 @@ export default function PaymentPage() {
                     </span>
                   </div>
                 </div>
-              )}
+              )} */}
 
               <button
                 onClick={handlePayment}

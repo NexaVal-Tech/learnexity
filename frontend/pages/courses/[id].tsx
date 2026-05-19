@@ -10,7 +10,7 @@ import Footer from "@/components/footer/Footer";
 import Courses from "@/components/headercourses/HeaderCourse";
 import { ExpertButton } from "@/components/button/Button";
 import { ArrowRight } from "lucide-react";
-import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
+// import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
 
 const BRAND = "#4A3AFF";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -395,7 +395,7 @@ export default function CoursePage() {
               <p className="text-lg text-gray-400 leading-relaxed">
                 {course.description}
               </p>
-
+{/* 
               {!hasPaidAccess && (
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   {displayPrice > 0 && (
@@ -421,7 +421,7 @@ export default function CoursePage() {
                     showCta={!enrollmentStatus?.isEnrolled}
                   />
                 </div>
-              )}
+              )} */}
 
               {hasPaidAccess && (
                 <div className="flex items-center gap-3">

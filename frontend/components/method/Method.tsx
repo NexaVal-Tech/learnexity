@@ -62,8 +62,9 @@ export default function Method() {
               Why Choose Learnexity
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              We provide the structure and support you need to build a portfolio
-              that gets noticed and land a job.
+              We help you move from learning →{" "}
+              <span style={{ color: "#4A3AFF" }}>to earning</span> →{" "}
+              <span style={{ color: "#D4AF37" }}>to real opportunity</span>, without quitting your job.
             </p>
           </div>
         </ScrollFadeIn>

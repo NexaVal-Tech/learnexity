@@ -102,6 +102,7 @@ class ScholarshipController extends Controller
             'weekly_hours'        => 'required|in:1_3,4_6,7_10,10_plus',
             'completion_obstacle' => 'required|string|min:20|max:800',
             'financial_context'   => 'required|string|min:30|max:1000',
+            'employment_status' => 'required|in:unemployed,student,employed_under_100k,employed_100k_200k,employed_above_200k',
             'outcome_plan'        => 'required|string|min:30|max:1000',
         ]);
 
@@ -162,13 +163,23 @@ class ScholarshipController extends Controller
         // Q5 — Financial context (20 pts max — highest weight)
         $score += $this->scoreTextAnswer($answers['financial_context'], 20);
 
-        // Q6 — Outcome plan specificity (15 pts max)
+        // Q6 — Employment / income status (20 pts max)
+        $score += match($answers['employment_status'] ?? '') {
+            'unemployed'          => 20,
+            'student'             => 20,
+            'employed_under_100k' => 15,
+            'employed_100k_200k'  => 8,
+            'employed_above_200k' => 2,
+            default               => 0,
+        };
+
+        // Q7 — Outcome plan specificity (15 pts max)
         $score += $this->scoreTextAnswer($answers['outcome_plan'], 15);
 
         $totalScore = min(100, $score + $locationBonus);
 
         // ── Auto-decision ─────────────────────────────────────────────────────
-        [$status, $discountPct, $reviewNote] = $this->autoDecide($totalScore, $isNigeria);
+        [$status, $discountPct, $reviewNote] = $this->autoDecide($totalScore, $isNigeria, $answers['employment_status'] ?? '');
 
         $scholarship = Scholarship::create([
             'user_id'            => $user->id,
@@ -267,10 +278,17 @@ class ScholarshipController extends Controller
      * Nigerian applicants start with +15, so the effective floor is lower —
      * deliberately, as cost-of-living context is factored in.
      */
-    private function autoDecide(int $totalScore, bool $isNigeria): array
+    private function autoDecide(int $totalScore, bool $isNigeria, string $employmentStatus): array
     {
+        // Tier 1: Unemployed/Student + Nigeria bonus → 75%
+        $isHighNeed = in_array($employmentStatus, ['unemployed', 'student', 'employed_under_100k']);
+        
+        if ($totalScore >= 70 && $isHighNeed) {
+            return ['approved', 75, '75% scholarship awarded based on strong need and commitment.'];
+        }
+
         if ($totalScore >= 55) {
-            return ['approved', 50, '50% scholarship awarded based on strong application.'];
+            return ['approved', 50, '50% scholarship awarded based on your application.'];
         }
 
         if ($totalScore >= 35) {

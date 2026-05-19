@@ -11,23 +11,23 @@ const BRAND = "#4A3AFF";
 const cards = [
   {
     number: "[ 01 ]",
-    title: "On Demand Courses",
+    title: "Live Classes with Expert Mentors",
     description:
-      "Access a library of courses with live expert tutors to master in-demand skills and accelerate your learning.",
+      "Weekly sessions with expert mentors, plus access to our course library and remote opportunities.",
     gradient: true,
   },
   {
     number: "[ 02 ]",
-    title: "Self-Paced Tutoring",
+    title: "Self-Paced Learning",
     description:
-      "Get personalized tutoring on your schedule. Perfect for busy professionals who need flexible learning to fit their life.",
+      "Learn at your own pace with expert-led content on your schedule. Perfect for busy professionals who need flexibility to fit learning into their lives.",
     gradient: false,
   },
   {
     number: "[ 03 ]",
-    title: "Join Our One-on-One Coaching",
+    title: "One-on-One Mentorship",
     description:
-      "Work directly with a mentor in private, focused sessions tailored to your goals. Expect clear direction and accelerated progress.",
+      "Get direct training and mentorship from our experts in private, focused sessions tailored specifically to your goals, plus access to our course library and remote opportunities.",
     gradient: false,
   },
 ];
@@ -55,8 +55,10 @@ export default function Pathways() {
               <h2 className="text-4xl font-semibold text-white mb-4 component-headers">
                 Our Pathways
               </h2>
-              <p className="text-xl text-gray-400">
-                Proven curriculum with measurable outcomes
+              <p className="w-full text-xl text-gray-400 text-center md:text-left">
+                Flexible delivery designed to suit your needs, plus access to remote opportunities,
+                <br />
+                community support, and job search assistance.
               </p>
             </div>
             <div className="flex justify-center md:justify-start lg:justify-end">
