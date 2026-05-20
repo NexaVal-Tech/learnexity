@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Log;
 use App\Models\EmailSequenceLog;
+use App\Mail\WelcomeEmail;  
 use App\Models\CourseEnrollment;
 use App\Models\SprintProgress;
 use App\Models\CourseMaterial;
@@ -29,71 +30,67 @@ class AuthController extends Controller
     public function register(Request $req)
     {
         Log::info('📝 [REGISTER] Registration attempt', [
-            'email' => $req->email,
+            'email'        => $req->email,
             'has_referral' => !empty($req->referral_code),
-            'referral_code' => $req->referral_code
+            'referral_code'=> $req->referral_code,
         ]);
-
+ 
         $v = Validator::make($req->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'phone' => 'nullable|string',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|min:8|confirmed',
+            'phone'         => 'nullable|string',
             'referral_code' => [
-            'nullable',
-            'string',
+                'nullable',
+                'string',
                 function ($attribute, $value, $fail) {
                     if ($value) {
-                        $inStudentCodes  = ReferralCode::where('referral_code', $value)->exists();
+                        $inStudentCodes   = ReferralCode::where('referral_code', $value)->exists();
                         $inPublicReferrers = PublicReferrer::where('referral_code', $value)->exists();
-
                         if (!$inStudentCodes && !$inPublicReferrers) {
                             $fail('Invalid referral code. Please check and try again.');
                         }
                     }
-                }
+                },
             ],
         ]);
-
+ 
         if ($v->fails()) {
             Log::error('❌ [REGISTER] Validation failed', $v->errors()->toArray());
-            
+ 
             if ($v->errors()->has('email')) {
                 return response()->json([
                     'message' => 'This email is already registered. Please login instead.',
-                    'errors' => $v->errors()
+                    'errors'  => $v->errors(),
                 ], 422);
             }
-
             if ($v->errors()->has('referral_code')) {
                 return response()->json([
                     'message' => 'Invalid referral code. Please check and try again.',
-                    'errors' => $v->errors()
+                    'errors'  => $v->errors(),
                 ], 422);
             }
-            
             return response()->json([
                 'message' => 'Validation failed. Please check your input.',
-                'errors' => $v->errors()
+                'errors'  => $v->errors(),
             ], 422);
         }
-
-        // Create user with referral code if provided
+ 
         $user = User::create([
-            'name' => $req->name,
-            'email' => $req->email,
-            'password' => Hash::make($req->password),
-            'phone' => $req->phone,
+            'name'             => $req->name,
+            'email'            => $req->email,
+            'password'         => Hash::make($req->password),
+            'phone'            => $req->phone,
             'referred_by_code' => $req->referral_code,
         ]);
-        
+ 
         Log::info('✅ [REGISTER] User created', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'referred_by_code' => $user->referred_by_code
+            'user_id'          => $user->id,
+            'email'            => $user->email,
+            'referred_by_code' => $user->referred_by_code,
         ]);
-
-        // ✅ Wrap email sending in try/catch so SMTP failure doesn't kill registration
+ 
+        // Send verification email (wrapped so SMTP failure doesn't kill registration)
         $emailSent = false;
         try {
             event(new Registered($user));
@@ -103,29 +100,49 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('❌ [REGISTER] Failed to send verification email', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ]);
-            // Don't rethrow — user is created, email just failed
         }
-
+ 
+        // ── NEW: Send welcome email (queued, non-blocking) ────────────────────
+        dispatch(function () use ($user) {
+            try {
+                // Guard: only send once ever
+                if (EmailSequenceLog::sentWithinDays($user->id, 'welcome', 3650)) {
+                    return;
+                }
+ 
+                Mail::to($user->email)->queue(new WelcomeEmail($user));
+ 
+                EmailSequenceLog::record($user->id, 'welcome', null, [
+                    'triggered_by' => 'registration',
+                ]);
+ 
+                Log::info('✅ [REGISTER] Welcome email queued', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('❌ [REGISTER] Welcome email failed', ['error' => $e->getMessage()]);
+            }
+        })->afterResponse();
+        // ── END NEW ───────────────────────────────────────────────────────────
+ 
         // Process referral if code was provided
         if ($req->referral_code) {
             $this->processReferral($user, $req->referral_code);
         }
-
+ 
         Log::info('✅ [REGISTER] Registration completed successfully', [
-            'user_id' => $user->id,
-            'email' => $user->email,
+            'user_id'    => $user->id,
+            'email'      => $user->email,
             'email_sent' => $emailSent,
         ]);
-
+ 
         return response()->json([
             'message' => $emailSent
                 ? 'Registration successful! Please check your email to verify your account.'
                 : 'Registration successful! However, we could not send a verification email. Please use the resend option on the next page.',
-            'email' => $user->email,
-            'email_verification_sent' => $emailSent,
-        ], 201); 
+            'email'                    => $user->email,
+            'email_verification_sent'  => $emailSent,
+        ], 201);
     }
 
     public function login(Request $req)

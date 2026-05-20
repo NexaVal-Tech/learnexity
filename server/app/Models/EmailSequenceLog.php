@@ -3,11 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * Tracks every transactional/sequence email ever sent.
+ *
+ * Columns:
+ *  id, user_id, email_type, course_id (nullable), metadata (json), sent_at, created_at, updated_at
+ */
 class EmailSequenceLog extends Model
 {
-    public $timestamps = false;
-
     protected $fillable = [
         'user_id',
         'email_type',
@@ -21,54 +26,98 @@ class EmailSequenceLog extends Model
         'sent_at'  => 'datetime',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Check if a specific email type was already sent to a user today.
-     */
-    public static function sentTodayFor(int $userId, string $type, ?string $courseId = null): bool
-    {
-        $query = static::where('user_id', $userId)
-            ->where('email_type', $type)
-            ->whereDate('sent_at', today());
-
-        if ($courseId) {
-            $query->where('course_id', $courseId);
-        }
-
-        return $query->exists();
-    }
-
-    /**
-     * Check if an email type was sent within the last N hours.
-     */
-    public static function sentWithinHours(int $userId, string $type, int $hours, ?string $courseId = null): bool
-    {
-        $query = static::where('user_id', $userId)
-            ->where('email_type', $type)
-            ->where('sent_at', '>=', now()->subHours($hours));
-
-        if ($courseId) {
-            $query->where('course_id', $courseId);
-        }
-
-        return $query->exists();
-    }
+    // ── Writers ───────────────────────────────────────────────────────────────
 
     /**
      * Record that an email was sent.
      */
-    public static function record(int $userId, string $type, ?string $courseId = null, array $metadata = []): void
-    {
-        static::create([
+    public static function record(
+        int $userId,
+        string $emailType,
+        ?string $courseId = null,
+        array $metadata = []
+    ): self {
+        return self::create([
             'user_id'    => $userId,
-            'email_type' => $type,
+            'email_type' => $emailType,
             'course_id'  => $courseId,
-            'metadata'   => $metadata ?: null,
+            'metadata'   => $metadata,
             'sent_at'    => now(),
         ]);
+    }
+
+    public $timestamps = false;
+
+    // ── Readers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Was this email type sent to this user today (calendar day)?
+     * Optionally scoped to a course.
+     */
+    public static function sentTodayFor(
+        int $userId,
+        string $emailType,
+        ?string $courseId = null
+    ): bool {
+        $query = self::where('user_id', $userId)
+            ->where('email_type', $emailType)
+            ->whereDate('sent_at', Carbon::today());
+
+        if ($courseId !== null) {
+            $query->where('course_id', $courseId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Was this email type sent to this user within the last N hours?
+     * Optionally scoped to a course.
+     */
+    public static function sentWithinHours(
+        int $userId,
+        string $emailType,
+        int $hours,
+        ?string $courseId = null
+    ): bool {
+        $query = self::where('user_id', $userId)
+            ->where('email_type', $emailType)
+            ->where('sent_at', '>=', now()->subHours($hours));
+
+        if ($courseId !== null) {
+            $query->where('course_id', $courseId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Was this email type sent within the last N days?
+     */
+    public static function sentWithinDays(
+        int $userId,
+        string $emailType,
+        int $days,
+        ?string $courseId = null
+    ): bool {
+        return self::sentWithinHours($userId, $emailType, $days * 24, $courseId);
+    }
+
+    /**
+     * How many times has this email been sent to this user (optionally per course)?
+     */
+    public static function countSent(
+        int $userId,
+        string $emailType,
+        ?string $courseId = null
+    ): int {
+        $query = self::where('user_id', $userId)
+            ->where('email_type', $emailType);
+
+        if ($courseId !== null) {
+            $query->where('course_id', $courseId);
+        }
+
+        return $query->count();
     }
 }

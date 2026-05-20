@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
-  Clock, CheckCircle, Download, FileText, File, Loader2,
+  Clock, CheckCircle, Loader2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -107,17 +107,16 @@ function getFileTypeLabel(type: string) {
   return map[type] ?? { label: type.slice(0, 3).toUpperCase(), bg: 'bg-gray-100', text: 'text-gray-500' };
 }
 
-// ─── Sort items by order field, then by id as tiebreaker ─────────────────────
-
 function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
 }
 
 const READING_TIME_MS = 30_000;
+const SCROLL_KEY = 'rp_modal_scroll';
 
 // ─── Video Block ──────────────────────────────────────────────────────────────
 
-function VideoBlock({
+const VideoBlock = memo(function VideoBlock({
   url, title, isCompleted, onComplete,
 }: {
   url: string;
@@ -127,27 +126,35 @@ function VideoBlock({
 }) {
   const embedUrl = toEmbedUrl(url);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  // FIX: use ref for completion guard so it never triggers re-render
   const hasCompleted = useRef(isCompleted || false);
+  // FIX: stable callback ref so the message listener doesn't re-register on every parent render
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
     if (!embedUrl?.includes('youtube.com/embed') || hasCompleted.current) return;
     const handler = (e: MessageEvent) => {
       try {
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-        if (data?.event === 'onStateChange' && data?.info === 0) {
-          if (!hasCompleted.current) { hasCompleted.current = true; onComplete?.(); }
+        if (data?.event === 'onStateChange' && data?.info === 0 && !hasCompleted.current) {
+          hasCompleted.current = true;
+          onCompleteRef.current?.();
         }
       } catch {}
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [embedUrl, onComplete]);
+    // FIX: only re-register when the embed URL actually changes, not on every render
+  }, [embedUrl]);
 
   if (!embedUrl) {
     return (
       <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500">
         <ExternalLink size={14} />
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline truncate">{title || url}</a>
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline truncate">
+          {title || url}
+        </a>
       </div>
     );
   }
@@ -172,11 +179,11 @@ function VideoBlock({
       )}
     </div>
   );
-}
+});
 
 // ─── Image Block ──────────────────────────────────────────────────────────────
 
-function ImageBlock({ url }: { url: string }) {
+const ImageBlock = memo(function ImageBlock({ url }: { url: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
@@ -184,11 +191,11 @@ function ImageBlock({ url }: { url: string }) {
       <img src={url} alt="" className="w-full object-contain max-h-[500px]" onError={() => setFailed(true)} />
     </div>
   );
-}
+});
 
 // ─── Text Block ───────────────────────────────────────────────────────────────
 
-function TextBlock({ html }: { html: string }) {
+const TextBlock = memo(function TextBlock({ html }: { html: string }) {
   return (
     <div
       className="
@@ -206,11 +213,11 @@ function TextBlock({ html }: { html: string }) {
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
-}
+});
 
 // ─── PDF Viewer ───────────────────────────────────────────────────────────────
 
-function PdfViewer({
+const PdfViewer = memo(function PdfViewer({
   itemId, title, isCompleted, onComplete, onPreviewFile,
 }: {
   itemId: number;
@@ -225,6 +232,9 @@ function PdfViewer({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = useRef(isCompleted || false);
   const objectUrlRef = useRef<string | null>(null);
+  // FIX: stable ref so timer callback always has latest onComplete without restarting the timer
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const doFetch = useCallback(async () => {
     try {
@@ -241,27 +251,28 @@ function PdfViewer({
     } finally {
       setFetching(false);
     }
+    // FIX: itemId and title are stable primitives; onPreviewFile is wrapped in useCallback at parent
   }, [itemId, title, onPreviewFile]);
 
   useEffect(() => {
     doFetch();
     return () => {
-      if (objectUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(objectUrlRef.current);
-      }
+      if (objectUrlRef.current?.startsWith('blob:')) URL.revokeObjectURL(objectUrlRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [doFetch]);
 
   useEffect(() => {
-    if (isCompleted || completed.current || !blobUrl) return;
+    if (completed.current || !blobUrl) return;
+    // FIX: timer uses ref so it doesn't restart when onComplete identity changes
     timerRef.current = setTimeout(() => {
       if (!completed.current) {
         completed.current = true;
-        onComplete(itemId);
+        onCompleteRef.current(itemId);
       }
     }, 60_000);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [itemId, isCompleted, onComplete, blobUrl]);
+  }, [itemId, blobUrl]); // intentionally excludes isCompleted and onComplete
 
   if (fetching) {
     return (
@@ -285,11 +296,7 @@ function PdfViewer({
   return (
     <div className="flex flex-col">
       <div style={{ height: '500px' }} className="bg-gray-100">
-        <iframe
-          src={`${blobUrl}#toolbar=0&view=FitH`}
-          className="w-full h-full border-0"
-          title={title}
-        />
+        <iframe src={`${blobUrl}#toolbar=0&view=FitH`} className="w-full h-full border-0" title={title} />
       </div>
       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <span className="text-xs text-gray-400 flex items-center gap-1.5">
@@ -304,11 +311,11 @@ function PdfViewer({
       </div>
     </div>
   );
-}
+});
 
 // ─── Document Viewer ──────────────────────────────────────────────────────────
 
-function DocViewer({
+const DocViewer = memo(function DocViewer({
   itemId, title, isCompleted, onComplete, onPreviewFile,
 }: {
   itemId: number;
@@ -321,17 +328,18 @@ function DocViewer({
   const [loadError, setLoadError] = useState(false);
   const [fetching, setFetching] = useState(true);
   const completed = useRef(isCompleted || false);
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
     let cancelled = false;
-    const doFetch = async () => {
+    (async () => {
       try {
         setFetching(true);
         setLoadError(false);
         const rawUrl = await onPreviewFile(itemId, title);
         if (cancelled) return;
 
-        // Office files can't render as blob URLs — pipe through MS Office viewer
         const lowerTitle = title.toLowerCase();
         const isOffice =
           lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
@@ -344,19 +352,18 @@ function DocViewer({
 
         setViewUrl(finalUrl);
 
-        if (!completed.current && !isCompleted) {
+        if (!completed.current) {
           completed.current = true;
-          onComplete(itemId);
+          onCompleteRef.current(itemId);
         }
       } catch {
         if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setFetching(false);
       }
-    };
-    doFetch();
+    })();
     return () => { cancelled = true; };
-  }, [itemId, title, onPreviewFile, isCompleted, onComplete]);
+  }, [itemId, title, onPreviewFile]); // FIX: onComplete excluded — handled via ref
 
   if (fetching) {
     return (
@@ -379,12 +386,7 @@ function DocViewer({
   return (
     <div className="flex flex-col">
       <div style={{ height: '500px' }} className="bg-gray-100">
-        <iframe
-          src={viewUrl}
-          className="w-full h-full border-0"
-          title={title}
-          allow="autoplay"
-        />
+        <iframe src={viewUrl} className="w-full h-full border-0" title={title} allow="autoplay" />
       </div>
       <div className="flex items-center px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <span className="text-xs text-gray-400 flex items-center gap-1.5">
@@ -399,31 +401,35 @@ function DocViewer({
       </div>
     </div>
   );
-}
+});
 
+// ─── Topic Content ────────────────────────────────────────────────────────────
 
-// ─── Topic Content (Rich Blocks) ──────────────────────────────────────────────
-
-function TopicContent({
+const TopicContent = memo(function TopicContent({
   item, onComplete,
 }: {
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
 }) {
-  const blocks = parseBlocks(item.text_content);
+  // FIX: memoize block parsing — item.text_content is a string, safe as dep
+  const blocks = useMemo(() => parseBlocks(item.text_content), [item.text_content]);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrolledToBottom = useRef(false);
   const timeElapsed = useRef(false);
   const completed = useRef(item.is_completed || false);
+  // FIX: stable ref so completion callback doesn't restart timers
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
+  // FIX: tryComplete uses refs only — no deps that could cause re-creation loops
   const tryComplete = useCallback(() => {
-    if (completed.current || item.is_completed) return;
+    if (completed.current) return;
     if (scrolledToBottom.current && timeElapsed.current) {
       completed.current = true;
-      onComplete(item.id);
+      onCompleteRef.current(item.id);
     }
-  }, [item.id, item.is_completed, onComplete]);
+  }, [item.id]); // item.id is a stable primitive
 
   useEffect(() => {
     if (item.is_completed) return;
@@ -448,14 +454,14 @@ function TopicContent({
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [item.is_completed, tryComplete]);
+  }, [item.id, item.is_completed, tryComplete]);
 
   const handleVideoComplete = useCallback(() => {
-    if (!item.is_completed && !completed.current) {
+    if (!completed.current) {
       completed.current = true;
-      onComplete(item.id);
+      onCompleteRef.current(item.id);
     }
-  }, [item.id, item.is_completed, onComplete]);
+  }, [item.id]);
 
   if (blocks.length === 0) {
     return (
@@ -485,17 +491,16 @@ function TopicContent({
       <div ref={sentinelRef} className="h-1" aria-hidden />
     </div>
   );
-}
+});
 
 // ─── Material Card ────────────────────────────────────────────────────────────
 
-function MaterialCard({
+const MaterialCard = memo(function MaterialCard({
   item, onComplete, onPreviewFile, initiallyExpanded = false,
 }: {
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
-  // FIX: new prop — when true this card opens pre-expanded and scrolls into view
   initiallyExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
@@ -504,16 +509,16 @@ function MaterialCard({
 
   const isPdf     = item.type === 'pdf';
   const isDoc     = item.type === 'document';
-  const hasBlocks = parseBlocks(item.text_content).length > 0;
-
+  // FIX: memoize block check — avoid re-parsing on every render
+  const hasBlocks = useMemo(() => parseBlocks(item.text_content).length > 0, [item.text_content]);
   const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
 
-  // FIX: scroll this card into view when it was pre-opened via initiallyExpanded
   useEffect(() => {
     if (initiallyExpanded && cardRef.current) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
+      return () => clearTimeout(timer);
     }
   }, [initiallyExpanded]);
 
@@ -524,7 +529,6 @@ function MaterialCard({
         item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
       }`}
     >
-      {/* ── Header row ── */}
       <button
         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
           isExpandable ? 'hover:bg-gray-50/70 cursor-pointer' : 'cursor-default'
@@ -535,7 +539,6 @@ function MaterialCard({
         <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${typeInfo.bg}`}>
           <span className={`text-[10px] font-bold tracking-wide ${typeInfo.text}`}>{typeInfo.label}</span>
         </div>
-
         <div className="flex-1 min-w-0 text-left">
           <p className={`text-sm font-medium truncate ${item.is_completed ? 'text-gray-400' : 'text-gray-800'}`}>
             {item.title}
@@ -547,7 +550,6 @@ function MaterialCard({
             </p>
           )}
         </div>
-
         <div className="flex items-center gap-2 flex-shrink-0">
           {item.is_completed ? (
             <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
@@ -567,7 +569,6 @@ function MaterialCard({
         </div>
       </button>
 
-      {/* ── Expanded content ── */}
       {expanded && isExpandable && (
         <div className="border-t border-gray-100">
           {isPdf && onPreviewFile && (
@@ -597,26 +598,24 @@ function MaterialCard({
       )}
     </div>
   );
-}
+});
 
 // ─── Sprint Section ───────────────────────────────────────────────────────────
 
-function SprintSection({
+const SprintSection = memo(function SprintSection({
   sprint, onComplete, initiallyExpanded = false, onPreviewFile, initialItemId,
 }: {
   sprint: Sprint;
   onComplete: (itemId: number) => void;
   initiallyExpanded?: boolean;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
-  // FIX: if a specific item in this sprint should be opened, its id goes here
   initialItemId?: number;
 }) {
-  // FIX: auto-expand this sprint if it contains the target item
   const containsInitialItem = initialItemId != null && sprint.items.some(i => i.id === initialItemId);
   const [expanded, setExpanded] = useState(initiallyExpanded || containsInitialItem);
 
-  // FIX: sort items by order field before rendering
-  const sortedItems = sortItems(sprint.items);
+  // FIX: memoize sorted items so sort doesn't run on every render
+  const sortedItems = useMemo(() => sortItems(sprint.items), [sprint.items]);
 
   return (
     <div className="mb-4">
@@ -655,7 +654,6 @@ function SprintSection({
               No materials in this sprint yet.
             </div>
           ) : (
-            // FIX: pass initiallyExpanded and scroll target down to each card
             sortedItems.map(item => (
               <MaterialCard
                 key={item.id}
@@ -670,7 +668,7 @@ function SprintSection({
       )}
     </div>
   );
-}
+});
 
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
@@ -678,34 +676,73 @@ export default function ResourcePreviewModal({
   url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos,
 }: ResourcePreviewModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  // FIX: track whether this is the first mount so we only restore scroll once
+  const scrollRestored = useRef(false);
+
+  // FIX: stable callback refs for all functions passed from parent.
+  // This is the ROOT cause of the modal resetting — if the parent doesn't
+  // memoize onMarkComplete/onPreviewFile, they get new identities every render,
+  // which flows down and restarts timers and re-fetches inside children.
+  const onMarkCompleteRef = useRef(onMarkComplete);
+  const onPreviewFileRef  = useRef(onPreviewFile);
+  const onCloseRef        = useRef(onClose);
+  useEffect(() => { onMarkCompleteRef.current = onMarkComplete; }, [onMarkComplete]);
+  useEffect(() => { onPreviewFileRef.current  = onPreviewFile;  }, [onPreviewFile]);
+  useEffect(() => { onCloseRef.current        = onClose;        }, [onClose]);
+
+  // FIX: stable wrapper callbacks — these never change identity, so children
+  // wrapped in memo() will never re-render just because the parent re-rendered.
+  const stableOnMarkComplete = useCallback(
+    (itemId: number, title: string) => onPreviewFileRef.current?.(itemId, title) ?? Promise.resolve(''),
+    []
+  );
+  const stableOnPreviewFile = useCallback(
+    (itemId: number, title: string) => onPreviewFileRef.current?.(itemId, title) ?? Promise.resolve(''),
+    []
+  );
+  const stableOnAutoComplete = useCallback(async (itemId: number) => {
+    await onMarkCompleteRef.current?.(itemId, false);
+  }, []);
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onClose]);
+  }, []); // FIX: empty deps — uses ref, never re-registers
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
+  // FIX: restore scroll exactly once on mount, only when there's no specific
+  // target item (if there IS a target, let the card's scrollIntoView handle it)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || scrollRestored.current) return;
+    scrollRestored.current = true;
+
+    if (!initialItemId) {
+      try {
+        const saved = parseInt(localStorage.getItem(SCROLL_KEY) || '0', 10);
+        if (saved > 0) {
+          // Small delay so the DOM has rendered before we scroll
+          requestAnimationFrame(() => { el.scrollTop = saved; });
+        }
+      } catch {}
+    }
+  }, []); // FIX: intentionally empty — run once on mount only
+
+  // FIX: persist scroll position using a passive listener, cleaned up properly
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // FIX: only restore scroll position when opening without a specific target item
-    if (!initialItemId) {
-      const saved = parseInt(localStorage.getItem('rp_modal_scroll') || '0', 10);
-      if (saved) el.scrollTop = saved;
-    }
-    const onScroll = () => { try { localStorage.setItem('rp_modal_scroll', String(el.scrollTop)); } catch {} };
+    const onScroll = () => {
+      try { localStorage.setItem(SCROLL_KEY, String(el.scrollTop)); } catch {}
+    };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, [initialItemId]);
-
-  const handleAutoComplete = useCallback(async (itemId: number) => {
-    if (onMarkComplete) await onMarkComplete(itemId, false);
-  }, [onMarkComplete]);
+  }, []); // FIX: empty deps — el ref is stable
 
   if (!url && !sprints) return null;
 
@@ -752,7 +789,8 @@ export default function ResourcePreviewModal({
                 <span>
                   Some videos can't be embedded and will open in a new tab:{' '}
                   {externalVideos.filter(v => !toEmbedUrl(v.url)).map(v => (
-                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-900 mr-1">{v.title}</a>
+                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
+                      className="underline hover:text-amber-900 mr-1">{v.title}</a>
                   ))}
                 </span>
               </p>
@@ -771,11 +809,9 @@ export default function ResourcePreviewModal({
                 <SprintSection
                   key={sprint.id}
                   sprint={sprint}
-                  onComplete={handleAutoComplete}
-                  // FIX: only auto-expand first sprint when no specific item is targeted
+                  onComplete={stableOnAutoComplete}
                   initiallyExpanded={initialItemId == null ? idx === 0 : false}
-                  onPreviewFile={onPreviewFile}
-                  // FIX: pass target item id so sprint + card auto-expand
+                  onPreviewFile={stableOnPreviewFile}
                   initialItemId={initialItemId}
                 />
               ))}

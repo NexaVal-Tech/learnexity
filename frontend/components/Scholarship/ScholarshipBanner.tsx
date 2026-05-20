@@ -216,7 +216,7 @@ export default function ScholarshipBanner() {
           <div className="schb-right">
             <div className="schb-logo-wrap">
               <img
-                src="/images/logo.png"
+                src="/images/learnexity-image.jpeg"
                 alt="Learnexity"
                 className="schb-logo-img"
               />
