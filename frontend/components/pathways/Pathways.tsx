@@ -98,7 +98,7 @@ export default function Pathways() {
               /* Cards 02 & 03 — dark themed */
               <ScrollFadeIn key={card.number} delay={index * 0.15} duration={0.3}>
                 <div
-                  className="pathway-card p-8 h-100
+                  className="pathway-card p-5 sm:p-8 h-full
                     border border-white/10
                     bg-[#0f0f0f]/90 backdrop-blur-sm
                     shadow-lg shadow-black/40
