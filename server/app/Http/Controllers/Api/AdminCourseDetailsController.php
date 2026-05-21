@@ -365,4 +365,120 @@ class AdminCourseDetailsController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Industry deleted successfully']);
     }
+
+    // ── SYNC METHODS (replace all items at once) ──────────────────────────────
+
+    public function syncTools(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+
+        // Delete existing tools
+        $existing = CourseTool::where('course_id', $course->id)->get();
+        foreach ($existing as $tool) {
+            if ($tool->icon) Storage::disk('public')->delete($tool->icon);
+        }
+        CourseTool::where('course_id', $course->id)->delete();
+
+        // Re-create from submitted data
+        $tools = $request->input('tools', []);
+        $files = $request->allFiles();
+
+        foreach ($tools as $i => $toolData) {
+            $iconPath = null;
+
+            // New icon uploaded for this index
+            if (isset($files["tool_icons"][$i])) {
+                $iconPath = $files["tool_icons"][$i]->store('course-tools', 'public');
+            } elseif (!empty($toolData['icon_url'])) {
+                // Keep existing icon — extract relative path from URL
+                $iconPath = str_replace(Storage::url(''), '', $toolData['icon_url']);
+            }
+
+            if (!empty($toolData['name'])) {
+                CourseTool::create([
+                    'course_id' => $course->id,
+                    'name'      => $toolData['name'],
+                    'icon'      => $iconPath,
+                    'order'     => $i,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Tools updated successfully']);
+    }
+
+    public function syncLearnings(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        CourseLearning::where('course_id', $course->id)->delete();
+
+        foreach ($request->input('learnings', []) as $i => $item) {
+            if (!empty($item['learning_point'])) {
+                CourseLearning::create([
+                    'course_id'      => $course->id,
+                    'learning_point' => $item['learning_point'],
+                    'order'          => $i,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Learnings updated successfully']);
+    }
+
+    public function syncBenefits(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        CourseBenefit::where('course_id', $course->id)->delete();
+
+        foreach ($request->input('benefits', []) as $i => $item) {
+            if (!empty($item['title']) && !empty($item['text'])) {
+                CourseBenefit::create([
+                    'course_id' => $course->id,
+                    'title'     => $item['title'],
+                    'text'      => $item['text'],
+                    'order'     => $i,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Benefits updated successfully']);
+    }
+
+    public function syncCareerPaths(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        CourseCareerPath::where('course_id', $course->id)->delete();
+
+        foreach ($request->input('career_paths', []) as $i => $item) {
+            if (!empty($item['position'])) {
+                CourseCareerPath::create([
+                    'course_id' => $course->id,
+                    'level'     => $item['level'] ?? 'entry',
+                    'position'  => $item['position'],
+                    'order'     => $i,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Career paths updated successfully']);
+    }
+
+    public function syncIndustries(Request $request, string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        CourseIndustry::where('course_id', $course->id)->delete();
+
+        foreach ($request->input('industries', []) as $i => $item) {
+            if (!empty($item['title']) && !empty($item['text'])) {
+                CourseIndustry::create([
+                    'course_id' => $course->id,
+                    'title'     => $item['title'],
+                    'text'      => $item['text'],
+                    'order'     => $i,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Industries updated successfully']);
+    }
 }

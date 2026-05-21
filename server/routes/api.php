@@ -264,6 +264,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::post('/',            [AdminCourseController::class, 'store']);
         Route::get('/{courseId}',   [AdminCourseController::class, 'show']);
         Route::put('/{courseId}',   [AdminCourseController::class, 'update']);
+        Route::post('/{courseId}/update', [AdminCourseController::class, 'update']); 
         Route::delete('/{courseId}',[AdminCourseController::class, 'destroy']);
         Route::put('/{courseId}/pricing',[AdminCourseController::class, 'updatePricingAndSettings']);
 

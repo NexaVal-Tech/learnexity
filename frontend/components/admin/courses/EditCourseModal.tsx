@@ -54,9 +54,9 @@ interface Salary { entry_level: string; mid_level: string; senior_level: string 
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+const TABS: { id: TabId; label: string; icon: React.ElementType; disabled?: boolean }[] = [
   { id: 'basic',       label: 'Basic Info',     icon: BookOpen   },
-  { id: 'pricing',     label: 'Pricing',        icon: DollarSign },
+  { id: 'pricing',     label: 'Pricing',        icon: DollarSign, disabled: true },
   { id: 'images',      label: 'Images',         icon: Image      },
   { id: 'tools',       label: 'Tools',          icon: Wrench     },
   { id: 'learnings',   label: 'Learnings',      icon: BookOpen   },
@@ -304,7 +304,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
     Object.entries(basic).forEach(([k, v]) => formData.append(k, String(v)));
     if (heroFile)     formData.append('hero_image', heroFile);
     if (secondaryFile) formData.append('secondary_image', secondaryFile);
-    formData.append('_method', 'PUT');
+    // formData.append('_method', 'PUT');
 
     await api.admin.courses.updateFormData(course.course_id, formData);
   };
@@ -352,12 +352,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
   };
 
   const handleSave = async () => {
+    if (activeTab === 'pricing') return; // locked in edit mode
     setSaving(true);
     try {
       switch (activeTab) {
         case 'basic':        await saveBasicAndImages(); break;
         case 'images':       await saveBasicAndImages(); break;
-        case 'pricing':      await savePricing();        break;
+        // case 'pricing':      await savePricing();        break;
         case 'tools':        await saveTools();          break;
         case 'learnings':    await saveLearnings();      break;
         case 'benefits':     await saveBenefits();       break;
@@ -418,18 +419,26 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar tabs */}
           <aside className="w-52 shrink-0 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-            {TABS.map(({ id, label, icon: Icon }) => (
+            {TABS.map(({ id, label, icon: Icon, disabled }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id)}
+                onClick={() => !disabled && setActiveTab(id)}
+                disabled={disabled}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left border-l-2
-                  ${activeTab === id
-                    ? 'bg-white border-[#0F172A] text-[#0F172A]'
-                    : 'border-transparent text-gray-500 hover:bg-white hover:text-gray-800'
+                  ${disabled
+                    ? 'border-transparent text-gray-300 cursor-not-allowed'
+                    : activeTab === id
+                      ? 'bg-white border-[#0F172A] text-[#0F172A]'
+                      : 'border-transparent text-gray-500 hover:bg-white hover:text-gray-800'
                   }`}
               >
                 <Icon size={16} />
                 {label}
+                {disabled && (
+                  <span className="ml-auto text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-normal">
+                    locked
+                  </span>
+                )}
               </button>
             ))}
           </aside>

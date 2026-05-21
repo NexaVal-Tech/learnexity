@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { InstructorAuthProvider } from '@/contexts/InstructorAuthContext';
+import WhatsAppButton from "@/components/chat/WhatsappButton";
 import Head from "next/head";
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -82,6 +83,7 @@ export default function App({ Component, pageProps }: AppProps) {
         ) : (
           <AuthProvider>
             <Component {...pageProps} />
+            <WhatsAppButton /> 
           </AuthProvider>
         )}
       </main>

@@ -184,21 +184,21 @@ export default function ProbStatement() {
 
             {/* component-headers equivalent */}
             <h2 className="prob-headline">
-              Stop learning skills<br />
-             that don’t create <em>job opportunity.</em>
+              Worried You’ll Learn Tech Skills…<br />
+              But Still Not Get <em>Hired ?</em>
             </h2>
 
             <div className="prob-body">
-              <p className="prob-body-line accent">Most programs teach thoery.</p>
+              <p className="prob-body-line accent">Most programs teach skills..</p>
               {/* <p className="prob-body-line">Employers hire people who can prove real work.</p> */}
-              <p className="prob-body-line highlight">Learnexity closes that gap.</p>
+              {/* <p className="prob-body-line highlight">Learnexity closes that gap.</p> */}
               <p className="prob-body-line">
-                We help you turn learning into income, career growth, and real-world opportunities, without leaving your current job..
+                Learnexity helps you gain real experience and position yourself for income and global opportunities.
               </p>
-              {/* <p className="prob-body-line">Built to fit your life, without leaving your job.</p>
+              <p className="prob-body-line">Built to fit your life, without leaving your job.</p>
               <p className="prob-body-line accent">
-                This isn't about learning more. It's about getting hired.
-              </p> */}
+                This isn't about learning more. It's opportunity.
+              </p>
             </div>
 
 

@@ -124,6 +124,23 @@ class AuthController extends Controller
             }
         })->afterResponse();
         // ── END NEW ───────────────────────────────────────────────────────────
+
+        // ── Notify admin of new registration ──────────────────────────────────
+        dispatch(function () use ($user, $req) {
+            try {
+                $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                if (!$adminEmail) return;
+
+                Mail::to($adminEmail)->queue(
+                    new \App\Mail\AdminNewStudentMail($user, $req->referral_code)
+                );
+
+                Log::info('✅ [REGISTER] Admin notification queued', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('❌ [REGISTER] Admin notification failed', ['error' => $e->getMessage()]);
+            }
+        })->afterResponse();
+        // ── END admin notify ──────────────────────────────────────────────────
  
         // Process referral if code was provided
         if ($req->referral_code) {
