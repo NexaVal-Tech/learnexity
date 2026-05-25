@@ -30,6 +30,7 @@ class StripeController extends Controller
             'learning_track' => 'required|in:one_on_one,group_mentorship,self_paced',
             'payment_type'   => 'required|in:onetime,installment',
             'currency'       => 'required|in:usd',
+            'scholarship_id' => 'nullable|integer', 
             // ✅ amount removed — we calculate it server-side
         ]);
 

@@ -12,7 +12,7 @@ export default function UserDashboardPage() {
   const { user } = useAuth();
   const { tab } = router.query;
   
-  const [activeTab, setActiveTab] = useState("catalogue");
+  const [activeTab, setActiveTab] = useState("your-course");
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);

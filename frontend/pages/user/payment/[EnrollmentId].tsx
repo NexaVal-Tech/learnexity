@@ -629,7 +629,6 @@ export default function PaymentPage() {
                             {/* ── Track price display ── */}
                             <div className="text-right">
                               {scholarship && !scholarship.is_used ? (
-                                // Scholarship active: show original → scholarship-discounted price
                                 <div>
                                   <div className="text-sm text-gray-400 line-through">
                                     {currency === 'NGN' ? '₦' : '$'}{trackPrices[track.id]?.toLocaleString()}
@@ -637,11 +636,15 @@ export default function PaymentPage() {
                                   <div className="text-2xl font-bold text-indigo-600">
                                     {currency === 'NGN' ? '₦' : '$'}
                                     {Math.max(0, Math.round(
-                                      trackPrices[track.id] * (1 - scholarship.discount_percentage / 100)
+                                      // Step 1: apply one-time discount first
+                                      // Step 2: then apply scholarship on top
+                                      (trackPrices[track.id] * (1 - onetimeDiscountPercent / 100))
+                                      * (1 - scholarship.discount_percentage / 100)
                                     )).toLocaleString()}
                                   </div>
                                   <div className="text-xs font-bold text-green-600">
-                                    {scholarship.discount_percentage}% scholarship applied
+                                    {scholarship.discount_percentage}% scholarship
+                                    {onetimeDiscountPercent > 0 && ` + ${onetimeDiscountPercent}% off`}
                                   </div>
                                 </div>
                               ) : (
@@ -733,8 +736,7 @@ export default function PaymentPage() {
                                   {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack].toLocaleString()}
                                 </span>
                                 <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded">
-                                  {scholarship.discount_percentage}% scholarship
-                                  {onetimeDiscountPercent > 0 && ` + ${onetimeDiscountPercent}% off`}
+                                  {onetimeDiscountPercent > 0 && `${onetimeDiscountPercent}% off + `}{scholarship.discount_percentage}% scholarship
                                 </span>
                               </div>
                               <div className="text-2xl font-bold text-green-600">
@@ -856,11 +858,12 @@ export default function PaymentPage() {
                 )}
 
                 {scholarship && !scholarship.is_used && (
-                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-2">
-                    <div>
-                      <p className="text-xs font-bold text-green-700">Scholarship Applied</p>
-                      <p className="text-xs text-green-600">{scholarship.discount_percentage}% discount active</p>
-                    </div>
+                  <div className="flex justify-between text-sm text-green-600 font-semibold">
+                    <span>{scholarship.discount_percentage}% scholarship:</span>
+                    <span>
+                      -{currency === 'NGN' ? '₦' : '$'}
+                      {Math.round(priceAfterOnetimeDiscount * (scholarship.discount_percentage / 100)).toLocaleString()}
+                    </span>
                   </div>
                 )}
 

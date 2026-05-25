@@ -771,25 +771,24 @@ export default function Navbar() {
         {/* Mobile bottom actions */}
         <div className="px-4 pb-6 flex flex-col gap-2.5">
           <div className="border-t border-gray-100 pt-4">
-            {!user ? (
-              <Link
-                href="/user/auth/login"
-                onClick={() => setIsMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-[13.5px] font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <UserIcon />
-                Log in
-              </Link>
-            ) : (
-              <Link
-                href="/user/profile"
-                onClick={() => setIsMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-[13.5px] font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <UserIcon />
-                My profile
-              </Link>
-            )}
+              {!user ? (
+                <Link
+                  href="/user/auth/login"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+                >
+                  <UserIcon />
+                  Log in
+                </Link>
+              ) : (
+                // <Link
+                //   href="/user/profile"
+                //   aria-label="Account"
+                //   className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-[#6C63FF] hover:from-indigo-200 hover:to-purple-200 transition-all duration-150 shadow-sm"
+                // >
+                //   <UserIcon />
+                // </Link>
+                <></>
+              )}
           </div>
           <Link
             href="https://calendly.com/nexavaltech/30min"

@@ -658,9 +658,25 @@ export default function ScholarshipPage() {
               <ResultCard
                 scholarship={result}
                 courseName={courseName}
-                onContinue={() => {
+                onContinue={async () => {
                   if (result.status === 'approved') {
-                    router.push('/user/payment');   // auto-detects pending enrollment
+                    try {
+                      const response = await api.enrollment.getUserEnrollments();
+                      const pending = response.enrollments
+                        .filter((e: any) => e.payment_status === 'pending')
+                        .sort((a: any, b: any) =>
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                        )[0];
+
+                      if (pending?.id) {
+                        router.push(`/user/payment/${pending.id}`);
+                      } else {
+                        // No pending enrollment — send them to enroll first
+                        router.push(`/courses/${courseId}`);
+                      }
+                    } catch {
+                      router.push(`/courses/${courseId}`);
+                    }
                   } else {
                     router.push(`/courses/${courseId}`);
                   }
