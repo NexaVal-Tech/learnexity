@@ -119,19 +119,24 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
     return (
       <button
         onClick={() => router.push(`/scholarships/${courseId}`)}
-        className="group inline-flex items-center gap-3 px-4 py-3 transition-all"
-          style={{
-            borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
-            border: `1.5px solid ${BRAND}`,
-            background: BRAND,
-            color: '#ffffff',
-          }}
+        className="group flex w-full items-center justify-center px-4 py-3 transition-all"
+        style={{
+          width: "100%",
+          borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem",
+          border: `1.5px solid ${BRAND}`,
+          background: BRAND,
+          color: "#ffffff",
+        }}
       >
-        <div className="text-left">
-          <p className="font-bold text-sm">Can't afford the full price?</p>
-          <p className="text-xs opacity-70">Click here to Apply for a scholarship</p>
+        <div className="w-full text-center">
+          <p className="font-bold text-sm">
+            Can't afford the full price?
+          </p>
+
+          <p className="text-xs opacity-70">
+            Click here to Apply for a scholarship
+          </p>
         </div>
-        
       </button>
     );
   }

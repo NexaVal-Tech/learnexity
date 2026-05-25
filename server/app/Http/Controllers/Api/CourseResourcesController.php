@@ -248,7 +248,7 @@ class CourseResourcesController extends Controller
             ? round(($completedSprints / $totalSprints) * 100)
             : 0;
  
-        $courseName = \DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
+        $courseName = DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
  
         try {
             Mail::to($user->email)->queue(

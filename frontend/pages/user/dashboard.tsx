@@ -76,22 +76,25 @@ export default function UserDashboardPage() {
   const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
 
   // ── Payment summary for hero section ───────────────────────────────────
-  // Summarise all completed-payment enrollments and any pending installment info
-  const completedEnrollments = enrollments.filter(
-    (e) => e.payment_status === "completed"
+  // ── Payment summary for hero section ───────────────────────────────────
+  const pendingEnrollments = enrollments.filter(
+    (e) => e.payment_status !== "completed"
   );
+
   const installmentEnrollments = enrollments.filter(
     (e) =>
       e.payment_type === "installment" &&
       e.next_payment_due &&
       e.payment_status !== "completed"
   );
-  // For the hero we highlight the most urgent upcoming installment
-  const nextInstallment = installmentEnrollments.sort((a, b) =>
-    new Date(a.next_payment_due!).getTime() - new Date(b.next_payment_due!).getTime()
-  )[0] ?? null;
 
-  // Days until next installment
+  const nextInstallment =
+    installmentEnrollments.sort(
+      (a, b) =>
+        new Date(a.next_payment_due!).getTime() -
+        new Date(b.next_payment_due!).getTime()
+    )[0] ?? null;
+
   const daysUntilNext = nextInstallment
     ? Math.ceil(
         (new Date(nextInstallment.next_payment_due!).getTime() - Date.now()) /
@@ -99,6 +102,7 @@ export default function UserDashboardPage() {
       )
     : null;
 
+  const hasPendingPayments = pendingEnrollments.length > 0;
   const hasAnyEnrollment = enrollments.length > 0;
 
   return (
@@ -136,21 +140,22 @@ export default function UserDashboardPage() {
               {/* Right — payment stat cards */}
               <div className="flex flex-wrap gap-4 flex-1 justify-end">
                 {/* Courses enrolled */}
+                {/* Courses Enrolled — show ALL enrollments, note pending ones */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                     Courses Enrolled
                   </p>
                   <p className="text-4xl font-bold text-indigo-600">
-                    {completedEnrollments.length}
+                    {enrollments.length}  {/* ✅ all enrollments, not just completed */}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {enrollments.length > completedEnrollments.length
-                      ? `+${enrollments.length - completedEnrollments.length} pending`
+                    {pendingEnrollments.length > 0
+                      ? `${pendingEnrollments.length} payment${pendingEnrollments.length > 1 ? "s" : ""} pending`
                       : "All paid & active"}
                   </p>
                 </div>
 
-                {/* Payment status */}
+                {/* Payment Status — check ALL pending, not just installments */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[160px] flex flex-col gap-1 shadow-sm">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                     Payment Status
@@ -170,6 +175,13 @@ export default function UserDashboardPage() {
                           : "Until next payment"}
                       </p>
                     </>
+                  ) : hasPendingPayments ? (  /* ✅ catch pending one-time payments too */
+                    <>
+                      <p className="text-4xl font-bold text-yellow-500">!</p>
+                      <p className="text-xs text-gray-400">
+                        {pendingEnrollments.length} payment{pendingEnrollments.length > 1 ? "s" : ""} required
+                      </p>
+                    </>
                   ) : (
                     <>
                       <p className="text-4xl font-bold text-green-500">✓</p>
@@ -178,6 +190,35 @@ export default function UserDashboardPage() {
                   )}
                 </div>
 
+                {/* Payment Plan — "Fully paid" only when truly no pending payments */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                    Payment Plan
+                  </p>
+                  {installmentEnrollments.length > 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                        <p className="text-base font-bold text-gray-800">Installment</p>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {installmentEnrollments.length} active plan
+                        {installmentEnrollments.length > 1 ? "s" : ""}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`w-2 h-2 rounded-full ${hasPendingPayments ? "bg-yellow-400" : "bg-green-400"} inline-block`}></span>
+                        <p className="text-base font-bold text-gray-800">One-time</p>
+                      </div>
+                      {/* ✅ Only say "Fully paid" when there are truly no pending payments */}
+                      <p className="text-xs text-gray-400">
+                        {hasPendingPayments ? "Payment required" : "Fully paid"}
+                      </p>
+                    </>
+                  )}
+                </div>
                 {/* Next due date detail — only for installment students */}
                 {nextInstallment && (
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[180px] flex flex-col gap-1 shadow-sm">
@@ -204,33 +245,6 @@ export default function UserDashboardPage() {
                     </button>
                   </div>
                 )}
-
-                {/* Payment type badge */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                    Payment Plan
-                  </p>
-                  {installmentEnrollments.length > 0 ? (
-                    <>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                        <p className="text-base font-bold text-gray-800">Installment</p>
-                      </div>
-                      <p className="text-xs text-gray-400">
-                        {installmentEnrollments.length} active plan
-                        {installmentEnrollments.length > 1 ? "s" : ""}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-                        <p className="text-base font-bold text-gray-800">One-time</p>
-                      </div>
-                      <p className="text-xs text-gray-400">Fully paid</p>
-                    </>
-                  )}
-                </div>
               </div>
             </div>
           </div>

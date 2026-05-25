@@ -65,6 +65,25 @@ class StripeController extends Controller
                 }
             }
 
+                // ✅ NEW: Apply scholarship discount on top
+            if (!empty($validated['scholarship_id'])) {
+                $scholarship = Scholarship::where('id', $validated['scholarship_id'])
+                    ->where('user_id', auth()->id())
+                    ->where('status', 'approved')
+                    ->where('is_used', false)
+                    ->first();
+
+                if ($scholarship && $scholarship->discount_percentage > 0) {
+                    $basePrice = round($basePrice * (1 - $scholarship->discount_percentage / 100));
+
+                    Log::info('🎓 Scholarship discount applied (Stripe)', [
+                        'scholarship_id'   => $scholarship->id,
+                        'discount_percent' => $scholarship->discount_percentage,
+                        'price_after'      => $basePrice,
+                    ]);
+                }
+            }
+
             // Installment = 1/4 of price
             if ($type === 'installment') {
                 $basePrice = round($basePrice / 4);
@@ -102,6 +121,7 @@ class StripeController extends Controller
                 'customer_email' => auth()->user()->email,
                 'metadata'      => [
                     'enrollment_id' => $enrollment->id,
+                    'scholarship_id' => $validated['scholarship_id'] ?? null, 
                     'course_id'     => $course->id,
                     'course_name'   => $course->title,
                     'user_id'       => auth()->id(),

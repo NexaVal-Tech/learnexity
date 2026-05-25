@@ -660,8 +660,7 @@ export default function ScholarshipPage() {
                 courseName={courseName}
                 onContinue={() => {
                   if (result.status === 'approved') {
-                    // Go directly to enrollment/payment
-                    router.push(`/courses/${courseId}`);
+                    router.push('/user/payment');   // auto-detects pending enrollment
                   } else {
                     router.push(`/courses/${courseId}`);
                   }
