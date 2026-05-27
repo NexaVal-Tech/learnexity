@@ -354,21 +354,31 @@ class AuthController extends Controller
         }
     }
 
-    public function redirectToGoogle(Request $request)
-    {
-        Log::info('🔗 [GOOGLE] Redirecting to Google OAuth', [
-            'has_ref' => $request->has('ref'),
-            'ref_code' => $request->ref
-        ]);
-        
-        // Store referral code in session if provided
-        if ($request->has('ref')) {
-            session(['pending_referral_code' => $request->ref]);
-            Log::info('📌 [GOOGLE] Referral code stored in session', ['code' => $request->ref]);
-        }
-        
-        return Socialite::driver('google')->stateless()->redirect();
+public function redirectToGoogle(Request $request)
+{
+    Log::info('🔗 [GOOGLE] Redirecting to Google OAuth', [
+        'has_ref'  => $request->has('ref'),
+        'ref_code' => $request->ref,
+    ]);
+
+    // Store all redirect flags in session so they survive the OAuth round-trip.
+    // The frontend encodes these as query params on the redirect URL.
+    if ($request->has('ref')) {
+        session(['pending_referral_code' => $request->ref]);
+        Log::info('📌 [GOOGLE] Referral code stored in session', ['code' => $request->ref]);
     }
+    if ($request->has('scholarship_redirect')) {
+        session(['scholarship_redirect' => $request->scholarship_redirect]);
+    }
+    if ($request->has('scholarship_browse_courses')) {
+        session(['scholarship_browse_courses' => $request->scholarship_browse_courses]);
+    }
+    if ($request->has('intended_course')) {
+        session(['intended_course' => $request->intended_course]);
+    }
+
+    return Socialite::driver('google')->stateless()->redirect();
+}
 
     public function handleGoogleCallback()
     {
