@@ -290,7 +290,7 @@ export default function UserDashboardPage() {
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Course Catalogue
+            Explore Courses
           </button>
         </div>
 

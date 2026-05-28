@@ -54,6 +54,11 @@ class StripeController extends Controller
 
             $basePrice = (float) ($priceMap[$track] ?? $course->price_usd ?? 0);
 
+            $hours = (int) ($request->input('hours', 1));
+                if ($track === 'one_on_one' && $hours > 1) {
+                    $basePrice = $basePrice * min($hours, 20); // cap at 20 for safety
+                }
+
             if ($basePrice <= 0) {
                 return response()->json(['error' => 'Invalid course price configuration.'], 422);
             }

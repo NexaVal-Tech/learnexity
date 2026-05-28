@@ -13,41 +13,49 @@ use Illuminate\Support\Facades\Validator;
 
 class ScholarshipController extends Controller
 {
-    // ─── Scoring weights (must sum to 85; Nigeria bonus adds up to 15) ──────
-    // Q1 experience_level        → max 10
-    // Q2 learning_attempts       → max 15
-    // Q3 weekly_hours            → max 15
-    // Q4 completion_obstacle     → max 10
-    // Q5 financial_context       → max 20
-    // Q6 outcome_plan            → max 15
-    //                              ────
-    //                              85  + up to 15 location bonus = 100
+    // ─── Scholarship rules (CHANGE 5) ────────────────────────────────────────
+    //
+    // Eligibility: ONE scholarship per user ever (across all courses).
+    //
+    // Outcome rules:
+    //  • Student + Unemployed + Nigeria                  → 75%
+    //  • Student + any location (incl. above)            → 50%
+    //  • Employed + income < ₦100k / $100               → 50%
+    //  • Employed + income ₦100k–₦200k / $100–$200      → 25%  (borderline)
+    //  • Employed + income > ₦200k / $200               → rejected
+    //  • Not student + unemployed                        → 50%  (needs support)
+    //  • Everything else                                 → rejected
 
     /**
-     * Check application eligibility for a course before showing the form.
-     * Returns: { eligible, reason, existing_application }
+     * Check application eligibility.
+     * CHANGE 5: Now rejects if user has ANY prior application (not just this course).
      */
     public function checkEligibility(Request $request, string $courseId): JsonResponse
     {
         $user = auth()->user();
 
-        $existing = Scholarship::where('user_id', $user->id)
-            ->where('course_id', $courseId)
-            ->first();
+        // CHANGE 5: one scholarship per user across ALL courses
+        $anyExisting = Scholarship::where('user_id', $user->id)->first();
 
-        if ($existing) {
+        if ($anyExisting) {
+            // If it's for this exact course, return the existing application so the UI can show it
+            if ($anyExisting->course_id === $courseId) {
+                return response()->json([
+                    'eligible'             => false,
+                    'reason'               => 'already_applied',
+                    'existing_application' => $anyExisting,
+                ]);
+            }
+
+            // Applied on a different course
             return response()->json([
-                'eligible'             => false,
-                'reason'               => 'already_applied',
-                'existing_application' => $existing,
+                'eligible' => false,
+                'reason'   => 'already_applied',
             ]);
         }
 
-        // Check if user already has ANY approved scholarship (one ever, across all courses)
-        $hasUsed = Scholarship::where('user_id', $user->id)
-            ->where('is_used', true)
-            ->exists();
-
+        // Check if user already used a scholarship
+        $hasUsed = Scholarship::where('user_id', $user->id)->where('is_used', true)->exists();
         if ($hasUsed) {
             return response()->json([
                 'eligible' => false,
@@ -66,28 +74,22 @@ class ScholarshipController extends Controller
         ]);
     }
 
-    
     /**
-     * Submit a scholarship application.
-     * Auto-scores and auto-decides immediately.
+     * Submit a scholarship application (CHANGE 5: simplified 4-question form).
      */
     public function apply(Request $request, string $courseId): JsonResponse
     {
         $user = auth()->user();
 
-        // ── Guard: one application per user per course ──────────────────────
-        $existing = Scholarship::where('user_id', $user->id)
-            ->where('course_id', $courseId)
-            ->first();
-
-        if ($existing) {
+        // CHANGE 5: one scholarship per user ever
+        $anyExisting = Scholarship::where('user_id', $user->id)->first();
+        if ($anyExisting) {
             return response()->json([
-                'message'     => 'You have already applied for a scholarship on this course.',
-                'scholarship' => $existing,
+                'message'     => 'You have already submitted a scholarship application. Each user may only apply once across all courses.',
+                'scholarship' => $anyExisting->course_id === $courseId ? $anyExisting : null,
             ], 409);
         }
 
-        // ── Guard: already used a scholarship ───────────────────────────────
         $hasUsed = Scholarship::where('user_id', $user->id)->where('is_used', true)->exists();
         if ($hasUsed) {
             return response()->json([
@@ -95,15 +97,13 @@ class ScholarshipController extends Controller
             ], 409);
         }
 
-        // ── Validate answers ─────────────────────────────────────────────────
+        // ── Validate the new 4-question form ────────────────────────────────
         $validator = Validator::make($request->all(), [
-            'experience_level'    => 'required|in:complete_beginner,some_exposure,intermediate,advanced',
-            'learning_attempts'   => 'required|string|min:30|max:1000',
-            'weekly_hours'        => 'required|in:1_3,4_6,7_10,10_plus',
-            'completion_obstacle' => 'required|string|min:20|max:800',
-            'financial_context'   => 'required|string|min:30|max:1000',
-            'employment_status' => 'required|in:unemployed,student,employed_under_100k,employed_100k_200k,employed_above_200k',
-            'outcome_plan'        => 'required|string|min:30|max:1000',
+            'weekly_hours' => 'required|in:1_3,4_6,7_10,10_plus',
+            'is_student'   => 'required|in:yes,no',
+            'is_employed'  => 'required|in:yes,no',
+            'salary_range' => 'required|in:under_100,100_200,above_200,not_employed',
+            'country'      => 'required|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -115,96 +115,50 @@ class ScholarshipController extends Controller
 
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
-        // ── Detect location ──────────────────────────────────────────────────
-        $locationData   = LocationService::detectCurrencyFull($request->ip());
-        $country        = $locationData['country'] ?? 'Unknown';
-        $isNigeria      = in_array(strtoupper($country), ['NG', 'NIGERIA', 'NGA'], true);
-        $locationBonus  = $isNigeria ? 15 : 0;
+        $isStudent   = $request->input('is_student') === 'yes';
+        $isEmployed  = $request->input('is_employed') === 'yes';
+        $salaryRange = $request->input('salary_range'); // under_100 | 100_200 | above_200 | not_employed
+        $country     = trim($request->input('country'));
 
-        // ── Score each answer ─────────────────────────────────────────────────
-        $answers = $request->only([
-            'experience_level',
-            'learning_attempts',
-            'weekly_hours',
-            'completion_obstacle',
-            'financial_context',
-            'outcome_plan',
-        ]);
+        // Normalise country to check for Nigeria
+        $isNigeria = in_array(strtolower($country), [
+            'nigeria', 'ng', 'nga', 'nigerian',
+        ], true);
 
-        $score = 0;
+        // ── Auto-decision (CHANGE 5 rules) ───────────────────────────────────
+        [$status, $discountPct, $reviewNote] = $this->autoDecide(
+            $isStudent,
+            $isEmployed,
+            $salaryRange,
+            $isNigeria
+        );
 
-        // Q1 — Experience level (10 pts max)
-        // Beginners and those with some exposure are most in need of support
-        $score += match($answers['experience_level']) {
-            'complete_beginner' => 10,
-            'some_exposure'     => 8,
-            'intermediate'      => 5,
-            'advanced'          => 2,
-            default             => 0,
-        };
-
-        // Q2 — Learning attempts (15 pts max)
-        // Length & specificity of answer is a proxy for seriousness
-        $score += $this->scoreTextAnswer($answers['learning_attempts'], 15);
-
-        // Q3 — Weekly hours commitment (15 pts max)
-        $score += match($answers['weekly_hours']) {
-            '10_plus' => 15,
-            '7_10'    => 12,
-            '4_6'     => 8,
-            '1_3'     => 3,
-            default   => 0,
-        };
-
-        // Q4 — Completion obstacle awareness (10 pts max)
-        // Self-awareness = commitment likelihood
-        $score += $this->scoreTextAnswer($answers['completion_obstacle'], 10);
-
-        // Q5 — Financial context (20 pts max — highest weight)
-        $score += $this->scoreTextAnswer($answers['financial_context'], 20);
-
-        // Q6 — Employment / income status (20 pts max)
-        $score += match($answers['employment_status'] ?? '') {
-            'unemployed'          => 20,
-            'student'             => 20,
-            'employed_under_100k' => 15,
-            'employed_100k_200k'  => 8,
-            'employed_above_200k' => 2,
-            default               => 0,
-        };
-
-        // Q7 — Outcome plan specificity (15 pts max)
-        $score += $this->scoreTextAnswer($answers['outcome_plan'], 15);
-
-        $totalScore = min(100, $score + $locationBonus);
-
-        // ── Auto-decision ─────────────────────────────────────────────────────
-        [$status, $discountPct, $reviewNote] = $this->autoDecide($totalScore, $isNigeria, $answers['employment_status'] ?? '');
+        $answers = $request->only(['weekly_hours', 'is_student', 'is_employed', 'salary_range', 'country']);
 
         $scholarship = Scholarship::create([
-            'user_id'            => $user->id,
-            'course_id'          => $courseId,
-            'course_name'        => $course->title,
-            'status'             => $status,
-            'score'              => $score,
-            'location_bonus'     => $locationBonus,
-            'total_score'        => $totalScore,
-            'discount_percentage'=> $discountPct,
-            'answers'            => $answers,
-            'review_notes'       => $reviewNote,
-            'applicant_country'  => $country,
-            'applicant_ip'       => $request->ip(),
+            'user_id'             => $user->id,
+            'course_id'           => $courseId,
+            'course_name'         => $course->title,
+            'status'              => $status,
+            'score'               => 0,          // not used with new rule-based system
+            'location_bonus'      => $isNigeria ? 1 : 0,
+            'total_score'         => 0,
+            'discount_percentage' => $discountPct,
+            'answers'             => $answers,
+            'review_notes'        => $reviewNote,
+            'applicant_country'   => $country,
+            'applicant_ip'        => $request->ip(),
         ]);
 
-        Log::info('🎓 Scholarship auto-processed', [
-            'user_id'      => $user->id,
-            'course_id'    => $courseId,
-            'score'        => $score,
-            'location_bonus'=> $locationBonus,
-            'total_score'  => $totalScore,
-            'status'       => $status,
-            'discount'     => $discountPct,
-            'is_nigeria'   => $isNigeria,
+        Log::info('🎓 Scholarship auto-processed (new rules)', [
+            'user_id'     => $user->id,
+            'course_id'   => $courseId,
+            'is_student'  => $isStudent,
+            'is_employed' => $isEmployed,
+            'salary'      => $salaryRange,
+            'is_nigeria'  => $isNigeria,
+            'status'      => $status,
+            'discount'    => $discountPct,
         ]);
 
         return response()->json([
@@ -216,7 +170,7 @@ class ScholarshipController extends Controller
     }
 
     /**
-     * Get scholarship status for a specific course (for payment page).
+     * Get scholarship status for a specific course (payment page).
      */
     public function getForCourse(string $courseId): JsonResponse
     {
@@ -248,56 +202,67 @@ class ScholarshipController extends Controller
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     /**
-     * Score a free-text answer by length and basic quality heuristics.
-     * Rewards genuine, specific writing over one-liners.
-     */
-    private function scoreTextAnswer(string $text, int $max): int
-    {
-        $wordCount = str_word_count(strip_tags($text));
-
-        // Tiers:  <15 words → minimal | 15–40 → fair | 41–80 → good | 81+ → excellent
-        $lengthScore = match(true) {
-            $wordCount >= 81 => $max,
-            $wordCount >= 41 => (int) round($max * 0.75),
-            $wordCount >= 15 => (int) round($max * 0.45),
-            default          => (int) round($max * 0.15),
-        };
-
-        return $lengthScore;
-    }
-
-    /**
-     * Map a total score to a decision.
+     * Rule-based scholarship decision (CHANGE 5).
      *
-     * Score tiers (after location bonus):
-     *  75–100 → approved  100%
-     *  55–74  → approved   50%
-     *  35–54  → approved   25%
-     *   0–34  → rejected
+     * Rules in priority order:
+     *  1. Student + Unemployed + Nigeria                  → 75%
+     *  2. Student (any location / employment status)      → 50%
+     *  3. Not student + unemployed                        → 50%
+     *  4. Employed + income < ₦100k/$100 (under_100)     → 50%
+     *  5. Employed + income ₦100k–₦200k / $100–$200      → rejected (can afford partial — no scholarship)
+     *  6. Employed + income > ₦200k / $200               → rejected
+     *  7. Everything else                                 → rejected
      *
-     * Nigerian applicants start with +15, so the effective floor is lower —
-     * deliberately, as cost-of-living context is factored in.
+     * @return array{0: string, 1: int, 2: string}  [status, discount_pct, review_note]
      */
-    private function autoDecide(int $totalScore, bool $isNigeria, string $employmentStatus): array
-    {
-        // Tier 1: Unemployed/Student + Nigeria bonus → 75%
-        $isHighNeed = in_array($employmentStatus, ['unemployed', 'student', 'employed_under_100k']);
-        
-        if ($totalScore >= 70 && $isHighNeed) {
-            return ['approved', 75, '75% scholarship awarded based on strong need and commitment.'];
+    private function autoDecide(
+        bool   $isStudent,
+        bool   $isEmployed,
+        string $salaryRange,
+        bool   $isNigeria
+    ): array {
+        // Rule 1: Student + Unemployed + Nigeria → 75%
+        if ($isStudent && ! $isEmployed && $isNigeria) {
+            return [
+                'approved',
+                75,
+                '75% scholarship awarded — student, unemployed, and based in Nigeria.',
+            ];
         }
 
-        if ($totalScore >= 55) {
-            return ['approved', 50, '50% scholarship awarded based on your application.'];
+        // Rule 2: Student (any other combination) → 50%
+        if ($isStudent) {
+            return [
+                'approved',
+                50,
+                '50% scholarship awarded based on student status.',
+            ];
         }
 
-        if ($totalScore >= 35) {
-            $note = $isNigeria
-                ? '25% scholarship awarded. Location support factor applied.'
-                : '25% scholarship awarded based on application merit.';
-            return ['approved', 25, $note];
+        // Rule 3: Not a student + unemployed → 50%
+        if (! $isStudent && ! $isEmployed) {
+            return [
+                'approved',
+                50,
+                '50% scholarship awarded — unemployed and seeking to upskill.',
+            ];
         }
 
-        return ['rejected', 0, 'Application did not meet minimum scholarship criteria.'];
+        // Rule 4: Employed but income under ₦100k / $100 → 50%
+        if ($isEmployed && $salaryRange === 'under_100') {
+            return [
+                'approved',
+                50,
+                '50% scholarship awarded — employed but income below the ₦100,000 / $100 threshold.',
+            ];
+        }
+
+        // Rules 5 & 6: Employed with higher income → rejected
+        // (₦100k–₦200k and above ₦200k both do not qualify)
+        return [
+            'rejected',
+            0,
+            'Application not approved — your current employment and income level does not meet the scholarship criteria.',
+        ];
     }
 }

@@ -122,19 +122,15 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
         className="group flex w-full items-center justify-center px-4 py-3 transition-all"
         style={{
           width: "100%",
-          borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem",
-          border: `1.5px solid ${BRAND}`,
-          background: BRAND,
+          borderRadius: "0.7rem",
+          border: "1px solid rgb(255, 255, 255)", // white border
+          background: '#0a0a0a',
           color: "#ffffff",
         }}
       >
         <div className="w-full text-center">
           <p className="font-bold text-sm">
-            Can't afford the full price?
-          </p>
-
-          <p className="text-xs opacity-70">
-            Click here to Apply for a scholarship
+            Apply For Scholarship
           </p>
         </div>
       </button>

@@ -1,3 +1,5 @@
+// pages/admin/settings/courses.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layouts/AdminLayout';
