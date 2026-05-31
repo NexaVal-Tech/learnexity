@@ -329,10 +329,11 @@ export default function ResourcesPage() {
   // Get item type badge colors
   const getItemColors = (type: string) => {
     const map: Record<string, { bg: string; text: string; label: string }> = {
-      pdf:      { bg: 'bg-red-100',    text: 'text-red-600',    label: 'PDF' },
-      document: { bg: 'bg-orange-100', text: 'text-orange-600', label: 'DOC' },
-      video:    { bg: 'bg-purple-100', text: 'text-purple-600', label: 'VID' },
-      text:     { bg: 'bg-blue-100',   text: 'text-blue-600',   label: 'TXT' },
+      pdf:         { bg: 'bg-red-100',      text: 'text-red-600',     label: 'PDF' },
+      document:    { bg: 'bg-orange-100',   text: 'text-orange-600',  label: 'DOC' },
+      video:       { bg: 'bg-purple-100',   text: 'text-purple-600',  label: 'VID' },
+      text:        { bg: 'bg-blue-100',     text: 'text-blue-600',    label: 'TXT' },
+      code_editor: { bg: 'bg-indigo-100',   text: 'text-indigo-700',  label: '</>' },
     };
     return map[type] ?? { bg: 'bg-gray-100', text: 'text-gray-600', label: type.slice(0, 3).toUpperCase() };
   };
@@ -490,10 +491,11 @@ export default function ResourcesPage() {
                         <div className="bg-white divide-y divide-gray-100">
                           {sortItems(sprint.items).map(item => {
                             const colors = getItemColors(item.type);
-                            const isPdf = item.type === 'pdf' && !!item.download_url;
-                            const isDoc = item.type === 'document' && !!item.download_url;
-                            const hasText = !!item.text_content;
-                            const isClickable = isPdf || isDoc || hasText;
+                            const isPdf       = item.type === 'pdf' && !!item.download_url;
+                            const isDoc       = item.type === 'document' && !!item.download_url;
+                            const hasText     = !!item.text_content;
+                            const isCodeExercise = item.type === 'code_editor';
+                            const isClickable = isPdf || isDoc || hasText || isCodeExercise;
 
                             return (
                               <div
@@ -525,11 +527,15 @@ export default function ResourcesPage() {
                                     <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                       <CheckCircle size={11} /> Completed
                                     </span>
+                                  ) : isCodeExercise ? (
+                                    <span className="flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full font-medium">
+                                      ⚡ Exercise
+                                    </span>
                                   ) : (
                                     <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
                                       <Clock size={11} /> Auto-tracks
                                     </span>
-                                  )}
+                                  )}   
                                 </div>
                               </div>
                             );

@@ -153,7 +153,8 @@ class CourseResourcesController extends Controller
                     return [
                         'rank' => $participant->rank,
                         'user_id' => $participant->user_id,
-                        'user_name' => $participant->user->name,
+                        // 'user_name' => $participant->user->name,
+                        'user_name' => $participant->user?->name ?? 'Unknown',
                         'sprint1_score' => $participant->sprint1_score,
                         'sprint2_score' => $participant->sprint2_score,
                         'sprint3_score' => $participant->sprint3_score,
