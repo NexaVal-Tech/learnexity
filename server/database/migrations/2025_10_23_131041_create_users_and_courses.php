@@ -20,15 +20,6 @@ class CreateUsersAndCourses extends Migration
             $t->timestamps();
         });
 
-        Schema::create('courses', function(Blueprint $t) {
-            $t->id();
-            $t->string('title');
-            $t->text('description')->nullable();
-            $t->decimal('price', 10, 2);
-            $t->string('stripe_price_id')->nullable(); // optional map to Stripe Price
-            $t->timestamps();
-        });
-
         Schema::create('purchases', function(Blueprint $t){
             $t->id();
             $t->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -42,7 +33,6 @@ class CreateUsersAndCourses extends Migration
     public function down()
     {
         Schema::dropIfExists('purchases');
-        Schema::dropIfExists('courses');
         Schema::dropIfExists('users');
     }
 }

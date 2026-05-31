@@ -1,8 +1,11 @@
+// frontend/components/resources/ResourcePreviewModal.tsx
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
-  Clock, CheckCircle, Download, FileText, File, Loader2,
+  Clock, CheckCircle, Download, FileText, File, Loader2, Code2,
 } from 'lucide-react';
+import CodeEditor from '@/components/codeeditor/CodeEditor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +17,7 @@ interface ContentBlock {
 interface CourseResourceItem {
   id: number;
   title: string;
+  // 'code_editor' is the new type — set this in your DB/admin for code exercise items
   type: string;
   order?: number;
   file_size?: string | null;
@@ -21,6 +25,8 @@ interface CourseResourceItem {
   is_completed?: boolean;
   video_url?: string | null;
   text_content?: string | null;
+  // For code_editor items: the starter code and language come from text_content as JSON:
+  // { "language": "python", "starterCode": "# Write your solution here\n" }
 }
 
 interface Sprint {
@@ -96,24 +102,116 @@ function parseBlocks(raw: string | null | undefined): ContentBlock[] {
   return [];
 }
 
+// Parse code editor config from text_content JSON
+// Format: { "language": "python", "starterCode": "..." }
+function parseCodeEditorConfig(raw: string | null | undefined): {
+  language: 'html' | 'css' | 'javascript' | 'python' | 'sql';
+  starterCode?: string;
+} {
+  if (!raw) return { language: 'javascript' };
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      language: parsed.language ?? 'javascript',
+      starterCode: parsed.starterCode,
+    };
+  } catch {
+    return { language: 'javascript' };
+  }
+}
+
 function getFileTypeLabel(type: string) {
   const map: Record<string, { label: string; bg: string; text: string }> = {
-    pdf:      { label: 'PDF', bg: 'bg-red-50',     text: 'text-red-500' },
-    document: { label: 'DOC', bg: 'bg-orange-50',  text: 'text-orange-500' },
-    video:    { label: 'VID', bg: 'bg-violet-50',  text: 'text-violet-500' },
-    link:     { label: 'LNK', bg: 'bg-emerald-50', text: 'text-emerald-500' },
-    text:     { label: 'TXT', bg: 'bg-blue-50',    text: 'text-blue-500' },
+    pdf:         { label: 'PDF', bg: 'bg-red-50',     text: 'text-red-500' },
+    document:    { label: 'DOC', bg: 'bg-orange-50',  text: 'text-orange-500' },
+    video:       { label: 'VID', bg: 'bg-violet-50',  text: 'text-violet-500' },
+    link:        { label: 'LNK', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    text:        { label: 'TXT', bg: 'bg-blue-50',    text: 'text-blue-500' },
+    code_editor: { label: '</>', bg: 'bg-[#eeeaff]',  text: 'text-[#4A3AFF]' },
   };
   return map[type] ?? { label: type.slice(0, 3).toUpperCase(), bg: 'bg-gray-100', text: 'text-gray-500' };
 }
-
-// ─── Sort items by order field, then by id as tiebreaker ─────────────────────
 
 function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
 }
 
 const READING_TIME_MS = 30_000;
+
+// ─── Inline Code Editor Card Content ─────────────────────────────────────────
+
+function CodeEditorContent({
+  item,
+  onComplete,
+}: {
+  item: CourseResourceItem;
+  onComplete: (itemId: number) => void;
+}) {
+  const config = parseCodeEditorConfig(item.text_content);
+  const hasCompleted = useRef(item.is_completed || false);
+
+  // Auto-complete after 2 minutes of coding
+  useEffect(() => {
+    if (hasCompleted.current || item.is_completed) return;
+    const timer = setTimeout(() => {
+      if (!hasCompleted.current) {
+        hasCompleted.current = true;
+        onComplete(item.id);
+      }
+    }, 120_000);
+    return () => clearTimeout(timer);
+  }, [item.id, item.is_completed, onComplete]);
+
+  return (
+    <div className="px-4 pb-4 pt-3">
+      {/* Exercise header banner */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-[#4A3AFF]/10 flex items-center justify-center">
+            <Code2 size={11} className="text-[#4A3AFF]" />
+          </div>
+          <span className="text-xs font-semibold text-[#4A3AFF] uppercase tracking-wider">
+            Code Exercise
+          </span>
+        </div>
+        {!item.is_completed && (
+          <span className="text-[10px] text-gray-400 flex items-center gap-1">
+            <Clock size={9} /> Auto-marks after 2 min of coding
+          </span>
+        )}
+        {item.is_completed && (
+          <span className="flex items-center gap-1 text-xs text-emerald-600">
+            <CheckCircle size={11} /> Completed
+          </span>
+        )}
+      </div>
+
+      {/* The actual editor */}
+      <CodeEditor
+        initialLanguage={config.language}
+        initialCode={config.starterCode}
+        height="420px"
+        showHeader={true}
+        lessonTitle={item.title}
+      />
+
+      {/* Hint strip */}
+      <div className="flex items-center gap-4 mt-2 px-1">
+        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">Ctrl+↵</span>
+          Run
+        </span>
+        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">Tab</span>
+          Indent
+        </span>
+        <span className="text-[10px] text-gray-400 ml-auto">
+          Drag the divider to resize panes ↔
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // ─── Video Block ──────────────────────────────────────────────────────────────
 
@@ -331,7 +429,6 @@ function DocViewer({
         const rawUrl = await onPreviewFile(itemId, title);
         if (cancelled) return;
 
-        // Office files can't render as blob URLs — pipe through MS Office viewer
         const lowerTitle = title.toLowerCase();
         const isOffice =
           lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
@@ -400,7 +497,6 @@ function DocViewer({
     </div>
   );
 }
-
 
 // ─── Topic Content (Rich Blocks) ──────────────────────────────────────────────
 
@@ -495,20 +591,19 @@ function MaterialCard({
   item: CourseResourceItem;
   onComplete: (itemId: number) => void;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
-  // FIX: new prop — when true this card opens pre-expanded and scrolls into view
   initiallyExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const cardRef = useRef<HTMLDivElement>(null);
   const typeInfo = getFileTypeLabel(item.type);
 
-  const isPdf     = item.type === 'pdf';
-  const isDoc     = item.type === 'document';
-  const hasBlocks = parseBlocks(item.text_content).length > 0;
+  const isPdf        = item.type === 'pdf';
+  const isDoc        = item.type === 'document';
+  const isCodeEditor = item.type === 'code_editor';
+  const hasBlocks    = parseBlocks(item.text_content).length > 0;
 
-  const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
+  const isExpandable = isCodeEditor || hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
 
-  // FIX: scroll this card into view when it was pre-opened via initiallyExpanded
   useEffect(() => {
     if (initiallyExpanded && cardRef.current) {
       setTimeout(() => {
@@ -521,37 +616,58 @@ function MaterialCard({
     <div
       ref={cardRef}
       className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
-        item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
+        // Code editor items get a subtle brand-tinted border when expanded
+        isCodeEditor && expanded
+          ? 'border-[#4A3AFF]/20 bg-[#f7f6ff]'
+          : item.is_completed
+          ? 'border-emerald-100 bg-emerald-50/20'
+          : 'border-gray-100 bg-white'
       }`}
     >
       {/* ── Header row ── */}
       <button
         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
           isExpandable ? 'hover:bg-gray-50/70 cursor-pointer' : 'cursor-default'
-        }`}
+        } ${isCodeEditor && expanded ? 'bg-[#4A3AFF]/5' : ''}`}
         onClick={() => isExpandable && setExpanded(e => !e)}
         disabled={!isExpandable}
       >
+        {/* Type badge */}
         <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${typeInfo.bg}`}>
-          <span className={`text-[10px] font-bold tracking-wide ${typeInfo.text}`}>{typeInfo.label}</span>
+          {isCodeEditor
+            ? <Code2 size={14} className={typeInfo.text} />
+            : <span className={`text-[10px] font-bold tracking-wide ${typeInfo.text}`}>{typeInfo.label}</span>
+          }
         </div>
 
         <div className="flex-1 min-w-0 text-left">
-          <p className={`text-sm font-medium truncate ${item.is_completed ? 'text-gray-400' : 'text-gray-800'}`}>
+          <p className={`text-sm font-medium truncate ${
+            item.is_completed ? 'text-gray-400' : isCodeEditor ? 'text-gray-900' : 'text-gray-800'
+          }`}>
             {item.title}
           </p>
           {item.file_size && <p className="text-xs text-gray-400 mt-0.5">{item.file_size}</p>}
-          {!item.is_completed && isExpandable && (
+          {!item.is_completed && isCodeEditor && !expanded && (
+            <p className="text-xs text-[#4A3AFF]/70 mt-0.5 font-medium">
+              Click to open code exercise ⚡
+            </p>
+          )}
+          {!item.is_completed && !isCodeEditor && isExpandable && (
             <p className="text-xs text-gray-400 mt-0.5">
               {isPdf ? 'Click to read PDF' : isDoc ? 'Click to view document' : 'Click to read'}
             </p>
           )}
         </div>
 
+        {/* Status badge */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {item.is_completed ? (
             <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
               <CheckCircle size={11} /> Done
+            </span>
+          ) : isCodeEditor ? (
+            <span className="flex items-center gap-1 text-xs text-[#4A3AFF] bg-[#eeeaff] px-2 py-1 rounded-full font-medium">
+              <Code2 size={10} /> Exercise
             </span>
           ) : (
             <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
@@ -561,7 +677,9 @@ function MaterialCard({
           {isExpandable && (
             <ChevronDown
               size={14}
-              className={`text-gray-400 transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`}
+              className={`transition-transform flex-shrink-0 ${
+                expanded ? 'rotate-180 text-[#4A3AFF]' : 'text-gray-400'
+              }`}
             />
           )}
         </div>
@@ -570,7 +688,10 @@ function MaterialCard({
       {/* ── Expanded content ── */}
       {expanded && isExpandable && (
         <div className="border-t border-gray-100">
-          {isPdf && onPreviewFile && (
+          {isCodeEditor && (
+            <CodeEditorContent item={item} onComplete={onComplete} />
+          )}
+          {isPdf && !isCodeEditor && onPreviewFile && (
             <PdfViewer
               itemId={item.id}
               title={item.title}
@@ -579,7 +700,7 @@ function MaterialCard({
               onPreviewFile={onPreviewFile}
             />
           )}
-          {isDoc && !isPdf && onPreviewFile && (
+          {isDoc && !isPdf && !isCodeEditor && onPreviewFile && (
             <DocViewer
               itemId={item.id}
               title={item.title}
@@ -588,7 +709,7 @@ function MaterialCard({
               onPreviewFile={onPreviewFile}
             />
           )}
-          {!isPdf && !isDoc && hasBlocks && (
+          {!isPdf && !isDoc && !isCodeEditor && hasBlocks && (
             <div className="px-4 pb-4 pt-4">
               <TopicContent item={item} onComplete={onComplete} />
             </div>
@@ -608,14 +729,11 @@ function SprintSection({
   onComplete: (itemId: number) => void;
   initiallyExpanded?: boolean;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
-  // FIX: if a specific item in this sprint should be opened, its id goes here
   initialItemId?: number;
 }) {
-  // FIX: auto-expand this sprint if it contains the target item
   const containsInitialItem = initialItemId != null && sprint.items.some(i => i.id === initialItemId);
   const [expanded, setExpanded] = useState(initiallyExpanded || containsInitialItem);
 
-  // FIX: sort items by order field before rendering
   const sortedItems = sortItems(sprint.items);
 
   return (
@@ -655,7 +773,6 @@ function SprintSection({
               No materials in this sprint yet.
             </div>
           ) : (
-            // FIX: pass initiallyExpanded and scroll target down to each card
             sortedItems.map(item => (
               <MaterialCard
                 key={item.id}
@@ -693,7 +810,6 @@ export default function ResourcePreviewModal({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // FIX: only restore scroll position when opening without a specific target item
     if (!initialItemId) {
       const saved = parseInt(localStorage.getItem('rp_modal_scroll') || '0', 10);
       if (saved) el.scrollTop = saved;
@@ -726,6 +842,10 @@ export default function ResourcePreviewModal({
     );
   }
 
+  // Count code exercises across all sprints for summary badge
+  const totalCodeExercises = sprints?.reduce((acc, s) =>
+    acc + s.items.filter(i => i.type === 'code_editor').length, 0) ?? 0;
+
   // ── Full sprints modal ───────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -733,10 +853,20 @@ export default function ResourcePreviewModal({
         className="bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{ height: '95vh' }}
       >
+        {/* Modal header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 flex-shrink-0 bg-white">
-          <div>
-            <h2 className="font-semibold text-gray-900 text-sm">Course Materials</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Progress tracked automatically as you read & watch</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="font-semibold text-gray-900 text-sm">Course Materials</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Progress tracked automatically as you read & watch</p>
+            </div>
+            {/* Code exercise count badge */}
+            {totalCodeExercises > 0 && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-[#eeeaff] text-[#4A3AFF] text-xs font-semibold px-2.5 py-1 rounded-full">
+                <Code2 size={11} />
+                {totalCodeExercises} code exercise{totalCodeExercises > 1 ? 's' : ''}
+              </div>
+            )}
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-400 flex-shrink-0">
             <X className="w-4 h-4" />
@@ -772,10 +902,8 @@ export default function ResourcePreviewModal({
                   key={sprint.id}
                   sprint={sprint}
                   onComplete={handleAutoComplete}
-                  // FIX: only auto-expand first sprint when no specific item is targeted
                   initiallyExpanded={initialItemId == null ? idx === 0 : false}
                   onPreviewFile={onPreviewFile}
-                  // FIX: pass target item id so sprint + card auto-expand
                   initialItemId={initialItemId}
                 />
               ))}
