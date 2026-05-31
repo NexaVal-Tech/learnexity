@@ -443,7 +443,7 @@ export default function ScholarshipPage() {
 
               <div className="space-y-3 mb-8">
                 {[
-                  { text: '4 quick questions — decision in under 60 seconds' },
+                  // { text: '4 quick questions — decision in under 60 seconds' },
                   { text: 'One scholarship per user across all courses' },
                   { text: 'Discount applied automatically at checkout' },
                 ].map((item) => (
@@ -465,8 +465,8 @@ export default function ScholarshipPage() {
                 <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {[
-                    { pct: '75%', label: 'Student · Unemployed · 🇳🇬 Nigeria' },
-                    { pct: '50%', label: 'Student · Any location' },
+                    { pct: '75%', label: 'scholarship' },
+                    { pct: '50%', label: 'scholarship' },
                   ].map((tier) => (
                     <div key={tier.pct} className="text-center p-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
                       <p className="text-xl font-black text-white">{tier.pct}</p>
