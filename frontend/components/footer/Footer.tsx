@@ -20,7 +20,7 @@ export default function Footer() {
             </button>
           </Link>
 
-          <Link href="https://calendly.com/nexavaltech/30min">
+          <Link href="/consultation">
             <button className="text-white text-sm md:text-lg hover:no-underline transition-all">
               Book Free Consultation
             </button>
