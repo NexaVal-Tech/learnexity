@@ -30,6 +30,7 @@ class StripeController extends Controller
             'learning_track' => 'required|in:one_on_one,group_mentorship,self_paced',
             'payment_type'   => 'required|in:onetime,installment',
             'currency'       => 'required|in:usd',
+            'scholarship_id' => 'nullable|integer', 
             // ✅ amount removed — we calculate it server-side
         ]);
 
@@ -53,6 +54,11 @@ class StripeController extends Controller
 
             $basePrice = (float) ($priceMap[$track] ?? $course->price_usd ?? 0);
 
+            $hours = (int) ($request->input('hours', 1));
+                if ($track === 'one_on_one' && $hours > 1) {
+                    $basePrice = $basePrice * min($hours, 20); // cap at 20 for safety
+                }
+
             if ($basePrice <= 0) {
                 return response()->json(['error' => 'Invalid course price configuration.'], 422);
             }
@@ -62,6 +68,25 @@ class StripeController extends Controller
                 $discountPercent = (float) ($course->onetime_discount_usd ?? 0);
                 if ($discountPercent > 0) {
                     $basePrice = round($basePrice * (1 - $discountPercent / 100));
+                }
+            }
+
+                // ✅ NEW: Apply scholarship discount on top
+            if (!empty($validated['scholarship_id'])) {
+                $scholarship = Scholarship::where('id', $validated['scholarship_id'])
+                    ->where('user_id', auth()->id())
+                    ->where('status', 'approved')
+                    ->where('is_used', false)
+                    ->first();
+
+                if ($scholarship && $scholarship->discount_percentage > 0) {
+                    $basePrice = round($basePrice * (1 - $scholarship->discount_percentage / 100));
+
+                    Log::info('🎓 Scholarship discount applied (Stripe)', [
+                        'scholarship_id'   => $scholarship->id,
+                        'discount_percent' => $scholarship->discount_percentage,
+                        'price_after'      => $basePrice,
+                    ]);
                 }
             }
 
@@ -102,6 +127,7 @@ class StripeController extends Controller
                 'customer_email' => auth()->user()->email,
                 'metadata'      => [
                     'enrollment_id' => $enrollment->id,
+                    'scholarship_id' => $validated['scholarship_id'] ?? null, 
                     'course_id'     => $course->id,
                     'course_name'   => $course->title,
                     'user_id'       => auth()->id(),

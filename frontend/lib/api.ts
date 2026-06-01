@@ -761,7 +761,7 @@ settings: {
         courseId: string,
         data: FormData
       ): Promise<{ message: string; course: any }> => {
-        return await adminApi.post(`/api/admin/courses/${courseId}`, data);
+        return await adminApi.post(`/api/admin/courses/${courseId}/update`, data);
       },
 
       delete: async (courseId: string): Promise<{ message: string }> => {

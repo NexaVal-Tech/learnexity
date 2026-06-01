@@ -78,7 +78,7 @@ export default function CommunityPage() {
     setIsSubmitting(true);
     try {
       setShowModal(false);
-      window.open('https://chat.whatsapp.com/INag8dBLGnS9KBANu87Jlm', '_blank');
+      window.open('https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?mode=gi_t', '_blank');
       setFormData({ fullName: '', email: '', phoneNumber: '', countryCode: '+234' });
     } catch (error) {
       console.error('Error submitting form:', error);

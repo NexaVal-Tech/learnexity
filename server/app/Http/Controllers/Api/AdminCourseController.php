@@ -599,11 +599,15 @@ class AdminCourseController extends Controller
 
         DB::table('course_tools')->where('course_id', $course->id)->delete();
 
+        $uploadedFiles = $request->file('tool_icons') ?? []; // ← fix here
+
         foreach ($tools as $index => $tool) {
+            if (empty($tool['name'])) continue;
+
             $iconPath = null;
 
-            if ($request->hasFile("tool_icons.{$index}")) {
-                $iconPath = $request->file("tool_icons.{$index}")->store('course-tools', 'public');
+            if (isset($uploadedFiles[$index])) { // ← and here
+                $iconPath = $uploadedFiles[$index]->store('course-tools', 'public');
                 Log::info("📝 [syncTools] tool[{$index}] icon stored: {$iconPath}");
             } elseif (!empty($tool['icon_url'])) {
                 $iconPath = $this->normalizeIconUrl($tool['icon_url']);
