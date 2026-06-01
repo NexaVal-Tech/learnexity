@@ -1,9 +1,9 @@
-// frontend/components/resources/ResourcePreviewModal.tsx
+// components/resources/ResourcePreviewModal.tsx
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
-  Clock, CheckCircle, Loader2, Code2, Terminal,
+  Clock, CheckCircle, Loader2, Code2, Terminal, Lock,
 } from 'lucide-react';
 import CodeEditor from '@/components/codeeditor/CodeEditor';
 
@@ -22,6 +22,7 @@ interface CourseResourceItem {
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
+  is_locked?: boolean;
   video_url?: string | null;
   text_content?: string | null;
 }
@@ -33,7 +34,14 @@ interface Sprint {
   progress_percentage: number;
   completed_items?: number;
   total_items?: number;
+  is_locked?: boolean;
   items: CourseResourceItem[];
+}
+
+interface FreemiumMeta {
+  is_freemium: boolean;
+  free_sprint_limit: number;
+  user_has_access: boolean;
 }
 
 interface ExternalVideoResource {
@@ -54,6 +62,9 @@ interface ResourcePreviewModalProps {
   onDownload?: (itemId: number, title: string) => Promise<void>;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
   externalVideos?: ExternalVideoResource[];
+  freemiumMeta?: FreemiumMeta;
+  onEnrollClick?: () => void;
+  onPayNowClick?: (() => void) | undefined;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -110,8 +121,6 @@ function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
 const READING_TIME_MS = 30_000;
 
 // ─── Code Editor Panel ────────────────────────────────────────────────────────
-// Renders as a flex sibling next to the modal — no fixed positioning.
-// This means it naturally pushes the modal left instead of overlapping it.
 
 function CodeEditorPanel({ onClose }: { onClose: () => void }) {
   return (
@@ -125,13 +134,11 @@ function CodeEditorPanel({ onClose }: { onClose: () => void }) {
         alignSelf: 'stretch',
       }}
     >
-      {/* Panel header */}
       <div
         style={{ background: '#13131f', borderBottom: '1px solid #1e1e30' }}
         className="flex items-center justify-between px-4 py-3 flex-shrink-0"
       >
         <div className="flex items-center gap-2.5">
-          {/* Traffic lights */}
           <div className="flex gap-1.5">
             {(['#ff5f57', '#febc2e', '#28c840'] as const).map((c, i) => (
               <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
@@ -157,10 +164,75 @@ function CodeEditorPanel({ onClose }: { onClose: () => void }) {
           <X size={14} />
         </button>
       </div>
-
-      {/* Editor fills the rest */}
       <div className="flex-1 min-h-0">
         <CodeEditor height="100%" showHeader={true} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Locked Sprint Paywall (inside modal) ─────────────────────────────────────
+
+function LockedSprintPaywall({
+  sprint,
+  freemiumMeta,
+  onEnrollClick,
+  onPayNowClick,
+}: {
+  sprint: Sprint;
+  freemiumMeta?: FreemiumMeta;
+  onEnrollClick?: () => void;
+  onPayNowClick?: () => void;
+}) {
+  return (
+    <div className="mb-4 rounded-xl overflow-hidden border border-indigo-100">
+      {/* Sprint header — greyed out */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
+        <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <Lock className="w-4 h-4 text-gray-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-400 truncate">{sprint.sprint_name}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{sprint.total_items ?? sprint.items.length} items · Locked</p>
+        </div>
+        <span className="text-xs font-semibold bg-indigo-50 text-indigo-500 border border-indigo-100 px-2 py-0.5 rounded-full flex-shrink-0">
+          Premium
+        </span>
+      </div>
+
+      {/* Locked item rows */}
+      <div className="bg-white divide-y divide-gray-50">
+        {sortItems(sprint.items).slice(0, 3).map(item => (
+          <div key={item.id} className="flex items-center gap-3 px-4 py-3 opacity-50 select-none">
+            <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <Lock className="w-3 h-3 text-gray-300" />
+            </div>
+            <p className="text-xs text-gray-400 line-through truncate flex-1">{item.title}</p>
+          </div>
+        ))}
+        {sprint.items.length > 3 && (
+          <div className="px-4 py-2 text-xs text-gray-400 text-center">
+            +{sprint.items.length - 3} more items
+          </div>
+        )}
+      </div>
+
+      {/* CTA */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-indigo-100">
+        <div>
+          <p className="text-xs font-semibold text-indigo-900">Unlock this sprint</p>
+          <p className="text-xs text-indigo-600 mt-0.5">
+            {onPayNowClick
+              ? 'Complete your payment to access this content.'
+              : 'Enroll in the full course to access all sprints.'}
+          </p>
+        </div>
+        <button
+          onClick={onPayNowClick ?? onEnrollClick}
+          className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+        >
+          {onPayNowClick ? 'Pay Now →' : 'Enroll Now'}
+        </button>
       </div>
     </div>
   );
@@ -430,9 +502,9 @@ function MaterialCard({ item, onComplete, onPreviewFile, initiallyExpanded = fal
   const cardRef = useRef<HTMLDivElement>(null);
   const typeInfo = getFileTypeLabel(item.type);
 
-  const isPdf     = item.type === 'pdf';
-  const isDoc     = item.type === 'document';
-  const hasBlocks = parseBlocks(item.text_content).length > 0;
+  const isPdf       = item.type === 'pdf';
+  const isDoc       = item.type === 'document';
+  const hasBlocks   = parseBlocks(item.text_content).length > 0;
   const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
 
   useEffect(() => {
@@ -440,6 +512,26 @@ function MaterialCard({ item, onComplete, onPreviewFile, initiallyExpanded = fal
       setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }
   }, [initiallyExpanded]);
+
+  // Locked item — render a greyed-out, non-interactive row
+  if (item.is_locked) {
+    return (
+      <div ref={cardRef} className="rounded-xl border border-gray-100 bg-gray-50/50 mb-2 overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 select-none">
+          <div className="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <Lock size={14} className="text-gray-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-400 line-through truncate">{item.title}</p>
+            {item.file_size && <p className="text-xs text-gray-300 mt-0.5">{item.file_size}</p>}
+          </div>
+          <span className="flex items-center gap-1 text-xs text-gray-300 bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
+            <Lock size={10} /> Locked
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={cardRef} className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
@@ -505,10 +597,39 @@ function MaterialCard({ item, onComplete, onPreviewFile, initiallyExpanded = fal
 
 // ─── Sprint Section ───────────────────────────────────────────────────────────
 
-function SprintSection({ sprint, onComplete, initiallyExpanded = false, onPreviewFile, initialItemId }: {
-  sprint: Sprint; onComplete: (itemId: number) => void; initiallyExpanded?: boolean;
-  onPreviewFile?: (itemId: number, title: string) => Promise<string>; initialItemId?: number;
+function SprintSection({
+  sprint,
+  onComplete,
+  initiallyExpanded = false,
+  onPreviewFile,
+  initialItemId,
+  freemiumMeta,
+  onEnrollClick,
+  onPayNowClick,
+}: {
+  sprint: Sprint;
+  onComplete: (itemId: number) => void;
+  initiallyExpanded?: boolean;
+  onPreviewFile?: (itemId: number, title: string) => Promise<string>;
+  initialItemId?: number;
+  freemiumMeta?: FreemiumMeta;
+  onEnrollClick?: () => void;
+  onPayNowClick?: () => void;
 }) {
+  const isLocked = !!sprint.is_locked;
+
+  // Locked sprints get the paywall card instead of the regular accordion
+  if (isLocked) {
+    return (
+      <LockedSprintPaywall
+        sprint={sprint}
+        freemiumMeta={freemiumMeta}
+        onEnrollClick={onEnrollClick}
+        onPayNowClick={onPayNowClick}
+      />
+    );
+  }
+
   const containsInitialItem = initialItemId != null && sprint.items.some(i => i.id === initialItemId);
   const [expanded, setExpanded] = useState(initiallyExpanded || containsInitialItem);
   const sortedItems = sortItems(sprint.items);
@@ -526,7 +647,14 @@ function SprintSection({ sprint, onComplete, initiallyExpanded = false, onPrevie
             {sprint.progress_percentage === 100 ? <Check className="w-4 h-4" /> : `S${sprint.sprint_number}`}
           </div>
           <div className="text-left">
-            <p className="text-sm font-medium text-gray-800">{sprint.sprint_name}</p>
+            <p className="text-sm font-medium text-gray-800">
+              {sprint.sprint_name}
+              {freemiumMeta?.is_freemium && sprint.sprint_number <= (freemiumMeta?.free_sprint_limit ?? 0) && (
+                <span className="ml-2 text-xs font-normal bg-green-50 text-green-600 border border-green-100 px-2 py-0.5 rounded-full">
+                  Free
+                </span>
+              )}
+            </p>
             <p className="text-xs text-gray-400 mt-0.5">
               {sprint.completed_items ?? 0}/{sprint.total_items ?? sprint.items.length} completed · {sprint.progress_percentage}%
             </p>
@@ -562,7 +690,8 @@ function SprintSection({ sprint, onComplete, initiallyExpanded = false, onPrevie
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function ResourcePreviewModal({
-  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos,
+  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload,
+  onPreviewFile, externalVideos, freemiumMeta, onEnrollClick, onPayNowClick,
 }: ResourcePreviewModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -596,7 +725,7 @@ export default function ResourcePreviewModal({
 
   if (!url && !sprints) return null;
 
-  // ── Simple single-file fallback ──────────────────────────────────────────
+  // Simple single-file fallback
   if (!sprints && url) {
     return (
       <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -613,20 +742,15 @@ export default function ResourcePreviewModal({
     );
   }
 
-  // ── Full sprints modal ───────────────────────────────────────────────────
+  // Locked sprint count for the upgrade banner
+  const lockedCount = sprints?.filter(s => s.is_locked).length ?? 0;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/*
-        Flex row — modal and editor panel sit side-by-side.
-        The row is centered as a whole unit; opening the editor expands it
-        rightward while the modal keeps its width. Both panels share the same
-        height via items-stretch / alignSelf: 'stretch'.
-      */}
       <div
         className="flex items-end sm:items-stretch gap-3 w-full sm:w-auto"
         style={{ maxWidth: editorOpen ? 'calc(768px + 12px + 680px)' : '768px', width: '100%' }}
       >
-
         {/* ── Modal panel ─────────────────────────────────────────────── */}
         <div
           className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden flex-shrink-0"
@@ -639,7 +763,6 @@ export default function ResourcePreviewModal({
               <p className="text-xs text-gray-400 mt-0.5">Progress tracked automatically as you read &amp; watch</p>
             </div>
             <div className="flex items-center gap-2">
-              {/* Code Editor toggle — desktop only */}
               <button
                 onClick={() => setEditorOpen(o => !o)}
                 className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
@@ -656,6 +779,21 @@ export default function ResourcePreviewModal({
               </button>
             </div>
           </div>
+
+          {/* Freemium upgrade strip — shown inside modal when sprints are locked */}
+          {lockedCount > 0 && freemiumMeta?.is_freemium && !freemiumMeta.user_has_access && (
+            <div className="flex items-center justify-between px-5 py-2.5 bg-indigo-600 text-white flex-shrink-0">
+              <p className="text-xs font-medium">
+                {lockedCount} sprint{lockedCount > 1 ? 's' : ''} locked,  enroll to unlock everything
+              </p>
+              <button
+                onClick={onPayNowClick ?? onEnrollClick}
+                className="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors ml-4 flex-shrink-0"
+              >
+                {onPayNowClick ? 'Pay Now' : 'Enroll'}
+              </button>
+            </div>
+          )}
 
           {/* Scrollable content */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 px-4 sm:px-5 py-5">
@@ -690,6 +828,9 @@ export default function ResourcePreviewModal({
                     initiallyExpanded={initialItemId == null ? idx === 0 : false}
                     onPreviewFile={onPreviewFile}
                     initialItemId={initialItemId}
+                    freemiumMeta={freemiumMeta}
+                    onEnrollClick={onEnrollClick}
+                    onPayNowClick={onPayNowClick}
                   />
                 ))}
               </>
@@ -735,9 +876,8 @@ export default function ResourcePreviewModal({
           </div>
         </div>
 
-        {/* ── Code editor panel — flex sibling, desktop only ───────────── */}
+        {/* ── Code editor panel ────────────────────────────────────────── */}
         {editorOpen && <CodeEditorPanel onClose={() => setEditorOpen(false)} />}
-
       </div>
     </div>
   );

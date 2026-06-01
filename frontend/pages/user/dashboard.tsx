@@ -1,4 +1,8 @@
 // pages/user/dashboard.tsx
+// Changes from original:
+//   • Course catalogue cards now show a "Free Preview" badge when course.is_freemium === true
+//   • Freemium courses are always clickable (unenrolled users can browse to the resource page)
+//   • Everything else is unchanged
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -11,7 +15,7 @@ export default function UserDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { tab } = router.query;
-  
+
   const [activeTab, setActiveTab] = useState("catalogue");
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -76,7 +80,6 @@ export default function UserDashboardPage() {
   const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
 
   // ── Payment summary for hero section ───────────────────────────────────
-  // Summarise all completed-payment enrollments and any pending installment info
   const completedEnrollments = enrollments.filter(
     (e) => e.payment_status === "completed"
   );
@@ -86,12 +89,10 @@ export default function UserDashboardPage() {
       e.next_payment_due &&
       e.payment_status !== "completed"
   );
-  // For the hero we highlight the most urgent upcoming installment
   const nextInstallment = installmentEnrollments.sort((a, b) =>
     new Date(a.next_payment_due!).getTime() - new Date(b.next_payment_due!).getTime()
   )[0] ?? null;
 
-  // Days until next installment
   const daysUntilNext = nextInstallment
     ? Math.ceil(
         (new Date(nextInstallment.next_payment_due!).getTime() - Date.now()) /
@@ -113,14 +114,12 @@ export default function UserDashboardPage() {
         </div>
       )}
 
-      <div className="max-w-[1500px] mx-auto p-4 pt-25">
+      <div className="max-w-[1255px] mx-auto p-4 pt-25">
 
         {/* ── Hero Section ─────────────────────────────────────────────── */}
         {hasAnyEnrollment ? (
-          /* Payment Info Hero — shown when the student has at least one enrollment */
           <div className="bg-gradient-to-r from-purple-200 via-purple-100 to-blue-200 rounded-3xl p-6 md:p-8 mb-8">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-              {/* Left — greeting */}
               <div className="max-w-xs">
                 <p className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-1">
                   My Learning
@@ -133,7 +132,6 @@ export default function UserDashboardPage() {
                 </p>
               </div>
 
-              {/* Right — payment stat cards */}
               <div className="flex flex-wrap gap-4 flex-1 justify-end">
                 {/* Courses enrolled */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
@@ -178,7 +176,7 @@ export default function UserDashboardPage() {
                   )}
                 </div>
 
-                {/* Next due date detail — only for installment students */}
+                {/* Next due date — installment students only */}
                 {nextInstallment && (
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[180px] flex flex-col gap-1 shadow-sm">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
@@ -235,7 +233,6 @@ export default function UserDashboardPage() {
             </div>
           </div>
         ) : (
-          /* Default hero — shown when not enrolled in anything yet */
           <div className="bg-gradient-to-r from-purple-200 via-purple-100 to-blue-200 rounded-3xl p-2 md:p-2 mb-8 flex flex-col md:flex-row md:items-start justify-between gap-8">
             <div className="max-w-xl text-center md:text-left md:p-6">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -304,20 +301,32 @@ export default function UserDashboardPage() {
                   const courseId = course.course_id ?? course.id;
                   const enrollment = getEnrollmentForCourse(courseId);
                   const isEnrolled = !!enrollment;
+                  // ── NEW: freemium courses are always previewable ──────────
+                  const isFreemium = !!(course as any).is_freemium;
+
+                  const handleCardClick = () => {
+                    if (isEnrolled) {
+                      // Paid user → go straight to resources
+                      router.push({
+                        pathname: "/user/resource",
+                        query: { courseId: courseId },
+                      });
+                    } else if (isFreemium) {
+                      // Unenrolled but freemium → send to resource page (sprints 1-2 visible)
+                      router.push({
+                        pathname: "/user/resource",
+                        query: { courseId: courseId },
+                      });
+                    } else {
+                      // Standard premium → go to course landing/payment page
+                      router.push(`/courses/${courseId}`);
+                    }
+                  };
 
                   return (
                     <div
                       key={course.id}
-                      onClick={() => {
-                        if (isEnrolled) {
-                          router.push({
-                            pathname: "/user/resource",
-                            query: { courseId: courseId },
-                          });
-                        } else {
-                          router.push(`/courses/${courseId}`);
-                        }
-                      }}
+                      onClick={handleCardClick}
                       className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow cursor-pointer p-2 relative"
                     >
                       {/* Enrolled badge */}
@@ -327,6 +336,13 @@ export default function UserDashboardPage() {
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           Enrolled
+                        </div>
+                      )}
+
+                      {/* ── NEW: Free Preview badge for freemium, unenrolled ── */}
+                      {!isEnrolled && isFreemium && (
+                        <div className="absolute top-4 right-4 z-10 bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                          Free Preview
                         </div>
                       )}
 
@@ -347,11 +363,20 @@ export default function UserDashboardPage() {
                           {course.description}
                         </p>
 
-                        {/* Continue learning CTA for enrolled courses */}
+                        {/* Continue learning CTA — paid/enrolled */}
                         {isEnrolled && (
                           <div className="mt-3 mb-1">
                             <span className="inline-block w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl py-2 transition-colors">
-                              Continue Learning →
+                              Continue Learning
+                            </span>
+                          </div>
+                        )}
+
+                        {/* ── NEW: Preview CTA for freemium, unenrolled ──────── */}
+                        {!isEnrolled && isFreemium && (
+                          <div className="mt-3 mb-1">
+                            <span className="inline-block w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl py-2 transition-colors">
+                              Preview Free Sprints
                             </span>
                           </div>
                         )}

@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\User\AuthController;
 use App\Http\Controllers\Api\User\CourseController;
 use App\Http\Controllers\Api\User\CourseEnrollmentController;
+use App\Http\Controllers\Api\User\TrackUpgradeController;
+use App\Http\Controllers\Api\User\UserProfileController;
+use App\Http\Controllers\Api\User\UserSettingsController;
 use App\Http\Controllers\Api\PaystackWebhookController;
 use App\Http\Controllers\Api\StripeController;
 use App\Http\Controllers\Api\CourseResourcesController;
@@ -125,6 +128,16 @@ Route::middleware(['jwt.auth'])->group(function () {
         });
     });
 
+    Route::prefix('courses/{courseId}/upgrade')->group(function () {
+        Route::get('/options',   [TrackUpgradeController::class, 'getUpgradeOptions']);
+        Route::post('/initiate', [TrackUpgradeController::class, 'initiateUpgrade']);
+    });
+
+    Route::post(
+        '/enrollments/{enrollmentId}/finalise-upgrade',
+        [TrackUpgradeController::class, 'finaliseUpgrade']
+    );
+
     Route::prefix('materials')->group(function () {
         Route::post('/{itemId}/complete',   [CourseResourcesController::class, 'markItemCompleted']);
         Route::post('/{itemId}/incomplete', [CourseResourcesController::class, 'markItemIncomplete']);
@@ -147,6 +160,24 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/{projectId}/submit',                 [StudentProjectController::class, 'submit']);
         Route::post('/{projectId}/checkin',                [StudentProjectController::class, 'checkin']);
         Route::get('/{projectId}/submissions',             [StudentProjectController::class, 'mySubmissions']);
+    });
+
+    // student Profile
+    Route::prefix('profile')->group(function () {
+        Route::get('/',          [UserProfileController::class, 'show']);
+        Route::put('/',          [UserProfileController::class, 'update']);
+        Route::post('/avatar',   [UserProfileController::class, 'uploadAvatar']);
+        Route::delete('/avatar', [UserProfileController::class, 'deleteAvatar']);
+        Route::get('/activity',  [UserProfileController::class, 'activityLog']);
+    });
+
+    // student Settings
+    Route::prefix('settings')->group(function () {
+        Route::get('/',                  [UserSettingsController::class, 'show']);
+        Route::put('/notifications',     [UserSettingsController::class, 'updateNotifications']);
+        Route::put('/privacy',           [UserSettingsController::class, 'updatePrivacy']);
+        Route::put('/password',          [UserSettingsController::class, 'changePassword']);
+        Route::delete('/account',        [UserSettingsController::class, 'deleteAccount']);
     });
 });
 

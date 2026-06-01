@@ -36,7 +36,7 @@ export default function StudentProjectsPage() {
 
   return (
     <UserDashboardLayout>
-      <div className="max-w-[1200px] mx-auto px-4 py-8 pt-25">
+      <div className="max-w-[1255px] mx-auto px-4 py-8 pt-25">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
           <p className="text-gray-500 text-sm mt-1">

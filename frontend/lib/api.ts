@@ -235,6 +235,101 @@ export const api = {
     },
   },
 
+  // inside the api object, after enrollment:
+  trackUpgrade: {
+      getOptions: async (courseId: string) => {
+          const response = await apiClient.get(`/api/courses/${courseId}/upgrade/options`);
+          return response.data;
+      },
+      initiate: async (courseId: string, data: {
+          target_track: string;
+          payment_type: 'onetime' | 'installment';
+          hours?: number;
+      }) => {
+          const response = await apiClient.post(`/api/courses/${courseId}/upgrade/initiate`, data);
+          return response.data;
+      },
+      finalise: async (
+        enrollmentId: number,
+        transactionId: string,
+        extra: {
+          target_track: string;
+          upgrade_type: string;
+          amount_paid: number;
+          currency: string;
+          hours?: number;
+        }
+      ) => {
+        const response = await apiClient.post(
+          `/api/enrollments/${enrollmentId}/finalise-upgrade`,
+          { transaction_id: transactionId, ...extra }
+        );
+        return response.data;
+      },
+  },
+
+  profile: {
+    get: async () => {
+        const r = await apiClient.get('/api/profile');
+        return r.data;
+    },
+    update: async (data: {
+        name?: string; phone?: string; bio?: string; location?: string;
+        linkedin_url?: string; twitter_url?: string;
+        github_url?: string; website_url?: string;
+    }) => {
+        const r = await apiClient.put('/api/profile', data);
+        return r.data;
+    },
+    uploadAvatar: async (file: File) => {
+        const form = new FormData();
+        form.append('avatar', file);
+        const r = await apiClient.post('/api/profile/avatar', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return r.data;
+    },
+    deleteAvatar: async () => {
+        const r = await apiClient.delete('/api/profile/avatar');
+        return r.data;
+    },
+    getActivity: async () => {
+        const r = await apiClient.get('/api/profile/activity');
+        return r.data;
+    },
+},
+
+settings: {
+    get: async () => {
+        const r = await apiClient.get('/api/settings');
+        return r.data;
+    },
+    updateNotifications: async (data: {
+        email_notifications?: boolean;
+        marketing_emails?: boolean;
+        sms_notifications?: boolean;
+    }) => {
+        const r = await apiClient.put('/api/settings/notifications', data);
+        return r.data;
+    },
+    updatePrivacy: async (profilePublic: boolean) => {
+        const r = await apiClient.put('/api/settings/privacy', { profile_public: profilePublic });
+        return r.data;
+    },
+    changePassword: async (data: {
+        current_password?: string;
+        new_password: string;
+        new_password_confirmation: string;
+    }) => {
+        const r = await apiClient.put('/api/settings/password', data);
+        return r.data;
+    },
+    deleteAccount: async (data: { password?: string; confirmation: string }) => {
+        const r = await apiClient.delete('/api/settings/account', { data });
+        return r.data;
+    },
+},
+
   // ── COURSE RESOURCES ────────────────────────────────────────────────────────
   courseResources: {
     getAll: async (courseId: string): Promise<CourseResourcesResponse> => {

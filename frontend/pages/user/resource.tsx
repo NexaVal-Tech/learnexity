@@ -1,7 +1,7 @@
 // pages/user/resource.tsx
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File, Lock } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
@@ -20,6 +20,7 @@ interface CourseResourceItem {
   file_size?: string | null;
   download_url?: string | null;
   is_completed?: boolean;
+  is_locked?: boolean;
   text_content?: string | null;
 }
 
@@ -30,7 +31,14 @@ interface Sprint {
   progress_percentage: number;
   completed_items?: number;
   total_items?: number;
+  is_locked?: boolean;
   items: CourseResourceItem[];
+}
+
+interface FreemiumMeta {
+  is_freemium: boolean;
+  free_sprint_limit: number;
+  user_has_access: boolean;
 }
 
 interface LeaderboardParticipant {
@@ -65,6 +73,7 @@ interface CourseResourcesData {
     recommended_reading: ExternalResource[];
   };
   badges: { id: number; is_unlocked: boolean }[];
+  freemium_meta?: FreemiumMeta;
 }
 
 interface EnrolledCourse {
@@ -81,6 +90,64 @@ function sortItems(items: CourseResourceItem[]): CourseResourceItem[] {
 
 function sortExternal(items: ExternalResource[]): ExternalResource[] {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
+}
+
+// ─── Locked Sprint Paywall ────────────────────────────────────────────────────
+
+function LockedSprintRow({ title, type }: { title: string; type: string }) {
+  return (
+    <div className="flex items-center justify-between p-4 opacity-60 select-none">
+      <div className="flex items-center gap-3 flex-1">
+        <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+          <Lock className="w-4 h-4 text-gray-400" />
+        </div>
+        <p className="text-sm text-gray-400 line-through">{title}</p>
+      </div>
+      <span className="flex items-center gap-1 text-xs text-gray-300 bg-gray-50 px-2 py-1 rounded-full">
+        <Lock size={10} /> Locked
+      </span>
+    </div>
+  );
+}
+
+function LockedSprintBanner({
+  courseId,
+  enrollmentId,
+  onEnroll,
+}: {
+  courseId: string;
+  enrollmentId?: number;
+  onEnroll: () => void;
+}) {
+  const router = useRouter();
+
+  return (
+    <div className="mx-4 mb-3 mt-1 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+          <Lock className="w-4 h-4 text-indigo-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-indigo-900">This sprint is locked</p>
+          <p className="text-xs text-indigo-600 mt-0.5">
+            Enroll in the course to access all sprints and course materials.
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          if (enrollmentId) {
+            router.push(`/user/payment/${enrollmentId}`);
+          } else {
+            router.push(`/courses/${courseId}`);
+          }
+        }}
+        className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+      >
+        {enrollmentId ? 'Complete Payment' : 'Enroll Now'}
+      </button>
+    </div>
+  );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -100,7 +167,6 @@ export default function ResourcesPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [currentEnrollment, setCurrentEnrollment] = useState<CourseEnrollment | null>(null);
 
-  // FIX: track modal open state AND which item (if any) was clicked to open it
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [initialItemId, setInitialItemId] = useState<number | undefined>(undefined);
 
@@ -146,7 +212,9 @@ export default function ResourcesPage() {
         const response = await api.enrollment.checkStatus(courseId);
         if (response.enrollment) setCurrentEnrollment(response.enrollment);
       } catch {
-        setCurrentEnrollment({ has_access: true } as CourseEnrollment);
+        // For freemium courses the user may not be enrolled at all — that's fine.
+        // We set a minimal object so the resource page still loads.
+        setCurrentEnrollment({ has_access: false } as CourseEnrollment);
       }
     })();
   }, [courseId]);
@@ -158,21 +226,34 @@ export default function ResourcesPage() {
     loadData();
   }, [courseId, currentEnrollment]);
 
-  // Initial load — shows spinner, sets first expanded sprint
   const loadData = async () => {
     try {
       setLoading(true);
-      if (currentEnrollment && !currentEnrollment.has_access) {
-        setData(null); setError(null); setLoading(false); return;
+
+      // For fully-blocked (non-freemium) courses keep existing behaviour
+      const isFreemiumCourse = data?.freemium_meta?.is_freemium;
+      if (
+        currentEnrollment &&
+        !currentEnrollment.has_access &&
+        !isFreemiumCourse
+      ) {
+        setData(null);
+        setError(null);
+        setLoading(false);
+        return;
       }
+
       const response = await api.courseResources.getAll(courseId!);
       const fresh = response as CourseResourcesData;
       setData(fresh);
       setError(null);
 
       if (fresh.materials.length > 0) {
-        const firstUncompleted = fresh.materials.find(s => s.progress_percentage < 100);
-        setExpandedSprints([firstUncompleted?.id ?? fresh.materials[0].id]);
+        // Auto-expand the first unlocked sprint with incomplete items
+        const firstUnlocked = fresh.materials.find(
+          (s) => !s.is_locked && s.progress_percentage < 100
+        );
+        setExpandedSprints([firstUnlocked?.id ?? fresh.materials[0].id]);
       }
     } catch {
       setError('Failed to load course resources. Please try again.');
@@ -181,10 +262,10 @@ export default function ResourcesPage() {
     }
   };
 
-  // Silent refresh — no spinner, no expanded-sprint reset, preserves completion state
-  // Automatically expands any brand-new sprints that didn't exist before.
+  // Silent refresh — no spinner, preserves completion state
   const silentRefresh = useCallback(async () => {
-    if (!courseId || !currentEnrollment?.has_access) return;
+    if (!courseId) return;
+    // Allow refresh even when user doesn't have full access (freemium preview)
     try {
       const response = await api.courseResources.getAll(courseId);
       const fresh = response as CourseResourcesData;
@@ -192,13 +273,11 @@ export default function ResourcesPage() {
       setData(prev => {
         if (!prev) return fresh;
 
-        // Build a map of existing completion states so we don't flicker
-        // completed items back to incomplete between poll cycles.
         const completedIds = new Set<number>();
-        prev.materials.forEach(s => s.items.forEach(i => { if (i.is_completed) completedIds.add(i.id); }));
+        prev.materials.forEach(s =>
+          s.items.forEach(i => { if (i.is_completed) completedIds.add(i.id); })
+        );
 
-        // Merge: keep is_completed=true if we already marked it locally,
-        // regardless of what the API says (API will catch up on the next cycle).
         const mergedMaterials = fresh.materials.map(sprint => ({
           ...sprint,
           items: sprint.items.map(item => ({
@@ -210,7 +289,6 @@ export default function ResourcesPage() {
         return { ...fresh, materials: mergedMaterials };
       });
 
-      // Expand any sprint IDs that are new (weren't in state before)
       setExpandedSprints(prev => {
         const existingIds = new Set(prev);
         const newSprintIds = fresh.materials
@@ -219,20 +297,17 @@ export default function ResourcesPage() {
         return newSprintIds.length > 0 ? [...prev, ...newSprintIds] : prev;
       });
     } catch {
-      // Silent — don't show an error for background polls
+      // silent
     }
-  }, [courseId, currentEnrollment]);
+  }, [courseId]);
 
-  // Poll every 30 seconds while the page is visible
   useEffect(() => {
-    if (!courseId || !currentEnrollment?.has_access) return;
+    if (!courseId) return;
 
     const interval = setInterval(() => {
-      // Only poll when the tab is in the foreground
       if (!document.hidden) silentRefresh();
     }, 30_000);
 
-    // Also refresh immediately when the user returns to this tab
     const handleVisibilityChange = () => {
       if (!document.hidden) silentRefresh();
     };
@@ -242,12 +317,17 @@ export default function ResourcesPage() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [courseId, currentEnrollment, silentRefresh]);
+  }, [courseId, silentRefresh]);
 
   // ── Auto-complete ──────────────────────────────────────────────────────────
 
   const handleAutoComplete = useCallback(async (itemId: number) => {
     if (completingRef.current.has(itemId)) return;
+
+    // Don't attempt to complete items inside locked sprints
+    const sprint = data?.materials.find(s => s.items.some(i => i.id === itemId));
+    if (sprint?.is_locked) return;
+
     completingRef.current.add(itemId);
     try {
       await api.courseResources.markItemCompleted(itemId);
@@ -265,14 +345,13 @@ export default function ResourcesPage() {
           })),
         };
       });
-      // Use silentRefresh instead of loadData so progress state isn't lost
       setTimeout(silentRefresh, 1000);
     } catch {
       // silent fail
     } finally {
       completingRef.current.delete(itemId);
     }
-  }, [courseId, currentEnrollment, silentRefresh]);
+  }, [data, silentRefresh]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -308,37 +387,34 @@ export default function ResourcesPage() {
     }
   };
 
-  // FIX: helper to open modal targeting a specific item
   const openModalAtItem = (itemId: number) => {
     setInitialItemId(itemId);
     setPreviewModalOpen(true);
   };
 
-  // FIX: helper to open modal at the top (Learning View button)
   const openModalAtTop = () => {
     setInitialItemId(undefined);
     setPreviewModalOpen(true);
   };
 
-  // FIX: close modal and clear target item
   const closeModal = () => {
     setPreviewModalOpen(false);
     setInitialItemId(undefined);
   };
 
-  // Get item type badge colors
   const getItemColors = (type: string) => {
     const map: Record<string, { bg: string; text: string; label: string }> = {
-      pdf:         { bg: 'bg-red-100',      text: 'text-red-600',     label: 'PDF' },
-      document:    { bg: 'bg-orange-100',   text: 'text-orange-600',  label: 'DOC' },
-      video:       { bg: 'bg-purple-100',   text: 'text-purple-600',  label: 'VID' },
-      text:        { bg: 'bg-blue-100',     text: 'text-blue-600',    label: 'TXT' },
-      code_editor: { bg: 'bg-indigo-100',   text: 'text-indigo-700',  label: '</>' },
+      pdf:         { bg: 'bg-red-100',    text: 'text-red-600',    label: 'PDF' },
+      document:    { bg: 'bg-orange-100', text: 'text-orange-600', label: 'DOC' },
+      video:       { bg: 'bg-purple-100', text: 'text-purple-600', label: 'VID' },
+      text:        { bg: 'bg-blue-100',   text: 'text-blue-600',   label: 'TXT' },
+      code_editor: { bg: 'bg-indigo-100', text: 'text-indigo-700', label: '</>' },
     };
     return map[type] ?? { bg: 'bg-gray-100', text: 'text-gray-600', label: type.slice(0, 3).toUpperCase() };
   };
 
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
+  const freemiumMeta = data?.freemium_meta;
 
   // ── Loading / Error ────────────────────────────────────────────────────────
 
@@ -369,16 +445,44 @@ export default function ResourcesPage() {
 
   return (
     <UserDashboardLayout>
-      {currentEnrollment && !currentEnrollment.has_access && (
+      {/* Fully blocked non-freemium course */}
+      {currentEnrollment && !currentEnrollment.has_access && !freemiumMeta?.is_freemium && (
         <AccessBlockedBanner
           enrollment={currentEnrollment}
           onPayNow={() => router.push(`/user/payment/${currentEnrollment.id}`)}
         />
       )}
 
-      <div className="max-w-[1541px] mx-auto px-6 py-8 pt-25">
+      <div className="max-w-[1255px] mx-auto px-6 py-8 pt-25">
         {currentEnrollment?.has_access && currentEnrollment?.access_blocked_reason && (
           <PaymentWarningBanner enrollment={currentEnrollment} />
+        )}
+
+        {/* Freemium preview banner — shown when user is previewing without full access */}
+        {freemiumMeta?.is_freemium && !freemiumMeta.user_has_access && (
+          <div className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 p-px">
+            <div className="rounded-2xl bg-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">
+                    You're in free mode u can only accessing the first {freemiumMeta.free_sprint_limit} sprints for free
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Enroll to unlock all course materials, projects and certificates.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/courses/${courseId}`)}
+                className="flex-shrink-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-opacity hover:opacity-90"
+              >
+                Unlock Full Course
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Tab Navigation */}
@@ -429,15 +533,21 @@ export default function ResourcesPage() {
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
-                  <p className="text-sm text-gray-500 mt-1">Click any item to view or download</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {freemiumMeta?.is_freemium && !freemiumMeta.user_has_access
+                      ? `Sprints 1–${freemiumMeta.free_sprint_limit} are free · Remaining sprints require enrollment`
+                      : 'Click any item to view or download'}
+                  </p>
                 </div>
-                {/* FIX: Learning View button opens modal at top with no specific target */}
-                <button
-                  onClick={openModalAtTop}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
-                >
-                  <BookOpen size={15} /> Learning View
-                </button>
+                {/* Learning View button — only when user has access to something */}
+                {(freemiumMeta?.user_has_access || freemiumMeta?.is_freemium) && (
+                  <button
+                    onClick={openModalAtTop}
+                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition"
+                  >
+                    <BookOpen size={15} /> Learning View
+                  </button>
+                )}
               </div>
 
               {isMaterialsEmpty ? (
@@ -452,104 +562,153 @@ export default function ResourcesPage() {
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
-                  {data.materials.map(sprint => (
-                    <div key={sprint.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                      {/* Sprint header */}
-                      <button
-                        onClick={() => toggleSprint(sprint.id)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
-                            sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
-                          }`}>
-                            {sprint.progress_percentage === 100 ? <Check className="w-6 h-6" /> : `S${sprint.sprint_number}`}
-                          </div>
-                          <div className="text-left">
-                            <div className="font-medium text-gray-900">{sprint.sprint_name}</div>
-                            <div className="text-xs text-gray-500">
-                              {sprint.completed_items ?? 0} of {sprint.total_items ?? sprint.items.length} completed ({sprint.progress_percentage}%)
+                  {data.materials.map(sprint => {
+                    const isLocked = !!sprint.is_locked;
+
+                    return (
+                      <div key={sprint.id} className={`border rounded-lg overflow-hidden ${isLocked ? 'border-gray-100 bg-gray-50/50' : 'border-gray-200'}`}>
+                        {/* Sprint header */}
+                        <button
+                          onClick={() => toggleSprint(sprint.id)}
+                          className={`w-full flex items-center justify-between p-4 transition ${
+                            isLocked
+                              ? 'bg-gray-50 cursor-pointer hover:bg-gray-100'
+                              : 'bg-gray-50 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
+                              isLocked
+                                ? 'bg-gray-200 text-gray-400'
+                                : sprint.progress_percentage === 100
+                                ? 'bg-green-500 text-white'
+                                : 'bg-gray-200 text-gray-600'
+                            }`}>
+                              {isLocked
+                                ? <Lock className="w-4 h-4" />
+                                : sprint.progress_percentage === 100
+                                ? <Check className="w-6 h-6" />
+                                : `S${sprint.sprint_number}`
+                              }
+                            </div>
+                            <div className="text-left">
+                              <div className={`font-medium ${isLocked ? 'text-gray-400' : 'text-gray-900'}`}>
+                                {sprint.sprint_name}
+                                {isLocked && (
+                                  <span className="ml-2 text-xs font-normal bg-indigo-50 text-indigo-500 border border-indigo-100 px-2 py-0.5 rounded-full">
+                                    Premium
+                                  </span>
+                                )}
+                                {!isLocked && sprint.sprint_number <= (freemiumMeta?.free_sprint_limit ?? 0) && freemiumMeta?.is_freemium && (
+                                  <span className="ml-2 text-xs font-normal bg-green-50 text-green-600 border border-green-100 px-2 py-0.5 rounded-full">
+                                    Free Preview
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {isLocked
+                                  ? `${sprint.total_items ?? sprint.items.length} items · Locked`
+                                  : `${sprint.completed_items ?? 0} of ${sprint.total_items ?? sprint.items.length} completed (${sprint.progress_percentage}%)`
+                                }
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
-                              style={{ width: `${sprint.progress_percentage}%` }}
-                            />
-                          </div>
-                          {expandedSprints.includes(sprint.id)
-                            ? <ChevronUp className="w-5 h-5 text-gray-400" />
-                            : <ChevronDown className="w-5 h-5 text-gray-400" />
-                          }
-                        </div>
-                      </button>
-
-                      {/* Sprint items — FIX: sorted by order before render */}
-                      {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
-                        <div className="bg-white divide-y divide-gray-100">
-                          {sortItems(sprint.items).map(item => {
-                            const colors = getItemColors(item.type);
-                            const isPdf       = item.type === 'pdf' && !!item.download_url;
-                            const isDoc       = item.type === 'document' && !!item.download_url;
-                            const hasText     = !!item.text_content;
-                            const isCodeExercise = item.type === 'code_editor';
-                            const isClickable = isPdf || isDoc || hasText || isCodeExercise;
-
-                            return (
-                              <div
-                                key={item.id}
-                                className={`flex items-center justify-between p-4 transition ${
-                                  item.is_completed ? 'bg-green-50/30' : ''
-                                } ${isClickable ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
-                                // FIX: open modal targeting this specific item
-                                onClick={() => isClickable && openModalAtItem(item.id)}
-                              >
-                                <div className="flex items-center gap-3 flex-1">
-                                  {/* Type badge */}
-                                  <div className={`w-8 h-8 rounded flex items-center justify-center ${colors.bg}`}>
-                                    <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>
-                                  </div>
-
-                                  {/* Title */}
-                                  <div className="flex-1">
-                                    <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700' : 'text-gray-800'}`}>
-                                      {item.title}
-                                    </p>
-                                    {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
-                                  </div>
-                                </div>
-
-                                {/* Status */}
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {item.is_completed ? (
-                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                      <CheckCircle size={11} /> Completed
-                                    </span>
-                                  ) : isCodeExercise ? (
-                                    <span className="flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full font-medium">
-                                      ⚡ Exercise
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-                                      <Clock size={11} /> Auto-tracks
-                                    </span>
-                                  )}   
-                                </div>
+                          <div className="flex items-center gap-3">
+                            {!isLocked && (
+                              <div className="w-32 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
+                                  style={{ width: `${sprint.progress_percentage}%` }}
+                                />
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                            )}
+                            {expandedSprints.includes(sprint.id)
+                              ? <ChevronUp className="w-5 h-5 text-gray-400" />
+                              : <ChevronDown className="w-5 h-5 text-gray-400" />
+                            }
+                          </div>
+                        </button>
+
+                        {/* Sprint items */}
+                        {expandedSprints.includes(sprint.id) && (
+                          <div className="bg-white">
+                            {isLocked ? (
+                              <>
+                                {/* Show locked placeholder rows */}
+                                <div className="divide-y divide-gray-50">
+                                  {sortItems(sprint.items).map(item => (
+                                    <LockedSprintRow key={item.id} title={item.title} type={item.type} />
+                                  ))}
+                                </div>
+                                {/* Paywall CTA */}
+                                <LockedSprintBanner
+                                  courseId={courseId!}
+                                  enrollmentId={currentEnrollment?.id}
+                                  onEnroll={() => router.push(`/courses/${courseId}`)}
+                                />
+                              </>
+                            ) : (
+                              sprint.items.length > 0 && (
+                                <div className="divide-y divide-gray-100">
+                                  {sortItems(sprint.items).map(item => {
+                                    const colors = getItemColors(item.type);
+                                    const isPdf          = item.type === 'pdf' && !!item.download_url;
+                                    const isDoc          = item.type === 'document' && !!item.download_url;
+                                    const hasText        = !!item.text_content;
+                                    const isCodeExercise = item.type === 'code_editor';
+                                    const isClickable    = isPdf || isDoc || hasText || isCodeExercise;
+
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        className={`flex items-center justify-between p-4 transition ${
+                                          item.is_completed ? 'bg-green-50/30' : ''
+                                        } ${isClickable ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
+                                        onClick={() => isClickable && openModalAtItem(item.id)}
+                                      >
+                                        <div className="flex items-center gap-3 flex-1">
+                                          <div className={`w-8 h-8 rounded flex items-center justify-center ${colors.bg}`}>
+                                            <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700' : 'text-gray-800'}`}>
+                                              {item.title}
+                                            </p>
+                                            {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                          {item.is_completed ? (
+                                            <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                              <CheckCircle size={11} /> Completed
+                                            </span>
+                                          ) : isCodeExercise ? (
+                                            <span className="flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full font-medium">
+                                              ⚡ Exercise
+                                            </span>
+                                          ) : (
+                                            <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                              <Clock size={11} /> Auto-tracks
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Leaderboard */}
-            {data.leaderboard && (
+            {data.leaderboard && freemiumMeta?.user_has_access && (
               <div className="bg-white rounded-lg border border-gray-200 mb-6">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -716,7 +875,7 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Preview Modal — FIX: pass initialItemId and use closeModal */}
+        {/* Preview Modal — only pass unlocked sprints */}
         {previewModalOpen && (
           <ResourcePreviewModal
             url={null}
@@ -727,6 +886,12 @@ export default function ResourcesPage() {
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
+            freemiumMeta={freemiumMeta}
+            onEnrollClick={() => router.push(`/courses/${courseId}`)}
+            onPayNowClick={currentEnrollment?.id
+              ? () => router.push(`/user/payment/${currentEnrollment!.id}`)
+              : undefined
+            }
             onPreviewFile={async (itemId, title) => {
               const lowerTitle = title.toLowerCase();
               const isOffice =
@@ -735,12 +900,10 @@ export default function ResourcesPage() {
                 lowerTitle.endsWith('.xlsx') || lowerTitle.endsWith('.xls');
 
               if (isOffice) {
-                // Get the direct storage URL — MS viewer fetches it server-side
                 const { url } = await api.courseResources.getPreviewUrl(itemId);
                 return url;
               }
 
-              // PDFs: blob URL works fine in iframes
               const blob = await api.courseResources.downloadMaterial(itemId);
               return window.URL.createObjectURL(blob);
             }}

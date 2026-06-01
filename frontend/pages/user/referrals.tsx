@@ -133,7 +133,7 @@ export default function ReferralsPage() {
 
   return (
     <UserDashboardLayout>
-      <div className="max-w-[1500px] mx-auto px-4 py-8 pt-28">
+      <div className="max-w-[1255px] mx-auto px-4 py-8 pt-28">
         {/* Referral Link Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center gap-2 mb-3">

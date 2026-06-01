@@ -57,7 +57,7 @@ export default function UserHeader() {
   return (
     <>
       <nav className="bg-white shadow-sm fixed w-full z-50">
-        <div className="max-w-screen-2xl mx-auto flex justify-between items-center px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <img src="/images/Logo.png" alt="logo" className="h-8" />
@@ -88,7 +88,7 @@ export default function UserHeader() {
           <div className="hidden md:flex items-center space-x-4">
             {/* Upgrade Button */}
             <Link 
-              href="/upgrade" 
+              href="/user/upgrade" 
               className="bg-[#6C63FF] text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-[#5753E6] transition-colors"
             >
               Upgrade

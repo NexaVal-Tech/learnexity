@@ -129,7 +129,7 @@ export default function StudentProjectDetail() {
 
   return (
     <UserDashboardLayout>
-      <div className="max-w-[900px] mx-auto px-4 py-8 pt-25">
+      <div className="max-w-[1255px] mx-auto px-4 py-8 pt-25">
 
         {/* Back */}
         <button onClick={() => router.push('/user/projects')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6">
