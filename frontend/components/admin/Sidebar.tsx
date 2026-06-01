@@ -26,7 +26,7 @@ const Sidebar = () => {
     { icon: User, label: 'Instructors Management', href: '/admin/instructors' },
     { icon: GraduationCap, label: 'Students Management', href: '/admin/students' },
     { icon: BookCopy, label: 'Course Management', href: '/admin/courses' },
-    // { icon: Calendar, label: 'Consultations', href: '/admin/consultations' },
+    { icon: Calendar, label: 'Consultations', href: '/admin/consultation' },
     // { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics' },
     { icon: SlidersHorizontal, label: 'Course Settings', href: '/admin/settings/courses' },
     { icon: GraduationCap, label: 'Kids Management', href: '/admin/kids' },

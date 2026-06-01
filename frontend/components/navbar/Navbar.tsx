@@ -66,7 +66,7 @@ export default function Navbar() {
 
           {/* Desktop CTA Button */}
           <Link
-            href="https://calendly.com/nexavaltech/30min"
+            href="/consultation"
             className="hidden md:block bg-[#6C63FF] text-white px-6 py-3 rounded-full font-medium hover:bg-[#5753E6] transition-colors"
           >
             Book a free consultation
@@ -169,7 +169,7 @@ export default function Navbar() {
         {/* Mobile CTA Button */}
         <div className="px-6 pb-6">
           <Link
-            href="https://calendly.com/nexavaltech/30min"
+            href="/consultation"
             className="block w-full bg-[#6C63FF] text-white px-6 py-3 rounded-full font-medium hover:bg-[#5753E6] transition-colors text-center"
             onClick={closeMenu}
           >
