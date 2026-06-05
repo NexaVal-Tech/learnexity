@@ -130,6 +130,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/{itemId}/incomplete', [CourseResourcesController::class, 'markItemIncomplete']);
         Route::get('/{itemId}/download',    [CourseResourcesController::class, 'downloadMaterial']);
         Route::get('/{itemId}/preview-url', [CourseResourcesController::class, 'getPreviewUrl']);
+        Route::get('/{itemId}/preview', [CourseResourcesController::class, 'previewMaterial']);
     });
 
     Route::prefix('scholarships')->group(function () {

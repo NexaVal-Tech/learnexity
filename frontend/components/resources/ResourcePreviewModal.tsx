@@ -339,16 +339,9 @@ const DocViewer = memo(function DocViewer({
         setLoadError(false);
         const rawUrl = await onPreviewFile(itemId, title);
         if (cancelled) return;
+        
+const finalUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`;
 
-        const lowerTitle = title.toLowerCase();
-        const isOffice =
-          lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
-          lowerTitle.endsWith('.pptx') || lowerTitle.endsWith('.ppt') ||
-          lowerTitle.endsWith('.xlsx') || lowerTitle.endsWith('.xls');
-
-        const finalUrl = isOffice
-          ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`
-          : rawUrl;
 
         setViewUrl(finalUrl);
 
@@ -507,8 +500,10 @@ const MaterialCard = memo(function MaterialCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const typeInfo = getFileTypeLabel(item.type);
 
-  const isPdf     = item.type === 'pdf';
-  const isDoc     = item.type === 'document';
+// AFTER — gate on download_url so items with no file are never expandable
+const hasFile = !!item.download_url;
+const isPdf = item.type === 'pdf' && hasFile;
+const isDoc = item.type === 'document' && hasFile;
   // FIX: memoize block check — avoid re-parsing on every render
   const hasBlocks = useMemo(() => parseBlocks(item.text_content).length > 0, [item.text_content]);
   const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);

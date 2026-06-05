@@ -1,9 +1,10 @@
 <?php
 
 return [
-    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*', 'scholarships/*'],
+    'paths' => ['api/*','sanctum/csrf-cookie','auth/*','stripe/webhook', 'courses/*', 'scholarships/*', 'materials/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
+        'http://localhost:3000',
         'https://learnexity.org',
         'https://www.learnexity.org',
         env('FRONTEND_URL', 'http://localhost:3000')

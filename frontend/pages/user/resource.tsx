@@ -721,23 +721,22 @@ export default function ResourcesPage() {
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
-            onPreviewFile={async (itemId, title) => {
-              const lowerTitle = title.toLowerCase();
-              const isOffice =
-                lowerTitle.endsWith('.docx') || lowerTitle.endsWith('.doc') ||
-                lowerTitle.endsWith('.pptx') || lowerTitle.endsWith('.ppt') ||
-                lowerTitle.endsWith('.xlsx') || lowerTitle.endsWith('.xls');
+onPreviewFile={async (itemId, title) => {
+  // Find the item across all sprints to check its type
+  const item = data?.materials
+    .flatMap(s => s.items)
+    .find(i => i.id === itemId);
 
-              if (isOffice) {
-                // Get the direct storage URL — MS viewer fetches it server-side
-                const { url } = await api.courseResources.getPreviewUrl(itemId);
-                return url;
-              }
+  if (item?.type === 'document') {
+    // Office viewer needs a real publicly accessible URL — never a blob
+    const { url } = await api.courseResources.getPreviewUrl(itemId);
+    return url;
+  }
 
-              // PDFs: blob URL works fine in iframes
-              const blob = await api.courseResources.downloadMaterial(itemId);
-              return window.URL.createObjectURL(blob);
-            }}
+  // PDFs: stream as blob
+  const blob = await api.courseResources.previewMaterial(itemId);
+  return window.URL.createObjectURL(blob);
+}}
           />
         )}
       </div>

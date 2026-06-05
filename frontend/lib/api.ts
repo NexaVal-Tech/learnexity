@@ -254,9 +254,16 @@ export const api = {
       return response.data;
     },
 
-    getPreviewUrl: async (itemId: number): Promise<{ url: string; type: string; title: string }> => {
-      const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
-      return response.data;
+    getPreviewUrl: async (itemId: number) => {
+        const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
+        return response.data;
+    },
+
+    previewMaterial: async (itemId: number): Promise<Blob> => {
+        const response = await apiClient.get(`/api/materials/${itemId}/preview`, {
+            responseType: 'blob',
+        });
+        return response.data;
     },
 
     downloadMaterial: async (itemId: number) => {

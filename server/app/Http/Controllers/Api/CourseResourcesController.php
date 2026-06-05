@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\User;
 use App\Models\CourseMaterial;
 use App\Models\MaterialItem;
 use App\Models\SprintProgress;
@@ -153,7 +154,7 @@ class CourseResourcesController extends Controller
                     return [
                         'rank' => $participant->rank,
                         'user_id' => $participant->user_id,
-                        'user_name' => $participant->user->name,
+                        'user_name' => $participant->user?->name ?? 'Unknown',
                         'sprint1_score' => $participant->sprint1_score,
                         'sprint2_score' => $participant->sprint2_score,
                         'sprint3_score' => $participant->sprint3_score,
@@ -187,6 +188,65 @@ class CourseResourcesController extends Controller
             'course_average' => round($courseAverage, 2),
         ]);
     }
+
+    /**
+     * Stream a file inline (for in-modal preview, no download)
+     */
+public function previewMaterial(Request $request, int $itemId): mixed
+{
+    $materialItem = MaterialItem::find($itemId);
+
+    if (!$materialItem) {
+        return response()->json(['error' => 'Material not found'], 404);
+    }
+
+    // Item exists but has no file stored — not an error worth logging
+    if (!$materialItem->file_path) {
+        return response()->json([
+            'error'   => 'No file uploaded for this material',
+            'title'   => $materialItem->title,
+            'type'    => $materialItem->type,
+            'has_url' => !empty($materialItem->file_url),
+        ], 422); // 422 = item exists but file is missing, distinct from 404
+    }
+
+    if (!Storage::disk('public')->exists($materialItem->file_path)) {
+        Log::warning('previewMaterial: file path recorded but file missing from disk', [
+            'item_id'   => $itemId,
+            'file_path' => $materialItem->file_path,
+        ]);
+        return response()->json([
+            'error'     => 'File was registered but is missing from storage',
+            'file_path' => $materialItem->file_path,
+        ], 422);
+    }
+
+    $fullPath  = Storage::disk('public')->path($materialItem->file_path);
+    $extension = strtolower(pathinfo($materialItem->file_path, PATHINFO_EXTENSION));
+    $filename  = $materialItem->title;
+
+    if (!str_ends_with(strtolower($filename), '.' . $extension)) {
+        $filename .= '.' . $extension;
+    }
+
+    $mimeMap = [
+        'pdf'  => 'application/pdf',
+        'doc'  => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'ppt'  => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'xls'  => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+
+    $mimeType = $mimeMap[$extension] 
+        ?? Storage::disk('public')->mimeType($materialItem->file_path);
+
+    return response()->file($fullPath, [
+        'Content-Type'        => $mimeType,
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+    ]);
+}
 
     /**
      * Mark material item as completed
@@ -235,7 +295,7 @@ class CourseResourcesController extends Controller
             return;
         }
  
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
         if (!$user) return;
  
         $totalSprints     = CourseMaterial::where('course_id', $courseId)->count();

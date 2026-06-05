@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, ChevronDown, ChevronUp, Users, FileText, Edit, Trash, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { createPortal } from 'react-dom';
 
 interface Course {
   id: number;
@@ -26,6 +27,7 @@ const CoursesTable: React.FC<CoursesTableProps> = ({filters,  onEditCourse,}) =>
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,7 +52,18 @@ const CoursesTable: React.FC<CoursesTableProps> = ({filters,  onEditCourse,}) =>
 
   const toggleDropdown = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveDropdown(activeDropdown === id ? null : id);
+    if (activeDropdown === id) {
+      setActiveDropdown(null);
+      setDropdownPos(null);
+    } else {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const rect = btn.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 4,
+        right: window.innerWidth - rect.right,
+      });
+      setActiveDropdown(id);
+    }
   };
 
   const handleDeleteCourse = async (courseId: string) => {
@@ -77,42 +90,48 @@ const CoursesTable: React.FC<CoursesTableProps> = ({filters,  onEditCourse,}) =>
     };
   }, []);
 
-  const ActionDropdown = ({ course }: { course: Course }) => (
-    <div 
-      ref={dropdownRef}
-      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <Link 
-        href={`/admin/courses/${course.course_id}`} 
-        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+  const ActionDropdown = ({ course }: { course: Course }) => {
+    if (!dropdownPos) return null;
+    return createPortal(
+      <div
+        ref={dropdownRef}
+        style={{ position: 'fixed', top: dropdownPos.top, right: dropdownPos.right }}
+        className="w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[200]"
+        onClick={(e) => e.stopPropagation()}
       >
-        <FileText size={16} className="text-gray-500" />
-        Manage Content
-      </Link>
-      <button onClick={() => {onEditCourse(course); setActiveDropdown(null);}}
-        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
-      >
-        <Edit size={16} className="text-gray-500" />
-        Edit Course
-      </button>
-      <Link 
-        href={`/admin/courses/${course.course_id}?tab=students`}
-        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
-      >
-        <Users size={16} className="text-gray-500" />
-        View Students
-      </Link>
-      <button 
-        onClick={() => handleDeleteCourse(course.course_id)}
-        className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5"
-      >
-        <Trash size={16} />
-        Delete Course
-      </button>
-    </div>
-  );
-
+        <Link
+          href={`/admin/courses/${course.course_id}`}
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+        >
+          <FileText size={16} className="text-gray-500" />
+          Manage Content
+        </Link>
+        <button
+          onClick={() => { onEditCourse(course); setActiveDropdown(null); setDropdownPos(null); }}
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+        >
+          <Edit size={16} className="text-gray-500" />
+          Edit Course
+        </button>
+        <Link
+          href={`/admin/courses/${course.course_id}?tab=students`}
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+        >
+          <Users size={16} className="text-gray-500" />
+          View Students
+        </Link>
+        <button
+          onClick={() => { handleDeleteCourse(course.course_id); setDropdownPos(null); }}
+          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5"
+        >
+          <Trash size={16} />
+          Delete Course
+        </button>
+      </div>,
+      document.body
+    );
+  };
+  
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-8 flex items-center justify-center min-h-[400px]">

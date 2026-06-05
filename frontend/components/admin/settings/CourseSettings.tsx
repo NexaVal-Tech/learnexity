@@ -109,7 +109,8 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         const num = parseFloat(cleanValue);
         if (!isNaN(num) && num > 100) return;
       }
-      setSettings({ ...settings, [field]: cleanValue });
+      // ✅ Use functional update to avoid stale closure
+      setSettings(prev => ({ ...prev, [field]: cleanValue }));
     }
   };
 
