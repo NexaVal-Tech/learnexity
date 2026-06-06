@@ -39,9 +39,9 @@ class AdminCourseController extends Controller
             }
         }
 
-        $courses = $query->latest()->paginate($request->per_page ?? 10);
+        $courses = $query->latest()->get();
 
-        $courses->getCollection()->transform(function($course) {
+        $courses->transform(function($course) {
             $enrollments = $course->enrollments;
             $totalEnrollments = $enrollments->count();
             $activeEnrollments = $enrollments->where('payment_status', 'completed')->count();
@@ -59,7 +59,7 @@ class AdminCourseController extends Controller
             return $course;
         });
 
-        return response()->json($courses);
+        return response()->json(['data' => $courses]);
     }
 
     /**

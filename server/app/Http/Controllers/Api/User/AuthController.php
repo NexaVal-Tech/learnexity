@@ -22,6 +22,7 @@ use App\Models\CourseEnrollment;
 use App\Models\SprintProgress;
 use App\Models\CourseMaterial;
 use App\Mail\LoginWelcomeBackMail;
+use App\Mail\AdminNewStudentMail;
 use App\Services\UserPerformanceTracker;
 use Illuminate\Support\Facades\Mail;
 
@@ -126,13 +127,19 @@ class AuthController extends Controller
         // ── END NEW ───────────────────────────────────────────────────────────
 
         // ── Notify admin of new registration ──────────────────────────────────
-        dispatch(function () use ($user, $req) {
+        // In register() — capture the value, not the object
+        $referralCodeValue = $req->referral_code;
+
+        dispatch(function () use ($user, $referralCodeValue) {
             try {
                 $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
-                if (!$adminEmail) return;
+                if (!$adminEmail) {
+                    Log::warning('⚠️ [REGISTER] ADMIN_NOTIFICATION_EMAIL not set');
+                    return;
+                }
 
                 Mail::to($adminEmail)->queue(
-                    new \App\Mail\AdminNewStudentMail($user, $req->referral_code)
+                    new AdminNewStudentMail($user, $referralCodeValue)
                 );
 
                 Log::info('✅ [REGISTER] Admin notification queued', ['user_id' => $user->id]);
@@ -420,12 +427,12 @@ public function redirectToGoogle(Request $request)
             Log::info('✅ [GOOGLE] Existing user logged in', ['user_id' => $user->id]);
         } else {
             $user = User::create([
-                'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'User',
-                'email' => $googleUser->getEmail(),
-                'google_id' => $googleUser->getId(),
-                'password' => null,
+                'name'              => $googleUser->getName() ?? $googleUser->getNickname() ?? 'User',
+                'email'             => $googleUser->getEmail(),
+                'google_id'         => $googleUser->getId(),
+                'password'          => null,
                 'email_verified_at' => now(),
-                'referred_by_code' => $referralCode,
+                'referred_by_code'  => $referralCode,
             ]);
 
             Log::info('✅ [GOOGLE] New user created', ['user_id' => $user->id]);
@@ -435,6 +442,27 @@ public function redirectToGoogle(Request $request)
                 session()->forget('pending_referral_code');
                 Log::info('🎉 [GOOGLE] Referral processed and session cleared');
             }
+
+            // ── Notify admin of new Google signup ─────────────────────────────
+            $capturedReferralCode = $referralCode;
+            dispatch(function () use ($user, $capturedReferralCode) {
+                try {
+                    $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                    if (!$adminEmail) {
+                        Log::warning('⚠️ [GOOGLE] ADMIN_NOTIFICATION_EMAIL not set');
+                        return;
+                    }
+
+                    Mail::to($adminEmail)->queue(
+                        new AdminNewStudentMail($user, $capturedReferralCode)
+                    );
+
+                    Log::info('✅ [GOOGLE] Admin notification queued', ['user_id' => $user->id]);
+                } catch (\Exception $e) {
+                    Log::error('❌ [GOOGLE] Admin notification failed', ['error' => $e->getMessage()]);
+                }
+            })->afterResponse();
+            // ── END admin notify ───────────────────────────────────────────────
         }
 
         // 4️⃣ Generate JWT token

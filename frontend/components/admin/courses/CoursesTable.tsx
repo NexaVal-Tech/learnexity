@@ -41,10 +41,12 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await api.admin.courses.getAll(filters);
-      setCourses(response.data);
+      // Pass empty object or undefined — make sure backend handles no filters
+      const response = await api.admin.courses.getAll(filters ?? {});
+      setCourses(response.data ?? []);  // ✅ guard against undefined
     } catch (error) {
-      // silent
+      console.error('Failed to fetch courses:', error);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -62,8 +64,14 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
     } else {
       const btn = e.currentTarget as HTMLButtonElement;
       const rect = btn.getBoundingClientRect();
+      const dropdownHeight = 220; // approximate height of dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+
       setDropdownPos({
-        top: rect.bottom + window.scrollY + 4,
+        // ✅ flip up if not enough space below
+        top: spaceBelow < dropdownHeight
+          ? rect.top - dropdownHeight          // open upward
+          : rect.bottom + 4,                   // open downward
         right: window.innerWidth - rect.right,
       });
       setActiveDropdown(id);
