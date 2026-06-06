@@ -53,6 +53,7 @@ class AdminCourseController extends Controller
                 'completion_rate'   => $totalEnrollments > 0 ? round(($activeEnrollments / $totalEnrollments) * 100) : 0,
                 'sprint_count'      => $sprintCount,
                 'week_count'        => $sprintCount,
+                'is_active'         => (bool) $course->is_active, 
             ];
 
             return $course;
@@ -185,6 +186,7 @@ class AdminCourseController extends Controller
                 'level'                      => $course->level,
                 'is_freemium'                => $course->is_freemium,
                 'is_premium'                 => $course->is_premium,
+                'is_active'                  => (bool) $course->is_active,
                 'hero_image'                 => $course->hero_image_url,
                 'secondary_image'            => $course->secondary_image_url,
                 'instructor'                 => 'Sarah Chen',
@@ -223,6 +225,21 @@ class AdminCourseController extends Controller
                     ['name' => '76-100%', 'value' => 68, 'color' => '#10B981'],
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * Toggle course active/inactive status
+     */
+    public function toggleStatus(string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        
+        $course->update(['is_active' => !$course->is_active]);
+
+        return response()->json([
+            'message'   => $course->is_active ? 'Course is now active' : 'Course is now inactive',
+            'is_active' => $course->is_active,
         ]);
     }
 

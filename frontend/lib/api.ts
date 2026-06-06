@@ -676,6 +676,10 @@ export const api = {
         return await adminApi.post(`/api/admin/courses/${courseId}/update`, data);
       },
 
+      toggleStatus: async (courseId: string): Promise<{ message: string; is_active: boolean }> => {
+          return await adminApi.patch(`/api/admin/courses/${courseId}/toggle-status`);
+      },
+
       delete: async (courseId: string): Promise<{ message: string }> => {
         return await adminApi.delete(`/api/admin/courses/${courseId}`);
       },

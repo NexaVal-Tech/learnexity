@@ -268,6 +268,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->group(function () {
         Route::post('/{courseId}/update', [AdminCourseController::class, 'update']); 
         Route::delete('/{courseId}',[AdminCourseController::class, 'destroy']);
         Route::put('/{courseId}/pricing',[AdminCourseController::class, 'updatePricingAndSettings']);
+        Route::patch('/{courseId}/toggle-status', [AdminCourseController::class, 'toggleStatus']);
 
         Route::get ('/{courseId}/details',                          [AdminCourseController::class, 'getDetails']);
         Route::post('/{courseId}/details/tools/sync',               [AdminCourseController::class, 'syncTools']);

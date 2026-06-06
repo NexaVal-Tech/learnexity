@@ -481,12 +481,14 @@ export interface AdminCourseListItem {
   id: number;
   course_id: string;
   title: string;
+  is_active: boolean;
   stats: {
     total_enrollments: number;
     active_students: number;
     completion_rate: number;
     sprint_count: number;
     week_count: number;
+    is_active: boolean;
   };
 }
 

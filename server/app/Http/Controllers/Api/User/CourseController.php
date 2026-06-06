@@ -13,9 +13,8 @@ class CourseController extends Controller
         $query = Course::with([
             'tools', 'learnings', 'benefits',
             'careerPaths', 'industries', 'salary'
-        ]);
+        ])->where('is_active', true);
 
-        // ✅ FIX: Clamp limit to max 50, default 10
         if ($request->has('limit')) {
             $limit = min(abs((int) $request->input('limit', 10)), 50);
             $query->limit($limit);
@@ -27,6 +26,7 @@ class CourseController extends Controller
     public function show(string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)
+            ->where('is_active', true)
             ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
             ->first();
 
@@ -40,6 +40,7 @@ class CourseController extends Controller
     public function featured(): JsonResponse
     {
         $courses = Course::where('is_premium', true)
+            ->where('is_active', true)
             ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
             ->limit(4)
             ->get();
@@ -50,6 +51,7 @@ class CourseController extends Controller
     public function freemium(): JsonResponse
     {
         $courses = Course::where('is_freemium', true)
+            ->where('is_active', true)
             ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
             ->get();
 
@@ -58,17 +60,19 @@ class CourseController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        // ✅ FIX: Validate and limit search term length
         $request->validate([
             'q' => 'required|string|min:1|max:100',
         ]);
 
         $searchTerm = $request->input('q');
 
-        $courses = Course::where('title', 'LIKE', "%{$searchTerm}%")
-            ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+        $courses = Course::where('is_active', true)
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('description', 'LIKE', "%{$searchTerm}%");
+            })
             ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
-            ->limit(50) // ✅ FIX: Always cap search results
+            ->limit(50)
             ->get();
 
         return response()->json($courses);
