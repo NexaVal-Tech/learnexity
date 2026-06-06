@@ -150,22 +150,29 @@ export default function PaymentPage() {
   // ── Currency / gateway detection ──────────────────────────────────────────
   useEffect(() => {
     const detectCurrency = async () => {
-      setCurrency('USD');
-      setPaymentGateway('stripe');
-      setCurrencyDetected(true);
+      // ❌ Remove these two lines — don't pre-set before detection
+      // setCurrency('USD');
+      // setPaymentGateway('stripe');
+      // setCurrencyDetected(true);  <-- especially not this
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/detect-currency`
         );
         const data = await response.json();
         setCurrency(data.currency);
         setDetectedLocation(data.country);
         setPaymentGateway(data.currency === 'NGN' ? 'paystack' : 'stripe');
       } catch {
+        // Detection failed — fall back to USD
+        setCurrency('USD');
+        setPaymentGateway('stripe');
         setDetectedLocation('Unknown');
+      } finally {
+        setCurrencyDetected(true); // ✅ Only set true AFTER detection completes
       }
     };
+
     detectCurrency();
   }, []);
 
