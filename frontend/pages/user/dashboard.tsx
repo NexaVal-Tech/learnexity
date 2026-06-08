@@ -365,7 +365,7 @@ export default function UserDashboardPage() {
                         {isEnrolled && (
                           <div className="mt-3 mb-1">
                             <span className="inline-block w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl py-2 transition-colors">
-                              Continue Learning →
+                              Continue Learning
                             </span>
                           </div>
                         )}
