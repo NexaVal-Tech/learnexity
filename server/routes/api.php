@@ -190,6 +190,7 @@ Route::prefix('courses')->group(function () {
     Route::get('/featured',  [CourseController::class, 'featured']);
     Route::get('/freemium',  [CourseController::class, 'freemium']);
     Route::get('/search',    [CourseController::class, 'search']);
+    Route::get('/by-track',   [CourseController::class, 'byTrack']);
     Route::get('/{courseId}',[CourseController::class, 'show']);
 });
 

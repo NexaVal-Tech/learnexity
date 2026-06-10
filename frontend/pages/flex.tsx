@@ -1,4 +1,4 @@
-// pages/courses/courses.tsx
+// pages/flex.tsx
 
 import Head from "next/head";
 import { useState, useEffect, useCallback } from "react";
@@ -38,7 +38,7 @@ function SkeletonCard() {
   );
 }
 
-export default function CoursesPage() {
+export default function FlexPage() {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -48,22 +48,19 @@ export default function CoursesPage() {
   const [purchasingCourseId, setPurchasingCourseId] = useState<string | null>(null);
   const [purchaseErrors, setPurchaseErrors] = useState<Record<string, string>>({});
 
-  // Fetch only courses that offer group mentorship or one-on-one
-  const fetchMentoredCourses = useCallback(async () => {
+  const fetchSelfPacedCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_URL}/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one`,
-        { headers: { Accept: "application/json" } }
-      );
+      const res = await fetch(`${API_URL}/api/courses/by-track?track[]=self_paced`, {
+        headers: { Accept: "application/json" },
+      });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data: Course[] = await res.json();
       setCourses(data);
     } catch (err: any) {
       setError(
-        err?.message ||
-          "Failed to load courses. Please check your connection and try again."
+        err?.message || "Failed to load courses. Please check your connection and try again."
       );
     } finally {
       setLoading(false);
@@ -71,20 +68,18 @@ export default function CoursesPage() {
   }, []);
 
   useEffect(() => {
-    fetchMentoredCourses();
-  }, [fetchMentoredCourses]);
+    fetchSelfPacedCourses();
+  }, [fetchSelfPacedCourses]);
 
   const handlePurchase = useCallback(
     async (course: Course, e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Clear any prior error for this card
       setPurchaseErrors((prev) => ({ ...prev, [course.course_id]: "" }));
 
-      // Redirect to login if not authenticated, preserving destination
       if (!user) {
-        router.push(`/user/auth/login?redirect=/courses/courses`);
+        router.push(`/user/auth/login?redirect=/flex`);
         return;
       }
 
@@ -94,8 +89,7 @@ export default function CoursesPage() {
         const response = await api.post(
           `/api/courses/${course.course_id}/enroll`,
           {
-            // Default to group_mentorship since that's the primary track on this page
-            learning_track: "group_mentorship",
+            learning_track: "self_paced",
             payment_type: "onetime",
           }
         );
@@ -114,7 +108,6 @@ export default function CoursesPage() {
           err?.message ||
           "Something went wrong. Please try again.";
 
-        // If already enrolled with a completed payment, send them to their courses
         if (
           message.toLowerCase().includes("already enrolled") &&
           message.toLowerCase().includes("paid")
@@ -123,7 +116,6 @@ export default function CoursesPage() {
           return;
         }
 
-        // If pending enrollment exists the API still returns enrollment_id — handle that
         const pendingId = err?.response?.data?.enrollment_id;
         if (pendingId) {
           router.push(`/user/payment/${pendingId}`);
@@ -143,12 +135,12 @@ export default function CoursesPage() {
   return (
     <>
       <Head>
-        <title>Courses - Expert-led mentorship programmes | Learnexity</title>
+        <title>Flexible Courses - Learn at your own pace | Learnexity</title>
         <meta
           name="description"
-          content="Group mentorship and one-on-one coaching programmes designed to launch you into high-paying tech careers."
+          content="Self-paced programmes designed to fit your schedule. Learn tech skills on your own terms."
         />
-        <link rel="canonical" href="https://learnexity.org/courses/courses" />
+        <link rel="canonical" href="https://learnexity.org/flex" />
       </Head>
 
       <AppLayout>
@@ -174,6 +166,7 @@ export default function CoursesPage() {
             justify-content: center;
             gap: 0.5rem;
             width: fit-content;
+
             background-color: #4A3AFF;
             color: white;
             font-weight: 600;
@@ -246,27 +239,20 @@ export default function CoursesPage() {
             align-items: center;
             gap: 0.625rem;
           }
-          /* Track badges shown on each card */
-          .track-badge {
+          /* Flex badge pill */
+          .flex-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.7rem;
+            gap: 0.375rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 999px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.07em;
-            text-transform: uppercase;
-          }
-          .track-badge-group {
-            background: rgba(74,58,255,0.12);
-            border: 1px solid rgba(74,58,255,0.3);
+            background: ${BRAND}18;
+            border: 1px solid ${BRAND}44;
             color: #a89fff;
-          }
-          .track-badge-oneone {
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.3);
-            color: #6ee7b7;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
           }
         `}</style>
 
@@ -276,9 +262,10 @@ export default function CoursesPage() {
           <section className="relative">
 
             <div className="relative w-full" style={{ height: "clamp(380px, 58vw, 640px)" }}>
+              {/* Re-use the courses hero image or swap for a flex-specific one */}
               <Image
                 src="/images/coures.jpg"
-                alt="Courses hero"
+                alt="Flexible courses hero"
                 fill
                 className="object-cover object-center"
                 priority
@@ -294,6 +281,14 @@ export default function CoursesPage() {
 
               <div className="absolute top-28 md:top-38 left-0 right-0 px-6 md:px-10 lg:px-16">
                 <div className="max-w-screen-xl mx-auto">
+                  {/* Flex badge */}
+                  <div className="flex-badge mb-4">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    Self-Paced
+                  </div>
+
                   <h1
                     className="font-bold text-white leading-tight"
                     style={{
@@ -302,7 +297,7 @@ export default function CoursesPage() {
                       textShadow: "0 2px 24px rgba(0,0,0,0.7)",
                     }}
                   >
-                    Expert-led programmes, group mentorship &amp; one-on-one coaching to launch you into high-paying tech careers.
+                    Flexible programmes, learn at your own pace, on your own schedule.
                   </h1>
                 </div>
               </div>
@@ -318,7 +313,7 @@ export default function CoursesPage() {
                   className="font-semibold mb-6"
                   style={{ color: BRAND, fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)" }}
                 >
-                  Mentorship Programmes
+                  Self-Paced Programmes
                 </p>
 
                 {/* ── Error state ── */}
@@ -326,7 +321,7 @@ export default function CoursesPage() {
                   <div className="text-center py-20">
                     <p className="text-red-400 text-lg mb-4">{error}</p>
                     <button
-                      onClick={fetchMentoredCourses}
+                      onClick={fetchSelfPacedCourses}
                       className="purchase-btn"
                       style={{ maxWidth: "140px", margin: "0 auto" }}
                     >
@@ -345,13 +340,13 @@ export default function CoursesPage() {
                 {/* ── Empty state ── */}
                 {!loading && !error && courses.length === 0 && (
                   <div className="text-center text-gray-400 py-20">
-                    <p className="text-xl mb-2">No mentorship courses available at the moment.</p>
+                    <p className="text-xl mb-2">No flexible courses available yet.</p>
                     <p className="text-sm text-gray-500">
-                      Looking to learn at your own pace? Check our{" "}
-                      <Link href="/flex" className="underline" style={{ color: BRAND }}>
-                        flexible programmes
-                      </Link>
-                      .
+                      Check our{" "}
+                      <Link href="/courses/courses" className="underline" style={{ color: BRAND }}>
+                        mentorship programmes
+                      </Link>{" "}
+                      in the meantime.
                     </p>
                   </div>
                 )}
@@ -377,23 +372,6 @@ export default function CoursesPage() {
                               transition: "all 0.3s ease",
                             }}
                           >
-                            {/* Icon */}
-                            <div className="course-icon-wrap">
-                              <svg
-                                className="w-6 h-6"
-                                style={{ color: BRAND }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                            </div>
 
                             {/* Title */}
                             <h3 className="text-2xl font-bold text-white mb-3">

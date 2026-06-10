@@ -3,8 +3,9 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { api } from "@/lib/api";
 import type { Course } from "@/lib/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ─── Animated accordion (mobile smooth expand/collapse) ───────────────────────
 
@@ -84,15 +85,14 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
-
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DropdownItem {
   href: string;
   label: string;
   description: string;
-  hasSubMenu?: boolean;
+  // hasSubMenu now carries which sub-panel to show
+  subMenu?: "deeptech" | "flex";
 }
 
 interface NavGroup {
@@ -118,14 +118,15 @@ const NAV: NavEntry[] = [
     items: [
       {
         href: "/courses/courses",
-        label: "In-demand Tech Courses",
-        description: "Software engineering tracks",
-        hasSubMenu: true,
+        label: "Deep Tech Courses",
+        description: "Group mentorship & one-on-one coaching",
+        subMenu: "deeptech",
       },
       {
-        href: "/kids",
-        label: "Kids Program",
-        description: "Youth learning programs",
+        href: "/flex",
+        label: "Flexible Courses",
+        description: "Self-paced programmes",
+        subMenu: "flex",
       },
     ],
   },
@@ -135,7 +136,6 @@ const NAV: NavEntry[] = [
     items: [
       { href: "/about", label: "About Us", description: "Our story and mission" },
       { href: "/contact", label: "Contact Us", description: "Get in touch" },
-      // { href: "/our-team", label: "Meet Our Team", description: "Get in touch" },
     ],
   },
   { type: "link", href: "/community", label: "Community" },
@@ -143,15 +143,20 @@ const NAV: NavEntry[] = [
 ];
 
 // ─── Courses Sub-Panel (Desktop) ──────────────────────────────────────────────
+// Shows the list of courses for a given sub-menu type
 
 function CoursesSubPanel({
   isOpen,
   courses,
   isLoading,
+  browseHref,
+  browseLabel,
 }: {
   isOpen: boolean;
   courses: Course[];
   isLoading: boolean;
+  browseHref: string;
+  browseLabel: string;
 }) {
   return (
     <div
@@ -168,11 +173,11 @@ function CoursesSubPanel({
       {/* Header */}
       <div className="px-3 pt-3 pb-2 border-b border-gray-50">
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-          All Courses
+          {browseLabel}
         </p>
       </div>
 
-      {/* Scrollable list — no scrollbar */}
+      {/* Scrollable list */}
       <div
         className="overflow-y-auto"
         style={{
@@ -220,10 +225,10 @@ function CoursesSubPanel({
       {/* Footer CTA */}
       <div className="px-2 pb-2 pt-1.5 border-t border-gray-50">
         <Link
-          href="/courses/courses"
+          href={browseHref}
           className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold text-[#6C63FF] bg-indigo-50 hover:bg-indigo-100 transition-colors duration-150"
         >
-          Browse all courses
+          Browse all
           <ChevronRight className="text-[#6C63FF]" />
         </Link>
       </div>
@@ -237,14 +242,18 @@ function DropdownMenu({
   group,
   isOpen,
   onClose,
-  courses,
-  coursesLoading,
+  deepTechCourses,
+  deepTechLoading,
+  flexCourses,
+  flexLoading,
 }: {
   group: NavGroup;
   isOpen: boolean;
   onClose: () => void;
-  courses: Course[];
-  coursesLoading: boolean;
+  deepTechCourses: Course[];
+  deepTechLoading: boolean;
+  flexCourses: Course[];
+  flexLoading: boolean;
 }) {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
 
@@ -269,12 +278,20 @@ function DropdownMenu({
 
       <div className="p-1.5">
         {group.items.map((item, i) => {
-          const isCourses = item.hasSubMenu;
+          const hasSubMenu = !!item.subMenu;
           const isSubOpen = openSubMenu === item.label;
+
+          // Decide which courses to pass to the sub-panel
+          const subCourses =
+            item.subMenu === "deeptech" ? deepTechCourses : flexCourses;
+          const subLoading =
+            item.subMenu === "deeptech" ? deepTechLoading : flexLoading;
+          const browseLabel =
+            item.subMenu === "deeptech" ? "Mentorship Courses" : "Self-Paced Courses";
 
           return (
             <div key={item.href} className="relative">
-              {isCourses ? (
+              {hasSubMenu ? (
                 <button
                   onClick={() => setOpenSubMenu(isSubOpen ? null : item.label)}
                   style={{ transitionDelay: isOpen ? `${i * 40}ms` : "0ms" }}
@@ -286,8 +303,9 @@ function DropdownMenu({
                   `}
                 >
                   <div className="flex flex-col gap-0.5 text-left">
-                    <span className={`text-[13px] font-semibold ${isSubOpen ? "text-[#6C63FF]" : "text-gray-800"}`}>{item.label}</span>
-                    {/* <span className="text-[11px] text-gray-400 leading-none">{item.description}</span> */}
+                    <span className={`text-[13px] font-semibold ${isSubOpen ? "text-[#6C63FF]" : "text-gray-800"}`}>
+                      {item.label}
+                    </span>
                   </div>
                   <ChevronRight
                     className={`flex-shrink-0 transition-all duration-200 ${isSubOpen ? "text-[#6C63FF] rotate-90" : "text-gray-300 group-hover/item:text-gray-500"}`}
@@ -306,18 +324,19 @@ function DropdownMenu({
                 >
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[13px] font-semibold text-gray-800">{item.label}</span>
-                    {/* <span className="text-[11px] text-gray-400 leading-none">{item.description}</span> */}
                   </div>
                   <ChevronRight className="flex-shrink-0 text-gray-300 group-hover/item:text-gray-500 transition-colors" />
                 </Link>
               )}
 
-              {/* Courses sub-panel */}
-              {isCourses && (
+              {/* Sub-panel for both deeptech and flex */}
+              {hasSubMenu && (
                 <CoursesSubPanel
                   isOpen={isSubOpen}
-                  courses={courses}
-                  isLoading={coursesLoading}
+                  courses={subCourses}
+                  isLoading={subLoading}
+                  browseHref={item.href}
+                  browseLabel={browseLabel}
                 />
               )}
             </div>
@@ -335,16 +354,18 @@ function MobileCoursesAccordion({
   courses,
   isLoading,
   onLinkClick,
+  browseHref,
 }: {
   isOpen: boolean;
   courses: Course[];
   isLoading: boolean;
   onLinkClick: () => void;
+  browseHref: string;
 }) {
   return (
     <AnimatedAccordion isOpen={isOpen}>
       <div
-        className="overflow-y-auto  mt-1 mb-2 border-indigo-100 flex flex-col gap-0.5"
+        className="overflow-y-auto mt-1 mb-2 border-indigo-100 flex flex-col gap-0.5"
         style={{
           maxHeight: "200px",
           scrollbarWidth: "none",
@@ -381,11 +402,11 @@ function MobileCoursesAccordion({
 
         {/* Browse all link */}
         <Link
-          href="/courses/courses"
+          href={browseHref}
           onClick={onLinkClick}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#6C63FF] hover:bg-indigo-50 transition-colors mt-1"
         >
-          Browse all courses
+          Browse all
         </Link>
       </div>
     </AnimatedAccordion>
@@ -398,23 +419,49 @@ export default function Navbar() {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
-  const [expandedMobileCourses, setExpandedMobileCourses] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [coursesLoading, setCoursesLoading] = useState(false);
+  // Track which mobile sub-accordion is open: "deeptech" | "flex" | null
+  const [expandedMobileSub, setExpandedMobileSub] = useState<string | null>(null);
+
+  // Separate state for the two course lists
+  const [deepTechCourses, setDeepTechCourses] = useState<Course[]>([]);
+  const [deepTechLoading, setDeepTechLoading] = useState(false);
+  const [flexCourses, setFlexCourses] = useState<Course[]>([]);
+  const [flexLoading, setFlexLoading] = useState(false);
+
   const [scrolled, setScrolled] = useState(false);
 
   const pathname = usePathname();
   const { user } = useAuth();
   const navRef = useRef<HTMLDivElement>(null);
 
-  // Fetch courses once
+  // Fetch deep tech (group_mentorship + one_on_one) courses
   useEffect(() => {
-    setCoursesLoading(true);
-    api.courses
-      .getAll()
-      .then((data) => setCourses(data))
-      .catch(() => setCourses([]))
-      .finally(() => setCoursesLoading(false));
+    setDeepTechLoading(true);
+    fetch(
+      `${API_URL}/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one`,
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        setDeepTechCourses(Array.isArray(data) ? data : data?.data ?? []);
+      })
+      .catch(() => setDeepTechCourses([]))
+      .finally(() => setDeepTechLoading(false));
+  }, []);
+
+  // Fetch self-paced (flex) courses
+  useEffect(() => {
+    setFlexLoading(true);
+    fetch(
+      `${API_URL}/api/courses/by-track?track[]=self_paced`,
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        setFlexCourses(Array.isArray(data) ? data : data?.data ?? []);
+      })
+      .catch(() => setFlexCourses([]))
+      .finally(() => setFlexLoading(false));
   }, []);
 
   // Navbar shadow on scroll
@@ -440,7 +487,7 @@ export default function Navbar() {
     setIsMobileOpen(false);
     setOpenGroup(null);
     setExpandedMobile(null);
-    setExpandedMobileCourses(false);
+    setExpandedMobileSub(null);
   }, [pathname]);
 
   const toggleGroup = (label: string) => {
@@ -505,8 +552,10 @@ export default function Navbar() {
                       group={entry}
                       isOpen={isThisOpen}
                       onClose={() => setOpenGroup(null)}
-                      courses={courses}
-                      coursesLoading={coursesLoading}
+                      deepTechCourses={deepTechCourses}
+                      deepTechLoading={deepTechLoading}
+                      flexCourses={flexCourses}
+                      flexLoading={flexLoading}
                     />
                   </div>
                 );
@@ -553,25 +602,18 @@ export default function Navbar() {
                 Dashboard
               </Link>
             )}
-              {!user ? (
-                <Link
-                  href="/user/auth/login"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
-                >
-                  <UserIcon />
-                  Log in
-                </Link>
-              ) : (
-                // <Link
-                //   href="/user/profile"
-                //   aria-label="Account"
-                //   className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-[#6C63FF] hover:from-indigo-200 hover:to-purple-200 transition-all duration-150 shadow-sm"
-                // >
-                //   <UserIcon />
-                // </Link>
-                <></>
-              )}
-              
+            {!user ? (
+              <Link
+                href="/user/auth/login"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+              >
+                <UserIcon />
+                Log in
+              </Link>
+            ) : (
+              <></>
+            )}
+
             <Link
               href="https://calendly.com/nexavaltech/30min"
               className="
@@ -663,41 +705,52 @@ export default function Navbar() {
                   <AnimatedAccordion isOpen={isExpanded}>
                     <div className="ml-1 mt-1 mb-2 pl-1 border-gray-100 flex flex-col gap-0.5">
                       {entry.items.map((item, i) => {
-                        const isCourseItem = item.hasSubMenu;
+                        const hasSubMenu = !!item.subMenu;
+                        const subKey = item.subMenu ?? item.label;
+                        const isSubExpanded = expandedMobileSub === subKey;
 
-                        if (isCourseItem) {
+                        // Pick the right courses for this sub-menu
+                        const subCourses =
+                          item.subMenu === "deeptech" ? deepTechCourses : flexCourses;
+                        const subLoading =
+                          item.subMenu === "deeptech" ? deepTechLoading : flexLoading;
+
+                        if (hasSubMenu) {
                           return (
                             <div key={item.href}>
                               <button
                                 onClick={() =>
-                                  setExpandedMobileCourses((v) => !v)
+                                  setExpandedMobileSub(
+                                    isSubExpanded ? null : subKey
+                                  )
                                 }
                                 style={{ transitionDelay: isExpanded ? `${i * 50}ms` : "0ms" }}
                                 className={`
                                   w-full flex items-center justify-between px-3 py-3 rounded-xl text-[13px]
                                   transition-all duration-200
                                   ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
-                                  ${expandedMobileCourses
+                                  ${isSubExpanded
                                     ? "text-[#6C63FF] bg-indigo-50 font-semibold"
                                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
                                   }
                                 `}
                               >
                                 <div className="flex flex-col gap-0.5 text-left">
-                                  <p className="font-semibold text-[13px] leading-none mb-0.5">{item.label}</p>
-                                  {/* <p className="text-[11px] text-gray-400">{item.description}</p> */}
+                                  <p className="font-semibold text-[13px] leading-none mb-0.5">
+                                    {item.label}
+                                  </p>
                                 </div>
                                 <ChevronDown
-                                  className={`transition-transform duration-300 flex-shrink-0 ${expandedMobileCourses ? "rotate-180 text-[#6C63FF]" : "text-gray-300"}`}
+                                  className={`transition-transform duration-300 flex-shrink-0 ${isSubExpanded ? "rotate-180 text-[#6C63FF]" : "text-gray-300"}`}
                                 />
                               </button>
 
-                              {/* Mobile Courses sub-list */}
                               <MobileCoursesAccordion
-                                isOpen={expandedMobileCourses}
-                                courses={courses}
-                                isLoading={coursesLoading}
+                                isOpen={isSubExpanded}
+                                courses={subCourses}
+                                isLoading={subLoading}
                                 onLinkClick={() => setIsMobileOpen(false)}
+                                browseHref={item.href}
                               />
                             </div>
                           );
@@ -721,7 +774,6 @@ export default function Navbar() {
                           >
                             <div>
                               <p className="font-semibold text-[13px] leading-none mb-0.5">{item.label}</p>
-                              {/* <p className="text-[11px] text-gray-400">{item.description}</p> */}
                             </div>
                             <ChevronRight className="flex-shrink-0 text-gray-300" />
                           </Link>
@@ -771,24 +823,17 @@ export default function Navbar() {
         {/* Mobile bottom actions */}
         <div className="px-4 pb-6 flex flex-col gap-2.5">
           <div className="border-t border-gray-100 pt-4">
-              {!user ? (
-                <Link
-                  href="/user/auth/login"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
-                >
-                  <UserIcon />
-                  Log in
-                </Link>
-              ) : (
-                // <Link
-                //   href="/user/profile"
-                //   aria-label="Account"
-                //   className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-[#6C63FF] hover:from-indigo-200 hover:to-purple-200 transition-all duration-150 shadow-sm"
-                // >
-                //   <UserIcon />
-                // </Link>
-                <></>
-              )}
+            {!user ? (
+              <Link
+                href="/user/auth/login"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+              >
+                <UserIcon />
+                Log in
+              </Link>
+            ) : (
+              <></>
+            )}
           </div>
           <Link
             href="https://calendly.com/nexavaltech/30min"

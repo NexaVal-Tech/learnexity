@@ -37,6 +37,40 @@ class CourseController extends Controller
         return response()->json($course);
     }
 
+    /**
+     * Get courses filtered by learning track.
+     * Query param: ?track=self_paced | group_mentorship | one_on_one
+     * Multiple tracks: ?track[]=self_paced&track[]=group_mentorship
+     */
+public function byTrack(Request $request): JsonResponse
+{
+    $request->validate([
+        'track'   => 'nullable|array',
+        'track.*' => 'string|in:self_paced,group_mentorship,one_on_one',
+    ]);
+
+    $tracks = $request->input('track', []);
+
+    $query = Course::with([
+        'tools', 'learnings', 'benefits',
+        'careerPaths', 'industries', 'salary'
+    ])->where('is_active', true);
+
+    if (!empty($tracks)) {
+        $query->where(function ($q) use ($tracks) {
+            foreach ($tracks as $track) {
+                match ($track) {
+                    'self_paced'       => $q->orWhere('offers_self_paced', true),
+                    'group_mentorship' => $q->orWhere('offers_group_mentorship', true),
+                    'one_on_one'       => $q->orWhere('offers_one_on_one', true),
+                };
+            }
+        });
+    }
+
+    return response()->json($query->get());
+}
+
     public function featured(): JsonResponse
     {
         $courses = Course::where('is_premium', true)
