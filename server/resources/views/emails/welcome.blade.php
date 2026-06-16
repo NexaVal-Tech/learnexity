@@ -63,7 +63,7 @@
                                 padding:12px 24px;">
                       <span style="font-size:28px; font-weight:800; color:#ffffff;
                                    letter-spacing:-0.5px;">
-                        Learn<span style="color:#60a5fa;">exity</span>
+                        Learnexity</span>
                       </span>
                     </div>
                   </td>
@@ -71,7 +71,6 @@
                 <tr>
                   <td align="center">
                     <!-- Celebration emoji ring -->
-                    <div style="font-size:52px; margin-bottom:20px; line-height:1;">🎉</div>
 
                     <h1 style="font-size:32px; font-weight:800; color:#ffffff; margin:0 0 12px;
                                 line-height:1.2; letter-spacing:-0.5px;">
@@ -193,7 +192,7 @@
                   <td style="padding: 28px 28px 20px;">
                     <p style="font-size:14px; font-weight:700; color:#1e3a8a;
                                text-transform:uppercase; letter-spacing:0.08em; margin:0 0 20px;">
-                      🚀 &nbsp;Get started in 3 steps
+                       &nbsp;Get started in 3 steps
                     </p>
 
                     <!-- Step 1 -->
@@ -272,24 +271,49 @@
               <!--  PRIMARY CTA BUTTON                        -->
               <!-- ─────────────────────────────────────────── -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                     style="margin-bottom: 40px;">
+                    style="margin-bottom: 40px;">
                 <tr>
                   <td align="center">
+
+                    <!-- Explore Courses -->
                     <a href="{{ $coursesUrl }}"
-                       style="display:inline-block; padding:16px 48px;
+                      style="display:inline-block; padding:16px 48px;
                               background:linear-gradient(135deg,#2563eb,#7c3aed);
                               color:#ffffff; font-size:16px; font-weight:700;
                               border-radius:9999px; text-decoration:none;
                               letter-spacing:0.01em;
                               box-shadow:0 8px 24px rgba(37,99,235,0.35);">
-                      Explore Courses &rarr;
+                      Explore Courses →
                     </a>
+
+                    <!-- Join Community -->
+                    <br>
+                    <a href="{{ $whatsappCommunityUrl }}"
+                      style="display:inline-block;
+                              margin-top:12px;
+                              padding:14px 40px;
+                              background:#111827;
+                              color:#ffffff;
+                              font-size:15px;
+                              font-weight:700;
+                              border-radius:9999px;
+                              text-decoration:none;
+                              letter-spacing:0.01em;
+                              box-shadow:0 8px 20px rgba(17,24,39,0.25);">
+                      Join Our Community →
+                    </a>
+
+                    <!-- Dashboard Link -->
                     <br>
                     <a href="{{ $dashboardUrl }}"
-                       style="display:inline-block; margin-top:12px;
-                              color:#6b7280; font-size:13px; text-decoration:underline;">
+                      style="display:inline-block;
+                              margin-top:12px;
+                              color:#6b7280;
+                              font-size:13px;
+                              text-decoration:underline;">
                       Or go to your dashboard
                     </a>
+
                   </td>
                 </tr>
               </table>

@@ -38,6 +38,29 @@ function SkeletonCard() {
   );
 }
 
+function FlexSkeletonCard() {
+  return (
+    <div
+      className="w-full animate-pulse p-7 flex flex-col"
+      style={{
+        borderRadius: "2rem 0.75rem 2rem 0.75rem",
+        background: "#0f0f0f",
+        border: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <div className="h-6 bg-gray-800 rounded-full w-2/3 mb-3" />
+      <div className="h-3 bg-gray-800 rounded-full w-full mb-2" />
+      <div className="h-3 bg-gray-800 rounded-full w-4/5 mb-5" />
+      <div className="space-y-2 flex-1">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-gray-800 rounded-full h-8" />
+        ))}
+      </div>
+      <div className="mt-5 h-8 bg-gray-800 rounded-full w-28" />
+    </div>
+  );
+}
+
 export default function CoursesPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -48,7 +71,10 @@ export default function CoursesPage() {
   const [purchasingCourseId, setPurchasingCourseId] = useState<string | null>(null);
   const [purchaseErrors, setPurchaseErrors] = useState<Record<string, string>>({});
 
-  // Fetch only courses that offer group mentorship or one-on-one
+  // Flex preview state
+  const [flexCourses, setFlexCourses] = useState<Course[]>([]);
+  const [flexLoading, setFlexLoading] = useState(true);
+
   const fetchMentoredCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -70,19 +96,36 @@ export default function CoursesPage() {
     }
   }, []);
 
+  const fetchFlexPreview = useCallback(async () => {
+    setFlexLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/courses/by-track?track[]=self_paced`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) return;
+      const data: Course[] = await res.json();
+      // Show up to 3 flex courses as a preview
+      setFlexCourses(data.slice(0, 3));
+    } catch {
+      // Silent fail — flex preview is non-critical
+    } finally {
+      setFlexLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMentoredCourses();
-  }, [fetchMentoredCourses]);
+    fetchFlexPreview();
+  }, [fetchMentoredCourses, fetchFlexPreview]);
 
   const handlePurchase = useCallback(
     async (course: Course, e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Clear any prior error for this card
       setPurchaseErrors((prev) => ({ ...prev, [course.course_id]: "" }));
 
-      // Redirect to login if not authenticated, preserving destination
       if (!user) {
         router.push(`/user/auth/login?redirect=/courses/courses`);
         return;
@@ -94,7 +137,6 @@ export default function CoursesPage() {
         const response = await api.post(
           `/api/courses/${course.course_id}/enroll`,
           {
-            // Default to group_mentorship since that's the primary track on this page
             learning_track: "group_mentorship",
             payment_type: "onetime",
           }
@@ -114,7 +156,6 @@ export default function CoursesPage() {
           err?.message ||
           "Something went wrong. Please try again.";
 
-        // If already enrolled with a completed payment, send them to their courses
         if (
           message.toLowerCase().includes("already enrolled") &&
           message.toLowerCase().includes("paid")
@@ -123,7 +164,6 @@ export default function CoursesPage() {
           return;
         }
 
-        // If pending enrollment exists the API still returns enrollment_id — handle that
         const pendingId = err?.response?.data?.enrollment_id;
         if (pendingId) {
           router.push(`/user/payment/${pendingId}`);
@@ -246,7 +286,6 @@ export default function CoursesPage() {
             align-items: center;
             gap: 0.625rem;
           }
-          /* Track badges shown on each card */
           .track-badge {
             display: inline-flex;
             align-items: center;
@@ -267,6 +306,76 @@ export default function CoursesPage() {
             background: rgba(16,185,129,0.1);
             border: 1px solid rgba(16,185,129,0.3);
             color: #6ee7b7;
+          }
+
+          /* ── Flex preview section ── */
+          .flex-preview-section {
+            border-top: 1px solid rgba(255,255,255,0.07);
+            margin-top: 5rem;
+            padding-top: 4rem;
+          }
+          .flex-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            background: ${BRAND}18;
+            border: 1px solid ${BRAND}44;
+            color: #a89fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+          .flex-card {
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(15,15,15,0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem 0.75rem 2rem 0.75rem;
+            transition: all 0.3s ease;
+          }
+          .flex-card:hover {
+            border-color: ${BRAND}44;
+            background: rgba(74,58,255,0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${BRAND}22;
+          }
+          .flex-card:hover .flex-icon-wrap {
+            transform: scale(1.15) rotate(-5deg);
+            background: ${BRAND}33;
+          }
+          .flex-icon-wrap {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: ${BRAND}18;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s;
+          }
+          .flex-view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem 0.75rem 2rem 0.75rem;
+            border: 1.5px solid ${BRAND}66;
+            color: #a89fff;
+            background: ${BRAND}10;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+          }
+          .flex-view-all-btn:hover {
+            background: ${BRAND}22;
+            border-color: ${BRAND};
+            color: #fff;
+            gap: 0.75rem;
+            box-shadow: 0 0 20px ${BRAND}44;
           }
         `}</style>
 
@@ -481,6 +590,138 @@ export default function CoursesPage() {
                     })}
                   </div>
                 )}
+
+                {/* ── FLEX PREVIEW SECTION ────────────────────────────── */}
+                {(flexLoading || flexCourses.length > 0) && (
+                  <div className="flex-preview-section">
+
+                    {/* Section header */}
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+                      <div>
+                        <div className="flex-badge mb-3">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                          </svg>
+                          Self-Paced
+                        </div>
+                        <h2 className="text-white font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
+                          Explore flexible programmes
+                        </h2>
+                        <p className="text-gray-500 text-sm mt-1">
+                          Prefer to learn on your own schedule? Browse our self-paced courses.
+                        </p>
+                      </div>
+
+                      <Link href="/flex" className="flex-view-all-btn flex-shrink-0">
+                        View all
+                        <ArrowRight size={16} strokeWidth={2.5} />
+                      </Link>
+                    </div>
+
+                    {/* Flex skeleton */}
+                    {flexLoading && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {[1, 2, 3].map((i) => <FlexSkeletonCard key={i} />)}
+                      </div>
+                    )}
+
+                    {/* Flex course cards */}
+                    {!flexLoading && flexCourses.length > 0 && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {flexCourses.map((course) => (
+                          <div key={course.id} className="flex">
+                            <Link
+                              href={`/courses/${course.course_id}`}
+                              className="flex-card p-7 flex flex-col h-full w-full"
+                            >
+
+                              {/* Title */}
+                              <h3 className="text-lg font-bold text-white mb-2 leading-snug">
+                                {course.title}
+                              </h3>
+
+                              {/* Description */}
+                              <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+                                {course.description}
+                              </p>
+
+                              {/* Learning points — up to 3 */}
+                              {course.learnings && course.learnings.length > 0 && (
+                                <div className="space-y-1.5 mb-5">
+                                  {course.learnings.slice(0, 3).map((learning) => (
+                                    <div key={learning.id} className="flex items-center gap-2">
+                                      <div
+                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${BRAND}22` }}
+                                      >
+                                        <svg
+                                          className="w-2.5 h-2.5"
+                                          style={{ color: BRAND }}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={3}
+                                            d="M5 13l4 4L19 7"
+                                          />
+                                        </svg>
+                                      </div>
+                                      <span className="text-gray-400 text-xs">
+                                        {learning.learning_point}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* CTA */}
+                              <div
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
+                                style={{ color: `${BRAND}cc` }}
+                              >
+                                View course
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+
+                        {/* "See all" card — only when there are courses */}
+                        <div className="flex">
+                          <Link
+                            href="/flex"
+                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
+                            style={{ minHeight: "220px" }}
+                          >
+                            <div
+                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                              style={{
+                                background: `${BRAND}18`,
+                                border: `1.5px solid ${BRAND}44`,
+                                transition: "all 0.3s",
+                              }}
+                            >
+                              <ArrowRight
+                                size={20}
+                                strokeWidth={2.5}
+                                style={{ color: BRAND }}
+                              />
+                            </div>
+                            <p className="text-white font-semibold text-base mb-1">
+                              See all flexible courses
+                            </p>
+                            <p className="text-gray-500 text-xs">
+                              Browse the full self-paced catalogue
+                            </p>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
             </div>
           </section>
