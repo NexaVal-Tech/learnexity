@@ -11,7 +11,7 @@ export default function Footer() {
           Ready to Transform Your Career?
         </h2>
         <p className="text-lg mb-12 max-w-4xl mx-auto leading-relaxed text-white opacity-90">
-         Choose your path and secure your spot in the next cohort strting soon
+         Choose your path and secure your spot in the next cohort starting soon
         </p>
         <div className="flex flex-row gap-4 justify-center items-center">
           <Link href="/courses/courses">

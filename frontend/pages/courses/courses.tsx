@@ -311,8 +311,8 @@ export default function CoursesPage() {
           /* ── Flex preview section ── */
           .flex-preview-section {
             border-top: 1px solid rgba(255,255,255,0.07);
-            margin-top: 5rem;
-            padding-top: 4rem;
+            margin-top: 2rem;
+            padding-top: 1.75rem;
           }
           .flex-badge {
             display: inline-flex;
@@ -596,14 +596,8 @@ export default function CoursesPage() {
                   <div className="flex-preview-section">
 
                     {/* Section header */}
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                       <div>
-                        <div className="flex-badge mb-3">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                          </svg>
-                          Self-Paced
-                        </div>
                         <h2 className="text-white font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
                           Explore flexible programmes
                         </h2>
@@ -636,12 +630,12 @@ export default function CoursesPage() {
                             >
 
                               {/* Title */}
-                              <h3 className="text-lg font-bold text-white mb-2 leading-snug">
+                              <h3 className="text-2xl font-bold text-white mb-3 leading-snug">
                                 {course.title}
                               </h3>
 
                               {/* Description */}
-                              <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+                              <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
                                 {course.description}
                               </p>
 
@@ -669,7 +663,7 @@ export default function CoursesPage() {
                                           />
                                         </svg>
                                       </div>
-                                      <span className="text-gray-400 text-xs">
+                                      <span className="text-gray-300 font-medium text-sm">
                                         {learning.learning_point}
                                       </span>
                                     </div>
