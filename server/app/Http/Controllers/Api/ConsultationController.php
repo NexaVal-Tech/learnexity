@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
+use App\Models\ConsultationSetting;
+use App\Services\LocationService;
 use App\Mail\ConsultationBookedAdmin;
 use App\Mail\ConsultationConfirmation;
 use Illuminate\Http\Request;
@@ -90,16 +92,30 @@ class ConsultationController extends Controller
         ], 201);
     }
 
+    public function getPricing(Request $request)
+    {
+        $settings = ConsultationSetting::current();
+        $locationInfo = LocationService::getLocationInfo();
+        $isNigeria = ($locationInfo['country_code'] ?? null) === 'NG';
+
+        return response()->json([
+            'currency'     => $isNigeria ? 'NGN' : 'USD',
+            'amount'       => $isNigeria ? (float) $settings->price_ngn : (float) $settings->price_usd,
+            'country_code' => $locationInfo['country_code'] ?? null,
+        ]);
+    }
+
     /**
-     * Return already-booked time slots for a given date.
-     * Used by the frontend calendar to grey-out taken slots.
+     * Already-booked time slots for a given date — greys out taken
+     * slots on the frontend calendar. Only 'scheduled' (i.e. paid)
+     * consultations block a slot — pending_payment ones don't.
      */
     public function bookedSlots(Request $request)
     {
         $request->validate(['date' => 'required|date']);
 
         $slots = Consultation::where('preferred_date', $request->date)
-            ->whereIn('status', ['scheduled'])
+            ->where('status', 'scheduled')
             ->pluck('preferred_time')
             ->values();
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Consultation;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\User\AuthController;
 use App\Http\Controllers\Api\User\CourseController;
@@ -33,6 +34,12 @@ use App\Http\Controllers\Api\Instructor\InstructorAuthController;
 use App\Http\Controllers\Api\Instructor\InstructorCourseController;
 use App\Http\Controllers\Api\AdminInstructorController;
 use App\Http\Controllers\Api\User\StudentProjectController;
+
+// Consultation
+
+use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\AdminConsultationController;
+use App\Http\Controllers\Api\ConsultationPaymentController;
 
 // =================== CURRENCY DETECTION =================== //
 
@@ -209,6 +216,16 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
     });
 });
 
+Route::middleware('throttle:api')->prefix('consultations')->group(function () {
+    Route::get('/pricing',      [ConsultationController::class, 'getPricing']);
+    Route::get('/booked-slots', [ConsultationController::class, 'bookedSlots']);
+    Route::get('/verify',       [ConsultationPaymentController::class, 'verify']);
+});
+
+Route::middleware('throttle:payments')->prefix('consultations')->group(function () {
+    Route::post('/initiate', [ConsultationPaymentController::class, 'initiate']);
+});
+
 // =================== PROTECTED INSTRUCTOR ROUTES (throttle:api) =================== //
 
 Route::middleware(['auth:instructor', 'throttle:api'])->prefix('instructor')->group(function () {
@@ -306,6 +323,18 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::put('/{id}',                 [AdminInstructorController::class, 'update']);
         Route::delete('/{id}',              [AdminInstructorController::class, 'destroy']);
         Route::post('/{id}/reset-password', [AdminInstructorController::class, 'resetPassword']);
+    });
+
+    // consultation
+
+    Route::prefix('consultations')->group(function () {
+        Route::get('/settings',  [AdminConsultationController::class, 'getSettings']);
+        Route::put('/settings',  [AdminConsultationController::class, 'updateSettings']);
+        Route::get('/stats',     [AdminConsultationController::class, 'stats']);
+        Route::get('/',          [AdminConsultationController::class, 'index']);
+        Route::get('/{id}',      [AdminConsultationController::class, 'show']);
+        Route::patch('/{id}',    [AdminConsultationController::class, 'update']);
+        Route::delete('/{id}',  [AdminConsultationController::class, 'destroy']);
     });
 
     // Courses

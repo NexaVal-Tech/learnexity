@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Consultation;
+use App\Services\ConsultationPaymentService;
 use App\Mail\PaymentConfirmation;
 use App\Models\CourseEnrollment;
 use App\Models\Scholarship;
@@ -120,6 +122,22 @@ class PaystackWebhookController extends Controller
                         }
                     }
                 }
+            }
+
+            if (is_array($metadata) && ($metadata['type'] ?? null) === 'consultation') {
+                $consultationId = $metadata['consultation_id'] ?? null;
+                $consultation = $consultationId
+                    ? Consultation::find($consultationId)
+                    : Consultation::where('transaction_id', $reference)->first();
+
+                if ($consultation) {
+                    ConsultationPaymentService::markPaid($consultation, $amount, $reference, 'paystack');
+                    Log::info('✅ Consultation paid via Paystack webhook', ['consultation_id' => $consultation->id]);
+                } else {
+                    Log::warning('⚠️ Consultation webhook: consultation not found', ['metadata' => $metadata]);
+                }
+
+                return response()->json(['status' => 'success'], 200);
             }
 
             // Last resort: parse from reference format ENR-{id}-{track}-{type}-{ts}

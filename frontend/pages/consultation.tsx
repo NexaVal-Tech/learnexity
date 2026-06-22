@@ -58,6 +58,31 @@ export default function ConsultationPage() {
   const [selectedTime, setSelectedTime] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
+  const [pricing, setPricing] = useState<{ currency: string; amount: number } | null>(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+
+useEffect(() => {
+  const fetchPricing = async () => {
+    setPricingLoading(true);
+    try {
+      const res = await api.consultations.getPricing();
+      setPricing({ currency: res.currency, amount: res.amount });
+    } catch {
+      setPricing(null);
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+  fetchPricing();
+}, []);
+
+const formatPrice = () => {
+  if (!pricing) return '';
+  return pricing.currency === 'NGN'
+    ? `₦${pricing.amount.toLocaleString()}`
+    : `$${pricing.amount.toFixed(2)}`;
+};
+
   const [form, setForm] = useState({
     full_name: user?.name || '',
     email: user?.email || '',
@@ -110,15 +135,14 @@ export default function ConsultationPage() {
     setLoading(true);
     setError('');
     try {
-      await api.post('/api/consultations', {
+      const res = await api.consultations.initiate({
         ...form,
         preferred_date: selectedDate,
         preferred_time: selectedTime,
       });
-      setStep(4);
+      window.location.href = res.checkout_url; // off to Stripe/Paystack
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to book consultation. Please try again.');
-    } finally {
+      setError(err?.response?.data?.message || 'Failed to start payment. Please try again.');
       setLoading(false);
     }
   };
@@ -484,6 +508,7 @@ export default function ConsultationPage() {
                       ['Type', CONSULTATION_TYPES.find(t => t.value === form.consultation_type)?.label || '—'],
                       ['Date', new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })],
                       ['Time', selectedTime],
+                      ['Consultation Fee', pricingLoading ? 'Loading…' : formatPrice()],
                       ...(form.message ? [['Message', form.message] as [string, string]] : []),
                     ].map(([key, val]) => (
                       <div className="confirm-row" key={key}>
@@ -494,13 +519,13 @@ export default function ConsultationPage() {
                   </div>
 
                   <p className="text-xs text-gray-600 mb-6 text-center">
-                    A confirmation email will be sent to <span style={{ color: BRAND }}>{form.email}</span>
+                    You'll be redirected to a secure payment page to pay {formatPrice()} before your booking is confirmed.
                   </p>
 
                   <div className="flex justify-between items-center">
                     <button onClick={() => setStep(2)} className="ghost-btn">← Back</button>
-                    <button onClick={handleSubmit} disabled={loading} className="primary-btn">
-                      {loading ? 'Booking…' : 'Confirm Booking ✓'}
+                    <button onClick={handleSubmit} disabled={loading || pricingLoading} className="primary-btn">
+                      {loading ? 'Redirecting…' : `Pay ${formatPrice()} & Confirm`}
                     </button>
                   </div>
                 </div>

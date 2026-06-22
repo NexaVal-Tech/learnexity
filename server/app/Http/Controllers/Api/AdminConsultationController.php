@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
+use App\Models\ConsultationSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -119,5 +120,31 @@ class AdminConsultationController extends Controller
         $consultation->delete();
 
         return response()->json(['message' => 'Consultation deleted.']);
+    }
+
+    public function getSettings()
+    {
+        $settings = ConsultationSetting::current();
+        return response()->json([
+            'price_usd' => (float) $settings->price_usd,
+            'price_ngn' => (float) $settings->price_ngn,
+        ]);
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'price_usd' => 'required|numeric|min:0',
+            'price_ngn' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $validator->errors()], 422);
+        }
+
+        $settings = ConsultationSetting::current();
+        $settings->update($request->only(['price_usd', 'price_ngn']));
+
+        return response()->json(['message' => 'Pricing updated.', 'settings' => $settings->fresh()]);
     }
 }

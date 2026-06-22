@@ -140,6 +140,61 @@ function DetailModal({ c, onClose, onUpdate }: { c: Consultation; onClose: () =>
   );
 }
 
+// consultation price setting 
+function PricingSettingsPanel() {
+  const [prices, setPrices] = useState({ price_usd: 10, price_ngn: 10000 });
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminApi.get('/api/admin/consultations/settings');
+        setPrices(res);
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await adminApi.put('/api/admin/consultations/settings', prices);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl mb-5 p-5">
+      <h3 className="font-semibold text-gray-900 mb-1">Consultation Pricing</h3>
+      <p className="text-xs text-gray-400 mb-4">Nigerians are charged in NGN, everyone else in USD — detected by IP location.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Price (USD)</label>
+          <input type="number" min={0} step="0.01" value={prices.price_usd}
+            onChange={e => setPrices(p => ({ ...p, price_usd: parseFloat(e.target.value) || 0 }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900" />
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Price (NGN)</label>
+          <input type="number" min={0} step="1" value={prices.price_ngn}
+            onChange={e => setPrices(p => ({ ...p, price_ngn: parseFloat(e.target.value) || 0 }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900" />
+        </div>
+        <button onClick={save} disabled={saving}
+          className="text-sm font-medium text-white rounded-lg py-2 px-4 transition-colors disabled:opacity-50"
+          style={{ background: '#000000' }}>
+          {saving ? 'Saving…' : 'Save Pricing'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Inner page (no layout wrappers) ─────────────────────────────────────────
 function ConsultationsPageInner() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -292,6 +347,8 @@ function ConsultationsPageInner() {
           </div>
         )}
       </div>
+
+      <PricingSettingsPanel />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">

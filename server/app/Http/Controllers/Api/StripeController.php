@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Consultation;
+use App\Services\ConsultationPaymentService;
 use App\Mail\PaymentConfirmation;
 use App\Models\CourseEnrollment;
 use App\Models\Scholarship;
@@ -176,6 +178,26 @@ class StripeController extends Controller
             if ($event->type === 'checkout.session.completed') {
                 $session = $event->data->object;
                 $metadata = $session->metadata;
+
+                if (($metadata->type ?? null) === 'consultation') {
+                    $consultationId = $metadata->consultation_id ?? null;
+                    $consultation = $consultationId ? Consultation::find($consultationId) : null;
+
+                    if ($consultation) {
+                        $amountPaid = $session->amount_total / 100;
+                        ConsultationPaymentService::markPaid(
+                            $consultation,
+                            $amountPaid,
+                            $session->payment_intent ?? $session->id,
+                            'stripe'
+                        );
+                        Log::info('✅ Consultation paid via Stripe webhook', ['consultation_id' => $consultation->id]);
+                    } else {
+                        Log::warning('⚠️ Consultation webhook: consultation not found', ['session_id' => $session->id]);
+                    }
+
+                    return response()->json(['status' => 'success'], 200);
+                }
 
                 $enrollmentId = $metadata->enrollment_id ?? null;
                 $learningTrack = $metadata->learning_track ?? null;

@@ -299,6 +299,37 @@ export const api = {
     },
 },
 
+consultations: {
+  getPricing: async (): Promise<{ currency: string; amount: number; country_code: string | null }> => {
+    const response = await apiClient.get('/api/consultations/pricing');
+    return response.data;
+  },
+
+  getBookedSlots: async (date: string): Promise<{ booked_slots: string[] }> => {
+    const response = await apiClient.get(`/api/consultations/booked-slots?date=${date}`);
+    return response.data;
+  },
+
+  initiate: async (data: {
+    full_name: string;
+    email: string;
+    phone?: string;
+    consultation_type: string;
+    course?: string;
+    message?: string;
+    preferred_date: string;
+    preferred_time: string;
+  }): Promise<{ checkout_url: string; consultation_id: number; currency: string; amount: number }> => {
+    const response = await apiClient.post('/api/consultations/initiate', data);
+    return response.data;
+  },
+
+  verifyPayment: async (params: { provider: 'stripe' | 'paystack'; session_id?: string; reference?: string }) => {
+    const response = await apiClient.get('/api/consultations/verify', { params });
+    return response.data;
+  },
+},
+
 settings: {
     get: async () => {
         const r = await apiClient.get('/api/settings');
@@ -613,6 +644,15 @@ settings: {
       return await adminApi.get<DashboardData>('/api/admin/dashboard');
     },
 
+
+    consultations: {
+      getSettings: async (): Promise<{ price_usd: number; price_ngn: number }> => {
+        return await adminApi.get('/api/admin/consultations/settings');
+      },
+      updateSettings: async (data: { price_usd: number; price_ngn: number }) => {
+        return await adminApi.put('/api/admin/consultations/settings', data);
+      },
+    },
     students: {
       getAll: async (params?: {
         search?: string;
