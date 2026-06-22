@@ -110,8 +110,8 @@ export default function ReferralsPage() {
               Start Earning Rewards
             </h1>
             <p className="text-gray-600 mb-8 text-lg">
-              Apply for your unique referral link and earn <span className="font-semibold text-purple-600">$30 credit</span> for 
-              every friend who signs up and completes their first sprint.
+              Apply for your unique referral link and start earning <span className="font-semibold text-purple-600">30% </span> for 
+              every friend who signs up and purchases a self paced course and 20% for deep tech courses.
             </p>
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
@@ -165,9 +165,8 @@ export default function ReferralsPage() {
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-1">Referral Rewards</h3>
                 <p className="text-sm text-gray-700">
-                  Earn <span className="font-semibold text-purple-600">$30 credit</span> for each friend who 
-                  successfully signs up and completes their first sprint. Your friend also gets{' '}
-                  <span className="font-semibold text-purple-600">$20 off</span> their enrollment!
+                  Earn <span className="font-semibold text-purple-600">30% </span> for each friend who 
+                  successfully signs up and purchases a self paced course and 20% for deep tech courses 
                 </p>
               </div>
             </div>

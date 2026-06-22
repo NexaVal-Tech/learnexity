@@ -105,7 +105,7 @@ function PaymentToast({ message, onClose }: { message: string; onClose: () => vo
 
 export default function PaymentPage() {
   const router       = useRouter();
-  const { enrollmentId } = router.query;
+  const { nrollmentId } = router.query;
   const { user, loading: authLoading } = useAuth();
 
   const [enrollment,       setEnrollment]       = useState<CourseEnrollment | null>(null);
@@ -150,22 +150,29 @@ export default function PaymentPage() {
   // ── Currency / gateway detection ──────────────────────────────────────────
   useEffect(() => {
     const detectCurrency = async () => {
-      setCurrency('USD');
-      setPaymentGateway('stripe');
-      setCurrencyDetected(true);
+      // ❌ Remove these two lines — don't pre-set before detection
+      // setCurrency('USD');
+      // setPaymentGateway('stripe');
+      // setCurrencyDetected(true);  <-- especially not this
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/detect-currency`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/detect-currency`
         );
         const data = await response.json();
         setCurrency(data.currency);
         setDetectedLocation(data.country);
         setPaymentGateway(data.currency === 'NGN' ? 'paystack' : 'stripe');
       } catch {
+        // Detection failed — fall back to USD
+        setCurrency('USD');
+        setPaymentGateway('stripe');
         setDetectedLocation('Unknown');
+      } finally {
+        setCurrencyDetected(true); // ✅ Only set true AFTER detection completes
       }
     };
+
     detectCurrency();
   }, []);
 
@@ -293,13 +300,16 @@ export default function PaymentPage() {
   }, [fetchCourseTrackDetails, currency, router]);
 
   const fetchEnrollmentDetails = useCallback(async () => {
+    const id = router.query.enrollmentId; // ← read fresh from router
+    if (!id || typeof id !== 'string') return;
+
     try {
       setLoading(true);
       setPageError(null);
 
       const response = await api.enrollment.getUserEnrollments();
-      const found    = response.enrollments.find(
-        (e: CourseEnrollment) => e.id === Number(enrollmentId)
+      const found = response.enrollments.find(
+        (e: CourseEnrollment) => e.id === Number(id) // ← use fresh id
       );
 
       if (!found) {
@@ -322,23 +332,29 @@ export default function PaymentPage() {
     } finally {
       setLoading(false);
     }
-  }, [enrollmentId, fetchCourseTrackDetails, currency, router]);
+  }, [fetchCourseTrackDetails, currency, router]);
 
   useEffect(() => {
-    if (authLoading)          return;
-    if (!user)                { router.push('/user/auth/login'); return; }
-    if (!router.isReady)      return;
-    if (!currencyDetected)    return;
+    if (authLoading)       return;
+    if (!user)             { router.push('/user/auth/login'); return; }
+    if (!router.isReady)   return;
+    if (!currencyDetected) return;
 
-    if (!enrollmentId) {
-      fetchPendingEnrollment();
-    } else if (typeof enrollmentId === 'string') {
-      fetchEnrollmentDetails();
-    } else {
-      setPageError('Invalid enrollment ID');
-      setLoading(false);
+    // ✅ Don't trust enrollmentId until router.isReady AND it's a non-empty string
+    const id = router.query.enrollmentId;
+
+    if (!id || typeof id !== 'string') {
+      // Only fall back to fetchPendingEnrollment if the URL
+      // genuinely has no enrollmentId segment (e.g. /user/payment)
+      // NOT when the param just hasn't hydrated yet
+      if (router.isReady && !id) {
+        fetchPendingEnrollment();
+      }
+      return;
     }
-  }, [router.isReady, enrollmentId, user, authLoading, currencyDetected]);
+
+    fetchEnrollmentDetails();
+  }, [router.isReady, router.query.enrollmentId, user, authLoading, currencyDetected]);
 
   // Force one-time when scholarship active
   useEffect(() => {

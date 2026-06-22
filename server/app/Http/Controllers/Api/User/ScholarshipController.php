@@ -221,44 +221,43 @@ class ScholarshipController extends Controller
         string $salaryRange,
         bool   $isNigeria
     ): array {
-        // Rule 1: Student + Unemployed + Nigeria → 75%
-        if ($isStudent && ! $isEmployed && $isNigeria) {
-            return [
-                'approved',
-                75,
-                '75% scholarship awarded — student, unemployed, and based in Nigeria.',
-            ];
-        }
-
-        // Rule 2: Student (any other combination) → 50%
-        if ($isStudent) {
+        // Rule 1: Student + Unemployed → 50%
+        if ($isStudent && ! $isEmployed) {
             return [
                 'approved',
                 50,
-                '50% scholarship awarded based on student status.',
+                '50% scholarship awarded — student with no current employment.',
             ];
         }
 
-        // Rule 3: Not a student + unemployed → 50%
+        // Rule 2: Student + Employed (any income) → 25%
+        if ($isStudent && $isEmployed) {
+            return [
+                'approved',
+                25,
+                '25% scholarship awarded — student in employment.',
+            ];
+        }
+
+        // Rule 3: Not a student + Unemployed → 25%
         if (! $isStudent && ! $isEmployed) {
             return [
                 'approved',
-                50,
-                '50% scholarship awarded — unemployed and seeking to upskill.',
+                25,
+                '25% scholarship awarded — unemployed and seeking to upskill.',
             ];
         }
 
-        // Rule 4: Employed but income under ₦100k / $100 → 50%
+        // Rule 4: Employed but income under ₦100k / $100 → 25%
         if ($isEmployed && $salaryRange === 'under_100') {
             return [
                 'approved',
-                50,
-                '50% scholarship awarded — employed but income below the ₦100,000 / $100 threshold.',
+                25,
+                '25% scholarship awarded — employed but income below the ₦100,000 / $100 threshold.',
             ];
         }
 
         // Rules 5 & 6: Employed with higher income → rejected
-        // (₦100k–₦200k and above ₦200k both do not qualify)
         return [
             'rejected',
             0,

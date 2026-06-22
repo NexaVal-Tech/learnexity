@@ -1,4 +1,4 @@
-// pages/courses/courses.tsx
+// pages/flex.tsx
 
 import Head from "next/head";
 import { useState, useEffect, useCallback } from "react";
@@ -38,30 +38,7 @@ function SkeletonCard() {
   );
 }
 
-function FlexSkeletonCard() {
-  return (
-    <div
-      className="w-full animate-pulse p-7 flex flex-col"
-      style={{
-        borderRadius: "2rem 0.75rem 2rem 0.75rem",
-        background: "#0f0f0f",
-        border: "1px solid rgba(255,255,255,0.07)",
-      }}
-    >
-      <div className="h-6 bg-gray-800 rounded-full w-2/3 mb-3" />
-      <div className="h-3 bg-gray-800 rounded-full w-full mb-2" />
-      <div className="h-3 bg-gray-800 rounded-full w-4/5 mb-5" />
-      <div className="space-y-2 flex-1">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-gray-800 rounded-full h-8" />
-        ))}
-      </div>
-      <div className="mt-5 h-8 bg-gray-800 rounded-full w-28" />
-    </div>
-  );
-}
-
-export default function CoursesPage() {
+export default function FlexPage() {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -71,53 +48,28 @@ export default function CoursesPage() {
   const [purchasingCourseId, setPurchasingCourseId] = useState<string | null>(null);
   const [purchaseErrors, setPurchaseErrors] = useState<Record<string, string>>({});
 
-  // Flex preview state
-  const [flexCourses, setFlexCourses] = useState<Course[]>([]);
-  const [flexLoading, setFlexLoading] = useState(true);
-
-  const fetchMentoredCourses = useCallback(async () => {
+  const fetchSelfPacedCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_URL}/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one`,
-        { headers: { Accept: "application/json" } }
-      );
+      const res = await fetch(`${API_URL}/api/courses/by-track?track[]=self_paced`, {
+        headers: { Accept: "application/json" },
+      });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data: Course[] = await res.json();
       setCourses(data);
     } catch (err: any) {
       setError(
-        err?.message ||
-          "Failed to load courses. Please check your connection and try again."
+        err?.message || "Failed to load courses. Please check your connection and try again."
       );
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const fetchFlexPreview = useCallback(async () => {
-    setFlexLoading(true);
-    try {
-      const res = await fetch(
-        `${API_URL}/api/courses/by-track?track[]=self_paced`,
-        { headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) return;
-      const data: Course[] = await res.json();
-      // Show up to 3 flex courses as a preview
-      setFlexCourses(data.slice(0, 3));
-    } catch {
-      // Silent fail — flex preview is non-critical
-    } finally {
-      setFlexLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchMentoredCourses();
-    fetchFlexPreview();
-  }, [fetchMentoredCourses, fetchFlexPreview]);
+    fetchSelfPacedCourses();
+  }, [fetchSelfPacedCourses]);
 
   const handlePurchase = useCallback(
     async (course: Course, e: React.MouseEvent) => {
@@ -127,7 +79,7 @@ export default function CoursesPage() {
       setPurchaseErrors((prev) => ({ ...prev, [course.course_id]: "" }));
 
       if (!user) {
-        router.push(`/user/auth/login?redirect=/courses/courses`);
+        router.push(`/user/auth/login?redirect=/flex`);
         return;
       }
 
@@ -137,7 +89,7 @@ export default function CoursesPage() {
         const response = await api.post(
           `/api/courses/${course.course_id}/enroll`,
           {
-            learning_track: "group_mentorship",
+            learning_track: "self_paced",
             payment_type: "onetime",
           }
         );
@@ -183,12 +135,12 @@ export default function CoursesPage() {
   return (
     <>
       <Head>
-        <title>Courses - Expert-led mentorship programmes | Learnexity</title>
+        <title>Flexible Courses - Learn at your own pace | Learnexity</title>
         <meta
           name="description"
-          content="Group mentorship and one-on-one coaching programmes designed to launch you into high-paying tech careers."
+          content="Self-paced programmes designed to fit your schedule. Learn tech skills on your own terms."
         />
-        <link rel="canonical" href="https://learnexity.org/courses/courses" />
+        <link rel="canonical" href="https://learnexity.org/flex" />
       </Head>
 
       <AppLayout>
@@ -214,6 +166,7 @@ export default function CoursesPage() {
             justify-content: center;
             gap: 0.5rem;
             width: fit-content;
+
             background-color: #4A3AFF;
             color: white;
             font-weight: 600;
@@ -286,34 +239,7 @@ export default function CoursesPage() {
             align-items: center;
             gap: 0.625rem;
           }
-          .track-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.7rem;
-            border-radius: 999px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.07em;
-            text-transform: uppercase;
-          }
-          .track-badge-group {
-            background: rgba(74,58,255,0.12);
-            border: 1px solid rgba(74,58,255,0.3);
-            color: #a89fff;
-          }
-          .track-badge-oneone {
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.3);
-            color: #6ee7b7;
-          }
-
-          /* ── Flex preview section ── */
-          .flex-preview-section {
-            border-top: 1px solid rgba(255,255,255,0.07);
-            margin-top: 2rem;
-            padding-top: 1.75rem;
-          }
+          /* Flex badge pill */
           .flex-badge {
             display: inline-flex;
             align-items: center;
@@ -328,55 +254,6 @@ export default function CoursesPage() {
             letter-spacing: 0.08em;
             text-transform: uppercase;
           }
-          .flex-card {
-            border: 1px solid rgba(255,255,255,0.07);
-            background: rgba(15,15,15,0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 2rem 0.75rem 2rem 0.75rem;
-            transition: all 0.3s ease;
-          }
-          .flex-card:hover {
-            border-color: ${BRAND}44;
-            background: rgba(74,58,255,0.05);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${BRAND}22;
-          }
-          .flex-card:hover .flex-icon-wrap {
-            transform: scale(1.15) rotate(-5deg);
-            background: ${BRAND}33;
-          }
-          .flex-icon-wrap {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            background: ${BRAND}18;
-            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s;
-          }
-          .flex-view-all-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1.5px solid ${BRAND}66;
-            color: #a89fff;
-            background: ${BRAND}10;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            white-space: nowrap;
-          }
-          .flex-view-all-btn:hover {
-            background: ${BRAND}22;
-            border-color: ${BRAND};
-            color: #fff;
-            gap: 0.75rem;
-            box-shadow: 0 0 20px ${BRAND}44;
-          }
         `}</style>
 
         <div className="min-h-screen pb-20">
@@ -385,9 +262,10 @@ export default function CoursesPage() {
           <section className="relative">
 
             <div className="relative w-full" style={{ height: "clamp(380px, 58vw, 640px)" }}>
+              {/* Re-use the courses hero image or swap for a flex-specific one */}
               <Image
                 src="/images/coures.jpg"
-                alt="Courses hero"
+                alt="Flexible courses hero"
                 fill
                 className="object-cover object-center"
                 priority
@@ -403,6 +281,14 @@ export default function CoursesPage() {
 
               <div className="absolute top-28 md:top-38 left-0 right-0 px-6 md:px-10 lg:px-16">
                 <div className="max-w-screen-xl mx-auto">
+                  {/* Flex badge */}
+                  <div className="flex-badge mb-4">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    Self-Paced
+                  </div>
+
                   <h1
                     className="font-bold text-white leading-tight"
                     style={{
@@ -411,7 +297,7 @@ export default function CoursesPage() {
                       textShadow: "0 2px 24px rgba(0,0,0,0.7)",
                     }}
                   >
-                    Expert-led programmes, group mentorship &amp; one-on-one coaching to launch you into high-paying tech careers.
+                    Flexible programmes, learn at your own pace, on your own schedule.
                   </h1>
                 </div>
               </div>
@@ -427,7 +313,7 @@ export default function CoursesPage() {
                   className="font-semibold mb-6"
                   style={{ color: BRAND, fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)" }}
                 >
-                  Mentorship Programmes
+                  Self-Paced Programmes
                 </p>
 
                 {/* ── Error state ── */}
@@ -435,7 +321,7 @@ export default function CoursesPage() {
                   <div className="text-center py-20">
                     <p className="text-red-400 text-lg mb-4">{error}</p>
                     <button
-                      onClick={fetchMentoredCourses}
+                      onClick={fetchSelfPacedCourses}
                       className="purchase-btn"
                       style={{ maxWidth: "140px", margin: "0 auto" }}
                     >
@@ -454,13 +340,13 @@ export default function CoursesPage() {
                 {/* ── Empty state ── */}
                 {!loading && !error && courses.length === 0 && (
                   <div className="text-center text-gray-400 py-20">
-                    <p className="text-xl mb-2">No mentorship courses available at the moment.</p>
+                    <p className="text-xl mb-2">No flexible courses available yet.</p>
                     <p className="text-sm text-gray-500">
-                      Looking to learn at your own pace? Check our{" "}
-                      <Link href="/flex" className="underline" style={{ color: BRAND }}>
-                        flexible programmes
-                      </Link>
-                      .
+                      Check our{" "}
+                      <Link href="/courses/courses" className="underline" style={{ color: BRAND }}>
+                        mentorship programmes
+                      </Link>{" "}
+                      in the meantime.
                     </p>
                   </div>
                 )}
@@ -486,23 +372,6 @@ export default function CoursesPage() {
                               transition: "all 0.3s ease",
                             }}
                           >
-                            {/* Icon */}
-                            <div className="course-icon-wrap">
-                              <svg
-                                className="w-6 h-6"
-                                style={{ color: BRAND }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                            </div>
 
                             {/* Title */}
                             <h3 className="text-2xl font-bold text-white mb-3">
@@ -590,132 +459,6 @@ export default function CoursesPage() {
                     })}
                   </div>
                 )}
-
-                {/* ── FLEX PREVIEW SECTION ────────────────────────────── */}
-                {(flexLoading || flexCourses.length > 0) && (
-                  <div className="flex-preview-section">
-
-                    {/* Section header */}
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-                      <div>
-                        <h2 className="text-white font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
-                          Explore flexible programmes
-                        </h2>
-                        <p className="text-gray-500 text-sm mt-1">
-                          Prefer to learn on your own schedule? Browse our self-paced courses.
-                        </p>
-                      </div>
-
-                      <Link href="/flex" className="flex-view-all-btn flex-shrink-0">
-                        View all
-                        <ArrowRight size={16} strokeWidth={2.5} />
-                      </Link>
-                    </div>
-
-                    {/* Flex skeleton */}
-                    {flexLoading && (
-                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
-                        {[1, 2, 3].map((i) => <FlexSkeletonCard key={i} />)}
-                      </div>
-                    )}
-
-                    {/* Flex course cards */}
-                    {!flexLoading && flexCourses.length > 0 && (
-                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
-                        {flexCourses.map((course) => (
-                          <div key={course.id} className="flex">
-                            <Link
-                              href={`/courses/${course.course_id}`}
-                              className="flex-card p-7 flex flex-col h-full w-full"
-                            >
-
-                              {/* Title */}
-                              <h3 className="text-2xl font-bold text-white mb-3 leading-snug">
-                                {course.title}
-                              </h3>
-
-                              {/* Description */}
-                              <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
-                                {course.description}
-                              </p>
-
-                              {/* Learning points — up to 3 */}
-                              {course.learnings && course.learnings.length > 0 && (
-                                <div className="space-y-1.5 mb-5">
-                                  {course.learnings.slice(0, 3).map((learning) => (
-                                    <div key={learning.id} className="flex items-center gap-2">
-                                      <div
-                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                                        style={{ backgroundColor: `${BRAND}22` }}
-                                      >
-                                        <svg
-                                          className="w-2.5 h-2.5"
-                                          style={{ color: BRAND }}
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={3}
-                                            d="M5 13l4 4L19 7"
-                                          />
-                                        </svg>
-                                      </div>
-                                      <span className="text-gray-300 font-medium text-sm">
-                                        {learning.learning_point}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* CTA */}
-                              <div
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
-                                style={{ color: `${BRAND}cc` }}
-                              >
-                                View course
-                              </div>
-                            </Link>
-                          </div>
-                        ))}
-
-                        {/* "See all" card — only when there are courses */}
-                        <div className="flex">
-                          <Link
-                            href="/flex"
-                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
-                            style={{ minHeight: "220px" }}
-                          >
-                            <div
-                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                              style={{
-                                background: `${BRAND}18`,
-                                border: `1.5px solid ${BRAND}44`,
-                                transition: "all 0.3s",
-                              }}
-                            >
-                              <ArrowRight
-                                size={20}
-                                strokeWidth={2.5}
-                                style={{ color: BRAND }}
-                              />
-                            </div>
-                            <p className="text-white font-semibold text-base mb-1">
-                              See all flexible courses
-                            </p>
-                            <p className="text-gray-500 text-xs">
-                              Browse the full self-paced catalogue
-                            </p>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
               </div>
             </div>
           </section>

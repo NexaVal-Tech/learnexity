@@ -1,8 +1,4 @@
 // pages/user/dashboard.tsx
-// Changes from original:
-//   • Course catalogue cards now show a "Free Preview" badge when course.is_freemium === true
-//   • Freemium courses are always clickable (unenrolled users can browse to the resource page)
-//   • Everything else is unchanged
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -15,8 +11,8 @@ export default function UserDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { tab } = router.query;
-
-  const [activeTab, setActiveTab] = useState("catalogue");
+  
+  const [activeTab, setActiveTab] = useState("your-course");
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,18 +76,24 @@ export default function UserDashboardPage() {
   const enrolledCoursesWithDetails = getEnrolledCoursesWithDetails();
 
   // ── Payment summary for hero section ───────────────────────────────────
-  const completedEnrollments = enrollments.filter(
-    (e) => e.payment_status === "completed"
+  // ── Payment summary for hero section ───────────────────────────────────
+  const pendingEnrollments = enrollments.filter(
+    (e) => e.payment_status !== "completed"
   );
+
   const installmentEnrollments = enrollments.filter(
     (e) =>
       e.payment_type === "installment" &&
       e.next_payment_due &&
       e.payment_status !== "completed"
   );
-  const nextInstallment = installmentEnrollments.sort((a, b) =>
-    new Date(a.next_payment_due!).getTime() - new Date(b.next_payment_due!).getTime()
-  )[0] ?? null;
+
+  const nextInstallment =
+    installmentEnrollments.sort(
+      (a, b) =>
+        new Date(a.next_payment_due!).getTime() -
+        new Date(b.next_payment_due!).getTime()
+    )[0] ?? null;
 
   const daysUntilNext = nextInstallment
     ? Math.ceil(
@@ -100,6 +102,7 @@ export default function UserDashboardPage() {
       )
     : null;
 
+  const hasPendingPayments = pendingEnrollments.length > 0;
   const hasAnyEnrollment = enrollments.length > 0;
 
   return (
@@ -114,12 +117,14 @@ export default function UserDashboardPage() {
         </div>
       )}
 
-      <div className="max-w-[1255px] mx-auto p-4 pt-25">
+      <div className="max-w-[1500px] mx-auto p-4 pt-25">
 
         {/* ── Hero Section ─────────────────────────────────────────────── */}
         {hasAnyEnrollment ? (
+          /* Payment Info Hero — shown when the student has at least one enrollment */
           <div className="bg-gradient-to-r from-purple-200 via-purple-100 to-blue-200 rounded-3xl p-6 md:p-8 mb-8">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+              {/* Left — greeting */}
               <div className="max-w-xs">
                 <p className="text-xs font-semibold uppercase tracking-widest text-purple-600 mb-1">
                   My Learning
@@ -132,23 +137,25 @@ export default function UserDashboardPage() {
                 </p>
               </div>
 
+              {/* Right — payment stat cards */}
               <div className="flex flex-wrap gap-4 flex-1 justify-end">
                 {/* Courses enrolled */}
+                {/* Courses Enrolled — show ALL enrollments, note pending ones */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                     Courses Enrolled
                   </p>
                   <p className="text-4xl font-bold text-indigo-600">
-                    {completedEnrollments.length}
+                    {enrollments.length}  {/* ✅ all enrollments, not just completed */}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {enrollments.length > completedEnrollments.length
-                      ? `+${enrollments.length - completedEnrollments.length} pending`
+                    {pendingEnrollments.length > 0
+                      ? `${pendingEnrollments.length} payment${pendingEnrollments.length > 1 ? "s" : ""} pending`
                       : "All paid & active"}
                   </p>
                 </div>
 
-                {/* Payment status */}
+                {/* Payment Status — check ALL pending, not just installments */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[160px] flex flex-col gap-1 shadow-sm">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                     Payment Status
@@ -168,6 +175,13 @@ export default function UserDashboardPage() {
                           : "Until next payment"}
                       </p>
                     </>
+                  ) : hasPendingPayments ? (  /* ✅ catch pending one-time payments too */
+                    <>
+                      <p className="text-4xl font-bold text-yellow-500">!</p>
+                      <p className="text-xs text-gray-400">
+                        {pendingEnrollments.length} payment{pendingEnrollments.length > 1 ? "s" : ""} required
+                      </p>
+                    </>
                   ) : (
                     <>
                       <p className="text-4xl font-bold text-green-500">✓</p>
@@ -176,7 +190,36 @@ export default function UserDashboardPage() {
                   )}
                 </div>
 
-                {/* Next due date — installment students only */}
+                {/* Payment Plan — "Fully paid" only when truly no pending payments */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                    Payment Plan
+                  </p>
+                  {installmentEnrollments.length > 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                        <p className="text-base font-bold text-gray-800">Installment</p>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {installmentEnrollments.length} active plan
+                        {installmentEnrollments.length > 1 ? "s" : ""}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`w-2 h-2 rounded-full ${hasPendingPayments ? "bg-yellow-400" : "bg-green-400"} inline-block`}></span>
+                        <p className="text-base font-bold text-gray-800">One-time</p>
+                      </div>
+                      {/* ✅ Only say "Fully paid" when there are truly no pending payments */}
+                      <p className="text-xs text-gray-400">
+                        {hasPendingPayments ? "Payment required" : "Fully paid"}
+                      </p>
+                    </>
+                  )}
+                </div>
+                {/* Next due date detail — only for installment students */}
                 {nextInstallment && (
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[180px] flex flex-col gap-1 shadow-sm">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
@@ -202,37 +245,11 @@ export default function UserDashboardPage() {
                     </button>
                   </div>
                 )}
-
-                {/* Payment type badge */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 min-w-[150px] flex flex-col gap-1 shadow-sm">
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                    Payment Plan
-                  </p>
-                  {installmentEnrollments.length > 0 ? (
-                    <>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                        <p className="text-base font-bold text-gray-800">Installment</p>
-                      </div>
-                      <p className="text-xs text-gray-400">
-                        {installmentEnrollments.length} active plan
-                        {installmentEnrollments.length > 1 ? "s" : ""}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-                        <p className="text-base font-bold text-gray-800">One-time</p>
-                      </div>
-                      <p className="text-xs text-gray-400">Fully paid</p>
-                    </>
-                  )}
-                </div>
               </div>
             </div>
           </div>
         ) : (
+          /* Default hero — shown when not enrolled in anything yet */
           <div className="bg-gradient-to-r from-purple-200 via-purple-100 to-blue-200 rounded-3xl p-2 md:p-2 mb-8 flex flex-col md:flex-row md:items-start justify-between gap-8">
             <div className="max-w-xl text-center md:text-left md:p-6">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -273,7 +290,7 @@ export default function UserDashboardPage() {
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Course Catalogue
+            Explore Courses
           </button>
         </div>
 
@@ -301,32 +318,20 @@ export default function UserDashboardPage() {
                   const courseId = course.course_id ?? course.id;
                   const enrollment = getEnrollmentForCourse(courseId);
                   const isEnrolled = !!enrollment;
-                  // ── NEW: freemium courses are always previewable ──────────
-                  const isFreemium = !!(course as any).is_freemium;
-
-                  const handleCardClick = () => {
-                    if (isEnrolled) {
-                      // Paid user → go straight to resources
-                      router.push({
-                        pathname: "/user/resource",
-                        query: { courseId: courseId },
-                      });
-                    } else if (isFreemium) {
-                      // Unenrolled but freemium → send to resource page (sprints 1-2 visible)
-                      router.push({
-                        pathname: "/user/resource",
-                        query: { courseId: courseId },
-                      });
-                    } else {
-                      // Standard premium → go to course landing/payment page
-                      router.push(`/courses/${courseId}`);
-                    }
-                  };
 
                   return (
                     <div
                       key={course.id}
-                      onClick={handleCardClick}
+                      onClick={() => {
+                        if (isEnrolled) {
+                          router.push({
+                            pathname: "/user/resource",
+                            query: { courseId: courseId },
+                          });
+                        } else {
+                          router.push(`/courses/${courseId}`);
+                        }
+                      }}
                       className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow cursor-pointer p-2 relative"
                     >
                       {/* Enrolled badge */}
@@ -336,13 +341,6 @@ export default function UserDashboardPage() {
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           Enrolled
-                        </div>
-                      )}
-
-                      {/* ── NEW: Free Preview badge for freemium, unenrolled ── */}
-                      {!isEnrolled && isFreemium && (
-                        <div className="absolute top-4 right-4 z-10 bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
-                          Free Preview
                         </div>
                       )}
 
@@ -363,20 +361,11 @@ export default function UserDashboardPage() {
                           {course.description}
                         </p>
 
-                        {/* Continue learning CTA — paid/enrolled */}
+                        {/* Continue learning CTA for enrolled courses */}
                         {isEnrolled && (
                           <div className="mt-3 mb-1">
                             <span className="inline-block w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl py-2 transition-colors">
                               Continue Learning
-                            </span>
-                          </div>
-                        )}
-
-                        {/* ── NEW: Preview CTA for freemium, unenrolled ──────── */}
-                        {!isEnrolled && isFreemium && (
-                          <div className="mt-3 mb-1">
-                            <span className="inline-block w-full text-center text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-2xl py-2 transition-colors">
-                              Preview Free Sprints
                             </span>
                           </div>
                         )}

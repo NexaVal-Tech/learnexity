@@ -8,6 +8,7 @@ use App\Models\EmailSequenceLog;
 use App\Models\CourseEnrollment;
 use App\Models\SprintProgress;
 use App\Mail\PerformanceMail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
@@ -92,7 +93,7 @@ class UserPerformanceTracker
         );
 
         // ── Count sprints ──────────────────────────────────────────────────────
-        $totalSprints = \DB::table('course_materials')
+        $totalSprints = DB::table('course_materials')
             ->where('course_id', $courseId)
             ->count();
 
@@ -118,7 +119,7 @@ class UserPerformanceTracker
 
         // ── Quality score ──────────────────────────────────────────────────────
         // Use leaderboard overall_score if available, else fall back to progress %
-        $leaderboardScore = \DB::table('cohort_participants')
+        $leaderboardScore = DB::table('cohort_participants')
             ->join('cohort_leaderboards', 'cohort_participants.cohort_leaderboard_id', '=', 'cohort_leaderboards.id')
             ->where('cohort_leaderboards.course_id', $courseId)
             ->where('cohort_participants.user_id', $userId)
@@ -140,8 +141,8 @@ class UserPerformanceTracker
 
         // ── Problem-solving score ─────────────────────────────────────────────
         // Based on submission approval rate
-        $totalSubmissions    = \DB::table('project_submissions')->where('user_id', $userId)->count();
-        $approvedSubmissions = \DB::table('project_submissions')
+        $totalSubmissions    = DB::table('project_submissions')->where('user_id', $userId)->count();
+        $approvedSubmissions = DB::table('project_submissions')
             ->where('user_id', $userId)
             ->where('status', 'approved')
             ->count();
@@ -180,7 +181,7 @@ class UserPerformanceTracker
         $user = User::find($userId);
         if (!$user) return;
 
-        $courseName = \DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
+        $courseName = DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
 
         $scores = [
             'speed'           => $score->speed_score,
@@ -234,7 +235,7 @@ class UserPerformanceTracker
         if (EmailSequenceLog::sentWithinHours($userId, 'streak_milestone', 1, $courseId)) return;
 
         $user       = User::find($userId);
-        $courseName = \DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
+        $courseName = DB::table('courses')->where('course_id', $courseId)->value('title') ?? $courseId;
 
         $scores = [
             'speed'           => $score->speed_score,

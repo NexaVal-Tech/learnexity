@@ -117,7 +117,7 @@ function ResultCard({
           boxShadow: `0 8px 28px ${BRAND}55`,
         }}
       >
-        {approved ? 'Continue to Payment →' : 'View Course'}
+        {approved ? 'Continue to Payment' : 'View Course'}
       </button>
 
       <style>{`
@@ -437,10 +437,6 @@ export default function ScholarshipPage() {
                 </div>
               </div>
 
-              <p className="text-gray-400 leading-relaxed mb-6">
-                Our scholarship programme removes financial barriers for determined learners. Answer 4 quick questions and get an instant decision.
-              </p>
-
               <div className="space-y-3 mb-8">
                 {[
                   // { text: '4 quick questions — decision in under 60 seconds' },
@@ -465,8 +461,8 @@ export default function ScholarshipPage() {
                 <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {[
-                    { pct: '75%', label: 'scholarship' },
                     { pct: '50%', label: 'scholarship' },
+                    { pct: '25%', label: 'scholarship' },
                   ].map((tier) => (
                     <div key={tier.pct} className="text-center p-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
                       <p className="text-xl font-black text-white">{tier.pct}</p>

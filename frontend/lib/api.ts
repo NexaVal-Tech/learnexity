@@ -349,9 +349,16 @@ settings: {
       return response.data;
     },
 
-    getPreviewUrl: async (itemId: number): Promise<{ url: string; type: string; title: string }> => {
-      const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
-      return response.data;
+    getPreviewUrl: async (itemId: number) => {
+        const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
+        return response.data;
+    },
+
+    previewMaterial: async (itemId: number): Promise<Blob> => {
+        const response = await apiClient.get(`/api/materials/${itemId}/preview`, {
+            responseType: 'blob',
+        });
+        return response.data;
     },
 
     downloadMaterial: async (itemId: number) => {
@@ -762,6 +769,10 @@ settings: {
         data: FormData
       ): Promise<{ message: string; course: any }> => {
         return await adminApi.post(`/api/admin/courses/${courseId}/update`, data);
+      },
+
+      toggleStatus: async (courseId: string): Promise<{ message: string; is_active: boolean }> => {
+          return await adminApi.patch(`/api/admin/courses/${courseId}/toggle-status`);
       },
 
       delete: async (courseId: string): Promise<{ message: string }> => {

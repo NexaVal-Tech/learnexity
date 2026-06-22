@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Course;
+use App\Models\User;
 use App\Models\CourseEnrollment;
 use App\Models\CourseMaterial;
 use App\Models\MaterialItem;
@@ -39,9 +40,9 @@ class AdminCourseController extends Controller
             }
         }
 
-        $courses = $query->latest()->paginate($request->per_page ?? 10);
+        $courses = $query->latest()->get();
 
-        $courses->getCollection()->transform(function($course) {
+        $courses->transform(function($course) {
             $enrollments = $course->enrollments;
             $totalEnrollments = $enrollments->count();
             $activeEnrollments = $enrollments->where('payment_status', 'completed')->count();
@@ -53,12 +54,13 @@ class AdminCourseController extends Controller
                 'completion_rate'   => $totalEnrollments > 0 ? round(($activeEnrollments / $totalEnrollments) * 100) : 0,
                 'sprint_count'      => $sprintCount,
                 'week_count'        => $sprintCount,
+                'is_active'         => (bool) $course->is_active, 
             ];
 
             return $course;
         });
 
-        return response()->json($courses);
+        return response()->json(['data' => $courses]);
     }
 
     /**
@@ -129,7 +131,7 @@ class AdminCourseController extends Controller
         $avgProgress     = 40;
 
         $students = $enrollments->map(function($enrollment) use ($courseId) {
-            $user = \App\Models\User::find($enrollment->user_id);
+            $user = User::find($enrollment->user_id);
             if (!$user) return null;
 
             $totalTopics = DB::table('material_items')
@@ -185,6 +187,7 @@ class AdminCourseController extends Controller
                 'level'                      => $course->level,
                 'is_freemium'                => $course->is_freemium,
                 'is_premium'                 => $course->is_premium,
+                'is_active'                  => (bool) $course->is_active,
                 'hero_image'                 => $course->hero_image_url,
                 'secondary_image'            => $course->secondary_image_url,
                 'instructor'                 => 'Sarah Chen',
@@ -223,6 +226,21 @@ class AdminCourseController extends Controller
                     ['name' => '76-100%', 'value' => 68, 'color' => '#10B981'],
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * Toggle course active/inactive status
+     */
+    public function toggleStatus(string $courseId): JsonResponse
+    {
+        $course = Course::where('course_id', $courseId)->firstOrFail();
+        
+        $course->update(['is_active' => !$course->is_active]);
+
+        return response()->json([
+            'message'   => $course->is_active ? 'Course is now active' : 'Course is now inactive',
+            'is_active' => $course->is_active,
         ]);
     }
 
@@ -417,20 +435,16 @@ class AdminCourseController extends Controller
                 'is_freemium' => 'nullable|in:0,1,true,false',
                 'is_premium'  => 'nullable|in:0,1,true,false',
 
-                // Images — no MIME validation here; handleImageInput deals with it
                 'hero_image'      => 'nullable',
                 'secondary_image' => 'nullable',
 
-                // Prices
                 'price_usd' => 'nullable|numeric|min:0',
                 'price_ngn' => 'nullable|numeric|min:0',
 
-                // Track availability
                 'offers_one_on_one'       => 'nullable|in:0,1,true,false',
                 'offers_group_mentorship' => 'nullable|in:0,1,true,false',
                 'offers_self_paced'       => 'nullable|in:0,1,true,false',
 
-                // Track prices
                 'one_on_one_price_usd'       => 'nullable|numeric|min:0',
                 'group_mentorship_price_usd' => 'nullable|numeric|min:0',
                 'self_paced_price_usd'       => 'nullable|numeric|min:0',
@@ -438,7 +452,6 @@ class AdminCourseController extends Controller
                 'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
                 'self_paced_price_ngn'       => 'nullable|numeric|min:0',
 
-                // Discounts
                 'onetime_discount_usd' => 'nullable|numeric|min:0',
                 'onetime_discount_ngn' => 'nullable|numeric|min:0',
             ]);
@@ -458,13 +471,29 @@ class AdminCourseController extends Controller
             ], 422);
         }
 
+        // Cast boolean strings from FormData
+        if (array_key_exists('is_freemium', $validated)) {
+            $validated['is_freemium'] = filter_var($validated['is_freemium'], FILTER_VALIDATE_BOOLEAN);
+        }
+        if (array_key_exists('is_premium', $validated)) {
+            $validated['is_premium'] = filter_var($validated['is_premium'], FILTER_VALIDATE_BOOLEAN);
+        }
+        if (array_key_exists('offers_one_on_one', $validated)) {
+            $validated['offers_one_on_one'] = filter_var($validated['offers_one_on_one'], FILTER_VALIDATE_BOOLEAN);
+        }
+        if (array_key_exists('offers_group_mentorship', $validated)) {
+            $validated['offers_group_mentorship'] = filter_var($validated['offers_group_mentorship'], FILTER_VALIDATE_BOOLEAN);
+        }
+        if (array_key_exists('offers_self_paced', $validated)) {
+            $validated['offers_self_paced'] = filter_var($validated['offers_self_paced'], FILTER_VALIDATE_BOOLEAN);
+        }
+
         // Handle image uploads — only update if a new file/value was provided
         $heroImage = $this->handleImageInput($request, 'hero_image');
         if ($heroImage !== null) {
             $validated['hero_image'] = $heroImage;
             Log::info('📝 [update] New hero_image stored: ' . $heroImage);
         } else {
-            // Don't overwrite the existing value with null
             unset($validated['hero_image']);
             Log::info('📝 [update] hero_image not changed (no new file/value)');
         }
@@ -483,7 +512,7 @@ class AdminCourseController extends Controller
             $validated['price'] = $validated['price_usd'];
         }
 
-        // Remove _method from validated so it doesn't get written to the DB
+        // Remove _method so it doesn't get written to the DB
         unset($validated['_method']);
 
         $course->update($validated);

@@ -35,6 +35,7 @@ class WelcomeEmail extends Mailable
                 'user' => $this->user,
                 'coursesUrl' => env('FRONTEND_URL', 'http://localhost:3000') . '/courses/courses',
                 'dashboardUrl' => env('FRONTEND_URL', 'http://localhost:3000') . '/user/dashboard',
+                'whatsappCommunityUrl' => 'https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2',
             ]
         );
     }

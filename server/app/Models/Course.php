@@ -23,6 +23,7 @@ class Course extends Model
         'price',
         'is_freemium',
         'is_premium',
+        'is_active',
         // Learning tracks
         'offers_one_on_one',
         'offers_group_mentorship',
