@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Clock, User, Mail, Phone, BookOpen, MessageSquare
 import AppLayout from "@/components/layouts/AppLayout";
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
+import type { Course } from '@/lib/types';
 
 const BRAND = "#4A3AFF";
 
@@ -15,19 +16,6 @@ const CONSULTATION_TYPES = [
   { value: 'technical_support', label: 'Technical Support', desc: 'Help with technical challenges in your course' },
   { value: 'renewal', label: 'Renewal', desc: 'Discuss course renewal or extension options' },
   { value: 'general', label: 'General Inquiry', desc: 'Any other questions or discussions' },
-];
-
-const COURSES = [
-  'Full Stack Web Development',
-  'Data Science Fundamentals',
-  'UI/UX Design Masterclass',
-  'Mobile App Development',
-  'Cloud Computing AWS',
-  'Digital Marketing Strategy',
-  'Machine Learning A-Z',
-  'Cybersecurity Essentials',
-  'Not enrolled yet',
-  'Other',
 ];
 
 const TIME_SLOTS = [
@@ -60,6 +48,8 @@ export default function ConsultationPage() {
 
   const [pricing, setPricing] = useState<{ currency: string; amount: number } | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
 
 useEffect(() => {
   const fetchPricing = async () => {
@@ -74,6 +64,20 @@ useEffect(() => {
     }
   };
   fetchPricing();
+}, []);
+
+useEffect(() => {
+  const fetchCourses = async () => {
+    try {
+      const data = await api.courses.getAll();
+      setCourses(data);
+    } catch {
+      setCourses([]);
+    } finally {
+      setCoursesLoading(false);
+    }
+  };
+  fetchCourses();
 }, []);
 
 const formatPrice = () => {
@@ -394,7 +398,12 @@ const formatPrice = () => {
                         <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                         <select name="course" value={form.course} onChange={handleChange} className="field-input pl-9 appearance-none">
                           <option value="">Select a course…</option>
-                          {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
+                          {coursesLoading && <option disabled>Loading courses…</option>}
+                          {courses.map(c => (
+                            <option key={c.course_id} value={c.title}>{c.title}</option>
+                          ))}
+                          <option value="Not enrolled yet">Not enrolled yet</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
                     </div>

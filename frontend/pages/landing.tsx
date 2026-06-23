@@ -338,28 +338,193 @@ export default function TenAlyticsLanding() {
       {/* CONTENT */}
       <main style={{ width: "100%", maxWidth: 780, margin: "84px auto 0", display: "flex", flexDirection: "column", gap: 12, padding: "0 12px 60px" }}>
 
-        {/* HERO */}
-        <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden" }}>
-          <div style={{ padding: "28px 24px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <BrandIcon size={52} />
-              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#1a1a1a" }}>Learnexity Flex</div>
+      {/* HERO */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 20,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            padding: "28px 24px",
+            textAlign: "center",
+          }}
+        >
+          {/* Eyebrow - very big font */}
+          <div
+            style={{
+              fontSize: "1.9rem",
+              fontWeight: 800,
+              color: "#1a1a1a",
+              lineHeight: 1.15,
+              marginBottom: 10,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            From Learning to Earning.
+          </div>
+
+          {/* Bold header */}
+          <div
+            style={{
+              fontSize: "1.15rem",
+              fontWeight: 800,
+              color: "#1a1a1a",
+              lineHeight: 1.35,
+              marginBottom: 6,
+            }}
+          >
+            Learn Tech Skills. Gain Experience. Increase Your Income.
+          </div>
+
+          {/* Subtext */}
+          <div
+            style={{
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              color: "#444",
+              marginBottom: 14,
+            }}
+          >
+            Without leaving your current role.
+          </div>
+
+          {/* Supporting statement */}
+          <p
+            style={{
+              fontSize: "0.9rem",
+              color: "#555",
+              lineHeight: 1.7,
+              marginBottom: 18,
+              maxWidth: 500,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            We help you build in-demand skills, gain real-world experience, and
+            provide the support you need to confidently transition into earning
+            opportunities.
+          </p>
+
+          {/* Highlight stat lines */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              marginBottom: 20,
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "#000",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "0.92rem",
+                padding: "14px 16px",
+                borderRadius: 12,
+                lineHeight: 1.4,
+                width: "100%",
+                maxWidth: 500,
+              }}
+            >
+              Imagine earning $1,500 – $10,000+ per month in global tech
+              opportunities.
             </div>
-            <p style={{ fontSize: "0.9rem", color: "#555", lineHeight: 1.7, marginBottom: 20 }}>
-              Learnexity Flex provides tailored self paced tech training, AI-focused courses, and essential soft skills development for individuals, organizations, and corporate bodies. We&apos;re committed to empowering professionals to stay relevant and thrive in the evolving landscape of technology and AI.
-            </p>
-            <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-              {socialLinks.map((s) => (
-                <a key={s.label} href={s.href} aria-label={s.label} className="ten-social-btn" style={{ width: 40, height: 40, borderRadius: 10, background: "#000", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", transition: "background 0.15s" }}>{s.icon}</a>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              {["Business", "Education", "Tech"].map((tag) => (
-                <a key={tag} href="#" className="ten-tag" style={{ fontSize: "0.82rem", color: "#fff", fontWeight: 500, textDecoration: "none" }}>{tag}</a>
-              ))}
+
+            <div
+              style={{
+                background: "#f3f3f3",
+                color: "#1a1a1a",
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                padding: "14px 16px",
+                borderRadius: 12,
+                border: "1px solid #ebebeb",
+                width: "100%",
+                maxWidth: 500,
+              }}
+            >
+              You can qualify for up to 50% scholarships.
             </div>
           </div>
+
+          {/* Closing CTA line */}
+          <p
+            style={{
+              fontSize: "0.92rem",
+              fontWeight: 700,
+              color: "#1a1a1a",
+              marginBottom: 20,
+            }}
+          >
+            Join our community and start your journey today.
+          </p>
+
+          {/* Social Icons */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginBottom: 20,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {socialLinks.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                aria-label={s.label}
+                className="ten-social-btn"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: "#000",
+                  border: "1px solid #222",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  transition: "background 0.15s",
+                }}
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
+
+          {/* Tags */}
+          <div
+            style={{
+              display: "flex",
+              gap: 14,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {["Business", "Education", "Tech"].map((tag) => (
+              <a
+                key={tag}
+                href="#"
+                className="ten-tag"
+                style={{
+                  fontSize: "0.82rem",
+                  color: "#fff",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
+              >
+                {tag}
+              </a>
+            ))}
+          </div>
         </div>
+      </div>
 
         {/* CTA */}
         <div style={{ ...card }}>

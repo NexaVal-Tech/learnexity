@@ -24,43 +24,61 @@ const TEAM: TeamMember[] = [
     name: "Mary Eze",
     role: "Founder | Clinical Informatics Specialist | Certified Cloud Practitioner",
     bio: "Mary Eze is the Founder of Learnexity, a premier technology training platform dedicated to workforce development and driving economic growth within underserved communities. As a Clinical Informatics Specialist and Certified Cloud Practitioner, she brings high-level expertise at the intersection of data and cloud technology to design innovative, scalable solutions.",
-    image: "/images/ceo.jpeg",
+    image: "/images/emmas-sister.jpeg",
     linkedin: "#",
     twitter: "#",
     featured: true,
   },
   {
-    name: "Instructor Name",
-    role: "Lead Instructor · Software Engineering",
-    bio: "Add a short bio here — background, specialisation, and teaching style.",
-    image: "/images/Nnamdi-2.png",
+    name: "Kingsley Eze",
+    role: "President, Learnexity",
+    bio: "Kingsley Eze serves as the President of Learnexity, where he plays a pivotal role in driving strategic growth, organizational excellence, and continuous innovation. With a strong foundation in systems thinking, he provides the executive leadership needed to design and scale programs that are both operationally sound and deeply learner-centered.",
+    image: "/images/decenc.jpg",
     linkedin: "#",
   },
   {
-    name: "Instructor Name",
-    role: "Instructor · UI/UX & Design",
-    bio: "Add a short bio here — background, specialisation, and teaching style.",
-    image: "/images/team/instructor-2.jpg",
+    name: "Decency Onyekachi Ogbonna, MBA",
+    role: "Executive Advisor, Learnexity",
+    bio: "Decency Onyekachi Ogbonna, MBA, serves as an Executive Advisor at Learnexity, where he contributes to the development of high-impact learning strategies and programs that drive measurable student success. As the Founder and CEO of Decency NCLEX Academy, he has built a results-driven platform dedicated to preparing aspiring nurses for licensure through structured training and mentorship.",
+    image: "/images/decency.jpg",
     linkedin: "#",
   },
   {
-    name: "Instructor Name",
-    role: "Instructor · Data & AI",
-    bio: "Add a short bio here — background, specialisation, and teaching style.",
-    image: "/images/team/instructor-3.jpg",
+    name: "Nmeribe Nnamdi",
+    role: "Software Engineer",
+    bio: "Nmeribe a Software Engineer with 5+ years of experience and an Electrical/Electronics Engineer with a passion for building innovative digital solutions and solving complex technical problems. who specializes in web and mobile application development systems development, combining software expertise with strong engineering principles. whose goal is to create reliable, efficient, and impactful technologies that drive business growth and improve user experiences.",
+    image: "/images/chidiadi-1.png",
     linkedin: "#",
   },
   {
-    name: "Team Member Name",
-    role: "Operations & Student Success",
-    bio: "Add a short bio here.",
-    image: "/images/team/member-1.jpg",
+    name: "Opie Samuel",
+    role: "Full-Stack Developer",
+    bio: "Opie Chisom Samuel is a full-stack developer and AI content creator who specializes in building automated, scalable content systems. He has successfully monetized over three YouTube channels within three months and has helped more than 10 individuals achieve monetization. His work focuses on combining technology and strategy to create sustainable online income, while guiding others to grow and succeed in the digital space.",
+    image: "/images/opie.jpg",
   },
   {
-    name: "Team Member Name",
-    role: "Marketing & Community",
-    bio: "Add a short bio here.",
-    image: "/images/team/member-2.jpg",
+    name: "Glory Chikadibia",
+    role: "Social Media Management",
+    bio: "Chikadibia Glory is a results-driven social media manager and coach with over 4 years of experience crafting strategies that elevate brands and build influence. She goes beyond teaching equipping individuals with the mindset, structure, and strategic thinking needed to operate as top professionals in the industry.",
+    image: "/images/glory.jpg",
+  },
+  {
+    name: "Sunday Goodnews",
+    role: "Software Engineer",
+    bio: "Sunday Goodnews is a software engineer with over 5 years of experience, who has led engineering teams to build solutions like ERPP and CAMP for the Nigerian Shippers Council. He teaches DevOps with a focus on preparing students to become industry-ready engineers..",
+    image: "/images/instructor-2.jpg",
+  },
+  {
+    name: "Ejiro Okereke",
+    role: "UI/UX Designer",
+    bio: "Ejiro Okereka is a Product and Brand Designer with over 3 years of experience creating intuitive digital products and cohesive brand identities across industries like finance, wellness, education, and productivity. She specializes in transforming ideas into user-friendly, visually engaging experiences—combining functionality with strong visual direction. Passionate about growth, she helps beginners build solid design foundations and confidently apply their skills to real-world projects.",
+    image: "/images/instructor-3.jpg",
+  },
+  {
+    name: "Grant Erondu",
+    role: "Data science and machine learning",
+    bio: "Grant Erondu is a data science and machine learning enthusiast with a passion for understanding how intelligent systems behave and make decisions. Over the years, he has trained over 100 students, equipping them with practical skills to analyze data and build impactful solutions.",
+    image: "/images/instructor-1.jpg",
   },
 ];
 
@@ -103,20 +121,22 @@ function FeaturedCard({ member }: { member: TeamMember }) {
       <div
         style={{
           position: "relative",
-          minHeight: "420px",
+          minHeight: "460px",
           background: `linear-gradient(135deg, ${BRAND}18 0%, #1a1a22 100%)`,
           overflow: "hidden",
         }}
       >
-        <Image
-          src={member.image}
-          alt={member.name}
-          fill
-          className="object-cover object-top"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
+        {member.image && (
+          <Image
+            src={member.image}
+            alt={member.name}
+            fill
+            style={{ objectFit: "cover", objectPosition: "center 20%" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
         {/* Gradient overlay blending into right side */}
         <div
           style={{
@@ -230,56 +250,6 @@ function FeaturedCard({ member }: { member: TeamMember }) {
         >
           {member.bio}
         </p>
-
-        {/* Social links */}
-        {(member.linkedin || member.twitter) && (
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
-            {member.linkedin && (
-              <a
-                href={member.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  color: "rgba(255,255,255,0.45)",
-                  fontSize: "0.8rem",
-                  textDecoration: "none",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "999px",
-                  padding: "0.4rem 0.85rem",
-                  transition: "all 0.25s",
-                }}
-                className="social-link"
-              >
-                <LinkedInIcon /> LinkedIn
-              </a>
-            )}
-            {member.twitter && (
-              <a
-                href={member.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  color: "rgba(255,255,255,0.45)",
-                  fontSize: "0.8rem",
-                  textDecoration: "none",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "999px",
-                  padding: "0.4rem 0.85rem",
-                  transition: "all 0.25s",
-                }}
-                className="social-link"
-              >
-                <TwitterIcon /> X / Twitter
-              </a>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -306,21 +276,24 @@ function MemberCard({ member }: { member: TeamMember }) {
       <div
         style={{
           position: "relative",
-          height: "260px",
+          height: "320px",
           background: `linear-gradient(135deg, ${BRAND}14 0%, #18181f 100%)`,
           overflow: "hidden",
           flexShrink: 0,
         }}
       >
-        <Image
-          src={member.image}
-          alt={member.name}
-          fill
-          className="object-cover member-photo"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
+        {member.image && (
+          <Image
+            src={member.image}
+            alt={member.name}
+            fill
+            className="member-photo"
+            style={{ objectFit: "cover", objectPosition: "center 18%" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
         <div
           style={{
             position: "absolute",
@@ -328,37 +301,40 @@ function MemberCard({ member }: { member: TeamMember }) {
             background: "linear-gradient(to top, rgba(28,28,32,0.9) 0%, transparent 55%)",
           }}
         />
-        {/* Placeholder */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+
+        {/* Placeholder — only shown when there is no image */}
+        {!member.image && (
           <div
             style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-              background: `${BRAND}1a`,
-              border: `1.5px solid ${BRAND}33`,
+              position: "absolute",
+              inset: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={`${BRAND}88`} strokeWidth="1.5">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-              />
-            </svg>
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: `${BRAND}1a`,
+                border: `1.5px solid ${BRAND}33`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={`${BRAND}88`} strokeWidth="1.5">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Text */}
@@ -386,69 +362,6 @@ function MemberCard({ member }: { member: TeamMember }) {
         >
           {member.name}
         </h3>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "0.85rem",
-            lineHeight: 1.65,
-            margin: "0.25rem 0 0",
-            flex: 1,
-          }}
-        >
-          {member.bio}
-        </p>
-
-        {/* Social links */}
-        {(member.linkedin || member.twitter) && (
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
-            {member.linkedin && (
-              <a
-                href={member.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-link"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.4)",
-                  textDecoration: "none",
-                  transition: "all 0.25s",
-                }}
-                aria-label={`${member.name} on LinkedIn`}
-              >
-                <LinkedInIcon />
-              </a>
-            )}
-            {member.twitter && (
-              <a
-                href={member.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-link"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.4)",
-                  textDecoration: "none",
-                  transition: "all 0.25s",
-                }}
-                aria-label={`${member.name} on X`}
-              >
-                <TwitterIcon />
-              </a>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

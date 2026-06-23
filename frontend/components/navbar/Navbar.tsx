@@ -136,6 +136,7 @@ const NAV: NavEntry[] = [
     items: [
       { href: "/about", label: "About Us", description: "Our story and mission" },
       { href: "/contact", label: "Contact Us", description: "Get in touch" },
+      { href: "/our-team", label: "Meet our Team", description: "Get in touch" },
     ],
   },
   { type: "link", href: "/community", label: "Community" },
@@ -615,7 +616,7 @@ export default function Navbar() {
             )}
 
             <Link
-              href="https://calendly.com/nexavaltech/30min"
+              href="/consultation"
               className="
                 relative overflow-hidden
                 bg-[#6C63FF] text-white text-[13px] px-5 py-2.5 rounded-xl font-semibold
@@ -836,7 +837,7 @@ export default function Navbar() {
             )}
           </div>
           <Link
-            href="https://calendly.com/nexavaltech/30min"
+            href="/consultation"
             onClick={() => setIsMobileOpen(false)}
             className="
               block w-full text-center
