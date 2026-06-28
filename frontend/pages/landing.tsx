@@ -339,158 +339,70 @@ export default function TenAlyticsLanding() {
       <main style={{ width: "100%", maxWidth: 780, margin: "84px auto 0", display: "flex", flexDirection: "column", gap: 12, padding: "0 12px 60px" }}>
 
       {/* HERO */}
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 20,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "28px 24px",
-            textAlign: "center",
-          }}
-        >
+      <div style={{background: "#fff", borderRadius: 20, overflow: "hidden", }} >
+        <div style={{padding: "28px 24px", textAlign: "center", }}>
           {/* Eyebrow - very big font */}
-          <div
-            style={{
-              fontSize: "1.9rem",
-              fontWeight: 800,
-              color: "#1a1a1a",
-              lineHeight: 1.15,
-              marginBottom: 10,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            From Learning to Earning.
-          </div>
+          <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden",}}>
+            <div style={{ padding: "28px 24px", textAlign: "center" }}>
+              {/* Main Heading */}
+              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 12, letterSpacing: "-0.02em",}}>
+                Earn More. Without Quitting Your Job.
+              </div>
 
-          {/* Bold header */}
-          <div
-            style={{
-              fontSize: "1.15rem",
-              fontWeight: 800,
-              color: "#1a1a1a",
-              lineHeight: 1.35,
-              marginBottom: 6,
-            }}
-          >
-            Learn Tech Skills. Gain Experience. Increase Your Income.
-          </div>
+              {/* Supporting Statement */}
+              <div style={{fontSize: "1.1rem", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.45, marginBottom: 18,}}>
+                Imagine earning $10,000+ per month through global tech opportunities.
+              </div>
 
-          {/* Subtext */}
-          <div
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              color: "#444",
-              marginBottom: 14,
-            }}
-          >
-            Without leaving your current role.
-          </div>
+              {/* Description */}
+              <p style={{fontSize: "0.95rem", color: "#555", lineHeight: 1.8, marginBottom: 22, maxWidth: 520, marginLeft: "auto", marginRight: "auto",}} >
+                At Learnexity, you'll learn in-demand tech skills, gain real-world
+                experience, and receive expert guidance designed to unlock new earning
+                opportunities.
+              </p>
 
-          {/* Supporting statement */}
-          <p
-            style={{
-              fontSize: "0.9rem",
-              color: "#555",
-              lineHeight: 1.7,
-              marginBottom: 18,
-              maxWidth: 500,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            We help you build in-demand skills, gain real-world experience, and
-            provide the support you need to confidently transition into earning
-            opportunities.
-          </p>
+              {/* Feature List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center", marginBottom: 24, }}>
+                <div style={{ background: "#000", color: "#fff", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, width: "100%", maxWidth: 520, }} >
+                  Learn from industry experts
+                </div>
 
-          {/* Highlight stat lines */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              marginBottom: 20,
-              alignItems: "center",
-            }}
-          >
-            <div
-              style={{
-                background: "#000",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "0.92rem",
-                padding: "14px 16px",
-                borderRadius: 12,
-                lineHeight: 1.4,
-                width: "100%",
-                maxWidth: 500,
-              }}
-            >
-              Imagine earning $1,500 – $10,000+ per month in global tech
-              opportunities.
-            </div>
+                <div style={{ background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb", width: "100%", maxWidth: 520, }}>
+                  Build hands-on projects
+                </div>
 
-            <div
-              style={{
-                background: "#f3f3f3",
-                color: "#1a1a1a",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                padding: "14px 16px",
-                borderRadius: 12,
-                border: "1px solid #ebebeb",
-                width: "100%",
-                maxWidth: 500,
-              }}
-            >
-              You can qualify for up to 50% scholarships.
+                <div  style={{background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb", width: "100%", maxWidth: 520,}}>
+                  Gain practical experience
+                </div>
+
+                <div style={{background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700,fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb",  width: "100%", maxWidth: 520,}} >
+                  Access mentorship and support
+                </div>
+              </div>
+
+              {/* Scholarship Highlight */}
+              <div style={{background: "#000", color: "#fff", fontWeight: 800, fontSize: "0.95rem", padding: "16px", borderRadius: 12, width: "100%", maxWidth: 520, margin: "0 auto 20px",}} >
+                Up to 50% Scholarships Available
+              </div>
+
+              {/* CTA */}
+              <p style={{fontSize: "1rem", fontWeight: 800, color: "#1a1a1a", marginBottom: 10, }} >
+                Join the Learnexity Community Today.
+              </p>
+
+              {/* Closing Tagline */}
+              <p style={{fontSize: "1.05rem", fontWeight: 800, color: "#000", margin: 0,}} >
+                From Learning to Earning.
+              </p>
             </div>
           </div>
-
-          {/* Closing CTA line */}
-          <p
-            style={{
-              fontSize: "0.92rem",
-              fontWeight: 700,
-              color: "#1a1a1a",
-              marginBottom: 20,
-            }}
-          >
-            Join our community and start your journey today.
-          </p>
 
           {/* Social Icons */}
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              marginBottom: 20,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
+          <div style={{display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", justifyContent: "center", }}>
             {socialLinks.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                aria-label={s.label}
-                className="ten-social-btn"
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: "#000",
-                  border: "1px solid #222",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textDecoration: "none",
-                  transition: "background 0.15s",
+              <a key={s.label} href={s.href} aria-label={s.label} className="ten-social-btn"
+                style={{width: 40, height: 40, borderRadius: 10, background: "#000", border: "1px solid #222", display: "flex",
+                  alignItems: "center", justifyContent: "center", textDecoration: "none", transition: "background 0.15s",
                 }}
               >
                 {s.icon}
@@ -499,26 +411,10 @@ export default function TenAlyticsLanding() {
           </div>
 
           {/* Tags */}
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
+          <div style={{display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center",}}>
             {["Business", "Education", "Tech"].map((tag) => (
-              <a
-                key={tag}
-                href="#"
-                className="ten-tag"
-                style={{
-                  fontSize: "0.82rem",
-                  color: "#fff",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
-              >
+              <a key={tag} href="#"  className="ten-tag"
+                style={{fontSize: "0.82rem", color: "#fff", fontWeight: 500,  textDecoration: "none", }}>
                 {tag}
               </a>
             ))}

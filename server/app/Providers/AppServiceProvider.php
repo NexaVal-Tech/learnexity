@@ -11,6 +11,10 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use App\Models\CourseEnrollment;
+use App\Jobs\SendDailyCheckinEmailsJob;
+use App\Jobs\SendInactiveUserEmailsJob;
+use App\Jobs\SendUnenrolledUserNudgeJob;
+use App\Jobs\SendPendingPaymentNudgeJob;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,17 +35,17 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         // ── Scheduled Tasks ──────────────────────────────────────────────
-        if ($this->app->runningInConsole()) {
+         if ($this->app->runningInConsole()) {
             $this->app->booted(function () {
                 $schedule = $this->app->make(Schedule::class);
 
                 $schedule->command('payments:send-reminders')
-                         ->dailyAt('09:00')
-                         ->withoutOverlapping();
+                        ->dailyAt('09:00')
+                        ->withoutOverlapping();
 
                 $schedule->command('payments:check-overdue')
-                         ->dailyAt('02:00')
-                         ->withoutOverlapping();
+                        ->dailyAt('02:00')
+                        ->withoutOverlapping();
 
                 $schedule->call(function () {
                     CourseEnrollment::where('payment_type', 'installment')
@@ -51,6 +55,27 @@ class AppServiceProvider extends ServiceProvider
                 ->name('update-access-status')
                 ->everySixHours()
                 ->withoutOverlapping();
+
+                // ── Newly registered email jobs ─────────────────────────────────
+                $schedule->call(fn () => (new SendDailyCheckinEmailsJob())->handle())
+                        ->name('daily-checkin-emails')
+                        ->dailyAt('08:00')
+                        ->withoutOverlapping();
+
+                $schedule->call(fn () => (new SendInactiveUserEmailsJob())->handle())
+                        ->name('inactive-user-emails')
+                        ->dailyAt('08:15')
+                        ->withoutOverlapping();
+
+                $schedule->call(fn () => (new SendUnenrolledUserNudgeJob())->handle())
+                        ->name('unenrolled-user-nudge')
+                        ->dailyAt('08:30')
+                        ->withoutOverlapping();
+
+                $schedule->call(fn () => (new SendPendingPaymentNudgeJob())->handle())
+                        ->name('pending-payment-nudge')
+                        ->dailyAt('08:45')
+                        ->withoutOverlapping();
             });
         }
     }

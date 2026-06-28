@@ -215,49 +215,36 @@ class ScholarshipController extends Controller
      *
      * @return array{0: string, 1: int, 2: string}  [status, discount_pct, review_note]
      */
-    private function autoDecide(
-        bool   $isStudent,
-        bool   $isEmployed,
-        string $salaryRange,
-        bool   $isNigeria
-    ): array {
-        // Rule 1: Student + Unemployed → 50%
-        if ($isStudent && ! $isEmployed) {
+    private function autoDecide(bool $isStudent, bool $isEmployed, string $salaryRange, bool $isNigeria ): array {
+
+        // Student (employed or unemployed)
+        if ($isStudent) {
             return [
                 'approved',
                 50,
-                '50% scholarship awarded — student with no current employment.',
+                '50% scholarship awarded.',
             ];
         }
 
-        // Rule 2: Student + Employed (any income) → 25%
-        if ($isStudent && $isEmployed) {
-            return [
-                'approved',
-                25,
-                '25% scholarship awarded — student in employment.',
-            ];
-        }
-
-        // Rule 3: Not a student + Unemployed → 25%
+        // Not a student but unemployed
         if (! $isStudent && ! $isEmployed) {
             return [
                 'approved',
-                25,
-                '25% scholarship awarded — unemployed and seeking to upskill.',
+                50,
+                '50% scholarship awarded.',
             ];
         }
 
-        // Rule 4: Employed but income under ₦100k / $100 → 25%
+        // Employed with income under ₦100k / $100
         if ($isEmployed && $salaryRange === 'under_100') {
             return [
                 'approved',
-                25,
-                '25% scholarship awarded — employed but income below the ₦100,000 / $100 threshold.',
+                50,
+                '50% scholarship awarded.',
             ];
         }
 
-        // Rules 5 & 6: Employed with higher income → rejected
+        // Everyone else is rejected
         return [
             'rejected',
             0,
