@@ -4,6 +4,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Models\CourseEnrollment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -16,13 +17,14 @@ class AdminNewStudentMail extends Mailable
 
     public function __construct(
         public User $user,
+        public CourseEnrollment $enrollment,
         public ?string $referralCode = null
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Student Registration — ' . $this->user->name,
+            subject: 'New Course Enrollment - ' . $this->user->name,
         );
     }
 

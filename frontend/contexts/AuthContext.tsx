@@ -10,9 +10,15 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    name: string, email: string, password: string,
-    passwordConfirmation: string, phone?: string, referralCode?: string
+  sendRegistrationOtp: (email: string, referralCode?: string) => Promise<void>;
+  resendRegistrationOtp: (email: string) => Promise<void>;
+  verifyRegistrationOtp: (email: string, otp: string) => Promise<string>; // returns registration_token
+  completeRegistration: (
+    email: string,
+    registrationToken: string,
+    password: string,
+    passwordConfirmation: string,
+    termsAccepted: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -99,24 +105,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (
-    name: string, email: string, password: string,
-    passwordConfirmation: string, phone?: string, referralCode?: string
-  ) => {
+  // ── STEP 1: send OTP to email ─────────────────────────────────────────
+  const sendRegistrationOtp = async (email: string, referralCode?: string) => {
     try {
       setError(null);
-      const payload: any = { name, email, password, password_confirmation: passwordConfirmation };
-      if (phone)        payload.phone         = phone;
-      if (referralCode) payload.referral_code = referralCode;
-      await api.auth.register(payload);
-    } catch (error: any) {
+      await api.auth.sendRegistrationOtp({ email, referral_code: referralCode });
+    } catch (error) {
       const err = handleApiError(error);
       setError(err);
       throw new Error(err);
     }
-    await router.replace(
-      `/user/auth/login?message=verify_email&email=${encodeURIComponent(email)}`
-    );
+  };
+
+  const resendRegistrationOtp = async (email: string) => {
+    try {
+      setError(null);
+      await api.auth.resendRegistrationOtp(email);
+    } catch (error) {
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
+    }
+  };
+
+  // ── STEP 2: verify OTP -> get short-lived registration_token ──────────
+  const verifyRegistrationOtp = async (email: string, otp: string): Promise<string> => {
+    try {
+      setError(null);
+      const res = await api.auth.verifyRegistrationOtp({ email, otp });
+      return res.registration_token;
+    } catch (error) {
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
+    }
+  };
+
+  // ── STEP 3: set password + accept terms -> account created + logged in ─
+  const completeRegistration = async (
+    email: string,
+    registrationToken: string,
+    password: string,
+    passwordConfirmation: string,
+    termsAccepted: boolean
+  ) => {
+    try {
+      setError(null);
+      const response = await api.auth.completeRegistration({
+        email,
+        registration_token: registrationToken,
+        password,
+        password_confirmation: passwordConfirmation,
+        terms_accepted: termsAccepted,
+      });
+      if (response.token) localStorage.setItem('token', response.token);
+      await refreshUser();
+      // Land directly on the dashboard with a flag urging profile completion.
+      router.push('/user/dashboard?welcome=1');
+    } catch (error) {
+      const err = handleApiError(error);
+      setError(err);
+      throw new Error(err);
+    }
   };
 
   const logout = async () => {
@@ -137,10 +187,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // FIX: referral code is now passed as ?ref= on the redirect URL so the
-  // backend redirectToGoogle() method can read it and store it in session.
-  // Previously the ref was only in sessionStorage, which the Laravel backend
-  // cannot access — so it was silently lost on every Google signup.
+  // Referral code is passed as ?ref= on the redirect URL so the backend
+  // redirectToGoogle() method can read it and store it in session.
   const loginWithGoogle = () => {
     const scholarshipId  = sessionStorage.getItem('scholarship_course_redirect');
     const browseCourses  = sessionStorage.getItem('scholarship_browse_courses');
@@ -151,7 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (scholarshipId)  params.set('scholarship_redirect',    scholarshipId);
     if (browseCourses)  params.set('scholarship_browse_courses', 'true');
     if (intendedCourse) params.set('intended_course',          intendedCourse);
-    if (ref)            params.set('ref',                      ref);  // ← backend reads this
+    if (ref)            params.set('ref',                      ref);
 
     const qs          = params.toString();
     const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/redirect${qs ? `?${qs}` : ''}`;
@@ -160,8 +208,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, error, login, register, logout,
-      refreshUser, loginWithGoogle, clearError, setUserFromToken,
+      user, loading, error, login,
+      sendRegistrationOtp, resendRegistrationOtp, verifyRegistrationOtp, completeRegistration,
+      logout, refreshUser, loginWithGoogle, clearError, setUserFromToken,
     }}>
       {children}
     </AuthContext.Provider>

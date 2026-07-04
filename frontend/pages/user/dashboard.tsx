@@ -17,6 +17,7 @@ export default function UserDashboardPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
 
   useEffect(() => {
     if (tab === 'your-course') {
@@ -28,6 +29,13 @@ export default function UserDashboardPage() {
       }, 5000);
     }
   }, [tab]);
+
+  useEffect(() => {
+    if (router.query.welcome === '1') {
+      setShowWelcomeBanner(true);
+      router.replace('/user/dashboard', undefined, { shallow: true });
+    }
+  }, [router.query.welcome]);
 
   useEffect(() => {
     fetchCourses();
@@ -118,6 +126,39 @@ export default function UserDashboardPage() {
       )}
 
       <div className="max-w-[1500px] mx-auto p-4 pt-25">
+        {/* ── Welcome / Complete Profile Banner ───────────────────────────── */}
+        {showWelcomeBanner && (
+          <div className="mb-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-100 rounded-3xl p-5 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-900 font-bold text-sm">Registration successful — welcome to Learnexity!</p>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  Take a minute to complete your profile so we can personalize your experience.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/user/profile"
+                className="text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full transition-colors"
+              >
+                Complete Profile
+              </Link>
+              <button
+                onClick={() => setShowWelcomeBanner(false)}
+                className="text-gray-400 hover:text-gray-600 text-xs px-2"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── Hero Section ─────────────────────────────────────────────── */}
         {hasAnyEnrollment ? (

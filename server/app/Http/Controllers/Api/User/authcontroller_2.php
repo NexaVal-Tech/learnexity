@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\PublicReferrer;
 use App\Models\ReferralCode;
 use App\Models\ReferralHistory;
-use App\Models\RegistrationOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -15,45 +14,39 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Socialite;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Log;
 use App\Models\EmailSequenceLog;
+use App\Mail\WelcomeEmail;  
 use App\Models\CourseEnrollment;
 use App\Models\SprintProgress;
 use App\Models\CourseMaterial;
 use App\Mail\LoginWelcomeBackMail;
 use App\Mail\AdminNewStudentMail;
-use App\Mail\RegistrationOtpMail;
 use App\Services\UserPerformanceTracker;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    private const OTP_TTL_MINUTES   = 10;
-    private const TOKEN_TTL_MINUTES = 15;
-    private const MAX_OTP_ATTEMPTS  = 5;
-    private const RESEND_COOLDOWN_S = 45;
-    private const MAX_RESENDS       = 6;
-
-    /**
-     * STEP 1 — person submits only their email (+ optional referral code).
-     * We validate it's not already registered, then email a 6-digit OTP.
-     */
-    public function sendRegistrationOtp(Request $req)
+    public function register(Request $req)
     {
-        Log::info('📝 [REGISTER-OTP] Send OTP attempt', [
+        Log::info('📝 [REGISTER] Registration attempt', [
             'email'        => $req->email,
             'has_referral' => !empty($req->referral_code),
+            'referral_code'=> $req->referral_code,
         ]);
-
+ 
         $v = Validator::make($req->all(), [
-            'email'         => 'required|email|max:255|unique:users,email',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|min:8|confirmed',
+            'phone'         => 'nullable|string',
             'referral_code' => [
                 'nullable',
                 'string',
                 function ($attribute, $value, $fail) {
                     if ($value) {
-                        $inStudentCodes    = ReferralCode::where('referral_code', $value)->exists();
+                        $inStudentCodes   = ReferralCode::where('referral_code', $value)->exists();
                         $inPublicReferrers = PublicReferrer::where('referral_code', $value)->exists();
                         if (!$inStudentCodes && !$inPublicReferrers) {
                             $fail('Invalid referral code. Please check and try again.');
@@ -62,230 +55,117 @@ class AuthController extends Controller
                 },
             ],
         ]);
-
+ 
         if ($v->fails()) {
-            Log::error('❌ [REGISTER-OTP] Validation failed', $v->errors()->toArray());
-
+            Log::error('❌ [REGISTER] Validation failed', $v->errors()->toArray());
+ 
             if ($v->errors()->has('email')) {
                 return response()->json([
                     'message' => 'This email is already registered. Please login instead.',
                     'errors'  => $v->errors(),
                 ], 422);
             }
+            if ($v->errors()->has('referral_code')) {
+                return response()->json([
+                    'message' => 'Invalid referral code. Please check and try again.',
+                    'errors'  => $v->errors(),
+                ], 422);
+            }
             return response()->json([
-                'message' => $v->errors()->first(),
+                'message' => 'Validation failed. Please check your input.',
                 'errors'  => $v->errors(),
             ], 422);
         }
-
-        return $this->issueOtp($req->email, $req->referral_code);
-    }
-
-    /**
-     * Resend OTP for an email that already has a pending registration.
-     */
-    public function resendRegistrationOtp(Request $req)
-    {
-        $req->validate(['email' => 'required|email']);
-
-        $record = RegistrationOtp::where('email', $req->email)->first();
-        if (!$record) {
-            return response()->json([
-                'message' => 'No pending registration found for this email. Please start again.',
-            ], 404);
-        }
-
-        return $this->issueOtp($record->email, $record->referral_code, $record);
-    }
-
-    private function issueOtp(string $email, ?string $referralCode, ?RegistrationOtp $record = null)
-    {
-        $record = $record ?: RegistrationOtp::where('email', $email)->first();
-
-        if ($record && $record->last_sent_at && $record->last_sent_at->addSeconds(self::RESEND_COOLDOWN_S)->isFuture()) {
-            $wait = now()->diffInSeconds($record->last_sent_at->addSeconds(self::RESEND_COOLDOWN_S));
-            return response()->json([
-                'message'     => "Please wait {$wait}s before requesting another code.",
-                'retry_after' => $wait,
-            ], 429);
-        }
-
-        if ($record && $record->resend_count >= self::MAX_RESENDS) {
-            return response()->json([
-                'message' => 'Too many code requests. Please try again later.',
-            ], 429);
-        }
-
-        $otp = (string) random_int(100000, 999999);
-
-        RegistrationOtp::updateOrCreate(
-            ['email' => $email],
-            [
-                'referral_code'    => $referralCode,
-                'otp_hash'         => Hash::make($otp),
-                'attempts'         => 0,
-                'expires_at'       => now()->addMinutes(self::OTP_TTL_MINUTES),
-                'verified_at'      => null,
-                'token_hash'       => null,
-                'token_expires_at' => null,
-                'resend_count'     => $record ? $record->resend_count + 1 : 0,
-                'last_sent_at'     => now(),
-            ]
-        );
-
-        try {
-            Mail::to($email)->queue(new RegistrationOtpMail($otp));
-        } catch (\Exception $e) {
-            Log::error('❌ [REGISTER-OTP] Failed to send OTP email', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Could not send verification email. Please try again.'], 500);
-        }
-
-        Log::info('✅ [REGISTER-OTP] OTP sent', ['email' => $email]);
-
-        return response()->json(['message' => 'Verification code sent to your email.']);
-    }
-
-    /**
-     * STEP 2 — verify the 6-digit code. On success, issue a short-lived
-     * registration_token used to authorize the password step.
-     */
-    public function verifyRegistrationOtp(Request $req)
-    {
-        $req->validate([
-            'email' => 'required|email',
-            'otp'   => 'required|digits:6',
-        ]);
-
-        $record = RegistrationOtp::where('email', $req->email)->first();
-
-        if (!$record || $record->expires_at->isPast()) {
-            Log::warning('⚠️ [REGISTER-OTP] Code expired or not found', ['email' => $req->email]);
-            return response()->json(['message' => 'Code expired or not found. Please request a new code.'], 422);
-        }
-
-        if ($record->attempts >= self::MAX_OTP_ATTEMPTS) {
-            return response()->json(['message' => 'Too many incorrect attempts. Please request a new code.'], 422);
-        }
-
-        if (!Hash::check($req->otp, $record->otp_hash)) {
-            $record->increment('attempts');
-            $remaining = self::MAX_OTP_ATTEMPTS - $record->attempts;
-            Log::warning('⚠️ [REGISTER-OTP] Incorrect code', ['email' => $req->email, 'remaining' => $remaining]);
-            return response()->json([
-                'message' => "Incorrect code. {$remaining} attempt(s) remaining.",
-            ], 422);
-        }
-
-        $token = Str::random(64);
-
-        $record->update([
-            'verified_at'      => now(),
-            'token_hash'       => Hash::make($token),
-            'token_expires_at' => now()->addMinutes(self::TOKEN_TTL_MINUTES),
-            'attempts'         => 0,
-        ]);
-
-        Log::info('✅ [REGISTER-OTP] Email verified', ['email' => $req->email]);
-
-        return response()->json([
-            'message'            => 'Email verified.',
-            'registration_token' => $token,
-        ]);
-    }
-
-    /**
-     * STEP 3 — set password + accept terms. Creates the account.
-     * Name/phone stay unset here — your profile setup flow fills those in
-     * later and is where the welcome email should fire from.
-     */
-    public function completeRegistration(Request $req)
-    {
-        $req->validate([
-            'email'              => 'required|email',
-            'registration_token' => 'required|string',
-            'password'           => ['required', 'confirmed', 'min:8', 'regex:/[A-Za-z]/', 'regex:/[0-9]/'],
-            'terms_accepted'     => 'required|accepted',
-        ]);
-
-        $record = RegistrationOtp::where('email', $req->email)->first();
-
-        if (
-            !$record ||
-            !$record->verified_at ||
-            !$record->token_hash ||
-            !$record->token_expires_at ||
-            $record->token_expires_at->isPast() ||
-            !Hash::check($req->registration_token, $record->token_hash)
-        ) {
-            Log::warning('⚠️ [REGISTER-COMPLETE] Invalid or expired registration session', ['email' => $req->email]);
-            return response()->json([
-                'message' => 'Your verification session has expired. Please verify your email again.',
-            ], 422);
-        }
-
-        if (User::where('email', $record->email)->exists()) {
-            $record->delete();
-            return response()->json(['message' => 'This email is already registered. Please login instead.'], 422);
-        }
-
-        // Placeholder name from email local-part — overwritten by your
-        // existing profile-setup flow.
-        $placeholderName = explode('@', $record->email)[0];
-
+ 
         $user = User::create([
-            'name'              => $placeholderName,
-            'email'             => $record->email,
-            'password'          => Hash::make($req->password),
-            'referred_by_code'  => $record->referral_code,
-            'email_verified_at' => now(), // OTP already proved ownership
-            'terms_accepted_at' => now(),
+            'name'             => $req->name,
+            'email'            => $req->email,
+            'password'         => Hash::make($req->password),
+            'phone'            => $req->phone,
+            'referred_by_code' => $req->referral_code,
         ]);
-
-        Log::info('✅ [REGISTER-COMPLETE] User created via OTP flow', [
+ 
+        Log::info('✅ [REGISTER] User created', [
             'user_id'          => $user->id,
             'email'            => $user->email,
             'referred_by_code' => $user->referred_by_code,
         ]);
+ 
+        // Send verification email (wrapped so SMTP failure doesn't kill registration)
+        $emailSent = false;
+        try {
+            event(new Registered($user));
+            $user->sendEmailVerificationNotification();
+            $emailSent = true;
+            Log::info('✅ [REGISTER] Verification email sent', ['user_id' => $user->id]);
+        } catch (\Exception $e) {
+            Log::error('❌ [REGISTER] Failed to send verification email', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+ 
+        // ── NEW: Send welcome email (queued, non-blocking) ────────────────────
+        dispatch(function () use ($user) {
+            try {
+                // Guard: only send once ever
+                if (EmailSequenceLog::sentWithinDays($user->id, 'welcome', 3650)) {
+                    return;
+                }
+ 
+                Mail::to($user->email)->queue(new WelcomeEmail($user));
+ 
+                EmailSequenceLog::record($user->id, 'welcome', null, [
+                    'triggered_by' => 'registration',
+                ]);
+ 
+                Log::info('✅ [REGISTER] Welcome email queued', ['user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('❌ [REGISTER] Welcome email failed', ['error' => $e->getMessage()]);
+            }
+        })->afterResponse();
+        // ── END NEW ───────────────────────────────────────────────────────────
 
-        $referralCode = $record->referral_code;
-        $record->delete();
+        // ── Notify admin of new registration ──────────────────────────────────
+        // In register() — capture the value, not the object
+        $referralCodeValue = $req->referral_code;
 
-        // ── Notify admin of new registration (unchanged behavior) ──────────
-        dispatch(function () use ($user, $referralCode) {
+        dispatch(function () use ($user, $referralCodeValue) {
             try {
                 $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
                 if (!$adminEmail) {
-                    Log::warning('⚠️ [REGISTER-COMPLETE] ADMIN_NOTIFICATION_EMAIL not set');
+                    Log::warning('⚠️ [REGISTER] ADMIN_NOTIFICATION_EMAIL not set');
                     return;
                 }
 
                 Mail::to($adminEmail)->queue(
-                    new AdminNewStudentMail($user, $referralCode)
+                    new AdminNewStudentMail($user, $referralCodeValue)
                 );
 
-                Log::info('✅ [REGISTER-COMPLETE] Admin notification queued', ['user_id' => $user->id]);
+                Log::info('✅ [REGISTER] Admin notification queued', ['user_id' => $user->id]);
             } catch (\Exception $e) {
-                Log::error('❌ [REGISTER-COMPLETE] Admin notification failed', ['error' => $e->getMessage()]);
+                Log::error('❌ [REGISTER] Admin notification failed', ['error' => $e->getMessage()]);
             }
         })->afterResponse();
-        // ── END admin notify ─────────────────────────────────────────────────
-
-        // Referral processing — identical logic to your existing method
-        if ($referralCode) {
-            $this->processReferral($user, $referralCode);
+        // ── END admin notify ──────────────────────────────────────────────────
+ 
+        // Process referral if code was provided
+        if ($req->referral_code) {
+            $this->processReferral($user, $req->referral_code);
         }
-
-        $token = JWTAuth::fromUser($user);
-
-        Log::info('✅ [REGISTER-COMPLETE] Registration completed successfully', [
-            'user_id' => $user->id,
-            'email'   => $user->email,
+ 
+        Log::info('✅ [REGISTER] Registration completed successfully', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'email_sent' => $emailSent,
         ]);
-
+ 
         return response()->json([
-            'message' => 'Registration successful!',
-            'user'    => $user,
-            'token'   => $token,
+            'message' => $emailSent
+                ? 'Registration successful! Please check your email to verify your account.'
+                : 'Registration successful! However, we could not send a verification email. Please use the resend option on the next page.',
+            'email'                    => $user->email,
+            'email_verification_sent'  => $emailSent,
         ], 201);
     }
 
@@ -321,6 +201,7 @@ class AuthController extends Controller
             ], 500);
         }
 
+        // Check if email is verified
         if (!$user->hasVerifiedEmail()) {
             if ($token) {
                 try {
@@ -349,55 +230,57 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'email'   => $user->email,
         ]);
-
+ 
+        // ── Update performance tracker (login streak) ─────────────────────────
         try {
             app(UserPerformanceTracker::class)->onLogin($user->id);
         } catch (\Exception $e) {
             Log::error('❌ Performance tracker onLogin failed', ['error' => $e->getMessage()]);
         }
-
+ 
+        // ── Send welcome-back email (once per day max) ────────────────────────
         dispatch(function () use ($user) {
             try {
                 if (EmailSequenceLog::sentTodayFor($user->id, 'login_welcome_back')) {
                     return;
                 }
-
+ 
                 $enrollments = CourseEnrollment::where('user_id', $user->id)
                     ->where('payment_status', 'completed')
                     ->get();
-
+ 
                 if ($enrollments->isEmpty()) return;
-
+ 
                 $courseProgress = $enrollments->map(function ($e) use ($user) {
                     $totalSprints     = CourseMaterial::where('course_id', $e->course_id)->count();
                     $completedSprints = SprintProgress::where('user_id', $user->id)
                         ->where('course_id', $e->course_id)
                         ->where('progress_percentage', 100)
                         ->count();
-
+ 
                     return [
                         'name'     => $e->course_name ?? "Course #{$e->course_id}",
                         'progress' => $totalSprints > 0 ? round(($completedSprints / $totalSprints) * 100) : 0,
                     ];
                 })->toArray();
-
+ 
                 $streak = \App\Models\UserPerformanceScore::where('user_id', $user->id)
                     ->max('login_streak_days') ?? 0;
-
+ 
                 Mail::to($user->email)->queue(
                     new LoginWelcomeBackMail($user, $streak, $courseProgress)
                 );
-
+ 
                 EmailSequenceLog::record($user->id, 'login_welcome_back', null, [
                     'streak' => $streak,
                 ]);
-
+ 
                 Log::info('✅ Login welcome-back email queued', ['user_id' => $user->id]);
             } catch (\Exception $e) {
                 Log::error('❌ Login welcome-back email failed', ['error' => $e->getMessage()]);
             }
         })->afterResponse();
-
+ 
         return response()->json([
             'message' => 'Login successful',
             'user'    => $user,
@@ -409,7 +292,7 @@ class AuthController extends Controller
     {
         $token = JWTAuth::getToken();
         if ($token) JWTAuth::invalidate($token);
-
+        
         return response()->json(['message' => 'Logged out successfully']);
     }
 
@@ -426,9 +309,10 @@ class AuthController extends Controller
     public function sendResetLink(Request $r)
     {
         Log::info('🔐 [PASSWORD RESET] Reset link request', ['email' => $r->email]);
-
+        
         $r->validate(['email' => 'required|email']);
-
+        
+        // Check if user exists
         $user = User::where('email', $r->email)->first();
         if (!$user) {
             Log::warning('⚠️ [PASSWORD RESET] Email not found', ['email' => $r->email]);
@@ -436,70 +320,72 @@ class AuthController extends Controller
                 'message' => 'If an account exists with this email, you will receive a password reset link.'
             ], 200);
         }
-
+        
         Log::info('✅ [PASSWORD RESET] User found, sending reset link', [
             'user_id' => $user->id,
             'email' => $user->email
         ]);
-
+        
         try {
             $status = Password::sendResetLink($r->only('email'));
-
+            
             Log::info('📧 [PASSWORD RESET] Password facade response', [
                 'status' => $status,
                 'is_sent' => $status === Password::RESET_LINK_SENT
             ]);
-
+            
             if ($status === Password::RESET_LINK_SENT) {
                 return response()->json([
                     'message' => 'Password reset link sent to your email.'
                 ], 200);
             }
-
+            
             Log::error('❌ [PASSWORD RESET] Failed to send', [
                 'status' => $status,
                 'email' => $r->email
             ]);
-
+            
             return response()->json([
                 'message' => 'Unable to send reset link. Please try again later.'
             ], 422);
-
+            
         } catch (\Exception $e) {
             Log::error('❌ [PASSWORD RESET] Exception occurred', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
+            
             return response()->json([
                 'message' => 'An error occurred. Please try again later.'
             ], 500);
         }
     }
 
-    public function redirectToGoogle(Request $request)
-    {
-        Log::info('🔗 [GOOGLE] Redirecting to Google OAuth', [
-            'has_ref'  => $request->has('ref'),
-            'ref_code' => $request->ref,
-        ]);
+public function redirectToGoogle(Request $request)
+{
+    Log::info('🔗 [GOOGLE] Redirecting to Google OAuth', [
+        'has_ref'  => $request->has('ref'),
+        'ref_code' => $request->ref,
+    ]);
 
-        if ($request->has('ref')) {
-            session(['pending_referral_code' => $request->ref]);
-            Log::info('📌 [GOOGLE] Referral code stored in session', ['code' => $request->ref]);
-        }
-        if ($request->has('scholarship_redirect')) {
-            session(['scholarship_redirect' => $request->scholarship_redirect]);
-        }
-        if ($request->has('scholarship_browse_courses')) {
-            session(['scholarship_browse_courses' => $request->scholarship_browse_courses]);
-        }
-        if ($request->has('intended_course')) {
-            session(['intended_course' => $request->intended_course]);
-        }
-
-        return Socialite::driver('google')->stateless()->redirect();
+    // Store all redirect flags in session so they survive the OAuth round-trip.
+    // The frontend encodes these as query params on the redirect URL.
+    if ($request->has('ref')) {
+        session(['pending_referral_code' => $request->ref]);
+        Log::info('📌 [GOOGLE] Referral code stored in session', ['code' => $request->ref]);
     }
+    if ($request->has('scholarship_redirect')) {
+        session(['scholarship_redirect' => $request->scholarship_redirect]);
+    }
+    if ($request->has('scholarship_browse_courses')) {
+        session(['scholarship_browse_courses' => $request->scholarship_browse_courses]);
+    }
+    if ($request->has('intended_course')) {
+        session(['intended_course' => $request->intended_course]);
+    }
+
+    return Socialite::driver('google')->stateless()->redirect();
+}
 
     public function handleGoogleCallback()
     {
@@ -508,6 +394,7 @@ class AuthController extends Controller
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $isProduction = app()->environment('production');
 
+        // 1️⃣ Fetch user from Google
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
             Log::info('✅ [GOOGLE] User fetched from Google', [
@@ -520,12 +407,14 @@ class AuthController extends Controller
             return redirect($frontendUrl . '/user/auth/login?error=oauth_failed');
         }
 
+        // 2️⃣ Check referral code in session
         $referralCode = session('pending_referral_code');
         Log::info('🔍 [GOOGLE] Checking for referral code', [
             'has_referral_in_session' => !empty($referralCode),
             'referral_code' => $referralCode
         ]);
 
+        // 3️⃣ Find or create user
         $user = User::where('email', $googleUser->getEmail())->first();
         if ($user) {
             if (!$user->google_id) {
@@ -554,6 +443,7 @@ class AuthController extends Controller
                 Log::info('🎉 [GOOGLE] Referral processed and session cleared');
             }
 
+            // ── Notify admin of new Google signup ─────────────────────────────
             $capturedReferralCode = $referralCode;
             dispatch(function () use ($user, $capturedReferralCode) {
                 try {
@@ -572,21 +462,23 @@ class AuthController extends Controller
                     Log::error('❌ [GOOGLE] Admin notification failed', ['error' => $e->getMessage()]);
                 }
             })->afterResponse();
+            // ── END admin notify ───────────────────────────────────────────────
         }
 
+        // 4️⃣ Generate JWT token
         $token = JWTAuth::fromUser($user);
         $isProduction = app()->environment('production');
 
         $cookie = cookie(
             'oauth_token',
             $token,
-            10,
+            10,                                         // 10 minutes
             '/',
-            $isProduction ? '.learnexity.org' : null,
-            $isProduction,
-            true,
+            $isProduction ? '.learnexity.org' : null,   // root domain in prod, null locally
+            $isProduction,                              // secure=true in prod (HTTPS only)
+            true,                                       // httpOnly always
             false,
-            $isProduction ? 'None' : 'Lax'
+            $isProduction ? 'None' : 'Lax'             // None for cross-subdomain, Lax for local
         );
 
         Log::info('🟢 [GOOGLE] Redirecting to frontend with cookie', ['user_id' => $user->id]);
@@ -594,8 +486,13 @@ class AuthController extends Controller
         return redirect($frontendUrl . '/user/auth/callback')->withCookie($cookie);
     }
 
+    /**
+ * Exchange the short-lived OAuth cookie for a real JWT token.
+ * Called by the frontend callback page after Google OAuth redirect.
+ */
     public function exchangeOAuthToken(Request $request)
     {
+        // Debug: log all cookies received (remove after confirming it works)
         Log::info('🍪 [OAUTH EXCHANGE] Cookies received', [
             'cookie_names' => array_keys($request->cookies->all()),
             'has_oauth_token' => $request->cookies->has('oauth_token'),
@@ -613,6 +510,7 @@ class AuthController extends Controller
         }
 
         try {
+            // Validate the short-lived cookie token
             JWTAuth::setToken($oauthToken);
             $user = JWTAuth::authenticate();
 
@@ -621,7 +519,10 @@ class AuthController extends Controller
                 return response()->json(['message' => 'User not found.'], 401);
             }
 
+            // Invalidate the short-lived cookie token immediately
             JWTAuth::invalidate($oauthToken);
+
+            // Issue a fresh full-length token
             $newToken = JWTAuth::fromUser($user);
 
             Log::info('✅ [OAUTH EXCHANGE] Token exchanged successfully', [
@@ -656,6 +557,7 @@ class AuthController extends Controller
         }
     }
 
+
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -677,27 +579,27 @@ class AuthController extends Controller
             ? response()->json(['message' => 'Password reset successfully'], 200)
             : response()->json(['message' => 'Invalid reset token or email'], 400);
     }
-
+    
     public function resendVerification(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-
+        
         $user = User::where('email', $request->email)->first();
-
+        
         if (!$user) {
             return response()->json([
                 'message' => 'No account found with this email.'
             ], 404);
         }
-
+        
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'This email is already verified.'
             ], 200);
         }
-
+        
         $user->sendEmailVerificationNotification();
-
+        
         return response()->json([
             'message' => 'Verification email sent.'
         ], 200);
@@ -708,8 +610,10 @@ class AuthController extends Controller
      */
     private function processReferral(User $user, string $referralCode)
     {
+        // Check if it's a student referral code
         $studentCode = ReferralCode::where('referral_code', $referralCode)->first();
         if ($studentCode) {
+            // existing student referral logic...
             $existingReferral = ReferralHistory::where('referred_user_id', $user->id)->first();
             if ($existingReferral) return;
 
@@ -727,6 +631,7 @@ class AuthController extends Controller
             return;
         }
 
+        // Check if it's a public referrer code
         $publicReferrer = PublicReferrer::where('referral_code', $referralCode)->first();
         if ($publicReferrer) {
             \App\Http\Controllers\Api\PublicReferralController::handleNewSignup($user, $referralCode);

@@ -29,35 +29,100 @@
 
     <div class="body">
 
-      <div class="label">Full Name</div>
-      <div class="value">{{ $user->name }}</div>
+        <div class="label">Student Name</div>
+        <div class="value">{{ $user->name }}</div>
 
-      <div class="label">Email Address</div>
-      <div class="value">{{ $user->email }}</div>
+        <div class="label">Email</div>
+        <div class="value">{{ $user->email }}</div>
 
-      @if($user->phone)
+        @if($user->phone)
         <div class="label">Phone</div>
         <div class="value">{{ $user->phone }}</div>
-      @endif
-
-      <div class="label">Referral Code Used</div>
-      <div class="value">
-        @if($referralCode)
-          <span class="badge">{{ $referralCode }}</span>
-        @else
-          <span class="badge no-ref">None</span>
         @endif
-      </div>
 
-      <div class="label">Registered At</div>
-      <div class="value">{{ $user->created_at->setTimezone('Africa/Lagos')->format('D, d M Y · H:i') }} WAT</div>
+        <div class="label">Course</div>
+        <div class="value">{{ $enrollment->course_name }}</div>
 
-      <hr class="divider"/>
+        <div class="label">Course ID</div>
+        <div class="value">{{ $enrollment->course_id }}</div>
 
-      <p style="text-align:center; margin:0;">
-        <a href="{{ env('FRONTEND_URL','https://learnexity.org') }}/admin/students" class="btn">View in Admin Panel →</a>
-      </p>
-    </div>
+        <div class="label">Learning Track</div>
+        <div class="value">{{ ucfirst(str_replace('_',' ', $enrollment->learning_track)) }}</div>
+
+        <div class="label">Payment Type</div>
+        <div class="value">{{ ucfirst($enrollment->payment_type) }}</div>
+
+        <div class="label">Payment Status</div>
+        <div class="value">
+            @if($enrollment->payment_status == 'completed')
+                <span class="badge" style="background:#dcfce7;color:#166534;">
+                    Completed
+                </span>
+            @elseif($enrollment->payment_status == 'pending')
+                <span class="badge" style="background:#fef9c3;color:#854d0e;">
+                    Pending
+                </span>
+            @else
+                <span class="badge" style="background:#fee2e2;color:#991b1b;">
+                    {{ ucfirst($enrollment->payment_status) }}
+                </span>
+            @endif
+        </div>
+
+        <div class="label">Currency</div>
+        <div class="value">{{ $enrollment->currency }}</div>
+
+        <div class="label">Course Price</div>
+        <div class="value">
+            {{ $enrollment->currency }}
+            {{ number_format($enrollment->total_amount,2) }}
+        </div>
+
+        <div class="label">Amount Paid</div>
+        <div class="value">
+            {{ $enrollment->currency }}
+            {{ number_format($enrollment->amount_paid,2) }}
+        </div>
+
+        <div class="label">Installments Paid</div>
+        <div class="value">
+            {{ $enrollment->installments_paid }}
+            / {{ $enrollment->total_installments }}
+        </div>
+
+        @if($enrollment->transaction_id)
+        <div class="label">Transaction ID</div>
+        <div class="value">{{ $enrollment->transaction_id }}</div>
+        @endif
+
+        @if($enrollment->payment_date)
+        <div class="label">Payment Date</div>
+        <div class="value">
+            {{ $enrollment->payment_date->setTimezone('Africa/Lagos')->format('d M Y, h:i A') }}
+        </div>
+        @endif
+
+        @if($enrollment->next_payment_due)
+        <div class="label">Next Payment Due</div>
+        <div class="value">
+            {{ $enrollment->next_payment_due->setTimezone('Africa/Lagos')->format('d M Y, h:i A') }}
+        </div>
+        @endif
+
+        <div class="label">Access Granted</div>
+        <div class="value">
+            {{ $enrollment->has_access ? 'Yes' : 'No' }}
+        </div>
+
+        <div class="label">Enrollment Time</div>
+        <div class="value">
+            {{ $enrollment->enrollment_date->setTimezone('Africa/Lagos')->format('d M Y, h:i A') }}
+        </div>
+
+        <div class="label">Referral Code</div>
+        <div class="value">
+            {{ $referralCode ?? 'None' }}
+        </div>
 
     <div class="footer">
       Learnexity Internal · This email was sent to the admin team only

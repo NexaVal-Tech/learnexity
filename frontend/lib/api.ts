@@ -118,8 +118,34 @@ export const api = {
 
   // ── AUTH ────────────────────────────────────────────────────────────────────
   auth: {
-    register: async (data: RegisterData): Promise<AuthResponse> => {
-      const response = await apiClient.post<AuthResponse>('/api/register', data);
+    // ── Registration (OTP-based) ──────────────────────────────────────────
+    sendRegistrationOtp: async (data: {
+      email: string; referral_code?: string;
+    }): Promise<{ message: string }> => {
+      const response = await apiClient.post('/api/register/send-otp', data);
+      return response.data;
+    },
+
+    resendRegistrationOtp: async (email: string): Promise<{ message: string; retry_after?: number }> => {
+      const response = await apiClient.post('/api/register/resend-otp', { email });
+      return response.data;
+    },
+
+    verifyRegistrationOtp: async (data: {
+      email: string; otp: string;
+    }): Promise<{ message: string; registration_token: string }> => {
+      const response = await apiClient.post('/api/register/verify-otp', data);
+      return response.data;
+    },
+
+    completeRegistration: async (data: {
+      email: string;
+      registration_token: string;
+      password: string;
+      password_confirmation: string;
+      terms_accepted: boolean;
+    }): Promise<AuthResponse> => {
+      const response = await apiClient.post<AuthResponse>('/api/register/complete', data);
       if (response.data?.token) localStorage.setItem('token', response.data.token);
       return response.data;
     },

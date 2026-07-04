@@ -106,7 +106,7 @@
       @endif
 
       <div class="cta-wrap">
-        <a href="{{ $paymentUrl }}" class="btn">Complete Payment Now →</a>
+        <a href="{{ $paymentUrl }}" class="btn">Complete Payment Now</a>
       </div>
       <p class="reassurance">Secure payment via Paystack &nbsp;·&nbsp; Your data is protected</p>
 

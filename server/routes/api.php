@@ -84,7 +84,14 @@ Route::post('/email/verification-notification', function (Request $request) {
 // =================== AUTH ROUTES (throttle:auth — 10/min per IP) =================== //
 
 Route::middleware('throttle:auth')->group(function () {
-    Route::post('/register',                  [AuthController::class, 'register']);
+    // Route::post('/register', [AuthController::class, 'register']); ← REMOVE
+
+    // ── OTP-based registration ──────────────────────────────────
+    Route::post('/register/send-otp',   [AuthController::class, 'sendRegistrationOtp']);
+    Route::post('/register/resend-otp', [AuthController::class, 'resendRegistrationOtp']);
+    Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp']);
+    Route::post('/register/complete',   [AuthController::class, 'completeRegistration']);
+
     Route::post('/login',                     [AuthController::class, 'login']);
     Route::post('/password/email',            [AuthController::class, 'sendResetLink']);
     Route::post('/password/reset',            [AuthController::class, 'resetPassword']);
