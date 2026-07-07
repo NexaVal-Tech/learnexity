@@ -17,14 +17,16 @@ class AdminNewStudentMail extends Mailable
 
     public function __construct(
         public User $user,
-        public CourseEnrollment $enrollment,
+        public ?CourseEnrollment $enrollment = null,
         public ?string $referralCode = null
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Course Enrollment - ' . $this->user->name,
+            subject: $this->enrollment
+                ? 'New Course Enrollment - ' . $this->user->name
+                : 'New Student Signup - ' . $this->user->name,
         );
     }
 

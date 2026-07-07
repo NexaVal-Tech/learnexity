@@ -24,7 +24,8 @@ class PerformanceMail extends Mailable
         public string $courseName,
         public array $scores,       // ['speed'=>70,'quality'=>60,'reliability'=>80,'problem_solving'=>55]
         public string $message,     // personalised message from rule engine
-        public ?string $actionUrl = null
+        public ?string $actionUrl = null,
+        public int $streak = 0      // only meaningful for streak_broken / streak_milestone
     ) {}
 
     public function envelope(): Envelope
@@ -33,7 +34,7 @@ class PerformanceMail extends Mailable
             'slow_progress'     => "We noticed you haven't progressed in a while, {$this->user->name}",
             'high_performer'    => "You're crushing it, {$this->user->name}!",
             'streak_broken'     => "Your learning streak ended — let's restart",
-            'streak_milestone'  => "{$this->scores['streak']} day streak — keep going, {$this->user->name}!",
+            'streak_milestone'  => "{$this->streak} day streak — keep going, {$this->user->name}!",
             'completion_near'   => "You're almost done with {$this->courseName}!",
             'quality_drop'      => "We noticed a dip — we're here to help",
         ];

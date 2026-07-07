@@ -227,6 +227,9 @@ class UserPerformanceTracker
     /**
      * Check if a streak milestone was hit and send email.
      */
+/**
+     * Check if a streak milestone was hit and send email.
+     */
     private function checkStreakMilestone(int $userId, string $courseId, int $streakDays, UserPerformanceScore $score): void
     {
         $milestones = [7, 14, 30, 60, 100];
@@ -242,12 +245,11 @@ class UserPerformanceTracker
             'quality'         => $score->quality_score,
             'reliability'     => $score->reliability_score,
             'problem_solving' => $score->problem_solving_score,
-            'streak'          => $streakDays,
         ];
 
         $this->sendPerformanceEmail($user, 'streak_milestone', $courseName, $scores,
             "You've logged in for {$streakDays} days straight — that's serious dedication! Consistency like this is what separates successful learners from the rest.",
-            $userId, $courseId
+            $userId, $courseId, $streakDays
         );
     }
 
@@ -260,16 +262,18 @@ class UserPerformanceTracker
         array $scores,
         string $message,
         int $userId,
-        string $courseId
+        string $courseId,
+        int $streak = 0
     ): void {
         try {
             Mail::to($user->email)->queue(
-                new PerformanceMail($user, $emailType, $courseName, $scores, $message)
+                new PerformanceMail($user, $emailType, $courseName, $scores, $message, null, $streak)
             );
 
             EmailSequenceLog::record($userId, $emailType, $courseId, [
                 'scores'  => $scores,
                 'message' => $message,
+                'streak'  => $streak,
             ]);
 
             Log::info("📧 Performance email queued: {$emailType}", [

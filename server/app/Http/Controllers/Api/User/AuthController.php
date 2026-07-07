@@ -260,7 +260,7 @@ class AuthController extends Controller
                 }
 
                 Mail::to($adminEmail)->queue(
-                    new AdminNewStudentMail($user, $referralCode)
+                    new AdminNewStudentMail($user, null, $referralCode)
                 );
 
                 Log::info('✅ [REGISTER-COMPLETE] Admin notification queued', ['user_id' => $user->id]);
@@ -564,7 +564,7 @@ class AuthController extends Controller
                     }
 
                     Mail::to($adminEmail)->queue(
-                        new AdminNewStudentMail($user, $capturedReferralCode)
+                        new AdminNewStudentMail($user, null, $capturedReferralCode)
                     );
 
                     Log::info('✅ [GOOGLE] Admin notification queued', ['user_id' => $user->id]);
