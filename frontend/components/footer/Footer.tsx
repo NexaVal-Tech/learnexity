@@ -4,7 +4,7 @@ import { FadeUpOnScroll } from "../animations/Animation";
 export default function Footer() {
   return (
     <FadeUpOnScroll>
-    <div className="bg-[#6D4AFF] text-white mx-auto">
+    <div className="relative z-10 bg-[#6D4AFF] text-white mx-auto">
       {/* CTA Section */}
       <div className="text-center py-6 px-6">
         <h2 className="text-5xl font-semibold mb-8 leading-tight">
@@ -114,6 +114,35 @@ export default function Footer() {
                 </li>
               </ul>
             </div>
+          </div>
+
+          {/* Powered by Nexaval Tech */}
+          <div className="mt-12 pt-6 border-t border-white/15 flex justify-center">
+            
+            <a href="https://nexavaluable.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors duration-300"
+            >
+              <span>Powered by</span>
+              <span className="relative text-xl font-bold tracking-wide text-white">
+                Nexaval Tech
+                <span className="absolute left-0 -bottom-0.5 w-0 h-px bg-white transition-all duration-300 group-hover:w-full"></span>
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+              >
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>
