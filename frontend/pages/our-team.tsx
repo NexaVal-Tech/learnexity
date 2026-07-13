@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Head from "next/head";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
@@ -23,9 +24,9 @@ const TEAM: TeamMember[] = [
   {
     name: "Mary Eze",
     role: "Founder | Clinical Informatics Specialist | Certified Cloud Practitioner",
-    bio: "Mary Eze is the Founder of Learnexity, a premier technology training platform dedicated to workforce development and driving economic growth within underserved communities. As a Clinical Informatics Specialist and Certified Cloud Practitioner, she brings high-level expertise at the intersection of data and cloud technology to design innovative, scalable solutions.",
+    bio: "I’m Mary, the founder of Learnexity, I’m an Informatics Specialist (MSN), AI Engineer, AI Governance Advocate, and AWS Certified Cloud Practitioner. I’m passionate about human transformation and using AI responsibly to create opportunities. Over the years, I’ve seen how rapidly technology is reshaping the future of work, widening the gap between learning and real opportunities. That’s why we built Learnexity. Our mission is to bridge the gap between learning and earning by equipping people with future-ready, AI-resilient skills, real-world experience, mentorship, and access to global opportunities, so they can build, earn, and thrive in the digital economy. I’m excited to share insights on AI, career growth, digital transformation, and the future of work with this community. If you’re passionate about continuous learning and building a meaningful career, you’re in the right place. Let’s connect, learn, and build the future together.",
     image: "/images/emmas-sister.jpeg",
-    linkedin: "#",
+    linkedin: "https://www.linkedin.com/in/mary-eze-64271a302?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
     twitter: "#",
     featured: true,
   },
@@ -33,7 +34,7 @@ const TEAM: TeamMember[] = [
     name: "Kingsley Eze",
     role: "President, Learnexity",
     bio: "Kingsley Eze serves as the President of Learnexity, where he plays a pivotal role in driving strategic growth, organizational excellence, and continuous innovation. With a strong foundation in systems thinking, he provides the executive leadership needed to design and scale programs that are both operationally sound and deeply learner-centered.",
-    image: "/images/decenc.jpg",
+    image: "/images/eze.jpeg",
     linkedin: "#",
   },
   {
@@ -41,6 +42,27 @@ const TEAM: TeamMember[] = [
     role: "Executive Advisor, Learnexity",
     bio: "Decency Onyekachi Ogbonna, MBA, serves as an Executive Advisor at Learnexity, where he contributes to the development of high-impact learning strategies and programs that drive measurable student success. As the Founder and CEO of Decency NCLEX Academy, he has built a results-driven platform dedicated to preparing aspiring nurses for licensure through structured training and mentorship.",
     image: "/images/decency.jpg",
+    linkedin: "#",
+  },
+  {
+    name: "Cynthia Arundu",
+    role: "Advisor And Career Coach",
+    bio: "Cynthia is an Adjunct Faculty Member at South College, Informatics Specialist (MSN), and a Google Certified Data Analyst passionate about empowering individuals through career development, technology, and lifelong learning.",
+    image: "/images/arundu.png",
+    linkedin: "#",
+  },
+  {
+    name: "David Miller",
+    role: "Senior Full-Stack Software Engineering Instructor",
+    bio: "David Miller is a Senior Full-Stack Software Engineer with over 10 years of experience building scalable web applications for startups and enterprise organizations. He specializes in JavaScript, TypeScript, React, Next.js, Node.js, and modern backend development. Throughout his career, David has mentored hundreds of aspiring developers, helping them transition into successful software engineering careers. At Learnexity, he is passionate about simplifying complex programming concepts through hands-on projects, real-world case studies, and industry best practices.",
+    image: "/images/david.png",
+    linkedin: "#",
+  },
+  {
+    name: "Micheal Anderson",
+    role: "Senior DevOps & Cloud Engineering Instructor",
+    bio: "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies. His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios. His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
+    image: "/images/micheal.png",
     linkedin: "#",
   },
   {
@@ -52,8 +74,8 @@ const TEAM: TeamMember[] = [
   },
   {
     name: "Opie Samuel",
-    role: "Full-Stack Developer",
-    bio: "Opie Chisom Samuel is a full-stack developer and AI content creator who specializes in building automated, scalable content systems. He has successfully monetized over three YouTube channels within three months and has helped more than 10 individuals achieve monetization. His work focuses on combining technology and strategy to create sustainable online income, while guiding others to grow and succeed in the digital space.",
+    role: "AI Automation Engineer",
+    bio: "Opie Chisom Samuel is an AI content creator who specializes in building automated, scalable content systems. He has successfully monetized over three YouTube channels within three months and has helped more than 10 individuals achieve monetization. His work focuses on combining technology and strategy to create sustainable online income, while guiding others to grow and succeed in the digital space.",
     image: "/images/opie.jpg",
   },
   {
@@ -64,7 +86,7 @@ const TEAM: TeamMember[] = [
   },
   {
     name: "Sunday Goodnews",
-    role: "Software Engineer",
+    role: "Devops and Cloud Architect",
     bio: "Sunday Goodnews is a software engineer with over 5 years of experience, who has led engineering teams to build solutions like ERPP and CAMP for the Nigerian Shippers Council. He teaches DevOps with a focus on preparing students to become industry-ready engineers..",
     image: "/images/instructor-2.jpg",
   },
@@ -76,7 +98,7 @@ const TEAM: TeamMember[] = [
   },
   {
     name: "Grant Erondu",
-    role: "Data science and machine learning",
+    role: "Data and AI Engineer",
     bio: "Grant Erondu is a data science and machine learning enthusiast with a passion for understanding how intelligent systems behave and make decisions. Over the years, he has trained over 100 students, equipping them with practical skills to analyze data and build impactful solutions.",
     image: "/images/instructor-1.jpg",
   },
@@ -99,33 +121,137 @@ function TwitterIcon() {
   );
 }
 
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+// ─── SOCIAL LINK PILL (shared) ────────────────────────────────────────────────
+function SocialLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="social-link"
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "36px",
+        height: "36px",
+        borderRadius: "50%",
+        border: "1px solid rgba(255,255,255,0.15)",
+        color: "rgba(255,255,255,0.7)",
+        background: "rgba(255,255,255,0.03)",
+        transition: "all 0.25s ease",
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+// ─── BIO MODAL ────────────────────────────────────────────────────────────────
+function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        background: "rgba(0,0,0,0.75)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.5rem",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "560px",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          borderRadius: "2rem 0.75rem 2rem 0.75rem",
+          border: `1px solid ${BRAND}44`,
+          background: "rgba(20,20,24,0.98)",
+          boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.8)`,
+          padding: "2.5rem",
+        }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          style={{
+            position: "absolute",
+            top: "1.25rem",
+            right: "1.25rem",
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.15)",
+            background: "rgba(255,255,255,0.05)",
+            color: "rgba(255,255,255,0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <CloseIcon />
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem", paddingRight: "2.5rem" }}>
+          {member.image && (
+            <div style={{ position: "relative", width: "64px", height: "64px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `1.5px solid ${BRAND}55` }}>
+              <Image src={member.image} alt={member.name} fill style={{ objectFit: "cover", objectPosition: "center 18%" }} />
+            </div>
+          )}
+          <div>
+            <h3 style={{ color: "white", fontSize: "1.3rem", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>{member.name}</h3>
+            <p style={{ color: BRAND, fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0.35rem 0 0" }}>
+              {member.role}
+            </p>
+          </div>
+        </div>
+
+        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0 }}>{member.bio}</p>
+
+        {(member.linkedin || member.twitter) && (
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.75rem" }}>
+            {member.linkedin && (
+              <SocialLink href={member.linkedin}>
+                <LinkedInIcon />
+              </SocialLink>
+            )}
+            {member.twitter && (
+              <SocialLink href={member.twitter}>
+                <TwitterIcon />
+              </SocialLink>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── FEATURED CARD (CEO) ──────────────────────────────────────────────────────
 function FeaturedCard({ member }: { member: TeamMember }) {
   return (
-    <div
-      className="featured-card"
-      style={{
-        borderRadius: "2.5rem 1rem 2.5rem 1rem",
-        border: `1px solid ${BRAND}44`,
-        background: "rgba(28,28,32,0.97)",
-        backdropFilter: "blur(12px)",
-        padding: "0",
-        overflow: "hidden",
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 0,
-        boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.7)`,
-      }}
-    >
+    <div className="featured-card" style={{borderRadius: "2.5rem 1rem 2.5rem 1rem", border: `1px solid ${BRAND}44`, background: "rgba(28,28,32,0.97)", backdropFilter: "blur(12px)", padding: "0", overflow: "hidden",
+        display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.7)`, }}>
       {/* Photo side */}
-      <div
-        style={{
-          position: "relative",
-          minHeight: "460px",
-          background: `linear-gradient(135deg, ${BRAND}18 0%, #1a1a22 100%)`,
-          overflow: "hidden",
-        }}
-      >
+      <div style={{position: "relative", minHeight: "460px", background: `linear-gradient(135deg, ${BRAND}18 0%, #1a1a22 100%)`, overflow: "hidden", }} >
         {member.image && (
           <Image
             src={member.image}
@@ -138,21 +264,9 @@ function FeaturedCard({ member }: { member: TeamMember }) {
           />
         )}
         {/* Gradient overlay blending into right side */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to right, transparent 60%, rgba(28,28,32,0.97) 100%)",
-          }}
-        />
+        <div style={{position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 60%, rgba(28,28,32,0.97) 100%)",}} />
         {/* Bottom tint */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to top, rgba(28,28,32,0.6) 0%, transparent 50%)",
-          }}
-        />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,28,32,0.6) 0%, transparent 50%)",}} />
 
         {/* Placeholder icon — only shown when there is no image */}
         {!member.image && (
@@ -176,112 +290,54 @@ function FeaturedCard({ member }: { member: TeamMember }) {
         )}
 
         {/* Leadership badge */}
-        <div
-          style={{
-            position: "absolute",
-            top: "1.5rem",
-            left: "1.5rem",
-            background: BRAND,
-            color: "white",
-            fontSize: "0.7rem",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            padding: "0.35rem 0.85rem",
-            borderRadius: "999px",
-          }}
-        >
-          Leadership
-        </div>
+        <div style={{position: "absolute", top: "1.5rem", left: "1.5rem", background: BRAND, color: "white", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.35rem 0.  85rem", borderRadius: "999px",}}> Leadership
+         </div>
       </div>
 
       {/* Text side */}
-      <div
-        style={{
-          padding: "3rem 2.5rem",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          gap: "1.25rem",
-        }}
-      >
+      <div style={{padding: "3rem 2.5rem", display: "flex", flexDirection: "column", justifyContent: "center", gap: "1.25rem", }}>
         <div>
-          <p
-            style={{
-              color: BRAND,
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: "0.5rem",
-            }}
-          >
+          <p style={{color: BRAND, fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.5rem",}}>
             {member.role}
           </p>
-          <h2
-            style={{
-              color: "white",
-              fontSize: "clamp(1.6rem, 2.5vw, 2.25rem)",
-              fontWeight: 800,
-              lineHeight: 1.1,
-              margin: 0,
-            }}
-          >
+          <h2 style={{color: "white", fontSize: "clamp(1.6rem, 2.5vw, 2.25rem)", fontWeight: 800, lineHeight: 1.1, margin: 0,}}>
             {member.name}
           </h2>
         </div>
 
-        <div
-          style={{
-            width: "2.5rem",
-            height: "3px",
-            background: BRAND,
-            borderRadius: "999px",
-          }}
-        />
+        <div style={{width: "2.5rem", height: "3px", background: BRAND, borderRadius: "999px",}}/>
 
-        <p
-          style={{
-            color: "rgba(255,255,255,0.65)",
-            fontSize: "0.95rem",
-            lineHeight: 1.75,
-            margin: 0,
-          }}
-        >
+        <p style={{color: "rgba(255,255,255,0.65)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0,}} >
           {member.bio}
         </p>
+
+        {/* Social links — LinkedIn (and Twitter, if provided) */}
+        {(member.linkedin || member.twitter) && (
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+            {member.linkedin && (
+              <SocialLink href={member.linkedin}>
+                <LinkedInIcon />
+              </SocialLink>
+            )}
+            {member.twitter && (
+              <SocialLink href={member.twitter}>
+                <TwitterIcon />
+              </SocialLink>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── REGULAR MEMBER CARD ──────────────────────────────────────────────────────
-function MemberCard({ member }: { member: TeamMember }) {
+function MemberCard({ member, onReadBio }: { member: TeamMember; onReadBio: (member: TeamMember) => void }) {
   return (
-    <div
-      className="member-card"
-      style={{
-        borderRadius: "2rem 0.75rem 2rem 0.75rem",
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(28,28,32,0.95)",
-        backdropFilter: "blur(8px)",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "0 25px 50px rgba(0,0,0,0.6)",
-        transition: "all 0.35s ease",
-      }}
-    >
+    <div className="member-card" style={{borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(28,28,32,0.95)", backdropFilter: "blur(8px)", overflow: "hidden",
+        display: "flex", flexDirection: "column", boxShadow: "0 25px 50px rgba(0,0,0,0.6)", transition: "all 0.35s ease",}}>
       {/* Photo */}
-      <div
-        style={{
-          position: "relative",
-          height: "320px",
-          background: `linear-gradient(135deg, ${BRAND}14 0%, #18181f 100%)`,
-          overflow: "hidden",
-          flexShrink: 0,
-        }}
-      >
+      <div style={{position: "relative", height: "320px", background: `linear-gradient(135deg, ${BRAND}14 0%, #18181f 100%)`, overflow: "hidden", flexShrink: 0,}} >
         {member.image && (
           <Image
             src={member.image}
@@ -294,13 +350,7 @@ function MemberCard({ member }: { member: TeamMember }) {
             }}
           />
         )}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to top, rgba(28,28,32,0.9) 0%, transparent 55%)",
-          }}
-        />
+        <div style={{position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,28,32,0.9) 0%, transparent 55%)",}} />
 
         {/* Placeholder — only shown when there is no image */}
         {!member.image && (
@@ -362,6 +412,34 @@ function MemberCard({ member }: { member: TeamMember }) {
         >
           {member.name}
         </h3>
+
+        {/* Bio is hidden by default — revealed via modal */}
+        <button
+          onClick={() => onReadBio(member)}
+          className="read-bio-btn"
+          style={{
+            marginTop: "0.75rem",
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            background: `${BRAND}14`,
+            border: `1px solid ${BRAND}44`,
+            color: BRAND,
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            padding: "0.5rem 1rem",
+            borderRadius: "999px",
+            cursor: "pointer",
+            transition: "all 0.25s ease",
+          }}
+        >
+          Learn more
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -371,6 +449,7 @@ function MemberCard({ member }: { member: TeamMember }) {
 export default function Team() {
   const featured = TEAM.find((m) => m.featured);
   const rest = TEAM.filter((m) => !m.featured);
+  const [activeMember, setActiveMember] = useState<TeamMember | null>(null);
 
   return (
     <>
@@ -397,6 +476,10 @@ export default function Team() {
             border-color: ${BRAND} !important;
             color: ${BRAND} !important;
             background: ${BRAND}18 !important;
+          }
+          .read-bio-btn:hover {
+            background: ${BRAND}26 !important;
+            box-shadow: 0 0 16px ${BRAND}33;
           }
           .featured-card {
             transition: box-shadow 0.35s ease;
@@ -549,7 +632,7 @@ export default function Team() {
               }}
             >
               {rest.map((member) => (
-                <MemberCard key={member.name + member.role} member={member} />
+                <MemberCard key={member.name + member.role} member={member} onReadBio={setActiveMember} />
               ))}
             </div>
           </div>
@@ -557,6 +640,9 @@ export default function Team() {
 
         <Footer />
       </AppLayout>
+
+      {/* Bio modal — only rendered when a member is selected */}
+      {activeMember && <BioModal member={activeMember} onClose={() => setActiveMember(null)} />}
     </>
   );
 }
