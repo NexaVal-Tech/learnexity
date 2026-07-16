@@ -86,13 +86,13 @@ const data: Testimonial[] = [
     video: "/videos/testimonial-vid-6.mp4",
     thumbnail: "/thumbnails/thumbnail-5.png",
   },
-  {
-    name: "james williams",
-    role: "Cloud Computing",
-    type: "text",
-    thumbnail: "/thumbnails/thumbnail-12.png",
-    text: "I came in with zero tech background. Learnexity broke everything down step by step until cloud concepts that used to scare me became second nature. Today I'm AWS certified and working with a global team.",
-  },
+  // {
+  //   name: "james williams",
+  //   role: "Cloud Computing",
+  //   type: "text",
+  //   thumbnail: "/thumbnails/thumbnail-12.png",
+  //   text: "I came in with zero tech background. Learnexity broke everything down step by step until cloud concepts that used to scare me became second nature. Today I'm AWS certified and working with a global team.",
+  // },
   {
     name: "Amadineze Christain Chinonso",
     role: "Digital Marketing",
