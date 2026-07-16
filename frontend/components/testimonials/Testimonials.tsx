@@ -24,11 +24,25 @@ const data: Testimonial[] = [
     thumbnail: "/thumbnails/thumbnail-3.png",
   },
   {
+    name: "Albert jake",
+    role: "Data Analytics",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-10.png",
+    text: "I joined Learnexity after two failed attempts at learning data analytics on my own. The structured sprints and real Nigerian datasets made it click. I landed a remote analyst role three weeks after finishing.",
+  },
+  {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
     type: "video",
     video: "/videos/testimony.mp4",
     thumbnail: "/thumbnails/lilian-thumbnail.png",
+  },
+  {
+    name: "Ross Micheal",
+    role: "Frontend Development",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-11.png",
+    text: "Learnexity took me from barely knowing what a div was to shipping real projects in under four months. The mentorship made all the difference — I finally understood why things worked, not just how to copy them.",
   },
   {
     name: "Ogechi",
@@ -38,11 +52,25 @@ const data: Testimonial[] = [
     thumbnail: "/thumbnails/thumbnail-1.png",
   },
   {
+    name: "Ross Micheal",
+    role: "Frontend Development",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-11.png",
+    text: "Learnexity took me from barely knowing what a div was to shipping real projects in under four months. The mentorship made all the difference — I finally understood why things worked, not just how to copy them.",
+  },
+  {
     name: "Lilian",
     role: "AI Automation",
     type: "video",
     video: "/videos/testimonial-video.mp4",
     thumbnail: "/thumbnails/thumbnail-2.png",
+  },
+  {
+    name: "Donald macroft",
+    role: "Backend Engineering",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-8.png",
+    text: "The instructors genuinely care. Whenever I got stuck at 2am, someone in the community was there to help. That kind of support is rare, and it's the reason I actually finished the program instead of giving up.",
   },
   {
     name: "Daniel Ugwusiani",
@@ -59,48 +87,20 @@ const data: Testimonial[] = [
     thumbnail: "/thumbnails/thumbnail-5.png",
   },
   {
-    name: "Amadineze Christain Chinonso",
-    role: "Digital Marketing",
-    type: "video",
-    video: "/videos/testimonial-vid-7.mp4",
-    thumbnail: "/thumbnails/thumbnail-7.png",
-  },
-  // ── TEXT TESTIMONIALS ── (add your own thumbnail image paths below)
-  {
-    name: "Ross Micheal",
-    role: "Frontend Development",
-    type: "text",
-    thumbnail: "/thumbnails/thumbnail-11.png",
-    text: "Learnexity took me from barely knowing what a div was to shipping real projects in under four months. The mentorship made all the difference — I finally understood why things worked, not just how to copy them.",
-  },
-  {
-    name: "Albert jake",
-    role: "Data Analytics",
-    type: "text",
-    thumbnail: "/thumbnails/thumbnail-10.png",
-    text: "I joined Learnexity after two failed attempts at learning data analytics on my own. The structured sprints and real Nigerian datasets made it click. I landed a remote analyst role three weeks after finishing.",
-  },
-  {
-    name: "Jordan Smith",
-    role: "Product Design",
-    type: "text",
-    thumbnail: "/thumbnails/thumbnail-9.png",
-    text: "What stood out was how practical everything felt. I wasn't just learning design theory, I was building a portfolio I could actually show clients. Within weeks of graduating I picked up my first freelance gig.",
-  },
-  {
-    name: "Donald macroft",
-    role: "Backend Engineering",
-    type: "text",
-    thumbnail: "/thumbnails/thumbnail-8.png",
-    text: "The instructors genuinely care. Whenever I got stuck at 2am, someone in the community was there to help. That kind of support is rare, and it's the reason I actually finished the program instead of giving up.",
-  },
-  {
     name: "james williams",
     role: "Cloud Computing",
     type: "text",
     thumbnail: "/thumbnails/thumbnail-12.png",
     text: "I came in with zero tech background. Learnexity broke everything down step by step until cloud concepts that used to scare me became second nature. Today I'm AWS certified and working with a global team.",
   },
+  {
+    name: "Amadineze Christain Chinonso",
+    role: "Digital Marketing",
+    type: "video",
+    video: "/videos/testimonial-vid-7.mp4",
+    thumbnail: "/thumbnails/thumbnail-7.png",
+  },
+
 ];
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
