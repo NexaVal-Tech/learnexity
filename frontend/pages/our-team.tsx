@@ -52,15 +52,15 @@ const TEAM: TeamMember[] = [
     linkedin: "#",
   },
   {
-    name: "David Miller",
-    role: "Senior Full-Stack Software Engineering Instructor",
+    name: "Hannah Francis",
+    role: "Communication Specialist",
     bio: "David Miller is a Senior Full-Stack Software Engineer with over 10 years of experience building scalable web applications for startups and enterprise organizations. He specializes in JavaScript, TypeScript, React, Next.js, Node.js, and modern backend development. Throughout his career, David has mentored hundreds of aspiring developers, helping them transition into successful software engineering careers. At Learnexity, he is passionate about simplifying complex programming concepts through hands-on projects, real-world case studies, and industry best practices.",
-    image: "/images/david.png",
+    image: "/images/hannah.jpeg",
     linkedin: "#",
   },
   {
-    name: "Micheal Anderson",
-    role: "Senior DevOps & Cloud Engineering Instructor",
+    name: "David Shetty",
+    role: "Head of Marketing",
     bio: "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies. His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios. His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
     image: "/images/micheal.png",
     linkedin: "#",
@@ -104,6 +104,10 @@ const TEAM: TeamMember[] = [
   },
 ];
 
+// ─── NAMES WITH BIO NOT READY YET ─────────────────────────────────────────────
+// Add/remove names here to control who shows "Coming soon" instead of a bio.
+const COMING_SOON_MEMBERS = ["David Shetty", "Hannah Francis"];
+
 // ─── SOCIAL ICONS ─────────────────────────────────────────────────────────────
 function LinkedInIcon() {
   return (
@@ -129,11 +133,20 @@ function CloseIcon() {
   );
 }
 
+function ClockIcon() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={BRAND} strokeWidth="1.5">
+      <circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
+    </svg>
+  );
+}
+
 // ─── SOCIAL LINK PILL (shared) ────────────────────────────────────────────────
 function SocialLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
-      href={href}
+    
+    <a href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="social-link"
@@ -158,6 +171,8 @@ function SocialLink({ href, children }: { href: string; children: React.ReactNod
 
 // ─── BIO MODAL ────────────────────────────────────────────────────────────────
 function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void }) {
+  const isComingSoon = COMING_SOON_MEMBERS.includes(member.name);
+
   return (
     <div
       onClick={onClose}
@@ -224,9 +239,43 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
           </div>
         </div>
 
-        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0 }}>{member.bio}</p>
+        {isComingSoon ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              padding: "2rem 1rem",
+              gap: "1rem",
+            }}
+          >
+            <div
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                background: `${BRAND}14`,
+                border: `1.5px solid ${BRAND}33`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ClockIcon />
+            </div>
+            <h4 style={{ color: "white", fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+              Bio coming soon
+            </h4>
+            {/* <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0, maxWidth: "380px" }}>
+              We're putting the finishing touches on {member.name.split(" ")[0]}'s profile. Check back shortly.
+            </p> */}
+          </div>
+        ) : (
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0 }}>{member.bio}</p>
+        )}
 
-        {(member.linkedin || member.twitter) && (
+        {!isComingSoon && (member.linkedin || member.twitter) && (
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.75rem" }}>
             {member.linkedin && (
               <SocialLink href={member.linkedin}>

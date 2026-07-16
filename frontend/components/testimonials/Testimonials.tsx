@@ -6,62 +6,125 @@ import { ScrollFadeIn } from "@/components/animations/Animation";
 
 const BRAND = "#4A3AFF";
 
-const data = [
+type Testimonial = {
+  name: string;
+  role: string;
+  type: "video" | "text";
+  thumbnail: string;
+  video?: string;
+  text?: string;
+};
+
+const data: Testimonial[] = [
   {
     name: "Benedict",
     role: "Video Editor",
+    type: "video",
     video: "/videos/testimobial-1.mp4",
     thumbnail: "/thumbnails/thumbnail-3.png",
   },
   {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
+    type: "video",
     video: "/videos/testimony.mp4",
     thumbnail: "/thumbnails/lilian-thumbnail.png",
   },
   {
     name: "Ogechi",
     role: "Product Management",
+    type: "video",
     video: "/videos/product-manager-review.mp4",
     thumbnail: "/thumbnails/thumbnail-1.png",
   },
   {
     name: "Lilian",
     role: "AI Automation",
+    type: "video",
     video: "/videos/testimonial-video.mp4",
     thumbnail: "/thumbnails/thumbnail-2.png",
   },
   {
     name: "Daniel Ugwusiani",
     role: "UI/Ux Designer",
+    type: "video",
     video: "/videos/testimonial-vid-5.mp4",
     thumbnail: "/thumbnails/thumbnail-6.png",
   },
   {
     name: "Mercy Aleke",
     role: "Digital Marketing",
+    type: "video",
     video: "/videos/testimonial-vid-6.mp4",
     thumbnail: "/thumbnails/thumbnail-5.png",
   },
   {
     name: "Amadineze Christain Chinonso",
     role: "Digital Marketing",
+    type: "video",
     video: "/videos/testimonial-vid-7.mp4",
     thumbnail: "/thumbnails/thumbnail-7.png",
   },
+  // ── TEXT TESTIMONIALS ── (add your own thumbnail image paths below)
+  {
+    name: "Ross Micheal",
+    role: "Frontend Development",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-11.png",
+    text: "Learnexity took me from barely knowing what a div was to shipping real projects in under four months. The mentorship made all the difference — I finally understood why things worked, not just how to copy them.",
+  },
+  {
+    name: "Albert jake",
+    role: "Data Analytics",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-10.png",
+    text: "I joined Learnexity after two failed attempts at learning data analytics on my own. The structured sprints and real Nigerian datasets made it click. I landed a remote analyst role three weeks after finishing.",
+  },
+  {
+    name: "Jordan Smith",
+    role: "Product Design",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-9.png",
+    text: "What stood out was how practical everything felt. I wasn't just learning design theory, I was building a portfolio I could actually show clients. Within weeks of graduating I picked up my first freelance gig.",
+  },
+  {
+    name: "Donald macroft",
+    role: "Backend Engineering",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-8.png",
+    text: "The instructors genuinely care. Whenever I got stuck at 2am, someone in the community was there to help. That kind of support is rare, and it's the reason I actually finished the program instead of giving up.",
+  },
+  {
+    name: "james williams",
+    role: "Cloud Computing",
+    type: "text",
+    thumbnail: "/thumbnails/thumbnail-12.png",
+    text: "I came in with zero tech background. Learnexity broke everything down step by step until cloud concepts that used to scare me became second nature. Today I'm AWS certified and working with a global team.",
+  },
 ];
 
-function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlay = () => {
     setPlaying(true);
-    videoRef.current?.play();
+    if (testimonial.type === "video") {
+      videoRef.current?.play();
+    }
   };
 
   const handleVideoEnd = () => {
     setPlaying(false);
+  };
+
+  const handleCardClick = () => {
+    if (playing && testimonial.type === "video") {
+      videoRef.current?.pause();
+      setPlaying(false);
+    } else if (playing && testimonial.type === "text") {
+      setPlaying(false);
+    }
   };
 
   return (
@@ -90,21 +153,58 @@ function VideoCard({ testimonial }: { testimonial: typeof data[0] }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         )}
 
-        <video
-          ref={videoRef}
-          src={testimonial.video}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-            playing ? "opacity-100" : "opacity-0"
-          }`}
-          preload="metadata"
-          onEnded={handleVideoEnd}
-          onClick={() => {
-            if (playing) {
-              videoRef.current?.pause();
-              setPlaying(false);
-            }
-          }}
-        />
+        {/* Video playback */}
+        {testimonial.type === "video" && (
+          <video
+            ref={videoRef}
+            src={testimonial.video}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              playing ? "opacity-100" : "opacity-0"
+            }`}
+            preload="metadata"
+            onEnded={handleVideoEnd}
+            onClick={handleCardClick}
+          />
+        )}
+
+        {/* Text testimonial reveal */}
+        {testimonial.type === "text" && playing && (
+          <div
+            onClick={handleCardClick}
+            className="absolute inset-0 flex flex-col justify-center px-7 py-8 cursor-pointer transition-opacity duration-300"
+            style={{
+              background: `linear-gradient(160deg, ${BRAND}22 0%, #0f0f0f 100%)`,
+            }}
+          >
+            <Image
+              src={testimonial.thumbnail}
+              alt={testimonial.name}
+              fill
+              className="object-cover opacity-15"
+              sizes="340px"
+            />
+            <div className="relative z-10">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill={BRAND}
+                className="mb-4 opacity-80"
+              >
+                <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+              </svg>
+              <p className="text-white text-[0.95rem] leading-relaxed mb-6">
+                {testimonial.text}
+              </p>
+              <p className="text-white font-semibold text-base">
+                {testimonial.name}
+              </p>
+              <p className="text-sm mt-0.5" style={{ color: `${BRAND}cc` }}>
+                {testimonial.role}
+              </p>
+            </div>
+          </div>
+        )}
 
         {!playing && (
           <button
@@ -211,7 +311,7 @@ export default function Testimonials() {
               }`}
             >
               {[...data, ...data].map((testimonial, index) => (
-                <VideoCard
+                <TestimonialCard
                   key={index}
                   testimonial={testimonial}
                 />
