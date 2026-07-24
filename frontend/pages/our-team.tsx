@@ -9,11 +9,12 @@ const BRAND = "#4A3AFF";
 // ─── TEAM DATA ────────────────────────────────────────────────────────────────
 // Replace image paths and bio text when assets are ready.
 // Add or remove members freely — the grid adapts automatically.
+// `bio` is now an array of paragraphs — each entry renders as its own <p>.
 
 interface TeamMember {
   name: string;
   role: string;
-  bio: string;
+  bio: string[];
   image: string;
   linkedin?: string;
   twitter?: string;
@@ -23,8 +24,14 @@ interface TeamMember {
 const TEAM: TeamMember[] = [
   {
     name: "Mary Eze",
-    role: "Founder | Clinical Informatics Specialist | Certified Cloud Practitioner",
-    bio: "I’m Mary, the founder of Learnexity, I’m an Informatics Specialist (MSN), AI Engineer, AI Governance Advocate, and AWS Certified Cloud Practitioner. I’m passionate about human transformation and using AI responsibly to create opportunities. Over the years, I’ve seen how rapidly technology is reshaping the future of work, widening the gap between learning and real opportunities. That’s why we built Learnexity. Our mission is to bridge the gap between learning and earning by equipping people with future-ready, AI-resilient skills, real-world experience, mentorship, and access to global opportunities, so they can build, earn, and thrive in the digital economy. I’m excited to share insights on AI, career growth, digital transformation, and the future of work with this community. If you’re passionate about continuous learning and building a meaningful career, you’re in the right place. Let’s connect, learn, and build the future together.",
+    role: "Founder | AI & Digital Transformation Strategist | Innovation, Governance & Human Development",
+    bio: [
+      "I’m Mary, the founder of Learnexity. I’m an Informatics Specialist (MSN), MBA candidate, AI Engineer, AI Governance Advocate, AWS Certified Cloud Practitioner, Career Coach, Mentor, and Author, with over 12 years of experience at the intersection of healthcare, technology, and digital transformation.",
+      "I’m passionate about human transformation and using AI and emerging technologies responsibly to create opportunities. Over the years, I’ve witnessed how rapidly technology is reshaping the future of work while creating a growing gap between learning and real-world opportunities. That realization inspired us to build Learnexity.",
+      "Our mission is to discover and develop high-potential talent by helping professionals build future-relevant skills, gain practical experience, and access mentorship and global career pathways.",
+      "We are building professionals who are prepared to contribute to the technologies shaping the future and thrive in the digital economy.",
+      "I’m excited to share insights on AI, career growth, digital transformation, and the future of work with this community. If you’re committed to continuous learning and building a meaningful career, you’re in the right place.",
+    ],
     image: "/images/emmas-sister.jpeg",
     linkedin: "https://www.linkedin.com/in/mary-eze-64271a302?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
     twitter: "#",
@@ -33,73 +40,120 @@ const TEAM: TeamMember[] = [
   {
     name: "Kingsley Eze",
     role: "President, Learnexity",
-    bio: "Kingsley Eze serves as the President of Learnexity, where he plays a pivotal role in driving strategic growth, organizational excellence, and continuous innovation. With a strong foundation in systems thinking, he provides the executive leadership needed to design and scale programs that are both operationally sound and deeply learner-centered.",
+    bio: [
+      "Kingsley Eze serves as the President of Learnexity, where he plays a pivotal role in driving strategic growth, organizational excellence, and continuous innovation.",
+      "With a strong foundation in systems thinking, he provides the executive leadership needed to design and scale programs that are both operationally sound and deeply learner-centered.",
+    ],
     image: "/images/eze.jpeg",
     linkedin: "#",
   },
   {
     name: "Decency Onyekachi Ogbonna, MBA",
     role: "Executive Advisor, Learnexity",
-    bio: "Decency Onyekachi Ogbonna, MBA, serves as an Executive Advisor at Learnexity, where he contributes to the development of high-impact learning strategies and programs that drive measurable student success. As the Founder and CEO of Decency NCLEX Academy, he has built a results-driven platform dedicated to preparing aspiring nurses for licensure through structured training and mentorship.",
+    bio: [
+      "Decency Onyekachi Ogbonna, MBA, serves as an Executive Advisor at Learnexity, where he contributes to the development of high-impact learning strategies and programs that drive measurable student success.",
+      "As the Founder and CEO of Decency NCLEX Academy, he has built a results-driven platform dedicated to preparing aspiring nurses for licensure through structured training and mentorship.",
+    ],
     image: "/images/decency.jpg",
     linkedin: "#",
   },
   {
     name: "Cynthia Arundu",
     role: "Advisor And Career Coach",
-    bio: "Cynthia is an Adjunct Faculty Member at South College, Informatics Specialist (MSN), and a Google Certified Data Analyst passionate about empowering individuals through career development, technology, and lifelong learning.",
+    bio: [
+      "Cynthia is an Adjunct Faculty Member at South College, Informatics Specialist (MSN), and a Google Certified Data Analyst passionate about empowering individuals through career development, technology, and lifelong learning.",
+    ],
     image: "/images/arundu.png",
     linkedin: "#",
   },
   {
     name: "Hannah Francis",
     role: "Communication Specialist",
-    bio: "David Miller is a Senior Full-Stack Software Engineer with over 10 years of experience building scalable web applications for startups and enterprise organizations. He specializes in JavaScript, TypeScript, React, Next.js, Node.js, and modern backend development. Throughout his career, David has mentored hundreds of aspiring developers, helping them transition into successful software engineering careers. At Learnexity, he is passionate about simplifying complex programming concepts through hands-on projects, real-world case studies, and industry best practices.",
+    bio: [
+      "Hannah Francis is a Communication Specialist with over 10 years of experience helping organizations build strong relationships through effective communication, public engagement, and strategic messaging across digital and traditional platforms.",
+      "Her expertise includes public relations, corporate communication, content strategy, media relations, presentation skills, crisis communication, stakeholder engagement, and brand storytelling. Hannah enjoys mentoring students on how to communicate with confidence, influence audiences, and build meaningful professional relationships.",
+      "Her goal is to equip learners with the communication skills, emotional intelligence, and strategic thinking required to excel in leadership, business, and today's fast-paced professional environment.",
+    ],
     image: "/images/hannah.jpeg",
     linkedin: "#",
   },
+  // {
+  //   name: "David Shetty",
+  //   role: "Head of Marketing",
+  //   bio: [
+  //     "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies.",
+  //     "His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios.",
+  //     "His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
+  //   ],
+  //   image: "/images/micheal.png",
+  //   linkedin: "#",
+  // },
   {
-    name: "David Shetty",
-    role: "Head of Marketing",
-    bio: "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies. His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios. His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
-    image: "/images/micheal.png",
+    name: "Evans Miller",
+    role: "AI Automation Engineer",
+    bio: [
+      "Evans Miller is an AI Automation Engineer with over 8 years of experience designing intelligent workflows and automation systems that help businesses streamline operations, improve productivity, and reduce manual effort through artificial intelligence.",
+      "whose expertise includes AI workflow automation, Python, OpenAI APIs, LangChain, n8n, Zapier, Make.com, API integrations, prompt engineering, and business process automation. Evans is passionate about teaching students how to build practical AI-powered solutions that solve real-world business challenges.",
+      "His mission is to empower aspiring engineers with the knowledge and hands-on experience needed to create scalable AI automation systems and become highly sought-after professionals in the rapidly evolving AI industry.",
+    ],
+    image: "/images/Evans.jpeg",
     linkedin: "#",
   },
   {
     name: "Nmeribe Nnamdi",
     role: "Software Engineer",
-    bio: "Nmeribe a Software Engineer with 5+ years of experience and an Electrical/Electronics Engineer with a passion for building innovative digital solutions and solving complex technical problems. who specializes in web and mobile application development systems development, combining software expertise with strong engineering principles. whose goal is to create reliable, efficient, and impactful technologies that drive business growth and improve user experiences.",
+    bio: [
+      "Nmeribe a Software Engineer with 5+ years of experience and an Electrical/Electronics Engineer with a passion for building innovative digital solutions and solving complex technical problems.",
+      "Who specializes in web and mobile application development and systems development, combining software expertise with strong engineering principles.",
+      "Whose goal is to create reliable, efficient, and impactful technologies that drive business growth and improve user experiences.",
+    ],
     image: "/images/chidiadi-1.png",
     linkedin: "#",
   },
   {
     name: "Opie Samuel",
     role: "AI Automation Engineer",
-    bio: "Opie Chisom Samuel is an AI content creator who specializes in building automated, scalable content systems. He has successfully monetized over three YouTube channels within three months and has helped more than 10 individuals achieve monetization. His work focuses on combining technology and strategy to create sustainable online income, while guiding others to grow and succeed in the digital space.",
+    bio: [
+      "Opie Chisom Samuel is an AI content creator who specializes in building automated, scalable content systems.",
+      "He has successfully monetized over three YouTube channels within three months and has helped more individuals achieve monetization. His work focuses on combining technology and strategy to create sustainable online income, while guiding others to grow and succeed in the digital space.",
+      "He has built several automation systems and is passionate about helping others and businesses achieve the same.",
+    ],
     image: "/images/opie.jpg",
   },
   {
     name: "Glory Chikadibia",
     role: "Social Media Management",
-    bio: "Chikadibia Glory is a results-driven social media manager and coach with over 4 years of experience crafting strategies that elevate brands and build influence. She goes beyond teaching equipping individuals with the mindset, structure, and strategic thinking needed to operate as top professionals in the industry.",
+    bio: [
+      "Chikadibia Glory is a results-driven social media manager and coach with over 4 years of experience crafting strategies that elevate brands and build influence.",
+      "She goes beyond teaching and equipping individuals with the mindset, structure, and strategic thinking needed to operate as top professionals in the industry.",
+    ],
     image: "/images/glory.jpg",
   },
   {
     name: "Sunday Goodnews",
     role: "Devops and Cloud Architect",
-    bio: "Sunday Goodnews is a software engineer with over 5 years of experience, who has led engineering teams to build solutions like ERPP and CAMP for the Nigerian Shippers Council. He teaches DevOps with a focus on preparing students to become industry-ready engineers..",
+    bio: [
+      "Sunday Goodnews is a software engineer with over 5 years of experience, who has led engineering teams to build solutions like ERPP and CAMP for the Nigerian Shippers Council.",
+      "He teaches DevOps with a focus on preparing students to become industry-ready engineers.",
+    ],
     image: "/images/instructor-2.jpg",
   },
   {
     name: "Ejiro Okereke",
     role: "UI/UX Designer",
-    bio: "Ejiro Okereka is a Product and Brand Designer with over 3 years of experience creating intuitive digital products and cohesive brand identities across industries like finance, wellness, education, and productivity. She specializes in transforming ideas into user-friendly, visually engaging experiences—combining functionality with strong visual direction. Passionate about growth, she helps beginners build solid design foundations and confidently apply their skills to real-world projects.",
+    bio: [
+      "Ejiro Okereke is a Product and Brand Designer with over 3 years of experience creating intuitive digital products and cohesive brand identities across industries like finance, wellness, education, and productivity.",
+      "She specializes in transforming ideas into user-friendly, visually engaging experiences, combining functionality with strong visual direction. Passionate about growth, she helps beginners build solid design foundations and confidently apply their skills to real-world projects.",
+    ],
     image: "/images/instructor-3.jpg",
   },
   {
     name: "Grant Erondu",
     role: "Data and AI Engineer",
-    bio: "Grant Erondu is a data science and machine learning enthusiast with a passion for understanding how intelligent systems behave and make decisions. Over the years, he has trained over 100 students, equipping them with practical skills to analyze data and build impactful solutions.",
+    bio: [
+      "Grant Erondu is a data science and machine learning enthusiast with a passion for understanding how intelligent systems behave and make decisions.",
+      "Over the years, he has trained over 100 students, equipping them with practical skills to analyze data and build impactful solutions.",
+    ],
     image: "/images/instructor-1.jpg",
   },
 ];
@@ -145,7 +199,7 @@ function ClockIcon() {
 // ─── SOCIAL LINK PILL (shared) ────────────────────────────────────────────────
 function SocialLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    
+
     <a href={href}
       target="_blank"
       rel="noopener noreferrer"
@@ -166,6 +220,28 @@ function SocialLink({ href, children }: { href: string; children: React.ReactNod
     >
       {children}
     </a>
+  );
+}
+
+// ─── BIO PARAGRAPHS (shared) ──────────────────────────────────────────────────
+function BioParagraphs({ paragraphs, style }: { paragraphs: string[]; style?: React.CSSProperties }) {
+  return (
+    <>
+      {paragraphs.map((para, i) => (
+        <p
+          key={i}
+          style={{
+            color: "rgba(255,255,255,0.7)",
+            fontSize: "0.95rem",
+            lineHeight: 1.75,
+            margin: i === 0 ? "0 0 1rem" : "0 0 1rem",
+            ...style,
+          }}
+        >
+          {para}
+        </p>
+      ))}
+    </>
   );
 }
 
@@ -267,16 +343,15 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
             <h4 style={{ color: "white", fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
               Bio coming soon
             </h4>
-            {/* <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0, maxWidth: "380px" }}>
-              We're putting the finishing touches on {member.name.split(" ")[0]}'s profile. Check back shortly.
-            </p> */}
           </div>
         ) : (
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0 }}>{member.bio}</p>
+          <div>
+            <BioParagraphs paragraphs={member.bio} />
+          </div>
         )}
 
         {!isComingSoon && (member.linkedin || member.twitter) && (
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.75rem" }}>
             {member.linkedin && (
               <SocialLink href={member.linkedin}>
                 <LinkedInIcon />
@@ -356,13 +431,13 @@ function FeaturedCard({ member }: { member: TeamMember }) {
 
         <div style={{width: "2.5rem", height: "3px", background: BRAND, borderRadius: "999px",}}/>
 
-        <p style={{color: "rgba(255,255,255,0.65)", fontSize: "0.95rem", lineHeight: 1.75, margin: 0,}} >
-          {member.bio}
-        </p>
+        <div>
+          <BioParagraphs paragraphs={member.bio} />
+        </div>
 
         {/* Social links — LinkedIn (and Twitter, if provided) */}
         {(member.linkedin || member.twitter) && (
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.25rem" }}>
             {member.linkedin && (
               <SocialLink href={member.linkedin}>
                 <LinkedInIcon />

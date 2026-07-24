@@ -112,7 +112,7 @@ export default function About() {
         <div className="hero-box py-10 px-6">
           <div className="max-w-5xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Build Real Tech Skills. Gain Real Experience. Launch Your Career.
+              Learn in-demand tech skills, Gain practical experience, and Stay relevant in the world of Artificial Intelligence..
             </h1>
             <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto">
               Learnexity helps you go from learning to doing, through hands-on training, internships, real-life experience, and pathways into jobs, freelancing, and entrepreneurship.
@@ -139,7 +139,8 @@ export default function About() {
               </div>
               <h3 className="text-xl font-bold mb-4 text-white">Our Mission</h3>
               <p className="text-gray-400">
-                To empower non-tech by connecting more skills to real-world opportunities through career pathways, practical training, and support systems.
+                Our promise is that every decision we make from curriculum to mentorship to projects is designed to maximize your readiness for the modern technology workforce. 
+                Our success is measured by the long-term success of our learners. 
               </p>
             </div>
 
@@ -147,9 +148,9 @@ export default function About() {
               <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Eye className="w-8 h-8" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Our Vision</h3>
+              <h3 className="text-xl font-bold mb-4 text-white">Our Mision</h3>
               <p className="text-gray-400">
-                A future where every tech-skilled person can build a sustainable and fulfilling career.
+               Our mission is to identify high-potential professionals, help them develop future-relevant skills, provide practical experience, and connect qualified individuals with global opportunity networks. We are building professionals who are ready to contribute to the technologies shaping the future. 
               </p>
             </div>
 
@@ -159,7 +160,7 @@ export default function About() {
               </div>
               <h3 className="text-xl font-bold mb-4 text-white">Our Guiding Belief</h3>
               <p className="text-gray-400">
-                We're not just teaching skills, we're transforming lives through skill development.
+                Learning alone is no longer enough. Knowledge becomes valuable when it can be applied to real problems, demonstrated through practical work, and continuously adapted as technology evolves. That belief shapes everything we build. 
               </p>
             </div>
           </div>
@@ -171,7 +172,7 @@ export default function About() {
         <div className="max-w-[1230px] mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4 text-white">What Makes Us Different</h2>
           <p className="text-center text-gray-400 mb-8 text-lg">
-            We don't just teach. We help you gain experience, build confidence, and launch your life through.
+            We do not chase every trend. We focus on areas that form the foundation of the modern AI economy. Every program is selected because it supports how organizations build, deploy, secure, and scale intelligent systems. We would rather build deep capability than offer dozens of disconnected courses. 
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">

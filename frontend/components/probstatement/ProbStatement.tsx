@@ -184,18 +184,17 @@ export default function ProbStatement() {
 
             {/* component-headers equivalent */}
             <h2 className="prob-headline">
-              Not All Courses Create Equal Opportunities.<br />
+              Not all skills create equal opportunities.<br />
             </h2>
 
             <div className="prob-body">
-              <p className="prob-body-line accent">Many learn skills but still struggle to monetize them, especially with today’s AI changes..</p>
+              <p className="prob-body-line accent"> Many spend valuable time and money learning technical skills and earning certificate,</p>
               <p className="prob-body-line">
-               That’s why Learnexity offers carefully selected, future-relevant courses.
+               only to struggle to monetize them, especially with today's rapid AI advancements.
               </p>
               <p className="prob-body-line">designed to help you land real opportunities.</p>
-              {/* <p className="prob-body-line accent">
-               It's opportunity.
-              </p> */}
+              <p className="prob-body-line">That's why Learnexity offers highly selective, future-proof pathways designed to help you master the high-value infrastructure layers that remain valuable as AI transforms the workplace. </p>
+              <p className="prob-body-line">We do not just teach you skills; we position you to land real, global opportunities</p>
             </div>
 
             <PrimaryButton2 />

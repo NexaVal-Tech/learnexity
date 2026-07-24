@@ -1,9 +1,6 @@
 "use client";
 import React from "react";
-// import Courses from "../headercourses/HeaderCourse";
 import { PrimaryButton, SignUpButton2 } from "../button/Button";
-
-
 
 export default function Hero() {
   return (
@@ -11,67 +8,38 @@ export default function Hero() {
       className="relative overflow-hidden bg-black w-full"
       style={{ minHeight: "90vh" }}
     >
-      {/* Background video — full section */}
-      <video
-        className="absolute inset-0 w-full h-[750px] md:h-[750px] lg:h-[600px] object-cover z-0"
-        src="/videos/landing_video.mp4"
-        autoPlay
-        loop
-        muted
+      {/* Background video */}
+      <video className="absolute inset-0 w-full h-[750px] md:h-[750px] lg:h-[600px] object-cover z-0" src="/videos/landing_video.mp4" autoPlay loop muted
         playsInline
       />
 
-      {/* Dark overlay over background video */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%)",
-        }}
-      />
+      {/* Overlay */}
+      <div className="absolute inset-0 z-[1]" style={{background:"linear-gradient(135deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%)",}} />
 
-      {/* Inner max-w-5xl container */}
-      <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col pt-15" style={{ minHeight: "90vh" }}>
+      <div className="relative z-10 max-w-7xl mx-auto flex items-center px-5 sm:px-8" style={{ minHeight: "90vh" }}>
+        <div className="max-w-4xl">
+          {/* Heading */}
+          <h1 className="text-left text-2xl sm:text-3xl md:text-5xl lg:text-5xl font-bold leading-tight text-white">
+            Learn in-demand tech skills,
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
+            Gain practical experience, and
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
+            Stay relevant in the world of Artificial Intelligence.
+          </h1>
 
-        {/* Courses nav bar */}
-        {/* <div className="pt-16 md:pt-6 px-5 sm:px-8">
-          <Courses variant="white" />
-        </div> */}
+          {/* Subheading */}
+          <p className="mt-4 max-w-2xl text-lg sm:text-xl md:text-2xl leading-relaxed text-gray-200">
+            Learn to work with AI, Lead with AI, and
+            Build the systems that power Artificial Intelligence.
+          </p>
 
-        {/* Main row: text left, hero-video right */}
-        <div className="flex flex-col md:flex-row items-center flex-1 gap-6 px-5 sm:px-8 py-10 md:py-0">
-
-          {/* Left: text */}
-          <div className="flex-1 text-left">
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-white mb-6"
-              style={{ letterSpacing: "-0.01em" }}
-            >
-              Learn in-demand Tech skills.{" "}<br />
-              <span>Gain practical experience.</span>{" "}<br />
-              Land real opportunities.
-            </h1>
-
-            <div className="flex flex-wrap items-center justify-start gap-3 mt-4">
-              <SignUpButton2 />
-              <PrimaryButton />
-            </div>
+          {/* Buttons */}
+          <div className="flex flex-row sm:flex-row items-start gap-4 mt-10">
+            <SignUpButton2 />
+            <PrimaryButton />
           </div>
-
-          {/* Right: foreground video */}
-          {/* <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-2xl" style={{ maxHeight: "520px" }}>
-            <video
-              className="w-full h-full object-cover"
-              style={{ maxHeight: "520px" }}
-              src="/videos/hero-video.mp4"
-              autoPlay
-              controls
-              loop
-              muted
-              playsInline
-            />
-          </div> */}
-
         </div>
       </div>
     </section>
