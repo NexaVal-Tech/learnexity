@@ -540,15 +540,11 @@ public function previewMaterial(Request $request, int $itemId): mixed
                 ->first();
 
             if ($badge) {
-                UserBadge::firstOrCreate(
-                    [
-                        'user_id' => $userId,
-                        'achievement_badge_id' => $badge->id,
-                    ],
-                    [
-                        'unlocked_at' => now(),
-                    ]
-                );
+                $alreadyUnlocked = UserBadge::where('user_id', $userId)->where('achievement_badge_id', $badge->id)->exists();
+                if (!$alreadyUnlocked) {
+                    UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $badge->id, 'unlocked_at' => now()]);
+                    $this->logBadgeUnlocked($userId, $courseId, $badge);
+                }
             }
         }
 
@@ -563,17 +559,36 @@ public function previewMaterial(Request $request, int $itemId): mixed
                 ->first();
 
             if ($completionBadge) {
-                UserBadge::firstOrCreate(
-                    [
-                        'user_id' => $userId,
-                        'achievement_badge_id' => $completionBadge->id,
-                    ],
-                    [
-                        'unlocked_at' => now(),
-                    ]
-                );
+                $alreadyUnlocked = UserBadge::where('user_id', $userId)->where('achievement_badge_id', $completionBadge->id)->exists();
+                if (!$alreadyUnlocked) {
+                    UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $completionBadge->id, 'unlocked_at' => now()]);
+                    $this->logBadgeUnlocked($userId, $courseId, $completionBadge);
+                }
+            }
+
+            // Course finished — auto-issue a certificate (idempotent).
+            try {
+                app(\App\Services\CertificateService::class)->autoIssueIfEligible($userId, $courseId);
+            } catch (\Exception $e) {
+                Log::error('❌ Certificate auto-issue failed', ['error' => $e->getMessage()]);
             }
         }
+    }
+
+    private function logBadgeUnlocked(int $userId, string $courseId, AchievementBadge $badge): void
+    {
+        $user = User::find($userId);
+        if (!$user) return;
+
+        \App\Services\ActivityLogger::log(
+            'badge.unlocked',
+            "{$user->name} unlocked the \"{$badge->name}\" badge",
+            actorType: 'system',
+            actorId: $userId,
+            actorName: $user->name,
+            metadata: ['badge_id' => $badge->id],
+            courseId: $courseId
+        );
     }
 
     /**

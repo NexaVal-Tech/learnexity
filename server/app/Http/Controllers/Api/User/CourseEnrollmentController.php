@@ -83,28 +83,22 @@ class CourseEnrollmentController extends Controller
         $learningTrack = $request->input('learning_track', 'self_paced');
         $paymentType   = $request->input('payment_type');
 
-        // ── Registration-fee override ────────────────────────────────────────
-        $scholarship = Scholarship::where('user_id', $user->id)
-            ->where('course_id', $courseId)
-            ->where('status', 'approved')
-            ->where('is_used', false)
-            ->first();
+        // ── Pricing (single source of truth — see PricingService) ────────────
+        $pricing = \App\Services\PricingService::calculate($user, $course, $currency, $learningTrack, $paymentType);
 
-        $isRegistrationFee     = (bool) $scholarship;
-        $registrationFeeAmount = null;
+        $isRegistrationFee     = $pricing['is_registration_fee'];
+        $scholarship           = $pricing['scholarship'];
+        $paymentType           = $pricing['payment_type']; // forced to 'onetime' when registration-fee
+        $registrationFeeAmount = $isRegistrationFee ? $pricing['amount'] : null;
+
+        if ($isRegistrationFee && $registrationFeeAmount <= 0) {
+            Log::warning('⚠️ [enroll] Registration fee not configured', ['currency' => $currency]);
+            return response()->json([
+                'message' => 'Registration fee is not configured yet. Please contact support.',
+            ], 400);
+        }
 
         if ($isRegistrationFee) {
-            $regFeeSetting          = RegistrationFeeSetting::current();
-            $registrationFeeAmount  = $regFeeSetting->priceForCurrency($currency);
-            $paymentType            = 'onetime'; // the registration fee is always paid in full, no installments
-
-            if ($registrationFeeAmount <= 0) {
-                Log::warning('⚠️ [enroll] Registration fee not configured', ['currency' => $currency]);
-                return response()->json([
-                    'message' => 'Registration fee is not configured yet. Please contact support.',
-                ], 400);
-            }
-
             Log::info('🎓 Registration-fee pricing applied', [
                 'user_id' => $user->id, 'course_id' => $courseId,
                 'scholarship_id' => $scholarship->id, 'amount' => $registrationFeeAmount, 'currency' => $currency,
@@ -131,32 +125,16 @@ class CourseEnrollmentController extends Controller
             }
 
             $needsUpdate = $existingEnrollment->learning_track !== $learningTrack
+                || $existingEnrollment->payment_type !== $paymentType
                 || (bool) $existingEnrollment->is_registration_fee !== $isRegistrationFee;
 
             if ($needsUpdate) {
-                if ($isRegistrationFee) {
-                    $newPrice = $registrationFeeAmount;
-                } else {
-                    $newPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
-
-                    if ($paymentType === 'onetime') {
-                        $discountPercent = $course->getOneTimeDiscountByCurrency($currency);
-                        if ($discountPercent > 0) {
-                            $newPrice = max(0, round($newPrice * (1 - ($discountPercent / 100)), 2));
-                        }
-                    }
-                }
-
-                $newInstallmentAmount = $paymentType === 'installment'
-                    ? round($newPrice / 4, 2)
-                    : $newPrice;
-
                 $existingEnrollment->update([
                     'learning_track'      => $learningTrack,
                     'payment_type'        => $paymentType,
-                    'total_amount'        => $newPrice,
-                    'installment_amount'  => $newInstallmentAmount,
-                    'total_installments'  => $paymentType === 'installment' ? 4 : 1,
+                    'total_amount'        => $pricing['amount'],
+                    'installment_amount'  => $pricing['installment_amount'],
+                    'total_installments'  => $pricing['total_installments'],
                     'currency'            => $currency,
                     'scholarship_id'      => $scholarship?->id,
                     'is_registration_fee' => $isRegistrationFee,
@@ -165,7 +143,7 @@ class CourseEnrollmentController extends Controller
                 Log::info('🔄 Updated pending enrollment pricing', [
                     'enrollment_id'        => $existingEnrollment->id,
                     'new_track'            => $learningTrack,
-                    'new_price'            => $newPrice,
+                    'new_price'            => $pricing['amount'],
                     'is_registration_fee'  => $isRegistrationFee,
                 ]);
             }
@@ -183,29 +161,16 @@ class CourseEnrollmentController extends Controller
         }
 
         // ── New enrollment ───────────────────────────────────────────────────────
-        if ($isRegistrationFee) {
-            $finalPrice = $registrationFeeAmount;
-        } else {
-            $finalPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
+        $finalPrice = $pricing['amount'];
 
-            if ($finalPrice <= 0) {
-                return response()->json([
-                    'message' => 'Pricing not configured for this course and currency combination',
-                ], 400);
-            }
-
-            if ($paymentType === 'onetime') {
-                $discountPercent = $course->getOneTimeDiscountByCurrency($currency);
-                if ($discountPercent > 0) {
-                    $finalPrice = max(0, round($finalPrice * (1 - ($discountPercent / 100)), 2));
-                }
-            }
+        if (!$isRegistrationFee && $finalPrice <= 0) {
+            return response()->json([
+                'message' => 'Pricing not configured for this course and currency combination',
+            ], 400);
         }
 
-        $totalInstallments  = $paymentType === 'installment' ? 4 : 1;
-        $installmentAmount  = $paymentType === 'installment'
-            ? round($finalPrice / 4, 2)
-            : $finalPrice;
+        $totalInstallments = $pricing['total_installments'];
+        $installmentAmount = $pricing['installment_amount'];
 
         $enrollment = CourseEnrollment::create([
             'user_id'             => $user->id,
@@ -231,6 +196,17 @@ class CourseEnrollmentController extends Controller
             'enrollment_id'       => $enrollment->id,
             'is_registration_fee' => $isRegistrationFee,
         ]);
+
+        \App\Services\ActivityLogger::log(
+            'enrollment.created',
+            "{$user->name} enrolled in {$course->title}",
+            actorType: 'user',
+            actorId: $user->id,
+            actorName: $user->name,
+            metadata: ['enrollment_id' => $enrollment->id],
+            courseId: $courseId,
+            request: $request
+        );
 
         return response()->json([
             'message'             => 'Enrollment created successfully',
@@ -351,6 +327,19 @@ class CourseEnrollmentController extends Controller
             'payment_status' => $request->payment_status,
             'has_access' => $enrollment->has_access,
         ]);
+
+        if ($request->payment_status === 'completed') {
+            \App\Services\ActivityLogger::log(
+                'payment.completed',
+                "{$user->name} completed payment for {$enrollment->course_name}",
+                actorType: 'user',
+                actorId: $user->id,
+                actorName: $user->name,
+                metadata: ['enrollment_id' => $enrollment->id, 'amount' => $enrollment->amount_paid],
+                courseId: $enrollment->course_id,
+                request: $request
+            );
+        }
 
         return response()->json([
             'message' => 'Payment status updated successfully',

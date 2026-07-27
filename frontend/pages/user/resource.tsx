@@ -722,20 +722,15 @@ export default function ResourcesPage() {
             onMarkComplete={handleAutoComplete}
             onDownload={handleDownload}
 onPreviewFile={async (itemId, title) => {
-  // Find the item across all sprints to check its type
-  const item = data?.materials
-    .flatMap(s => s.items)
-    .find(i => i.id === itemId);
-
-  if (item?.type === 'document') {
-    // Office viewer needs a real publicly accessible URL — never a blob
-    const { url } = await api.courseResources.getPreviewUrl(itemId);
-    return url;
-  }
-
-  // PDFs: stream as blob
-  const blob = await api.courseResources.previewMaterial(itemId);
-  return window.URL.createObjectURL(blob);
+  // Both docs and PDFs now resolve to a real, publicly-fetchable URL rather
+  // than a blob: URL. Blob URLs only render inside an <iframe> when the
+  // browser has a built-in PDF plugin — desktop Chrome/Edge do, but many
+  // mobile browsers (iOS Safari, in-app webviews) don't, and can't "Open"
+  // a blob: URL outside the tab that created it either. A real URL fixes
+  // both: PdfViewer renders it through Google's viewer (works everywhere)
+  // and the "Open in new tab" fallback actually goes somewhere.
+  const { url } = await api.courseResources.getPreviewUrl(itemId);
+  return url;
 }}
           />
         )}

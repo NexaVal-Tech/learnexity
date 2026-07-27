@@ -46,58 +46,38 @@ class StripeController extends Controller
             $course = $enrollment->course;
             $track  = $validated['learning_track'];
             $type   = $validated['payment_type'];
+            $user   = auth()->user();
 
-            // ✅ Server-side price calculation
-            $priceMap = [
-                'one_on_one'       => $course->one_on_one_price_usd,
-                'group_mentorship' => $course->group_mentorship_price_usd,
-                'self_paced'       => $course->self_paced_price_usd,
-            ];
+            // ✅ Server-side price calculation — same engine as the enroll()
+            // endpoint (App\Services\PricingService), so Stripe always
+            // charges exactly what the enrollment record says is owed.
+            // Scholarship eligibility is looked up independently here (by
+            // user + course), never trusted from client input.
+            $pricing = \App\Services\PricingService::calculate($user, $course, 'USD', $track, $type);
 
-            $basePrice = (float) ($priceMap[$track] ?? $course->price_usd ?? 0);
+            $basePrice   = $pricing['amount'];
+            $scholarship = $pricing['scholarship'];
+            $type        = $pricing['payment_type']; // forced 'onetime' if registration-fee
 
+            // Hourly multiplier only applies to the non-scholarship track price —
+            // a registration-fee payer pays the flat fee regardless of hours.
             $hours = (int) ($request->input('hours', 1));
-                if ($track === 'one_on_one' && $hours > 1) {
-                    $basePrice = $basePrice * min($hours, 20); // cap at 20 for safety
-                }
+            if (!$pricing['is_registration_fee'] && $track === 'one_on_one' && $hours > 1) {
+                $basePrice = $basePrice * min($hours, 20); // cap at 20 for safety
+            }
+
+            if ($scholarship) {
+                Log::info('🎓 Registration-fee pricing applied (Stripe)', [
+                    'scholarship_id' => $scholarship->id,
+                    'amount'         => $basePrice,
+                ]);
+            }
 
             if ($basePrice <= 0) {
                 return response()->json(['error' => 'Invalid course price configuration.'], 422);
             }
 
-            // Apply one-time discount if applicable
-            if ($type === 'onetime') {
-                $discountPercent = (float) ($course->onetime_discount_usd ?? 0);
-                if ($discountPercent > 0) {
-                    $basePrice = round($basePrice * (1 - $discountPercent / 100));
-                }
-            }
-
-                // ✅ NEW: Apply scholarship discount on top
-            if (!empty($validated['scholarship_id'])) {
-                $scholarship = Scholarship::where('id', $validated['scholarship_id'])
-                    ->where('user_id', auth()->id())
-                    ->where('status', 'approved')
-                    ->where('is_used', false)
-                    ->first();
-
-                if ($scholarship && $scholarship->discount_percentage > 0) {
-                    $basePrice = round($basePrice * (1 - $scholarship->discount_percentage / 100));
-
-                    Log::info('🎓 Scholarship discount applied (Stripe)', [
-                        'scholarship_id'   => $scholarship->id,
-                        'discount_percent' => $scholarship->discount_percentage,
-                        'price_after'      => $basePrice,
-                    ]);
-                }
-            }
-
-            // Installment = 1/4 of price
-            if ($type === 'installment') {
-                $basePrice = round($basePrice / 4);
-            }
-
-            $amountInCents = (int) ($basePrice * 100);
+            $amountInCents = (int) round($basePrice * 100);
 
             if ($amountInCents <= 0) {
                 return response()->json(['error' => 'Calculated amount is invalid.'], 422);
@@ -129,7 +109,7 @@ class StripeController extends Controller
                 'customer_email' => auth()->user()->email,
                 'metadata'      => [
                     'enrollment_id' => $enrollment->id,
-                    'scholarship_id' => $validated['scholarship_id'] ?? null, 
+                    'scholarship_id' => $scholarship?->id,
                     'course_id'     => $course->id,
                     'course_name'   => $course->title,
                     'user_id'       => auth()->id(),

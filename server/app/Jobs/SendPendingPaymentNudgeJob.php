@@ -4,9 +4,11 @@
 namespace App\Jobs;
 
 use App\Models\User;
+use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\EmailSequenceLog;
 use App\Mail\PendingPaymentNudgeMail;
+use App\Services\PricingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -55,12 +57,60 @@ class SendPendingPaymentNudgeJob implements ShouldQueue
             $user = User::find($userId);
             if (!$user) continue;
 
+            // ── Re-sync pricing before emailing ──────────────────────────────
+            // The enrollment row can go stale: a user enrolls at the full
+            // course price, then later applies for and is awarded the
+            // full-tuition scholarship. The stored total_amount would still
+            // be the old course price until they revisit the payment page.
+            // Recompute via the same PricingService used everywhere else and,
+            // if a registration-fee scholarship now applies, persist it here
+            // too so the enrollment record — and every future email/charge —
+            // reflects the registration fee, not the original price.
+            $course = Course::where('course_id', $enrollment->course_id)->first();
+            if ($course) {
+                $pricing = PricingService::calculate(
+                    $user,
+                    $course,
+                    $enrollment->currency ?? 'USD',
+                    $enrollment->learning_track ?? 'self_paced',
+                    $enrollment->payment_type ?? 'onetime'
+                );
+
+                if (
+                    $pricing['is_registration_fee'] &&
+                    (
+                        !$enrollment->is_registration_fee ||
+                        (float) $enrollment->total_amount !== (float) $pricing['amount']
+                    )
+                ) {
+                    $enrollment->update([
+                        'total_amount'        => $pricing['amount'],
+                        'installment_amount'  => $pricing['installment_amount'],
+                        'total_installments'  => $pricing['total_installments'],
+                        'payment_type'        => $pricing['payment_type'],
+                        'is_registration_fee' => true,
+                        'scholarship_id'      => $pricing['scholarship']->id,
+                    ]);
+                    $enrollment->refresh();
+
+                    Log::info('🎓 [PendingNudge] Synced stale enrollment to registration fee', [
+                        'enrollment_id' => $enrollment->id,
+                        'amount'        => $pricing['amount'],
+                    ]);
+                }
+            }
+
             // How many nudge emails have we sent for this enrollment so far?
             $nudgesSent = EmailSequenceLog::countSent($userId, $emailKey);
             $nudgeDay   = $nudgesSent + 1;   // 1-based day counter
 
+            // NOTE: was '/user/courses/payment/' — that route doesn't exist
+            // (the real page is frontend/pages/user/payment/[EnrollmentId].tsx,
+            // i.e. '/user/payment/{id}'), so every nudge email's CTA button
+            // was a dead link. Matches the URL used by InstallmentPaymentReminder
+            // and the Stripe checkout success/cancel URLs.
             $paymentUrl = rtrim(env('FRONTEND_URL', 'https://learnexity.org'), '/')
-                . '/user/courses/payment/' . $enrollment->id;
+                . '/user/payment/' . $enrollment->id;
 
             try {
                 Mail::to($user->email)->queue(

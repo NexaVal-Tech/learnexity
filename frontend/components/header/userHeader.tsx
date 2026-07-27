@@ -131,6 +131,9 @@ export default function UserHeader() {
                     <Link href="/user/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsAccountOpen(false)}>
                       Profile
                     </Link>
+                    <Link href="/user/achievements" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsAccountOpen(false)}>
+                      Badges &amp; Certificates
+                    </Link>
                     <Link href="/user/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsAccountOpen(false)}>
                       Settings
                     </Link>

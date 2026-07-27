@@ -3,6 +3,7 @@ import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
   Clock, CheckCircle, Loader2,
 } from 'lucide-react';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,10 @@ const ImageBlock = memo(function ImageBlock({ url }: { url: string }) {
 // ─── Text Block ───────────────────────────────────────────────────────────────
 
 const TextBlock = memo(function TextBlock({ html }: { html: string }) {
+  // Sanitized before render — this content is admin/instructor-authored,
+  // but a compromised staff account or an XSS bug in the admin panel
+  // shouldn't be able to run script in every enrolled student's browser.
+  const clean = useMemo(() => sanitizeHtml(html), [html]);
   return (
     <div
       className="
@@ -210,7 +215,7 @@ const TextBlock = memo(function TextBlock({ html }: { html: string }) {
         prose-strong:font-semibold prose-em:italic
         [&_p:empty]:hidden
       "
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: clean }}
     />
   );
 });
@@ -226,12 +231,17 @@ const PdfViewer = memo(function PdfViewer({
   onComplete: (id: number) => void;
   onPreviewFile: (itemId: number, title: string) => Promise<string>;
 }) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  // fileUrl is a real, publicly-fetchable URL (not a blob: URL). Blob URLs
+  // only render inside an <iframe> when the browser has a built-in PDF
+  // plugin — most desktop browsers do, but many mobile browsers/webviews
+  // don't, and show an inert fallback ("some number" + a dead Open button)
+  // instead. Routing a real URL through Google's viewer renders consistently
+  // on every device, and the "Open in new tab" fallback actually works too.
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [fetching, setFetching] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completed = useRef(isCompleted || false);
-  const objectUrlRef = useRef<string | null>(null);
   // FIX: stable ref so timer callback always has latest onComplete without restarting the timer
   const onCompleteRef = useRef(onComplete);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
@@ -240,12 +250,8 @@ const PdfViewer = memo(function PdfViewer({
     try {
       setFetching(true);
       setLoadError(false);
-      if (objectUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(objectUrlRef.current);
-      }
       const url = await onPreviewFile(itemId, title);
-      objectUrlRef.current = url;
-      setBlobUrl(url);
+      setFileUrl(url);
     } catch {
       setLoadError(true);
     } finally {
@@ -257,13 +263,12 @@ const PdfViewer = memo(function PdfViewer({
   useEffect(() => {
     doFetch();
     return () => {
-      if (objectUrlRef.current?.startsWith('blob:')) URL.revokeObjectURL(objectUrlRef.current);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [doFetch]);
 
   useEffect(() => {
-    if (completed.current || !blobUrl) return;
+    if (completed.current || !fileUrl) return;
     // FIX: timer uses ref so it doesn't restart when onComplete identity changes
     timerRef.current = setTimeout(() => {
       if (!completed.current) {
@@ -272,7 +277,7 @@ const PdfViewer = memo(function PdfViewer({
       }
     }, 60_000);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [itemId, blobUrl]); // intentionally excludes isCompleted and onComplete
+  }, [itemId, fileUrl]); // intentionally excludes isCompleted and onComplete
 
   if (fetching) {
     return (
@@ -283,7 +288,7 @@ const PdfViewer = memo(function PdfViewer({
     );
   }
 
-  if (loadError || !blobUrl) {
+  if (loadError || !fileUrl) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
         <FileX size={24} className="text-red-400" />
@@ -293,21 +298,28 @@ const PdfViewer = memo(function PdfViewer({
     );
   }
 
+  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+
   return (
     <div className="flex flex-col">
       <div style={{ height: '500px' }} className="bg-gray-100">
-        <iframe src={`${blobUrl}#toolbar=0&view=FitH`} className="w-full h-full border-0" title={title} />
+        <iframe src={viewerUrl} className="w-full h-full border-0" title={title} />
       </div>
       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <span className="text-xs text-gray-400 flex items-center gap-1.5">
           <Clock size={11} />
           {isCompleted ? 'Completed' : 'Marked complete after 60s of reading'}
         </span>
-        {isCompleted && (
-          <span className="flex items-center gap-1 text-xs text-emerald-600">
-            <CheckCircle size={11} /> Completed
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-600 hover:underline">
+            Open in new tab
+          </a>
+          {isCompleted && (
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <CheckCircle size={11} /> Completed
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

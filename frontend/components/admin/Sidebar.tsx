@@ -13,7 +13,9 @@ import {
   User, 
   LogOut,
   ChevronsUpDown,
-  Component
+  Component,
+  Award,
+  FileBadge,
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -31,6 +33,8 @@ const Sidebar = () => {
     { icon: GraduationCap, label: 'Kids Management', href: '/admin/kids' },
     { icon: User, label: 'Referral History', href: '/admin/referral-history' },
     { icon: GraduationCap, label: 'Scholarship Applications', href: '/admin/scholarship-application' },
+    { icon: Award, label: 'Badges', href: '/admin/badges' },
+    { icon: FileBadge, label: 'Certificates', href: '/admin/certificates' },
     { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics' },
   ];
 
@@ -40,7 +44,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-100 flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-screen w-74 bg-white border-r border-gray-100 flex flex-col z-50">
       {/* Header / Team Switcher */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between gap-2 px-2 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group">

@@ -75,8 +75,8 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
         }}
       >
         <div>
-          <p className="font-bold text-green-400">{scholarship.discount_percentage}% Scholarship Approved</p>
-          <p className="text-green-600 text-xs">Applied automatically at checkout</p>
+          <p className="font-bold text-green-400">Full-Tuition Scholarship Approved</p>
+          <p className="text-green-600 text-xs">Pay only the registration fee at checkout</p>
         </div>
       </div>
     );

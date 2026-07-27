@@ -282,6 +282,15 @@ class AuthController extends Controller
             'email'   => $user->email,
         ]);
 
+        \App\Services\ActivityLogger::log(
+            'user.registered',
+            "{$user->name} created an account",
+            actorType: 'user',
+            actorId: $user->id,
+            actorName: $user->name,
+            request: $req
+        );
+
         return response()->json([
             'message' => 'Registration successful!',
             'user'    => $user,
@@ -355,6 +364,15 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('❌ Performance tracker onLogin failed', ['error' => $e->getMessage()]);
         }
+
+        \App\Services\ActivityLogger::log(
+            'user.login',
+            "{$user->name} logged in",
+            actorType: 'user',
+            actorId: $user->id,
+            actorName: $user->name,
+            request: $req
+        );
 
         dispatch(function () use ($user) {
             try {

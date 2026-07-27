@@ -80,38 +80,29 @@ export const CourseActionButton = ({
       return;
     }
 
+    // Give a returning/logged-in user the same scholarship-screening
+    // opportunity a new signup gets, instead of jumping straight to
+    // payment — same rule as courses/[id].tsx and the post-login redirect.
+    try {
+      const onboardingStatus = await api.onboarding.getStatus();
+      if (onboardingStatus.show_modal) {
+        await api.onboarding.setIntendedCourse(courseId);
+        router.push('/user/dashboard');
+        return;
+      }
+    } catch {
+      // if the status check fails, don't block enrollment — fall through
+    }
+
     // If authenticated but not enrolled, enroll and go to payment
     setIsEnrolling(true);
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}/enroll`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({
-            course_name: courseName,
-            course_price: coursePrice,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        // Redirect to payment page
-        router.push(`/user/dashboard/payment?enrollment_id=${data.enrollment_id}&course_id=${courseId}`);
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to enroll in course');
-      }
-    } catch (error) {
+      const response = await api.enrollment.enroll(courseId, 'self_paced', 'onetime');
+      router.push(`/user/payment/${response.enrollment_id}`);
+    } catch (error: any) {
       console.error('Enrollment failed:', error);
-      alert('Failed to enroll in course. Please try again.');
+      const message = error?.response?.data?.message || 'Failed to enroll in course. Please try again.';
+      alert(message);
     } finally {
       setIsEnrolling(false);
     }

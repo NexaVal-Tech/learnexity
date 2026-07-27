@@ -44,26 +44,25 @@ interface ScholarshipStats {
 const DetailModal: React.FC<{
   application: ScholarshipApplication | null;
   onClose: () => void;
-  onUpdateStatus: (id: number, status: 'approved' | 'rejected', notes: string, discount: number) => Promise<void>;
+  onUpdateStatus: (id: number, status: 'approved' | 'rejected', notes: string) => Promise<void>;
 }> = ({ application, onClose, onUpdateStatus }) => {
   const [notes, setNotes] = useState('');
-  const [discount, setDiscount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
 
   useEffect(() => {
     if (application) {
       setNotes(application.review_notes ?? '');
-      setDiscount(application.discount_percentage);
     }
   }, [application]);
 
   if (!application) return null;
 
   const handleSubmit = async (status: 'approved' | 'rejected') => {
+    setAction(status === 'approved' ? 'approve' : 'reject');
     setSaving(true);
     try {
-      await onUpdateStatus(application.id, status, notes, discount);
+      await onUpdateStatus(application.id, status, notes);
       onClose();
     } finally {
       setSaving(false);
@@ -136,19 +135,13 @@ const DetailModal: React.FC<{
           {/* Review Section */}
           {application.status === 'pending' && (
             <div className="border-t border-gray-100 pt-4 space-y-4">
-              <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1.5">
-                  Discount to Award (%)
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={discount}
-                  onChange={e => setDiscount(Number(e.target.value))}
-                  className="w-32 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-400 mt-1">Auto-suggested: {application.discount_percentage}%</p>
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                <p className="text-sm font-semibold text-green-800">Full-tuition scholarship</p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Approving awards 100% of tuition — the student will only pay the platform's
+                  registration fee (set under Settings) instead of the course price. There are no
+                  partial/percentage awards anymore.
+                </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700 block mb-1.5">
@@ -191,7 +184,7 @@ const DetailModal: React.FC<{
               className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-60"
             >
               {saving && action === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              Approve ({discount}% discount)
+              Approve (full tuition)
             </button>
           </div>
         )}
@@ -249,10 +242,9 @@ function ScholarshipApplicationsPage() {
   const handleUpdateStatus = async (
     id: number,
     status: 'approved' | 'rejected',
-    notes: string,
-    discount: number
+    notes: string
   ) => {
-    await adminApi.patch(`/api/admin/scholarships/${id}/review`, { status, review_notes: notes, discount_percentage: discount });
+    await adminApi.patch(`/api/admin/scholarships/${id}/review`, { status, review_notes: notes });
     fetchApplications();
     fetchStats();
   };
@@ -330,7 +322,7 @@ function ScholarshipApplicationsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      {['Applicant', 'Course', 'Score', 'Location', 'Discount', 'Status', 'Used', 'Applied', 'Action'].map(h => (
+                      {['Applicant', 'Course', 'Score', 'Location', 'Award', 'Status', 'Used', 'Applied', 'Action'].map(h => (
                         <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -359,8 +351,8 @@ function ScholarshipApplicationsPage() {
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-600">{app.applicant_country ?? '—'}</td>
                           <td className="py-3 px-4">
-                            {app.discount_percentage > 0 ? (
-                              <span className="text-sm font-semibold text-green-700">{app.discount_percentage}%</span>
+                            {app.status === 'approved' ? (
+                              <span className="text-sm font-semibold text-green-700">Full tuition</span>
                             ) : (
                               <span className="text-sm text-gray-400">—</span>
                             )}

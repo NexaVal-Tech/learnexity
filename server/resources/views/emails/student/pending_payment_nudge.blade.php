@@ -59,6 +59,7 @@
         3 => "This is your final reminder. Your enrollment in <strong>{$enrollment->course_name}</strong> is still pending. Complete payment now or your reserved spot may be released to another student.",
       ];
       $bodyMessage = $messages[min($nudgeDay, 3)];
+      $isRegistrationFee = (bool) ($enrollment->is_registration_fee ?? false);
     @endphp
 
     <div class="header {{ $headerClass }}">
@@ -76,18 +77,22 @@
 
       <p class="text">{!! $bodyMessage !!}</p>
 
+      @if($isRegistrationFee)
+        <div class="urgency" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">🎓 Full-tuition scholarship awarded</div>
+      @endif
+
       <div class="course-card">
         <div class="course-label">Your Enrollment Summary</div>
         <div class="course-name">{{ $enrollment->course_name }}</div>
         <div class="detail-row">
           <span>Payment type</span>
-          <span class="detail-val">{{ $enrollment->payment_type === 'onetime' ? 'One-time payment' : 'Installment plan (4×)' }}</span>
+          <span class="detail-val">{{ $isRegistrationFee ? 'Registration fee (one-time)' : ($enrollment->payment_type === 'onetime' ? 'One-time payment' : 'Installment plan (4×)') }}</span>
         </div>
         <div class="detail-row">
-          <span>Total amount</span>
+          <span>{{ $isRegistrationFee ? 'Registration fee' : 'Total amount' }}</span>
           <span class="detail-val">{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->total_amount, 2) }}</span>
         </div>
-        @if($enrollment->payment_type === 'installment')
+        @if(!$isRegistrationFee && $enrollment->payment_type === 'installment')
           <div class="detail-row">
             <span>First installment</span>
             <span class="detail-val">{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->installment_amount, 2) }}</span>
@@ -99,7 +104,11 @@
         </div>
       </div>
 
-      @if($enrollment->payment_type === 'installment')
+      @if($isRegistrationFee)
+        <div class="installment-box">
+          <p><strong>Full-tuition scholarship:</strong> You only owe the registration fee of <strong>{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->total_amount, 2) }}</strong> — no further course payments. Complete it now to lock in your spot.</p>
+        </div>
+      @elseif($enrollment->payment_type === 'installment')
         <div class="installment-box">
           <p><strong>Installment plan:</strong> Pay just <strong>{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->installment_amount, 2) }}</strong> today to unlock full access, then spread the rest over 3 more payments every 4 weeks. No interest, no penalties.</p>
         </div>

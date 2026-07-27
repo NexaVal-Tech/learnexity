@@ -118,6 +118,23 @@ export default function CoursePage() {
       router.push("/user/auth/register");
       return;
     }
+
+    // Give a returning/logged-in user the same scholarship-screening
+    // opportunity a new signup gets, instead of jumping straight to
+    // payment. Mirrors the logged-out path above and the redirect logic
+    // in AuthContext/callback.tsx — the dashboard modal decides what to
+    // show based on server-computed screening status.
+    try {
+      const onboardingStatus = await api.onboarding.getStatus();
+      if (onboardingStatus.show_modal) {
+        await api.onboarding.setIntendedCourse(id as string);
+        router.push("/user/dashboard");
+        return;
+      }
+    } catch {
+      // if the status check fails, don't block enrollment — fall through
+    }
+
     try {
       setEnrolling(true);
       setError(null);

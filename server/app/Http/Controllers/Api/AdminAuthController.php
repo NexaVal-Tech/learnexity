@@ -63,6 +63,15 @@ class AdminAuthController extends Controller
                 'email' => $admin->email,
             ]);
 
+            \App\Services\ActivityLogger::log(
+                'admin.login',
+                "{$admin->name} (admin) logged in",
+                actorType: 'admin',
+                actorId: $admin->id,
+                actorName: $admin->name,
+                request: $request
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Admin logged in successfully',

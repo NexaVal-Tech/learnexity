@@ -1,4 +1,16 @@
-// pages/user/payment/[EnrollmentId].tsx
+// pages/user/payment/[enrollmentId].tsx
+//
+// NOTE: this file was previously named [EnrollmentId].tsx (capital E). Next.js
+// derives the router.query key from the exact bracket text in the filename,
+// and that key is case-sensitive — so router.query.enrollmentId (used
+// throughout this file) was ALWAYS undefined, no matter what was actually in
+// the URL. That silently broke the "load the specific enrollment from the
+// URL" path below and made the page always fall back to
+// fetchPendingEnrollment() (whichever pending enrollment happens to be most
+// recently created across ALL the user's courses) — which is why purchasing
+// course B could land you looking at course A. Renaming the file to match
+// the lowercase query key fixes it for real; no code changes were needed
+// once the filename matched.
 
 'use client';
 
@@ -175,6 +187,49 @@ export default function PaymentPage() {
 
     detectCurrency();
   }, []);
+
+  // ── Keep the enrollment's price in sync with the server whenever the
+  // learner changes track/payment type. The enroll() endpoint is the single
+  // source of truth for pricing (App\Services\PricingService on the
+  // backend) — it forces the flat registration fee for an approved,
+  // unused scholarship (no discount stacking, no installments), or the
+  // normal track price + one-time discount otherwise. We never compute
+  // the amount actually charged on the client anymore; we only display
+  // whatever this sync returns.
+  const [syncingPrice, setSyncingPrice] = useState(false);
+  const pricingSyncKey = useRef<string | null>(null);
+
+  const syncPricing = useCallback(async (track: LearningTrack, type: 'onetime' | 'installment', force = false) => {
+    if (!enrollment) return;
+    const key = `${enrollment.course_id}-${track}-${type}`;
+    if (!force && pricingSyncKey.current === key) return;
+    pricingSyncKey.current = key;
+
+    setSyncingPrice(true);
+    try {
+      const res = await api.enrollment.enroll(String(enrollment.course_id), track, type);
+      setEnrollment(prev => (prev ? {
+        ...prev,
+        total_amount: res.total_amount ?? prev.total_amount,
+        installment_amount: res.installment_amount ?? prev.installment_amount,
+        total_installments: res.total_installments ?? prev.total_installments,
+        currency: res.currency ?? prev.currency,
+        payment_type: res.payment_type ?? prev.payment_type,
+        is_registration_fee: res.is_registration_fee ?? prev.is_registration_fee,
+      } : prev));
+    } catch {
+      // non-critical — keep last known price; re-synced again on the next
+      // change or right before payment is initiated
+    } finally {
+      setSyncingPrice(false);
+    }
+  }, [enrollment?.course_id]);
+
+  useEffect(() => {
+    if (!selectedTrack || !enrollment) return;
+    const effectiveType = selectedTrack === 'one_on_one' ? 'onetime' : paymentType;
+    syncPricing(selectedTrack, effectiveType);
+  }, [selectedTrack, paymentType, enrollment?.course_id]);
 
   // ── Fetch scholarship ─────────────────────────────────────────────────────
   const fetchScholarship = useCallback(async (slug: string) => {
@@ -356,63 +411,53 @@ export default function PaymentPage() {
     fetchEnrollmentDetails();
   }, [router.isReady, router.query.enrollmentId, user, authLoading, currencyDetected]);
 
-  // Force one-time when scholarship active
+  // Full-tuition scholarship: one flat registration fee, always paid in
+  // full, no installments, no other discount — this is the single flag
+  // the whole page branches on. Sourced from the synced enrollment record
+  // (server truth) once available, falling back to the scholarship lookup
+  // before the first sync completes so the UI doesn't flash the wrong state.
+  const isRegistrationFee = enrollment?.is_registration_fee ?? (!!scholarship && !scholarship.is_used);
+
+  // Force one-time when a scholarship applies — installments aren't offered.
   useEffect(() => {
-    if (scholarship && !scholarship.is_used) setPaymentType('onetime');
-  }, [scholarship]);
+    if (isRegistrationFee) setPaymentType('onetime');
+  }, [isRegistrationFee]);
 
   // ── Price helpers ─────────────────────────────────────────────────────────
+  // The amount actually charged always comes from the enrollment record,
+  // which the server (PricingService) computes and syncPricing() keeps
+  // fresh. trackPrices/onetime-discount below are used only to render the
+  // "original price" strikethrough for non-scholarship learners — never to
+  // compute what gets charged.
   const getOnetimeDiscount = (): number => {
-    if (!course) return 0;
+    if (!course || isRegistrationFee) return 0;
     // one_on_one track never gets a "one-time" discount — it's already per-hour
     if (selectedTrack === 'one_on_one') return 0;
     return parseFloat(currency === 'NGN' ? course.onetime_discount_ngn : course.onetime_discount_usd) || 0;
   };
 
-  const getFullDiscountedPrice = (track: LearningTrack): number => {
-    let price = trackPrices[track] || 0;
-    // Skip onetime discount for hourly track
-    if (track !== 'one_on_one') {
-      const discountPercent = parseFloat(currency === 'NGN' ? course?.onetime_discount_ngn : course?.onetime_discount_usd) || 0;
-      if (paymentType === 'onetime' && discountPercent > 0) {
-        price = Math.max(0, Math.round(price * (1 - discountPercent / 100)));
-      }
-    }
-    if (scholarship && !scholarship.is_used) {
-      price = Math.max(0, Math.round(price * (1 - scholarship.discount_percentage / 100)));
-    }
-    return price;
-  };
-
   const getCurrentPrice = (): number => {
-    if (!selectedTrack) return 0;
-    let price = trackPrices[selectedTrack] || 0;
+    if (!selectedTrack || !enrollment) return 0;
+
+    if (isRegistrationFee) {
+      // Flat fee regardless of track or hour count.
+      return enrollment.total_amount ?? 0;
+    }
 
     if (selectedTrack === 'one_on_one') {
-      // hourly: no discounts, just multiply by qty
-      if (scholarship && !scholarship.is_used) {
-        price = Math.max(0, Math.round(price * (1 - scholarship.discount_percentage / 100)));
-      }
-      return price * hourlyQty;
+      return (enrollment.total_amount ?? 0) * hourlyQty;
     }
 
-    if (paymentType === 'onetime') {
-      const d = getOnetimeDiscount();
-      if (d > 0) price = Math.max(0, Math.round(price * (1 - d / 100)));
+    if (paymentType === 'installment') {
+      return enrollment.installment_amount ?? 0;
     }
-    if (scholarship && !scholarship.is_used) {
-      price = Math.max(0, Math.round(price * (1 - scholarship.discount_percentage / 100)));
-    }
-    if (paymentType === 'installment') price = Math.round(price / 4);
-    return price;
+
+    return enrollment.total_amount ?? 0;
   };
 
   const getInstallmentMonthlyPrice = (): number => {
-    if (!selectedTrack || selectedTrack === 'one_on_one') return 0;
-    let base = trackPrices[selectedTrack] || 0;
-    const d = getOnetimeDiscount();
-    if (d > 0) base = Math.max(0, Math.round(base * (1 - d / 100)));
-    return Math.round(base / 4);
+    if (!selectedTrack || selectedTrack === 'one_on_one' || isRegistrationFee) return 0;
+    return enrollment?.installment_amount ?? 0;
   };
 
   // ── Stripe payment ────────────────────────────────────────────────────────
@@ -425,7 +470,12 @@ export default function PaymentPage() {
       const stripe = await stripePromise;
       if (!stripe) throw new Error('Stripe failed to load');
 
-      const effectivePaymentType = selectedTrack === 'one_on_one' ? 'onetime' : paymentType;
+      const effectivePaymentType = isRegistrationFee ? 'onetime' : (selectedTrack === 'one_on_one' ? 'onetime' : paymentType);
+
+      // Force a fresh price sync right before charging — Stripe recalculates
+      // server-side from this same enrollment anyway (belt and suspenders),
+      // but this keeps the record itself current too.
+      await syncPricing(selectedTrack, effectivePaymentType, true);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/create-stripe-checkout`,
@@ -461,7 +511,7 @@ export default function PaymentPage() {
   };
 
   // ── Paystack payment ──────────────────────────────────────────────────────
-  const handlePaystackPayment = () => {
+  const handlePaystackPayment = async () => {
     if (!selectedTrack)  { showToast('Please select a learning track before proceeding.'); return; }
     if (!user?.email)    { showToast('User email is required. Please log in again.'); router.push('/user/auth/login'); return; }
     if (!enrollment)     { showToast('Enrollment information missing. Please try again.'); router.push('/user/dashboard'); return; }
@@ -472,12 +522,25 @@ export default function PaymentPage() {
 
     setProcessing(true);
 
-    const effectivePaymentType = selectedTrack === 'one_on_one' ? 'onetime' : paymentType;
+    const effectivePaymentType = isRegistrationFee ? 'onetime' : (selectedTrack === 'one_on_one' ? 'onetime' : paymentType);
+
+    // Force a fresh price sync right before charging so the amount handed
+    // to the Paystack widget is never a stale client-side number — this is
+    // the actual value the enrollment record says is owed, straight from
+    // PricingService on the backend.
+    await syncPricing(selectedTrack, effectivePaymentType, true);
+    const amountToCharge = getCurrentPrice();
+
+    if (!amountToCharge || amountToCharge <= 0) {
+      showToast('Could not confirm the payment amount. Please refresh and try again.');
+      setProcessing(false);
+      return;
+    }
 
     const handler = PaystackPop.setup({
       key:      process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
       email:    user.email,
-      amount:   Math.round(getCurrentPrice() * 100),
+      amount:   Math.round(amountToCharge * 100),
       ref:      `PAY-${crypto.randomUUID().replace(/-/g, '').substring(0, 20).toUpperCase()}`,
       currency: currency === 'NGN' ? 'NGN' : 'USD',
       metadata: {
@@ -550,7 +613,6 @@ export default function PaymentPage() {
   const priceAfterOnetimeDiscount = selectedTrack
     ? Math.max(0, Math.round(trackPrices[selectedTrack] * (1 - onetimeDiscountPercent / 100)))
     : 0;
-  const priceAfterAllDiscounts    = selectedTrack ? getFullDiscountedPrice(selectedTrack) : 0;
 
   // CHANGE 3: Back goes to course page if slug known, else browser back
   const handleBack = () => {
@@ -625,23 +687,13 @@ export default function PaymentPage() {
                             {/* CHANGE 4: track name black */}
                             <h3 className="text-xl font-bold text-black">{track.name}</h3>
                             <div className="text-right">
-                              {scholarship && !scholarship.is_used ? (
+                              {isRegistrationFee ? (
                                 <div>
-                                  <div className="text-sm text-gray-400 line-through">
-                                    {currency === 'NGN' ? '₦' : '$'}{trackPrices[track.id]?.toLocaleString()}
-                                    {track.priceLabel && <span className="text-xs">{track.priceLabel}</span>}
-                                  </div>
                                   <div className="text-2xl font-bold text-gray-900">
-                                    {currency === 'NGN' ? '₦' : '$'}
-                                    {Math.max(0, Math.round(
-                                      (trackPrices[track.id] * (1 - onetimeDiscountPercent / 100))
-                                      * (1 - scholarship.discount_percentage / 100)
-                                    )).toLocaleString()}
-                                    {track.priceLabel && <span className="text-sm font-normal text-gray-900">{track.priceLabel}</span>}
+                                    {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
                                   </div>
-                                  <div className="text-xs font-bold text-gray-600">
-                                    {scholarship.discount_percentage}% scholarship
-                                    {onetimeDiscountPercent > 0 && ` + ${onetimeDiscountPercent}% off`}
+                                  <div className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 mt-1 inline-block">
+                                    Full-tuition scholarship — registration fee only
                                   </div>
                                 </div>
                               ) : (
@@ -691,21 +743,29 @@ export default function PaymentPage() {
                   <h2 className="text-2xl font-bold text-black">Choose Payment Method</h2>
                 </div>
 
+                {/* Full-tuition scholarship: one flat registration fee, nothing else to choose */}
+                {isRegistrationFee && (
+                  <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800">
+                    <p>You've been awarded a full-tuition scholarship — you only pay the registration fee below, in one payment. Installments and course pricing don't apply.</p>
+                  </div>
+                )}
+
                 {/* CHANGE 2: notice for hourly track */}
-                {isHourlyTrack && (
+                {!isRegistrationFee && isHourlyTrack && (
                   <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
                     <p>One-on-One Coaching is billed hourly. The price shown is per session hour — one-time payment only.</p>
                   </div>
                 )}
 
-                {scholarship && !scholarship.is_used && (
-                  <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    <p>Scholarship recipients must pay in full (one-time). Installments are not available.</p>
+                {isRegistrationFee ? (
+                  <div className="border-2 border-green-600 bg-green-50 rounded-2xl p-6">
+                    <h3 className="text-xl font-bold text-black mb-2">Registration Fee Payment</h3>
+                    <p className="text-black text-sm mb-4">One payment secures your spot — no discounts or installments apply to the registration fee.</p>
+                    <div className="text-3xl font-bold text-green-700">
+                      {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
+                    </div>
                   </div>
-                )}
-
-                {/* CHANGE 2: hide payment type selector entirely for hourly track */}
-                {isHourlyTrack ? (
+                ) : isHourlyTrack ? (
                   <div className="border-2 border-indigo-600 bg-indigo-50 rounded-2xl p-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
@@ -755,25 +815,7 @@ export default function PaymentPage() {
                           <h3 className="text-xl font-bold text-black mb-2">One-Time Payment</h3>
                           <p className="text-black text-sm mb-3">Pay the full amount upfront and get a discount</p>
                           <div className="space-y-1">
-                            {scholarship && !scholarship.is_used ? (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-gray-400 line-through">
-                                    {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack].toLocaleString()}
-                                  </span>
-                                  <span className="text-xs font-bold text-gray-600 bg-green-100 px-2 py-0.5 rounded">
-                                    {onetimeDiscountPercent > 0 && `${onetimeDiscountPercent}% off + `}{scholarship.discount_percentage}% scholarship
-                                  </span>
-                                </div>
-                                <div className="text-2xl font-bold text-gray-600">
-                                  {currency === 'NGN' ? '₦' : '$'}{priceAfterAllDiscounts.toLocaleString()}
-                                </div>
-                                <p className="text-xs text-gray-700">
-                                  You save {currency === 'NGN' ? '₦' : '$'}
-                                  {(trackPrices[selectedTrack] - priceAfterAllDiscounts).toLocaleString()}
-                                </p>
-                              </>
-                            ) : onetimeDiscountPercent > 0 ? (
+                            {onetimeDiscountPercent > 0 ? (
                               <>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-gray-400 line-through">
@@ -810,39 +852,38 @@ export default function PaymentPage() {
                       </div>
                     </button>
 
-                    {/* Installment Payment card */}
-                    {(!scholarship || scholarship.is_used) && (
-                      <button onClick={() => setPaymentType('installment')}
-                        className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
-                          paymentType === 'installment'
-                            ? 'border-indigo-600 bg-indigo-50 shadow-lg'
-                            : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
-                        }`}>
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-black mb-2">Installment Payment</h3>
-                            <p className="text-black text-sm mb-3">Split payment across 4 months</p>
-                            <div className="text-2xl font-bold text-blue-600 mb-2">
-                              {currency === 'NGN' ? '₦' : '$'}
-                              {getInstallmentMonthlyPrice().toLocaleString()}
-                              <span className="text-sm font-normal text-black">/month × 4</span>
-                            </div>
-                            <p className="text-xs text-black bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
-                              Must pay on time each month to maintain access
-                            </p>
+                    {/* Installment Payment card — never shown for registration-fee
+                        payers, guaranteed by the outer branch above */}
+                    <button onClick={() => setPaymentType('installment')}
+                      className={`relative border-2 rounded-2xl p-6 text-left transition-all ${
+                        paymentType === 'installment'
+                          ? 'border-indigo-600 bg-indigo-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md'
+                      }`}>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-black mb-2">Installment Payment</h3>
+                          <p className="text-black text-sm mb-3">Split payment across 4 months</p>
+                          <div className="text-2xl font-bold text-blue-600 mb-2">
+                            {currency === 'NGN' ? '₦' : '$'}
+                            {getInstallmentMonthlyPrice().toLocaleString()}
+                            <span className="text-sm font-normal text-black">/month × 4</span>
                           </div>
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            paymentType === 'installment' ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
-                          }`}>
-                            {paymentType === 'installment' && (
-                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                              </svg>
-                            )}
-                          </div>
+                          <p className="text-xs text-black bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+                            Must pay on time each month to maintain access
+                          </p>
                         </div>
-                      </button>
-                    )}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                          paymentType === 'installment' ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
+                        }`}>
+                          {paymentType === 'installment' && (
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -881,7 +922,15 @@ export default function PaymentPage() {
                 )}
 
                 <div className="border-t border-gray-300 pt-3 mt-3 space-y-1">
-                  {selectedTrack && selectedTrack !== 'one_on_one' && (onetimeDiscountPercent > 0 || (scholarship && !scholarship.is_used)) && paymentType === 'onetime' && (
+                  {isRegistrationFee && (
+                    <div className="flex justify-between text-sm text-green-700 font-semibold">
+                      <span>Registration fee (full-tuition scholarship):</span>
+                      <span>
+                        {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {!isRegistrationFee && selectedTrack && selectedTrack !== 'one_on_one' && onetimeDiscountPercent > 0 && paymentType === 'onetime' && (
                     <>
                       <div className="flex justify-between text-sm text-gray-500">
                         <span>Track price:</span>
@@ -889,24 +938,13 @@ export default function PaymentPage() {
                           {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
                         </span>
                       </div>
-                      {onetimeDiscountPercent > 0 && (
-                        <div className="flex justify-between text-sm text-green-600">
-                          <span>{onetimeDiscountPercent}% one-time discount:</span>
-                          <span>
-                            -{currency === 'NGN' ? '₦' : '$'}
-                            {Math.round(trackPrices[selectedTrack] * onetimeDiscountPercent / 100).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {scholarship && !scholarship.is_used && (
-                        <div className="flex justify-between text-sm text-green-600 font-semibold">
-                          <span>{scholarship.discount_percentage}% scholarship:</span>
-                          <span>
-                            -{currency === 'NGN' ? '₦' : '$'}
-                            {Math.round(priceAfterOnetimeDiscount * scholarship.discount_percentage / 100).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>{onetimeDiscountPercent}% one-time discount:</span>
+                        <span>
+                          -{currency === 'NGN' ? '₦' : '$'}
+                          {Math.round(trackPrices[selectedTrack] * onetimeDiscountPercent / 100).toLocaleString()}
+                        </span>
+                      </div>
                     </>
                   )}
                   {/* Replace the existing "Per Hour:" total row */}
@@ -957,7 +995,7 @@ export default function PaymentPage() {
                     )}
                 </button>
 
-                {!scholarship && course && (
+                {!isRegistrationFee && course && (
                   <div style={{ flexShrink: 0 }}>
                     <ScholarshipBadge courseId={course.course_id} isLoggedIn={true} showCta={true} />
                   </div>

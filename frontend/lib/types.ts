@@ -186,7 +186,9 @@ export interface CourseEnrollment {
   installments_paid: number;
   installment_amount: number;
   payment_status: 'pending' | 'completed' | 'failed';
-  
+  is_registration_fee?: boolean;
+  scholarship_id?: number | null;
+
   // Access fields
   has_access: boolean;
   access_blocked_reason?: string | null;
@@ -210,6 +212,12 @@ export interface EnrollmentResponse {
   message: string;
   enrollment_id: number;
   course_id: string;
+  total_amount?: number;
+  installment_amount?: number;
+  total_installments?: number;
+  currency?: 'USD' | 'NGN';
+  payment_type?: 'onetime' | 'installment';
+  is_registration_fee?: boolean;
 }
 
 export interface UserEnrollmentsResponse {
@@ -267,6 +275,21 @@ export interface AchievementBadge {
   unlock_value: number;
   is_unlocked: boolean;
   unlocked_at: string | null;
+}
+
+export interface Certificate {
+  id: number;
+  certificate_uid: string;
+  user_id: number;
+  course_id: string;
+  course_title: string;
+  recipient_name: string;
+  issue_type: 'auto' | 'manual';
+  issued_at: string;
+  revoked_at: string | null;
+  pdf_path?: string | null;
+  is_revoked?: boolean;
+  download_url?: string;
 }
 
 export interface LeaderboardParticipant {

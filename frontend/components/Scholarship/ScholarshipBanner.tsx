@@ -203,7 +203,8 @@ export default function ScholarshipBanner() {
             <div className="schb-body">
               <p className="text-lg schb-body-line accent">We believe cost should never be a barrier to learning.</p>
               <p className="text-lg schb-body-line">
-                Learnexity offers need based scholarships across all courses, covering up to 75% of tuition.
+                Learnexity offers need-based, full-tuition scholarships across all courses — approved
+                applicants pay only a flat registration fee.
               </p>
             </div>
 

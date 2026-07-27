@@ -30,6 +30,11 @@ use App\Http\Controllers\Api\User\ScholarshipController;
 use App\Http\Controllers\Api\AdminKidsController;
 use App\Http\Controllers\Api\AdminReferralController;
 use App\Http\Controllers\Api\AdminScholarshipController;
+use App\Http\Controllers\Api\BadgeController;
+use App\Http\Controllers\Api\CertificateController;
+use App\Http\Controllers\Api\AdminBadgeController;
+use App\Http\Controllers\Api\AdminCertificateController;
+use App\Http\Controllers\Api\AdminActivityLogController;
 
 // ── NEW: Instructor + Student Project imports ──────────────────────────────
 use App\Http\Controllers\Api\Instructor\InstructorAuthController;
@@ -139,6 +144,10 @@ Route::post('/auth/exchange-token', [App\Http\Controllers\Api\User\AuthControlle
 
 Route::middleware('throttle:api')->group(function () {
     Route::post('/referrals/validate', [ReferralController::class, 'validateReferralCode']);
+
+    // Certificate download is deliberately public (shareable/verifiable link) —
+    // it's keyed off an unguessable UUID, not a sequential id.
+    Route::get('/certificates/{uid}/download', [CertificateController::class, 'download']);
 });
 
 // =================== PAYMENT ROUTES (jwt + throttle:payments — 10/min) =================== //
@@ -162,6 +171,10 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
     Route::prefix('onboarding')->group(function () {
         Route::get('/status', [OnboardingController::class, 'status']);
     });
+
+    // ── Badges & certificates (the learner's own) ───────────────────────────
+    Route::get('/badges',       [BadgeController::class, 'mine']);
+    Route::get('/certificates', [CertificateController::class, 'mine']);
 
     Route::prefix('user')->group(function () {
         Route::put('/intended-course',    [OnboardingController::class, 'setIntendedCourse']);
@@ -421,6 +434,35 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
             Route::put('/cohort/participants/{participantId}',   [AdminCourseResourcesController::class, 'updateParticipant']);
             Route::delete('/cohort/participants/{participantId}',[AdminCourseResourcesController::class, 'removeParticipant']);
         });
+    });
+
+    // Badges (global admin view — create/edit/delete + manual award)
+    Route::prefix('badges')->group(function () {
+        Route::get('/',                      [AdminBadgeController::class, 'index']);
+        Route::post('/',                     [AdminBadgeController::class, 'store']);
+        Route::get('/users/search',          [AdminBadgeController::class, 'searchUsers']);
+        Route::put('/{badgeId}',             [AdminBadgeController::class, 'update']);
+        Route::delete('/{badgeId}',          [AdminBadgeController::class, 'destroy']);
+        Route::get('/{badgeId}/holders',     [AdminBadgeController::class, 'holders']);
+        Route::post('/{badgeId}/award',      [AdminBadgeController::class, 'award']);
+        Route::delete('/{badgeId}/award/{userId}', [AdminBadgeController::class, 'revokeAward']);
+    });
+
+    // Certificates
+    Route::prefix('certificates')->group(function () {
+        Route::get('/',                  [AdminCertificateController::class, 'index']);
+        Route::get('/statistics',        [AdminCertificateController::class, 'statistics']);
+        Route::post('/issue',            [AdminCertificateController::class, 'issue']);
+        Route::post('/{id}/revoke',      [AdminCertificateController::class, 'revoke']);
+        Route::post('/{id}/reinstate',   [AdminCertificateController::class, 'reinstate']);
+        Route::post('/{id}/regenerate',  [AdminCertificateController::class, 'regeneratePdf']);
+        Route::get('/{id}/download',     [AdminCertificateController::class, 'download']);
+    });
+
+    // Activity log / analytics (see AdminActivityLogController)
+    Route::prefix('activity')->group(function () {
+        Route::get('/',        [AdminActivityLogController::class, 'index']);
+        Route::get('/summary', [AdminActivityLogController::class, 'summary']);
     });
 });
 

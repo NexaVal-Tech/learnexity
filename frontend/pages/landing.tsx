@@ -382,7 +382,7 @@ export default function TenAlyticsLanding() {
 
               {/* Scholarship Highlight */}
               <div style={{background: "#000", color: "#fff", fontWeight: 800, fontSize: "0.95rem", padding: "16px", borderRadius: 12, width: "100%", maxWidth: 520, margin: "0 auto 20px",}} >
-                Up to 50% Scholarships Available
+                Full-Tuition Scholarships Available
               </div>
 
               {/* CTA */}

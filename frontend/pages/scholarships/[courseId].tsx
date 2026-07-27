@@ -59,7 +59,6 @@ function ResultCard({
   onContinue: () => void;
 }) {
   const approved = scholarship.status === 'approved';
-  const discount = scholarship.discount_percentage;
 
   return (
     <div className="text-center py-8 px-4">
@@ -75,12 +74,12 @@ function ResultCard({
       </div>
 
       <h2 className="text-3xl font-bold text-white mb-3">
-        {approved ? `You got a ${discount}% Scholarship!` : 'Application Reviewed'}
+        {approved ? 'You got a Full-Tuition Scholarship!' : 'Application Reviewed'}
       </h2>
 
       <p className="text-gray-400 mb-2 max-w-md mx-auto leading-relaxed">
         {approved
-          ? `Congratulations — your scholarship has been applied to ${courseName}. This discount is tied exclusively to your account and this course.`
+          ? `Congratulations — your full-tuition scholarship has been applied to ${courseName}. This is tied exclusively to your account and this course. You'll only need to pay the registration fee to secure your spot.`
           : "We reviewed your application carefully. You didn't qualify this time, but the course is still open to you at the standard price."}
       </p>
 
@@ -92,8 +91,8 @@ function ResultCard({
             border: '1px solid rgba(22,163,74,0.3)',
           }}
         >
-          <span className="text-green-400 text-2xl font-black">{discount}% OFF</span>
-          <span className="text-green-300 text-sm">applied automatically at checkout</span>
+          <span className="text-green-400 text-2xl font-black">100% TUITION</span>
+          <span className="text-green-300 text-sm">just pay the registration fee</span>
         </div>
       )}
 
@@ -441,7 +440,7 @@ export default function ScholarshipPage() {
                 {[
                   // { text: '4 quick questions — decision in under 60 seconds' },
                   { text: 'One scholarship per user across all courses' },
-                  { text: 'Discount applied automatically at checkout' },
+                  { text: 'Full tuition covered — pay only the registration fee' },
                 ].map((item) => (
                   <div
                     key={item.text}
@@ -458,17 +457,10 @@ export default function ScholarshipPage() {
                 className="p-4 rounded-xl mb-8 text-sm"
                 style={{ background: `${BRAND}10`, border: `1px solid ${BRAND}25` }}
               >
-                <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {[
-                    { pct: '50%', label: 'scholarship' },
-                    { pct: '25%', label: 'scholarship' },
-                  ].map((tier) => (
-                    <div key={tier.pct} className="text-center p-2 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
-                      <p className="text-xl font-black text-white">{tier.pct}</p>
-                      <p className="text-xs text-gray-400 mt-1">{tier.label}</p>
-                    </div>
-                  ))}
+                <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcome</p>
+                <div className="mt-2 text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                  <p className="text-xl font-black text-white">100% Full Tuition</p>
+                  <p className="text-xs text-gray-400 mt-1">approved applicants pay only the registration fee</p>
                 </div>
               </div>
 
@@ -608,7 +600,7 @@ export default function ScholarshipPage() {
                 Which country are you from?
               </h2>
               <p className="text-sm text-gray-500 mb-6">
-                Nigerian applicants who are students or unemployed receive a higher scholarship tier.
+                Used to confirm your eligibility for the full-tuition scholarship.
               </p>
 
               <input
@@ -649,16 +641,22 @@ export default function ScholarshipPage() {
                     try {
                       const response = await api.enrollment.getUserEnrollments();
                       const pending = response.enrollments
-                        .filter((e: any) => e.payment_status === 'pending')
+                        .filter((e: any) => e.payment_status === 'pending' && e.course_id === courseId)
                         .sort((a: any, b: any) =>
                           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                         )[0];
 
                       if (pending?.id) {
                         router.push(`/user/payment/${pending.id}`);
-                      } else {
-                        router.push(`/courses/${courseId}`);
+                        return;
                       }
+
+                      // No enrollment yet — create one now (at the
+                      // registration-fee price, since the scholarship is
+                      // already approved) instead of dead-ending on the
+                      // course page. Mirrors ScreeningOnboardingModal's fix.
+                      const enrollRes = await api.enrollment.enroll(courseId as string, 'self_paced', 'onetime');
+                      router.push(`/user/payment/${enrollRes.enrollment_id}`);
                     } catch {
                       router.push(`/courses/${courseId}`);
                     }

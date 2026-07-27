@@ -25,6 +25,18 @@ class CourseEnrollment extends Model
         'installments_paid',
         'installment_amount',
         'payment_status',
+        // Full-tuition scholarship / registration-fee pricing (see
+        // PricingService and CourseEnrollmentController::enroll()). These
+        // were missing from $fillable, which meant every create()/update()
+        // call that set them (including the "apply for a scholarship after
+        // already enrolling" resync path) silently dropped them — the
+        // enrollment's total_amount/installment_amount would update
+        // correctly, but is_registration_fee/scholarship_id would stay at
+        // their DB defaults (false/null) forever, breaking anything that
+        // reads them back from the model (e.g. the API response
+        // '$existingEnrollment->fresh()->is_registration_fee').
+        'is_registration_fee',
+        'scholarship_id',
 
         // Access
         'has_access',
@@ -44,6 +56,7 @@ class CourseEnrollment extends Model
         'amount_paid' => 'decimal:2',
         'installment_amount' => 'decimal:2',
         'has_access' => 'boolean',
+        'is_registration_fee' => 'boolean',
         'next_payment_due' => 'datetime',
         'enrollment_date' => 'datetime',
         'payment_date' => 'datetime',

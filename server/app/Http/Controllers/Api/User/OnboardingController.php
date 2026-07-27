@@ -26,11 +26,25 @@ class OnboardingController extends Controller
         $scholarship     = Scholarship::where('user_id', $user->id)->first();
         $screeningStatus = $scholarship ? $scholarship->status : 'not_started';
 
+        // Which course is this whole flow "about"? A scholarship is
+        // permanently tied to exactly one course (full tuition only ever
+        // applies to the course applied for), so once one exists it is the
+        // source of truth — NOT user->intended_course_id, which is a more
+        // volatile pointer that can drift or get cleared independently
+        // (e.g. browsing other courses afterward, or clearIntendedCourse()
+        // being called elsewhere). Relying only on intended_course_id here
+        // meant an approved-scholarship user could see intended_course come
+        // back null even though their scholarship clearly names a course —
+        // and the frontend's "Proceed to Payment" button needs this field
+        // to build the registration-fee enrollment, so it was silently
+        // falling back to the courses list instead.
+        $targetCourseId = $scholarship?->course_id ?? $user->intended_course_id;
+
         $intendedCourse       = null;
         $pendingEnrollmentId  = null;
 
-        if ($user->intended_course_id) {
-            $course = Course::where('course_id', $user->intended_course_id)->first();
+        if ($targetCourseId) {
+            $course = Course::where('course_id', $targetCourseId)->first();
 
             if ($course) {
                 $intendedCourse = [

@@ -47,8 +47,12 @@ class AdminCourseDetailsController extends Controller
         try {
             $validated = $request->validate([
                 'name'  => 'required|string|max:255',
-                'icon'  => $request->hasFile('icon') 
-                            ? 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048' 
+                // SVG deliberately excluded — SVGs can embed <script>/event-handler
+                // JS and are a common stored-XSS vector when served back from the
+                // same origin (even for admin-only uploads: phished admin accounts
+                // are a real threat model, and the file is served publicly after upload).
+                'icon'  => $request->hasFile('icon')
+                            ? 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
                             : 'nullable',
                 'order' => 'nullable|integer|min:0',
             ]);

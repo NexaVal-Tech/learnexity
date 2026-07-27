@@ -23,6 +23,7 @@ import type {
   CourseStatistics,
   ExternalResource,
   AchievementBadge,
+  Certificate,
   LeaderboardParticipant,
   Leaderboard,
   CourseResourcesResponse,
@@ -234,6 +235,19 @@ export const api = {
     clearIntendedCourse: async (): Promise<{ message: string }> => {
       const response = await apiClient.delete('/api/user/intended-course');
       return response.data;
+    },
+  },
+
+  // ── ACHIEVEMENTS (the learner's own badges & certificates) ────────────────────
+  achievements: {
+    myBadges: async (): Promise<AchievementBadge[]> => {
+      const response = await apiClient.get<{ badges: AchievementBadge[] }>('/api/badges');
+      return response.data.badges;
+    },
+
+    myCertificates: async (): Promise<Certificate[]> => {
+      const response = await apiClient.get<{ certificates: Certificate[] }>('/api/certificates');
+      return response.data.certificates;
     },
   },
 
@@ -841,7 +855,6 @@ settings: {
         data: {
           status: 'approved' | 'rejected';
           review_notes?: string;
-          discount_percentage?: number;
         }
       ): Promise<{ message: string }> => {
         return await adminApi.patch<any>(`/api/admin/scholarships/${id}/review`, data);

@@ -19,6 +19,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [payingNow, setPayingNow] = useState(false);
 
   const hasIntended = !!status.intended_course;
   const isApproved = status.screening_status === 'approved' && !!status.scholarship && !status.scholarship.is_used;
@@ -32,11 +33,40 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const goToPayment = () => {
+  const goToPayment = async () => {
     if (status.pending_enrollment_id) {
       router.push(`/user/payment/${status.pending_enrollment_id}`);
-    } else if (status.intended_course) {
-      router.push(`/courses/${status.intended_course.course_id}`);
+      return;
+    }
+
+    // status.intended_course can legitimately be missing in edge cases even
+    // when a scholarship exists (e.g. an older backend response cached
+    // client-side). A scholarship is permanently tied to exactly one
+    // course, so fall back to its course_id rather than losing the target
+    // course entirely and dead-ending on the courses list.
+    const targetCourseId = status.intended_course?.course_id || status.scholarship?.course_id;
+
+    // Approved for a scholarship but no enrollment exists yet — being
+    // "awarded" never auto-creates one, so without this the button had
+    // nowhere real to send the person and fell back to browsing courses.
+    // Create the registration-fee enrollment now and go straight to
+    // payment for it, instead of dumping them back on the course page.
+    if (isApproved && targetCourseId) {
+      setPayingNow(true);
+      try {
+        const res = await api.enrollment.enroll(targetCourseId, 'self_paced', 'onetime');
+        router.push(`/user/payment/${res.enrollment_id}`);
+        return;
+      } catch {
+        // Fall through to the course page if enrollment creation fails —
+        // still better than silently doing nothing.
+      } finally {
+        setPayingNow(false);
+      }
+    }
+
+    if (targetCourseId) {
+      router.push(`/courses/${targetCourseId}`);
     } else {
       router.push('/courses/courses');
     }
@@ -118,6 +148,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
           transition: box-shadow 0.25s, transform 0.2s;
         }
         .som-btn-primary:hover { box-shadow: 0 8px 28px ${BRAND}55; transform: translateY(-1px); }
+        .som-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
         .som-btn-ghost {
           width: 100%; margin-top: 0.6rem; background: transparent; color: rgba(255,255,255,0.7);
           font-weight: 600; font-size: 0.85rem; padding: 0.75rem 1rem;
@@ -159,15 +190,14 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
               {userName ? `Nice one, ${userName}!` : 'Nice one!'} You're almost in.
             </h2>
             <p className="som-sub">
-              You've been approved
-              {status.scholarship?.discount_percentage ? ` for a ${status.scholarship.discount_percentage}% scholarship` : ''} on{' '}
+              You've been awarded a full-tuition scholarship on{' '}
               <strong style={{ color: '#fff' }}>
                 {status.intended_course?.title || status.scholarship?.course_name}
               </strong>
-              . Secure your spot by paying the small registration fee instead of the full course price.
+              . Secure your spot by paying just the registration fee instead of the full course price.
             </p>
-            <button type="button" className="som-btn-primary" onClick={goToPayment}>
-              Proceed to Payment <ArrowRight size={16} aria-hidden="true" />
+            <button type="button" className="som-btn-primary" onClick={goToPayment} disabled={payingNow}>
+              {payingNow ? 'Preparing payment…' : 'Proceed to Payment'} <ArrowRight size={16} aria-hidden="true" />
             </button>
           </>
         ) : showPicker ? (
@@ -201,22 +231,37 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
               Back
             </button>
           </>
+        ) : hasIntended && status.intended_course ? (
+          <>
+            <h2 id="som-title" className="som-title">
+              {userName ? `Welcome, ${userName}.` : 'Welcome.'} One quick step first.
+            </h2>
+            <p className="som-sub">
+              Before you pay full price for{' '}
+              <strong style={{ color: '#fff' }}>{status.intended_course.title}</strong>, take a
+              two-minute screening to see if you qualify for a tuition scholarship. No commitment
+              — you can always pay in full instead.
+            </p>
+            <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
+              Take Screening Now <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <button type="button" className="som-btn-ghost" onClick={goToPayment}>
+              Skip — pay full price
+            </button>
+          </>
         ) : (
           <>
             <h2 id="som-title" className="som-title">
-              Welcome{userName ? `, ${userName}` : ''} 
+              Welcome{userName ? `, ${userName}` : ''}.
             </h2>
             <p className="som-sub">
-              Take a quick screening to see if you qualify for full tuition support
-              {hasIntended && status.intended_course ? (
-                <> on <strong style={{ color: '#fff' }}>{status.intended_course.title}</strong></>
-              ) : null}.
+              Take a quick screening to see if you qualify for full tuition support on any course.
             </p>
-            <button type="button" className="som-btn-primary" onClick={goToPayment}>
-              {hasIntended ? 'Proceed to Payment' : 'Browse Courses'} <ArrowRight size={16} aria-hidden="true" />
+            <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
+              Take Screening Now <ArrowRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" className="som-btn-ghost" onClick={handleTakeScreening}>
-              Take Screening Now
+            <button type="button" className="som-btn-ghost" onClick={goToPayment}>
+              Browse Courses Instead
             </button>
           </>
         )}

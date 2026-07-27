@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         'oauth_token',
     ]);
 
+    // Baseline security headers on every response (nosniff, frame-deny, etc.)
+    // NOTE: app/Http/Kernel.php is NOT used by this app (Laravel 12 bootstraps
+    // middleware here instead) — register new global middleware in this file,
+    // not in Kernel.php's $middleware array.
+    $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
     $middleware->validateCsrfTokens(except: [
         'api/auth/exchange-token',
         'api/paystack/webhook',
