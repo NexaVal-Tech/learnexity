@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -58,7 +59,11 @@ export default function AuthCallback() {
         if (scholarshipId) {
           sessionStorage.removeItem('scholarship_course_redirect');
           const safeId = scholarshipId.replace(/[^a-zA-Z0-9_-]/g, '');
-          if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+          if (safeId) {
+            try { await api.onboarding.setIntendedCourse(safeId); } catch {}
+            router.push(`/scholarships/${safeId}`);
+            return;
+          }
         }
 
         // 2. Scholarship banner → courses listing
@@ -69,17 +74,23 @@ export default function AuthCallback() {
           return;
         }
 
-        // 3. Intended course (mid-enrolment)
+        // 3. Intended course (mid-enrolment) — a course picked while logged
+        // out used to jump straight to checkout after Google sign-in. It now
+        // lands on the dashboard instead, same as the email/password login
+        // path, so the onboarding modal can pick it up tied to that course.
         const intendedSession = sessionStorage.getItem('intended_course');
         const intendedCourse  = intendedSession || intendedCourseQ;
         if (intendedCourse) {
           sessionStorage.removeItem('intended_course');
           sessionStorage.removeItem('intended_course_name');
           const safeId = intendedCourse.replace(/[^a-zA-Z0-9_-]/g, '');
-          if (safeId) { router.push(`/courses/${safeId}`); return; }
+          if (safeId) {
+            try { await api.onboarding.setIntendedCourse(safeId); } catch {}
+          }
         }
 
-        // 4. Default
+        // 4. Default — the dashboard's onboarding modal takes it from here,
+        // reading whatever intended course/screening state is on the backend.
         setStatus('Redirecting to dashboard...');
         router.push('/user/dashboard');
 

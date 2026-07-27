@@ -7,28 +7,16 @@ const BRAND = "#4A3AFF";
 
 const cards = [
   {
-    id: "experts",
-    label: "Led By Industry Experts",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2" />
-        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-        <line x1="12" y1="12" x2="12" y2="16" />
-        <line x1="10" y1="14" x2="14" y2="14" />
-      </svg>
-    ),
-  },
-  {
     id: "partners",
     label: (
-      <div className="flex flex-col items-center gap-3">
-        <span>In Partnership With</span>
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-3xl">Delivered In Partnership With</span>
 
         <div className="flex items-center gap-4">
           <Image
             src="/partners/cisco.png"
             alt="Cisco"
-            width={90}
+            width={70}
             height={30}
             className="object-contain"
           />
@@ -40,12 +28,24 @@ const cards = [
           <Image
             src="/partners/microsoft.png"
             alt="Microsoft"
-            width={110}
+            width={100}
             height={30}
             className="object-contain"
           />
         </div>
       </div>
+    ),
+  },
+  {
+    id: "experts",
+    label: "Led By Industry Experts",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+        <line x1="12" y1="12" x2="12" y2="16" />
+        <line x1="10" y1="14" x2="14" y2="14" />
+      </svg>
     ),
   },
   {

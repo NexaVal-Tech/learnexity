@@ -7,6 +7,7 @@ import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
 import { Search, Loader2, AlertCircle, Settings, DollarSign } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
 import CourseSettings from '@/components/admin/settings/CourseSettings';
+import RegistrationFeeSettings from '@/components/admin/settings/RegistrationFeeSettings';
 
 interface Course {
   id: number;
@@ -67,6 +68,9 @@ const CourseSettingsPage = () => {
             <h1 className="text-2xl font-semibold text-gray-900">Course Settings</h1>
             <p className="text-sm text-gray-500 mt-1">Configure pricing and payment options for your courses</p>
           </div>
+
+          {/* Platform-wide scholarship registration fee — not per-course */}
+          <RegistrationFeeSettings />
 
           <div className="grid lg:grid-cols-12 gap-6">
             {/* Left Sidebar - Course List */}

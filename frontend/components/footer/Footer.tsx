@@ -5,13 +5,13 @@ import { FadeUpOnScroll } from "../animations/Animation";
 export default function Footer() {
   return (
     <FadeUpOnScroll>
-    <div className="relative z-10 bg-[#6D4AFF] text-white mx-auto">
+    <div className="relative z-10 bg-[#5B1EF6] text-white mx-auto">
       {/* CTA Section */}
-      <div className="text-center py-6 px-6">
-        <h2 className="text-5xl font-semibold mb-8 leading-tight">
+      <div className="text-center py-3 px-3">
+        <h2 className="text-5xl font-semibold mb-4 leading-tight">
           Ready to Transform Your Career?
         </h2>
-        <p className="text-lg mb-12 max-w-4xl mx-auto leading-relaxed text-white opacity-90">
+        <p className="text-lg mb-6 max-w-4xl mx-auto leading-relaxed text-white opacity-90">
          Choose your path and secure your spot in the next cohort starting soon
         </p>
         <div className="flex flex-row gap-4 justify-center items-center">
@@ -30,7 +30,7 @@ export default function Footer() {
       </div>
 
       {/* Footer Links Section */}
-      <div className="px-6 pb-6 pt-2">
+      <div className="px-6 pb-3 pt-2">
         <div className="max-w-screen-xl mx-auto">
           <div className="grid md:grid-cols-4 gap-16">
             {/* Logo and Copyright */}
@@ -46,10 +46,10 @@ export default function Footer() {
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-sm font-semibold mb-8 text-white opacity-200 tracking-wider uppercase">
+              <h3 className="text-xl font-semibold mb-2 text-white opacity-200 tracking-wider uppercase">
                 QUICK LINKS
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 <li>
                   <a href="/courses/courses" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Course Catalog
@@ -75,10 +75,10 @@ export default function Footer() {
 
             {/* Legal */}
             <div>
-              <h3 className="text-sm font-semibold mb-8 text-white opacity-90 tracking-wider uppercase">
+              <h3 className="text-xl font-semibold mb-2 text-white opacity-90 tracking-wider uppercase">
                 LEGAL
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 <li>
                   <a href="/privacy-policy" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     Privacy Policy
@@ -99,10 +99,10 @@ export default function Footer() {
 
             {/* Contact Us */}
             <div>
-              <h3 className="text-sm font-semibold mb-8 text-white opacity-90 tracking-wider uppercase">
+              <h3 className="text-xl font-semibold mb-2 text-white opacity-90 tracking-wider uppercase">
                 CONTACT US
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 <li>
                   <a href="mailto:info@learnexity.org" className="text-white opacity-80 hover:opacity-100 transition-opacity">
                     info@learnexity.org
@@ -118,7 +118,7 @@ export default function Footer() {
           </div>
 
           {/* Powered by Nexaval Tech */}
-        <div className="mt-12 pt-6 border-t border-white/15 flex justify-center">
+        <div className="mt-6 pt-3 border-t border-white/15 flex justify-center">
           <a href="https://nexavaluable.com" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors duration-300">
             <span>Powered by</span>
 

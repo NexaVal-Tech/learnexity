@@ -581,7 +581,7 @@ export default function PaymentPage() {
         </div>
       )}
 
-      <div className="max-w-[1550px] mx-auto px-4 md:px-8 pt-5 mt-20 overflow-x-hidden">
+      <div className="max-w-[1270px] mx-auto px-4 md:px-8 pt-5 mt-20 overflow-x-hidden">
         {/* CHANGE 3: back button now goes to course page */}
         <button onClick={handleBack}
           className="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors">

@@ -130,7 +130,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
       >
         <div className="w-full text-center">
           <p className="font-bold text-sm">
-            Apply For Scholarship
+            Apply For Full Tuition
           </p>
         </div>
       </button>

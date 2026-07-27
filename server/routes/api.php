@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\User\CourseEnrollmentController;
 use App\Http\Controllers\Api\User\TrackUpgradeController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use App\Http\Controllers\Api\User\UserSettingsController;
+use App\Http\Controllers\Api\User\OnboardingController;
 use App\Http\Controllers\Api\PaystackWebhookController;
 use App\Http\Controllers\Api\StripeController;
 use App\Http\Controllers\Api\KidsStripeController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminStudentController;
 use App\Http\Controllers\Api\AdminCourseController;
 use App\Http\Controllers\Api\AdminCourseDetailsController;
+use App\Http\Controllers\Api\AdminRegistrationFeeController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\URL;
@@ -55,6 +57,10 @@ Route::get('/detect-currency', function () {
         'region'       => $locationInfo['region'] ?? null,
     ]);
 });
+
+// =================== REGISTRATION FEE (public read) =================== //
+
+Route::get('/registration-fee', [AdminRegistrationFeeController::class, 'publicPricing']);
 
 // =================== EMAIL VERIFICATION =================== //
 
@@ -151,6 +157,16 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
 
     Route::get('/me',      [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // ── Onboarding / screening modal state ─────────────────────────────────
+    Route::prefix('onboarding')->group(function () {
+        Route::get('/status', [OnboardingController::class, 'status']);
+    });
+
+    Route::prefix('user')->group(function () {
+        Route::put('/intended-course',    [OnboardingController::class, 'setIntendedCourse']);
+        Route::delete('/intended-course', [OnboardingController::class, 'clearIntendedCourse']);
+    });
 
     Route::prefix('referrals')->group(function () {
         Route::get('/status', [ReferralController::class, 'checkStatus']);
@@ -320,6 +336,12 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::get('/',              [AdminScholarshipController::class, 'index']);
         Route::get('/stats',         [AdminScholarshipController::class, 'stats']);
         Route::patch('/{id}/review', [AdminScholarshipController::class, 'review']);
+    });
+
+    // Registration fee (single platform-wide setting, applies across all courses)
+    Route::prefix('registration-fee')->group(function () {
+        Route::get('/settings', [AdminRegistrationFeeController::class, 'getSettings']);
+        Route::put('/settings', [AdminRegistrationFeeController::class, 'updateSettings']);
     });
 
     // Instructors

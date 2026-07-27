@@ -29,12 +29,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
+/**
+ * If the person picked a course before signing in (sessionStorage), persist
+ * it to the backend so it survives closing the browser — this is what lets
+ * the dashboard onboarding modal "remember where they left off" on a later
+ * login. Failure here is non-critical: the modal just won't have a
+ * pre-selected course, so we never let it block navigation.
+ */
+async function persistIntendedCourse(courseId: string): Promise<void> {
+  try {
+    await api.onboarding.setIntendedCourse(courseId);
+  } catch {
+    // non-critical — swallow
+  }
+}
+
+async function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
   const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
   if (scholarshipRedirect) {
     sessionStorage.removeItem('scholarship_course_redirect');
     const safeId = scholarshipRedirect.replace(/[^a-zA-Z0-9_-]/g, '');
-    if (safeId) { router.push(`/scholarships/${safeId}`); return; }
+    if (safeId) {
+      await persistIntendedCourse(safeId);
+      router.push(`/scholarships/${safeId}`);
+      return;
+    }
   }
 
   const browseCourses = sessionStorage.getItem('scholarship_browse_courses');
@@ -44,12 +63,19 @@ function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
     return;
   }
 
+  // A course picked while logged out (e.g. clicking "Enroll"/"Purchase" on a
+  // course page) used to jump straight to checkout after login. It now lands
+  // on the dashboard instead — the onboarding modal picks this exact course
+  // up from there and offers the scholarship screening before payment,
+  // the same way it already does right after signup.
   const intendedCourse = sessionStorage.getItem('intended_course');
   if (intendedCourse) {
     sessionStorage.removeItem('intended_course');
     sessionStorage.removeItem('intended_course_name');
     const safeId = intendedCourse.replace(/[^a-zA-Z0-9_-]/g, '');
-    if (safeId) { router.push(`/courses/${safeId}`); return; }
+    if (safeId) {
+      await persistIntendedCourse(safeId);
+    }
   }
 
   router.push('/user/dashboard');
@@ -86,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await api.auth.login({ email, password });
       if (response.token) localStorage.setItem('token', response.token);
       await refreshUser();
-      resolvePostLoginRedirect(router);
+      await resolvePostLoginRedirect(router);
     } catch (error) {
       const err = handleApiError(error);
       setError(err);
@@ -160,7 +186,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       if (response.token) localStorage.setItem('token', response.token);
       await refreshUser();
-      // Land directly on the dashboard with a flag urging profile completion.
+
+      // If the person picked a course before signing up, persist it now so
+      // the dashboard's onboarding modal knows about it — registration
+      // always lands on the dashboard (not the course page), the modal
+      // decides what happens next.
+      const intendedCourse = sessionStorage.getItem('intended_course');
+      if (intendedCourse) {
+        sessionStorage.removeItem('intended_course');
+        sessionStorage.removeItem('intended_course_name');
+        const safeId = intendedCourse.replace(/[^a-zA-Z0-9_-]/g, '');
+        if (safeId) {
+          await persistIntendedCourse(safeId);
+        }
+      }
+
       router.push('/user/dashboard?welcome=1');
     } catch (error) {
       const err = handleApiError(error);

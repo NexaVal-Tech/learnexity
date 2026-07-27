@@ -59,7 +59,7 @@ const TEAM: TeamMember[] = [
   },
   {
     name: "Cynthia Arundu",
-    role: "Advisor And Career Coach",
+    role: "Executive Advisor",
     bio: [
       "Cynthia is an Adjunct Faculty Member at South College, Informatics Specialist (MSN), and a Google Certified Data Analyst passionate about empowering individuals through career development, technology, and lifelong learning.",
     ],
@@ -74,20 +74,20 @@ const TEAM: TeamMember[] = [
       "Her expertise includes public relations, corporate communication, content strategy, media relations, presentation skills, crisis communication, stakeholder engagement, and brand storytelling. Hannah enjoys mentoring students on how to communicate with confidence, influence audiences, and build meaningful professional relationships.",
       "Her goal is to equip learners with the communication skills, emotional intelligence, and strategic thinking required to excel in leadership, business, and today's fast-paced professional environment.",
     ],
-    image: "/images/hannah.jpeg",
+    image: "/images/hannah.jpg",
     linkedin: "#",
   },
-  // {
-  //   name: "David Shetty",
-  //   role: "Head of Marketing",
-  //   bio: [
-  //     "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies.",
-  //     "His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios.",
-  //     "His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
-  //   ],
-  //   image: "/images/micheal.png",
-  //   linkedin: "#",
-  // },
+  {
+    name: "David Shetty",
+    role: "Head of Marketing",
+    bio: [
+      "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies.",
+      "His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios.",
+      "His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
+    ],
+    image: "/images/micheal.png",
+    linkedin: "#",
+  },
   {
     name: "Evans Miller",
     role: "AI Automation Engineer",
@@ -96,7 +96,7 @@ const TEAM: TeamMember[] = [
       "whose expertise includes AI workflow automation, Python, OpenAI APIs, LangChain, n8n, Zapier, Make.com, API integrations, prompt engineering, and business process automation. Evans is passionate about teaching students how to build practical AI-powered solutions that solve real-world business challenges.",
       "His mission is to empower aspiring engineers with the knowledge and hands-on experience needed to create scalable AI automation systems and become highly sought-after professionals in the rapidly evolving AI industry.",
     ],
-    image: "/images/Evans.jpeg",
+    image: "/images/Evans.jpg",
     linkedin: "#",
   },
   {
@@ -139,20 +139,20 @@ const TEAM: TeamMember[] = [
     image: "/images/instructor-2.jpg",
   },
   {
-    name: "Ejiro Okereke",
-    role: "UI/UX Designer",
+    name: "Loveth Nworie",
+    role: "Cloud & AI Security (AI-SECOPS)",
     bio: [
-      "Ejiro Okereke is a Product and Brand Designer with over 3 years of experience creating intuitive digital products and cohesive brand identities across industries like finance, wellness, education, and productivity.",
-      "She specializes in transforming ideas into user-friendly, visually engaging experiences, combining functionality with strong visual direction. Passionate about growth, she helps beginners build solid design foundations and confidently apply their skills to real-world projects.",
+      "Loveth Nworie is a Cloud and AI Security Engineer specializing in securing cloud infrastructure, AI systems, and modern enterprise applications. Her expertise includes cloud security, identity and access management (IAM), DevSecOps, container security, threat detection, compliance, and securing AI/ML workloads across production environments.",
+      "She is passionate about helping aspiring cybersecurity professionals build practical, job-ready skills in Cloud Security and AI-SECOPS. Through hands-on labs and real-world scenarios, she teaches students how to identify vulnerabilities, implement security best practices, and protect cloud-native and AI-powered applications from emerging threats.",
     ],
     image: "/images/instructor-3.jpg",
   },
   {
     name: "Grant Erondu",
-    role: "Data and AI Engineer",
+    role: "AI Systems & MLOps Instructor",
     bio: [
-      "Grant Erondu is a data science and machine learning enthusiast with a passion for understanding how intelligent systems behave and make decisions.",
-      "Over the years, he has trained over 100 students, equipping them with practical skills to analyze data and build impactful solutions.",
+      "Grant Erondu is an AI Systems and MLOps Engineer with extensive experience designing, deploying, and maintaining production-ready machine learning solutions. He specializes in AI application development, model deployment, cloud infrastructure, CI/CD pipelines, Docker, Kubernetes, and scalable ML workflows.",
+      "He has trained over 100 students in artificial intelligence, machine learning, and MLOps, helping them gain hands-on experience in building, deploying, monitoring, and optimizing intelligent systems using industry-standard tools and best practices.",
     ],
     image: "/images/instructor-1.jpg",
   },

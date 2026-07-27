@@ -25,6 +25,11 @@ class ScholarshipController extends Controller
     //  • Employed + income > ₦200k / $200               → rejected
     //  • Not student + unemployed                        → 50%  (needs support)
     //  • Everything else                                 → rejected
+    //
+    // NOTE: any 'approved' outcome now means the student pays the flat
+    // platform registration fee instead of the course price (see
+    // CourseEnrollmentController::enroll()) rather than the discount_percentage
+    // being applied as a % off. discount_percentage is kept for display only.
 
     /**
      * Check application eligibility.
@@ -149,6 +154,12 @@ class ScholarshipController extends Controller
             'applicant_country'   => $country,
             'applicant_ip'        => $request->ip(),
         ]);
+
+        // Keep the onboarding state in sync — screening is now tied to this
+        // course, so make sure it's also the user's "intended" one.
+        if ($user->intended_course_id !== $courseId) {
+            $user->update(['intended_course_id' => $courseId]);
+        }
 
         Log::info('🎓 Scholarship auto-processed (new rules)', [
             'user_id'     => $user->id,

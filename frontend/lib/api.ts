@@ -61,6 +61,25 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export type { LearningTrack };
 
+// ── New: onboarding modal state (see OnboardingController on the backend) ──
+export interface OnboardingScholarship {
+  id: number;
+  status: 'approved' | 'rejected';
+  discount_percentage: number;
+  is_used: boolean;
+  course_id: string;
+  course_name?: string;
+  review_notes?: string;
+}
+
+export interface OnboardingStatus {
+  show_modal: boolean;
+  intended_course: { course_id: string; title: string } | null;
+  screening_status: 'not_started' | 'approved' | 'rejected';
+  scholarship: OnboardingScholarship | null;
+  pending_enrollment_id: number | null;
+}
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -196,6 +215,32 @@ export const api = {
 
     resendVerification: async (email: string): Promise<{ message: string }> => {
       const response = await apiClient.post('/api/email/resend-verification', { email });
+      return response.data;
+    },
+  },
+
+  // ── ONBOARDING (post-signup screening modal) ──────────────────────────────────
+  onboarding: {
+    getStatus: async (): Promise<OnboardingStatus> => {
+      const response = await apiClient.get<OnboardingStatus>('/api/onboarding/status');
+      return response.data;
+    },
+
+    setIntendedCourse: async (courseId: string): Promise<{ message: string; intended_course_id: string }> => {
+      const response = await apiClient.put('/api/user/intended-course', { course_id: courseId });
+      return response.data;
+    },
+
+    clearIntendedCourse: async (): Promise<{ message: string }> => {
+      const response = await apiClient.delete('/api/user/intended-course');
+      return response.data;
+    },
+  },
+
+  // ── REGISTRATION FEE (public read) ────────────────────────────────────────────
+  registrationFee: {
+    getPublic: async (): Promise<{ currency: string; amount: number }> => {
+      const response = await apiClient.get('/api/registration-fee');
       return response.data;
     },
   },
@@ -679,6 +724,17 @@ settings: {
         return await adminApi.put('/api/admin/consultations/settings', data);
       },
     },
+
+    // ── NEW: single platform-wide registration fee (applies to all courses) ──
+    registrationFee: {
+      getSettings: async (): Promise<{ price_usd: number; price_ngn: number }> => {
+        return await adminApi.get('/api/admin/registration-fee/settings');
+      },
+      updateSettings: async (data: { price_usd: number; price_ngn: number }) => {
+        return await adminApi.put('/api/admin/registration-fee/settings', data);
+      },
+    },
+
     students: {
       getAll: async (params?: {
         search?: string;

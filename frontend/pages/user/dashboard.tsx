@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import UserDashboardLayout from "@/components/layout/UserDashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { api, Course, CourseEnrollment } from "@/lib/api";
+import { api, Course, CourseEnrollment, OnboardingStatus } from "@/lib/api";
+import { ScreeningOnboardingModal } from "@/components/modals/ScreeningOnboardingModal";
 
 export default function UserDashboardPage() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function UserDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+
+  // ── Onboarding / "take the screening" modal ──────────────────────────────
+  const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   useEffect(() => {
     if (tab === 'your-course') {
@@ -44,6 +49,17 @@ export default function UserDashboardPage() {
     } else {
       setLoading(false);
     }
+  }, [user]);
+
+  // Recomputed fresh on every dashboard visit — this is what makes the
+  // modal "pick up where they left off" across logins/devices.
+  useEffect(() => {
+    if (!user) return;
+    api.onboarding.getStatus()
+      .then(setOnboardingStatus)
+      .catch(() => {
+        // non-critical — dashboard still works without the modal
+      });
   }, [user]);
 
   const fetchCourses = async () => {
@@ -115,6 +131,16 @@ export default function UserDashboardPage() {
 
   return (
     <UserDashboardLayout>
+      {/* Onboarding / screening modal — reappears on every visit until the
+          person either takes the screening or redeems an approved one. */}
+      {onboardingStatus?.show_modal && !onboardingDismissed && (
+        <ScreeningOnboardingModal
+          status={onboardingStatus}
+          userName={user?.name?.split(' ')[0]}
+          onClose={() => setOnboardingDismissed(true)}
+        />
+      )}
+
       {/* Success Toast */}
       {showSuccessToast && (
         <div className="fixed top-6 right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in">
@@ -125,7 +151,7 @@ export default function UserDashboardPage() {
         </div>
       )}
 
-      <div className="max-w-[1500px] mx-auto p-4 pt-25">
+      <div className="max-w-[1250px] mx-auto p-4 pt-25">
         {/* ── Welcome / Complete Profile Banner ───────────────────────────── */}
         {showWelcomeBanner && (
           <div className="mb-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-100 rounded-3xl p-5 flex items-center justify-between gap-4 flex-wrap">
