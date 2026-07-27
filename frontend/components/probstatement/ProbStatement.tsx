@@ -192,7 +192,6 @@ export default function ProbStatement() {
               <p className="prob-body-line">
                only to struggle to monetize them, especially with today's rapid AI advancements.
               </p>
-              <p className="prob-body-line">designed to help you land real opportunities.</p>
               <p className="prob-body-line">That's why Learnexity offers highly selective, future-proof pathways designed to help you master the high-value infrastructure layers that remain valuable as AI transforms the workplace. </p>
               <p className="prob-body-line">We do not just teach you skills; we position you to land real, global opportunities</p>
             </div>
