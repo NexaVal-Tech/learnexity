@@ -89,9 +89,11 @@ class AdminScholarshipController extends Controller
      * Send the scholarship result email (mirrors
      * ScholarshipController::sendResultEmail — kept as a small private copy
      * here since admin review is a distinct entry point and the two
-     * controllers don't share a base class for this). Also ensures a real
-     * enrollment row exists so the email's button deep-links straight to
-     * /user/payment/{enrollmentId}.
+     * controllers don't share a base class for this). For an APPROVED
+     * outcome this also creates the enrollment now (pending, registration
+     * fee) so it shows up in the student's dashboard immediately, rather
+     * than only after they click through an email/modal. Rejected
+     * applicants are not auto-enrolled.
      */
     private function sendResultEmail(\App\Models\User $user, Scholarship $scholarship, Course $course): void
     {
@@ -103,29 +105,31 @@ class AdminScholarshipController extends Controller
         $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/courses/' . $course->course_id;
         $amountDue  = null;
 
-        try {
-            $controller  = new \App\Http\Controllers\Api\User\CourseEnrollmentController();
-            $fakeRequest = new Request([], [
-                'learning_track' => 'self_paced',
-                'payment_type'   => 'onetime',
-            ]);
-            $fakeRequest->setUserResolver(fn () => $user);
-            auth()->setUser($user);
+        if ($isApproved) {
+            try {
+                $controller  = new \App\Http\Controllers\Api\User\CourseEnrollmentController();
+                $fakeRequest = new Request([], [
+                    'learning_track' => 'self_paced',
+                    'payment_type'   => 'onetime',
+                ]);
+                $fakeRequest->setUserResolver(fn () => $user);
+                auth()->setUser($user);
 
-            $response = $controller->enroll($fakeRequest, $course->course_id);
-            $data     = $response->getData(true);
+                $response = $controller->enroll($fakeRequest, $course->course_id);
+                $data     = $response->getData(true);
 
-            if (!empty($data['enrollment_id'])) {
-                $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/user/payment/' . $data['enrollment_id'];
-                $amountDue  = $data['total_amount'] ?? null;
-                $currency   = $data['currency'] ?? $currency;
+                if (!empty($data['enrollment_id'])) {
+                    $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/user/payment/' . $data['enrollment_id'];
+                    $amountDue  = $data['total_amount'] ?? null;
+                    $currency   = $data['currency'] ?? $currency;
+                }
+            } catch (\Exception $e) {
+                Log::error('❌ [AdminScholarshipReview] Failed to prepare enrollment for email link', [
+                    'user_id'   => $user->id,
+                    'course_id' => $course->course_id,
+                    'error'     => $e->getMessage(),
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::error('❌ [AdminScholarshipReview] Failed to prepare enrollment for email link', [
-                'user_id'   => $user->id,
-                'course_id' => $course->course_id,
-                'error'     => $e->getMessage(),
-            ]);
         }
 
         try {

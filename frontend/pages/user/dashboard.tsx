@@ -24,6 +24,29 @@ export default function UserDashboardPage() {
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
+  // Plain React state resets on every reload, which meant closing the modal
+  // did nothing beyond the current page view — it just came right back on
+  // the next visit even seconds later. Persist the dismissal for this
+  // browser session instead, matching the modal's own "come back later"
+  // intent (Escape/X). Keyed by the screening_status it was dismissed for,
+  // so a NEW outcome (e.g. just got approved after dismissing the "take the
+  // screening" nudge) still gets shown once — dismissing one nudge
+  // shouldn't silently suppress a completely different one later.
+  const dismissKey = user ? `onboarding_modal_dismissed_${user.id}` : null;
+
+  useEffect(() => {
+    if (!dismissKey || !onboardingStatus || typeof window === 'undefined') return;
+    const dismissedFor = sessionStorage.getItem(dismissKey);
+    setOnboardingDismissed(dismissedFor === onboardingStatus.screening_status);
+  }, [dismissKey, onboardingStatus?.screening_status]);
+
+  const dismissOnboardingModal = () => {
+    setOnboardingDismissed(true);
+    if (dismissKey && onboardingStatus && typeof window !== 'undefined') {
+      sessionStorage.setItem(dismissKey, onboardingStatus.screening_status);
+    }
+  };
+
   useEffect(() => {
     if (tab === 'your-course') {
       setActiveTab('your-course');
@@ -131,13 +154,15 @@ export default function UserDashboardPage() {
 
   return (
     <UserDashboardLayout>
-      {/* Onboarding / screening modal — reappears on every visit until the
-          person either takes the screening or redeems an approved one. */}
+      {/* Onboarding / screening modal — reappears each new session until the
+          person either takes the screening or redeems an approved one, but
+          stays closed for the rest of THIS session once dismissed instead
+          of popping right back on the next reload. */}
       {onboardingStatus?.show_modal && !onboardingDismissed && (
         <ScreeningOnboardingModal
           status={onboardingStatus}
           userName={user?.name?.split(' ')[0]}
-          onClose={() => setOnboardingDismissed(true)}
+          onClose={dismissOnboardingModal}
         />
       )}
 

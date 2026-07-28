@@ -42,7 +42,8 @@ class PricingService
 
         if ($isRegistrationFee) {
             $regFeeSetting = RegistrationFeeSetting::current();
-            $amount        = $regFeeSetting->priceForCurrency($currency);
+            $category      = RegistrationFeeSetting::categoryForTrack($learningTrack);
+            $amount        = $regFeeSetting->priceForCategory($category, $currency);
 
             return [
                 'amount'               => $amount,
@@ -51,6 +52,7 @@ class PricingService
                 'payment_type'         => 'onetime', // registration fee is always paid in full
                 'installment_amount'   => $amount,
                 'total_installments'   => 1,
+                'fee_category'         => $category,
             ];
         }
 
@@ -72,6 +74,7 @@ class PricingService
             'payment_type'        => $paymentType,
             'installment_amount'  => $installmentAmount,
             'total_installments'  => $paymentType === 'installment' ? 4 : 1,
+            'fee_category'        => null,
         ];
     }
 }

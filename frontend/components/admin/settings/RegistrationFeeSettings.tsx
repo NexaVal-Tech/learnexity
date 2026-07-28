@@ -5,8 +5,10 @@ import { Loader2, Save, CheckCircle2 } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
 
 export default function RegistrationFeeSettings() {
-  const [priceUsd, setPriceUsd] = useState('');
-  const [priceNgn, setPriceNgn] = useState('');
+  const [deeptechUsd, setDeeptechUsd] = useState('');
+  const [deeptechNgn, setDeeptechNgn] = useState('');
+  const [flexibleUsd, setFlexibleUsd] = useState('');
+  const [flexibleNgn, setFlexibleNgn] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +18,10 @@ export default function RegistrationFeeSettings() {
     (async () => {
       try {
         const data = await api.admin.registrationFee.getSettings();
-        setPriceUsd(String(data.price_usd));
-        setPriceNgn(String(data.price_ngn));
+        setDeeptechUsd(String(data.deeptech_price_usd));
+        setDeeptechNgn(String(data.deeptech_price_ngn));
+        setFlexibleUsd(String(data.flexible_price_usd));
+        setFlexibleNgn(String(data.flexible_price_ngn));
       } catch (err) {
         setError(handleApiError(err));
       } finally {
@@ -32,8 +36,10 @@ export default function RegistrationFeeSettings() {
     setSaved(false);
     try {
       await api.admin.registrationFee.updateSettings({
-        price_usd: parseFloat(priceUsd) || 0,
-        price_ngn: parseFloat(priceNgn) || 0,
+        deeptech_price_usd: parseFloat(deeptechUsd) || 0,
+        deeptech_price_ngn: parseFloat(deeptechNgn) || 0,
+        flexible_price_usd: parseFloat(flexibleUsd) || 0,
+        flexible_price_ngn: parseFloat(flexibleNgn) || 0,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -49,9 +55,10 @@ export default function RegistrationFeeSettings() {
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Scholarship Registration Fee</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Students who are approved through the scholarship screening pay this flat fee instead
-          of the course price — on any course. This is a single platform-wide setting, not
-          configured per course.
+          Students approved through scholarship screening pay a flat registration fee instead of
+          the course price. The fee depends on which learning track they enroll in — Deep-Tech
+          (one-on-one / group mentorship) and Flexible (self-paced) are priced separately. These
+          are platform-wide settings, not configured per course.
         </p>
       </div>
 
@@ -62,36 +69,75 @@ export default function RegistrationFeeSettings() {
         </div>
       ) : (
         <>
-          <div className="grid sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label htmlFor="reg-fee-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                Nigeria (₦)
-              </label>
-              <input
-                id="reg-fee-ngn"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={priceNgn}
-                onChange={(e) => setPriceNgn(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-              />
+          <div className="mb-5">
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Deep-Tech (one-on-one / group mentorship)</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="reg-fee-deeptech-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Nigeria (₦)
+                </label>
+                <input
+                  id="reg-fee-deeptech-ngn"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={deeptechNgn}
+                  onChange={(e) => setDeeptechNgn(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="reg-fee-deeptech-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Other countries ($)
+                </label>
+                <input
+                  id="reg-fee-deeptech-usd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={deeptechUsd}
+                  onChange={(e) => setDeeptechUsd(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="reg-fee-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                Other countries ($)
-              </label>
-              <input
-                id="reg-fee-usd"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={priceUsd}
-                onChange={(e) => setPriceUsd(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-              />
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Flexible (self-paced)</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="reg-fee-flexible-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Nigeria (₦)
+                </label>
+                <input
+                  id="reg-fee-flexible-ngn"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={flexibleNgn}
+                  onChange={(e) => setFlexibleNgn(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="reg-fee-flexible-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Other countries ($)
+                </label>
+                <input
+                  id="reg-fee-flexible-usd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={flexibleUsd}
+                  onChange={(e) => setFlexibleUsd(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
             </div>
           </div>
 

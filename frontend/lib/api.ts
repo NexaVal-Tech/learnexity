@@ -739,12 +739,20 @@ settings: {
       },
     },
 
-    // ── NEW: single platform-wide registration fee (applies to all courses) ──
+    // ── Two-tier platform-wide registration fee: "deeptech" (one_on_one /
+    // group_mentorship) and "flexible" (self_paced) — see PricingService. ──
     registrationFee: {
-      getSettings: async (): Promise<{ price_usd: number; price_ngn: number }> => {
+      getSettings: async (): Promise<{
+        price_usd: number; price_ngn: number;
+        deeptech_price_usd: number; deeptech_price_ngn: number;
+        flexible_price_usd: number; flexible_price_ngn: number;
+      }> => {
         return await adminApi.get('/api/admin/registration-fee/settings');
       },
-      updateSettings: async (data: { price_usd: number; price_ngn: number }) => {
+      updateSettings: async (data: {
+        deeptech_price_usd: number; deeptech_price_ngn: number;
+        flexible_price_usd: number; flexible_price_ngn: number;
+      }) => {
         return await adminApi.put('/api/admin/registration-fee/settings', data);
       },
     },

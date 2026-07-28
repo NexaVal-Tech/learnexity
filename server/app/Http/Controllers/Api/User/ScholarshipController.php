@@ -184,11 +184,17 @@ class ScholarshipController extends Controller
 
     /**
      * Send the "Proceed to Payment" result email — fired for BOTH approved
-     * and rejected outcomes (Task: user gets a CTA either way). Also makes
-     * sure a real enrollment row exists so the email's button can deep-link
-     * straight to /user/payment/{enrollmentId} instead of a generic course
-     * page. Reuses CourseEnrollmentController::enroll() — the single source
-     * of truth for enrollment creation/pricing — rather than duplicating it.
+     * and rejected outcomes (user gets a CTA either way). For an APPROVED
+     * outcome this also creates the enrollment now (pending, registration
+     * fee) rather than waiting for the person to click through the modal or
+     * payment page — being awarded a scholarship should immediately show up
+     * as "enrolled, payment pending" in their dashboard, the same way
+     * starting checkout on a normal course does. Rejected applicants are
+     * NOT auto-enrolled — they haven't chosen this course yet, they just
+     * found out they don't get a scholarship for it.
+     *
+     * Reuses CourseEnrollmentController::enroll() — the single source of
+     * truth for enrollment creation/pricing — rather than duplicating it.
      */
     private function sendResultEmail(\App\Models\User $user, Scholarship $scholarship, Course $course): void
     {
@@ -197,28 +203,35 @@ class ScholarshipController extends Controller
         $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/courses/' . $course->course_id;
         $amountDue  = null;
 
-        try {
-            $controller  = new \App\Http\Controllers\Api\User\CourseEnrollmentController();
-            $fakeRequest = new Request([], [
-                'learning_track' => 'self_paced',
-                'payment_type'   => 'onetime',
-            ]);
-            $response = $controller->enroll($fakeRequest, $course->course_id);
-            $data     = $response->getData(true);
+        if ($isApproved) {
+            try {
+                $controller  = new \App\Http\Controllers\Api\User\CourseEnrollmentController();
+                // self_paced is just a starting point — if the person picks
+                // a different track (one_on_one/group_mentorship) on the
+                // payment page, that page's own syncPricing() re-calls
+                // enroll() and corrects the amount/tier, so this default
+                // never under/over-charges anyone.
+                $fakeRequest = new Request([], [
+                    'learning_track' => 'self_paced',
+                    'payment_type'   => 'onetime',
+                ]);
+                $response = $controller->enroll($fakeRequest, $course->course_id);
+                $data     = $response->getData(true);
 
-            if (!empty($data['enrollment_id'])) {
-                $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/user/payment/' . $data['enrollment_id'];
-                $amountDue  = $data['total_amount'] ?? null;
-                $currency   = $data['currency'] ?? $currency;
+                if (!empty($data['enrollment_id'])) {
+                    $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/user/payment/' . $data['enrollment_id'];
+                    $amountDue  = $data['total_amount'] ?? null;
+                    $currency   = $data['currency'] ?? $currency;
+                }
+            } catch (\Exception $e) {
+                Log::error('❌ [ScholarshipResult] Failed to prepare enrollment for email link', [
+                    'user_id'       => $user->id,
+                    'course_id'     => $course->course_id,
+                    'error'         => $e->getMessage(),
+                ]);
+                // Fall back to the course page URL set above — the frontend
+                // scholarship/payment flow can still take it from there.
             }
-        } catch (\Exception $e) {
-            Log::error('❌ [ScholarshipResult] Failed to prepare enrollment for email link', [
-                'user_id'       => $user->id,
-                'course_id'     => $course->course_id,
-                'error'         => $e->getMessage(),
-            ]);
-            // Fall back to the course page URL set above — the frontend
-            // scholarship/payment flow can still take it from there.
         }
 
         try {
