@@ -16,6 +16,10 @@ class CourseEnrollment extends Model
         'course_name',
         'course_price',
         'learning_track',
+        // Deep-tech screening (one_on_one / group_mentorship only) — soft
+        // gate, see CourseEnrollmentController::enroll().
+        'deep_tech_screening_passed',
+        'deep_tech_screening_answers',
         // Payment
         'payment_type',
         'currency',
@@ -57,6 +61,8 @@ class CourseEnrollment extends Model
         'installment_amount' => 'decimal:2',
         'has_access' => 'boolean',
         'is_registration_fee' => 'boolean',
+        'deep_tech_screening_passed' => 'boolean',
+        'deep_tech_screening_answers' => 'array',
         'next_payment_due' => 'datetime',
         'enrollment_date' => 'datetime',
         'payment_date' => 'datetime',

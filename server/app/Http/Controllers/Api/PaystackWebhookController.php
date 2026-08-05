@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Services\ConsultationPaymentService;
 use App\Mail\PaymentConfirmation;
+use App\Mail\AdminNewStudentMail;
 use App\Models\CourseEnrollment;
 use App\Models\Scholarship;
 use Illuminate\Http\Request;
@@ -275,6 +276,35 @@ class PaystackWebhookController extends Controller
                 Log::error('❌ Failed to send confirmation email', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // ── Notify admin of the payment ────────────────────────────────
+            try {
+                $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                if ($adminEmail) {
+                    $isFullyPaid = $enrollment->payment_status === 'completed';
+                    if ($effectiveType === 'onetime') {
+                        $subject = 'Payment Received - ' . $enrollment->course_name . ' - ' . $enrollment->user->name;
+                    } elseif ($isFullyPaid) {
+                        $subject = 'Final Installment Paid - ' . $enrollment->course_name . ' - ' . $enrollment->user->name;
+                    } else {
+                        $subject = 'Installment Payment Received - ' . $enrollment->course_name . ' - ' . $enrollment->user->name;
+                    }
+
+                    Mail::to($adminEmail)->queue(
+                        new AdminNewStudentMail($enrollment->user, $enrollment, null, $subject)
+                    );
+                    Log::info('✅ Admin payment notification sent', [
+                        'admin_email' => $adminEmail,
+                        'course_name' => $enrollment->course_name,
+                    ]);
+                } else {
+                    Log::warning('⚠️ ADMIN_NOTIFICATION_EMAIL not set — admin payment notification skipped');
+                }
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to send admin payment notification', [
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

@@ -26,6 +26,7 @@ export const CourseActionButton = ({
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -96,13 +97,29 @@ export const CourseActionButton = ({
 
     // If authenticated but not enrolled, enroll and go to payment
     setIsEnrolling(true);
+    setEnrollError(null);
     try {
       const response = await api.enrollment.enroll(courseId, 'self_paced', 'onetime');
       router.push(`/user/payment/${response.enrollment_id}`);
     } catch (error: any) {
       console.error('Enrollment failed:', error);
+
+      // A pending enrollment already exists (e.g. started on another
+      // device/tab) — send them straight to payment instead of a dead-end
+      // error, matching the courses list and course detail page behavior.
+      const existingId = error?.response?.data?.enrollment_id;
+      if (existingId) {
+        router.push(`/user/payment/${existingId}`);
+        return;
+      }
+
+      if (error?.response?.status === 409) {
+        router.push('/user/dashboard?tab=your-course');
+        return;
+      }
+
       const message = error?.response?.data?.message || 'Failed to enroll in course. Please try again.';
-      alert(message);
+      setEnrollError(message);
     } finally {
       setIsEnrolling(false);
     }
@@ -118,34 +135,63 @@ export const CourseActionButton = ({
 
   const isLoading = authLoading || checkingEnrollment || isEnrolling;
 
+  const errorTooltip = enrollError ? (
+    <span
+      role="alert"
+      style={{
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        marginTop: '8px',
+        background: '#1f1f1f',
+        color: '#fca5a5',
+        border: '1px solid rgba(248,113,113,0.35)',
+        borderRadius: '8px',
+        padding: '6px 12px',
+        fontSize: '12px',
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        zIndex: 20,
+      }}
+    >
+      {enrollError}
+    </span>
+  ) : null;
+
   // Render based on variant
   if (variant === 'get-started' || !user) {
     return (
-      <button
-        onClick={handleClick}
-        disabled={isLoading}
-        className={`bg-white text-[#6C63FF] px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
-          isLoading ? 'opacity-50 cursor-not-allowed' : ''
-        } ${className}`}
-      >
-        <span>{getButtonText()}</span>
-        <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-[#4A3AFF] text-white">
-          <img src="/icons/arrow_right_line (1).png" alt="icon" className="w-6 h-6 object-contain"/>
-        </span>
-      </button>
+      <span style={{ position: 'relative', display: 'inline-block' }}>
+        <button
+          onClick={handleClick}
+          disabled={isLoading}
+          className={`bg-white text-[#6C63FF] px-2 py-1 rounded-full font-semibold text-base md:text-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          } ${className}`}
+        >
+          <span>{getButtonText()}</span>
+          <span className="w-12 h-6 md:w-16 md:h-8 flex items-center justify-center rounded-full bg-[#4A3AFF] text-white">
+            <img src="/icons/arrow_right_line (1).png" alt="icon" className="w-6 h-6 object-contain"/>
+          </span>
+        </button>
+        {errorTooltip}
+      </span>
     );
   }
 
   // Make Payment variant (for authenticated users)
   return (
-    <button
-      onClick={handleClick}
-      disabled={isLoading}
-      className={`bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg ${
-        isLoading ? 'opacity-50 cursor-not-allowed' : ''
-      } ${isEnrolled ? 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' : ''} ${className}`}
-    >
-      {getButtonText()}
-    </button>
+    <span style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={handleClick}
+        disabled={isLoading}
+        className={`bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg ${
+          isLoading ? 'opacity-50 cursor-not-allowed' : ''
+        } ${isEnrolled ? 'from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' : ''} ${className}`}
+      >
+        {getButtonText()}
+      </button>
+      {errorTooltip}
+    </span>
   );
 };

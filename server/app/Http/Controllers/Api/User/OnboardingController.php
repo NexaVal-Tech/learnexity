@@ -47,9 +47,17 @@ class OnboardingController extends Controller
             $course = Course::where('course_id', $targetCourseId)->first();
 
             if ($course) {
+                // Lets the frontend auto-enroll with the correct learning
+                // track instead of hardcoding 'self_paced' — a deep-tech-only
+                // course (mentorship tracks) would otherwise get enrolled at
+                // the wrong price tier and skip the deep-tech screening
+                // entirely (see CourseEnrollmentController::enroll()).
+                $isDeepTech = (bool) ($course->offers_one_on_one || $course->offers_group_mentorship);
+
                 $intendedCourse = [
-                    'course_id' => $course->course_id,
-                    'title'     => $course->title,
+                    'course_id'    => $course->course_id,
+                    'title'        => $course->title,
+                    'is_deep_tech' => $isDeepTech,
                 ];
 
                 $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)

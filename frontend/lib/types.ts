@@ -176,7 +176,8 @@ export interface CourseEnrollment {
   course_name: string;
   course_price?: number;
   learning_track: 'one_on_one' | 'group_mentorship' | 'self_paced';
-  
+  deep_tech_screening_passed?: boolean | null;
+
   // Payment fields
   payment_type: 'onetime' | 'installment';
   currency: 'USD' | 'NGN';

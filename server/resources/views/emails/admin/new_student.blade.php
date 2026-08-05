@@ -52,6 +52,24 @@
             <div class="label">Learning Track</div>
             <div class="value">{{ ucfirst(str_replace('_',' ', $enrollment->learning_track)) }}</div>
 
+            @if(!is_null($enrollment->deep_tech_screening_passed))
+            <div class="label">Deep-Tech Screening</div>
+            <div class="value">
+                @if($enrollment->deep_tech_screening_passed)
+                    <span class="badge" style="background:#dcfce7;color:#166534;">✅ Passed all criteria</span>
+                @else
+                    <span class="badge" style="background:#fef3c7;color:#92400e;">⚠️ Did not meet all criteria — follow up via WhatsApp</span>
+                @endif
+                @if(is_array($enrollment->deep_tech_screening_answers))
+                    <div style="margin-top:8px;font-size:13px;color:#475569;font-weight:400;">
+                        Laptop: {{ ($enrollment->deep_tech_screening_answers['has_laptop'] ?? false) ? 'Yes' : 'No' }} ·
+                        Programming knowledge: {{ ($enrollment->deep_tech_screening_answers['has_programming_knowledge'] ?? false) ? 'Yes' : 'No' }} ·
+                        Reliable internet: {{ ($enrollment->deep_tech_screening_answers['reliable_internet'] ?? false) ? 'Yes' : 'No' }}
+                    </div>
+                @endif
+            </div>
+            @endif
+
             <div class="label">Payment Type</div>
             <div class="value">{{ ucfirst($enrollment->payment_type) }}</div>
 

@@ -77,28 +77,28 @@ const TEAM: TeamMember[] = [
     image: "/images/hannah.jpg",
     linkedin: "#",
   },
-  {
-    name: "David Shetty",
-    role: "Head of Marketing",
-    bio: [
-      "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies.",
-      "His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios.",
-      "His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
-    ],
-    image: "/images/micheal.png",
-    linkedin: "#",
-  },
-  {
-    name: "Evans Miller",
-    role: "AI Automation Engineer",
-    bio: [
-      "Evans Miller is an AI Automation Engineer with over 8 years of experience designing intelligent workflows and automation systems that help businesses streamline operations, improve productivity, and reduce manual effort through artificial intelligence.",
-      "whose expertise includes AI workflow automation, Python, OpenAI APIs, LangChain, n8n, Zapier, Make.com, API integrations, prompt engineering, and business process automation. Evans is passionate about teaching students how to build practical AI-powered solutions that solve real-world business challenges.",
-      "His mission is to empower aspiring engineers with the knowledge and hands-on experience needed to create scalable AI automation systems and become highly sought-after professionals in the rapidly evolving AI industry.",
-    ],
-    image: "/images/Evans.jpg",
-    linkedin: "#",
-  },
+  // {
+  //   name: "David Shetty",
+  //   role: "Head of Marketing",
+  //   bio: [
+  //     "Michael Anderson is a DevOps and Cloud Engineer with more than 9 years of experience designing, deploying, and managing cloud infrastructure for high-growth technology companies.",
+  //     "His expertise includes AWS, Docker, Kubernetes, Terraform, Linux, CI/CD pipelines, and cloud security. Michael enjoys helping students understand modern DevOps practices by combining practical labs with real production scenarios.",
+  //     "His goal is to equip learners with the technical skills and confidence needed to become industry-ready cloud and DevOps engineers.",
+  //   ],
+  //   image: "/images/micheal.png",
+  //   linkedin: "#",
+  // },
+  // {
+  //   name: "Evans Miller",
+  //   role: "AI Automation Engineer",
+  //   bio: [
+  //     "Evans Miller is an AI Automation Engineer with over 8 years of experience designing intelligent workflows and automation systems that help businesses streamline operations, improve productivity, and reduce manual effort through artificial intelligence.",
+  //     "whose expertise includes AI workflow automation, Python, OpenAI APIs, LangChain, n8n, Zapier, Make.com, API integrations, prompt engineering, and business process automation. Evans is passionate about teaching students how to build practical AI-powered solutions that solve real-world business challenges.",
+  //     "His mission is to empower aspiring engineers with the knowledge and hands-on experience needed to create scalable AI automation systems and become highly sought-after professionals in the rapidly evolving AI industry.",
+  //   ],
+  //   image: "/images/Evans.jpg",
+  //   linkedin: "#",
+  // },
   {
     name: "Nmeribe Nnamdi",
     role: "Software Engineer",

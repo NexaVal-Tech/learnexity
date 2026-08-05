@@ -5,13 +5,37 @@ import { Course } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Auto-scroll speed (px/sec) and how long the carousel must sit idle
+// (no hover/touch/drag) before autoplay resumes.
+const AUTO_SCROLL_PX_PER_SEC = 45;
+const RESUME_IDLE_MS = 7000;
+
 export default function Courses() {
   const [deepTechCourses, setDeepTechCourses] = useState<Course[]>([]);
   const [flexCourses, setFlexCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
+
+  // Scroll container ref — this element is the actual `overflow-x-auto`
+  // scroller now, driven by JS (scrollLeft) instead of a CSS transform, so
+  // native touch/mouse-drag scrolling and the autoplay loop can share the
+  // same scroll position without fighting each other.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // true while the pointer is hovering or a touch is active over the carousel
+  const isActiveRef = useRef(false);
+  // true only while an actual mouse click-drag is in progress
+  const isDraggingRef = useRef(false);
+  // ms timestamp (Date.now()) of the last interaction — autoplay resumes
+  // once this is more than RESUME_IDLE_MS in the past. Starts at 0 so
+  // autoplay begins immediately on first mount.
+  const lastInteractionRef = useRef(0);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
+  // true if the current/last mouse gesture moved enough to count as a drag
+  // rather than a click — used to swallow the click so dragging a card
+  // doesn't also navigate to it.
+  const draggedRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -61,6 +85,113 @@ export default function Courses() {
 
   const marqueeItems = [...allCards, ...allCards];
 
+  // ── Autoplay loop ──────────────────────────────────────────────────────
+  // Drives scrollLeft directly via requestAnimationFrame so it coexists
+  // with native drag/touch scrolling on the same element. Pauses whenever
+  // the carousel is hovered/touched/dragged, and resumes RESUME_IDLE_MS
+  // after the last interaction ends.
+  useEffect(() => {
+    if (allCards.length === 0) return;
+    let lastTime: number | null = null;
+
+    const tick = (time: number) => {
+      const el = scrollerRef.current;
+      if (el) {
+        const dt = lastTime == null ? 0 : time - lastTime;
+        const idleMs = Date.now() - lastInteractionRef.current;
+        const shouldAutoScroll = !isActiveRef.current && !isDraggingRef.current && idleMs >= RESUME_IDLE_MS;
+
+        if (shouldAutoScroll && dt > 0) {
+          el.scrollLeft += (AUTO_SCROLL_PX_PER_SEC * dt) / 1000;
+          const half = el.scrollWidth / 2;
+          if (half > 0 && el.scrollLeft >= half) {
+            el.scrollLeft -= half;
+          }
+        }
+      }
+      lastTime = time;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [allCards.length]);
+
+  const markInteraction = () => {
+    lastInteractionRef.current = Date.now();
+  };
+
+  const handleMouseEnter = () => {
+    isActiveRef.current = true;
+    markInteraction();
+  };
+  const handleMouseLeave = () => {
+    isActiveRef.current = false;
+    isDraggingRef.current = false;
+    markInteraction();
+  };
+  const handleTouchStart = () => {
+    isActiveRef.current = true;
+    markInteraction();
+  };
+  const handleTouchEnd = () => {
+    isActiveRef.current = false;
+    markInteraction();
+  };
+
+  // Click-drag-to-scroll for desktop (mouse). Touch is left entirely to the
+  // browser's native overflow-x-auto scrolling — we just bail out early for
+  // touch pointers here so we never fight the native gesture.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollerRef.current;
+    if (!el || e.pointerType === 'touch') return;
+    isDraggingRef.current = true;
+    draggedRef.current = false;
+    markInteraction();
+    dragStartXRef.current = e.clientX;
+    dragStartScrollLeftRef.current = el.scrollLeft;
+    try { el.setPointerCapture(e.pointerId); } catch {}
+  };
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const dx = e.clientX - dragStartXRef.current;
+    if (Math.abs(dx) > 5) draggedRef.current = true;
+    el.scrollLeft = dragStartScrollLeftRef.current - dx;
+    markInteraction();
+  };
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    markInteraction();
+    try { scrollerRef.current?.releasePointerCapture(e.pointerId); } catch {}
+  };
+
+  // Seamless forward loop: content is duplicated (marqueeItems), so once
+  // scrollLeft passes the halfway point — whether from autoplay or a manual
+  // drag/swipe — jump back by half so it looks continuous.
+  const handleScroll = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const half = el.scrollWidth / 2;
+    if (half > 0 && el.scrollLeft >= half) {
+      el.scrollLeft -= half;
+    }
+  };
+
+  // Swallow the click that follows a drag so dragging a card doesn't also
+  // navigate to it via the card's <Link>.
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      draggedRef.current = false;
+    }
+  };
+
   return (
     <FadeUpOnScroll>
       <section className="py-20">
@@ -102,16 +233,20 @@ export default function Courses() {
               </p>
 
               <div
-                className="overflow-hidden relative"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-                onTouchStart={() => setIsPaused(true)}
-                onTouchEnd={() => setIsPaused(false)}
+                ref={scrollerRef}
+                className="overflow-x-auto relative no-scrollbar cursor-grab active:cursor-grabbing select-none"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                onScroll={handleScroll}
+                onClickCapture={handleClickCapture}
               >
-                <div
-                  ref={marqueeRef}
-                  className={`flex gap-4 w-max items-stretch marquee-track ${isPaused ? "paused" : ""}`}
-                >
+                <div className="flex gap-4 w-max items-stretch">
                   {marqueeItems.map((item, index) => {
                     if (item.type === "course") {
                       const course = item.data as Course;
@@ -275,29 +410,12 @@ export default function Courses() {
       </section>
 
       <style jsx>{`
-        .marquee-track {
-          animation: marquee 45s linear infinite;
-          will-change: transform;
+        .no-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
-
-        .marquee-track.paused {
-          animation-play-state: paused;
-        }
-
-        @keyframes marquee {
-          from {
-            transform: translateX(0);
-          }
-
-          to {
-            transform: translateX(-50%);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .marquee-track {
-            animation-duration: 30s;
-          }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </FadeUpOnScroll>

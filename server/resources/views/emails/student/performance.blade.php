@@ -83,6 +83,10 @@
       <p style="text-align:center; margin:28px 0;">
         <a href="{{ $actionUrl ?? env('FRONTEND_URL','https://learnexity.org').'/user/resource' }}" class="btn">View My Progress →</a>
       </p>
+
+      <p style="text-align:center; margin:0 0 8px;">
+        <a href="https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:700;">💬 Join our WhatsApp Community</a>
+      </p>
     </div>
 
     <div class="footer">

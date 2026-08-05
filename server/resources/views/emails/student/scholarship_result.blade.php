@@ -95,6 +95,10 @@
       <p class="text" style="font-size:14px; color:#64748b; margin-top:24px;">
         Questions about your application or the course? Just reply to this email — we're happy to help.
       </p>
+
+      <p style="text-align:center; margin:20px 0 0;">
+        <a href="https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:700;">💬 Join our WhatsApp Community</a>
+      </p>
     </div>
 
     <div class="footer">

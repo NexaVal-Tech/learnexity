@@ -158,6 +158,7 @@ Route::middleware(['jwt.auth', 'throttle:payments'])->group(function () {
     Route::post('/courses/{courseId}/enroll',                   [CourseEnrollmentController::class, 'enroll']);
     Route::patch('/courses/enrollments/{enrollmentId}/payment', [CourseEnrollmentController::class, 'updatePaymentStatus']);
     Route::post('/courses/enrollments/{enrollmentId}/verify-payment', [CourseEnrollmentController::class, 'verifyPaymentStatus']);
+    Route::post('/courses/enrollments/{enrollmentId}/deep-tech-screening', [CourseEnrollmentController::class, 'submitDeepTechScreening']);
 });
 
 // =================== PROTECTED USER ROUTES (jwt + throttle:api — 120/min auth, 30/min guest) =================== //

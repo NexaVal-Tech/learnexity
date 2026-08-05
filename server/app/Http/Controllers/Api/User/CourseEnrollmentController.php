@@ -69,6 +69,13 @@ class CourseEnrollmentController extends Controller
         $validator = Validator::make($request->all(), [
             'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
             'payment_type'   => 'required|in:onetime,installment',
+            // Deep-tech screening (one_on_one / group_mentorship only) — a
+            // soft-gate self-attestation. Optional so existing clients that
+            // don't send it (or self-paced enrollments) keep working.
+            'screening'                            => 'nullable|array',
+            'screening.has_laptop'                 => 'nullable|boolean',
+            'screening.has_programming_knowledge'  => 'nullable|boolean',
+            'screening.reliable_internet'          => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -82,6 +89,35 @@ class CourseEnrollmentController extends Controller
         $currency      = LocationService::detectCurrency();
         $learningTrack = $request->input('learning_track', 'self_paced');
         $paymentType   = $request->input('payment_type');
+
+        // ── Deep-tech screening (soft gate) ───────────────────────────────
+        // Only meaningful for the mentorship tracks. Self-attestation only —
+        // never blocks enrollment, just flags the enrollment so admins know
+        // to follow up (e.g. via WhatsApp) with applicants who don't yet
+        // meet the criteria.
+        $isDeepTechTrack   = in_array($learningTrack, ['one_on_one', 'group_mentorship'], true);
+        $screeningInput    = $request->input('screening');
+        $screeningAnswers  = null;
+        $screeningPassed   = null;
+
+        if ($isDeepTechTrack && is_array($screeningInput)) {
+            $screeningAnswers = [
+                'has_laptop'                => (bool) ($screeningInput['has_laptop'] ?? false),
+                'has_programming_knowledge' => (bool) ($screeningInput['has_programming_knowledge'] ?? false),
+                'reliable_internet'         => (bool) ($screeningInput['reliable_internet'] ?? false),
+                'screened_at'               => now()->toIso8601String(),
+            ];
+            $screeningPassed = $screeningAnswers['has_laptop']
+                && $screeningAnswers['has_programming_knowledge']
+                && $screeningAnswers['reliable_internet'];
+
+            Log::info('🧪 Deep-tech screening recorded', [
+                'user_id'   => $user->id,
+                'course_id' => $courseId,
+                'passed'    => $screeningPassed,
+                'answers'   => $screeningAnswers,
+            ]);
+        }
 
         // ── Pricing (single source of truth — see PricingService) ────────────
         $pricing = \App\Services\PricingService::calculate($user, $course, $currency, $learningTrack, $paymentType);
@@ -128,6 +164,14 @@ class CourseEnrollmentController extends Controller
                 || $existingEnrollment->payment_type !== $paymentType
                 || (bool) $existingEnrollment->is_registration_fee !== $isRegistrationFee;
 
+            // Screening answers can arrive on a retry even when nothing else
+            // changed (e.g. user closed the payment page and came back
+            // through the screening modal again) — always refresh them when
+            // present so admins see the latest attestation.
+            if ($screeningAnswers !== null) {
+                $needsUpdate = true;
+            }
+
             if ($needsUpdate) {
                 $existingEnrollment->update([
                     'learning_track'      => $learningTrack,
@@ -138,6 +182,10 @@ class CourseEnrollmentController extends Controller
                     'currency'            => $currency,
                     'scholarship_id'      => $scholarship?->id,
                     'is_registration_fee' => $isRegistrationFee,
+                    ...($screeningAnswers !== null ? [
+                        'deep_tech_screening_passed'  => $screeningPassed,
+                        'deep_tech_screening_answers' => $screeningAnswers,
+                    ] : []),
                 ]);
 
                 Log::info('🔄 Updated pending enrollment pricing', [
@@ -177,6 +225,8 @@ class CourseEnrollmentController extends Controller
             'course_id'           => $courseId,
             'course_name'         => $course->title,
             'learning_track'      => $learningTrack,
+            'deep_tech_screening_passed'  => $screeningPassed,
+            'deep_tech_screening_answers' => $screeningAnswers,
             'payment_type'        => $paymentType,
             'currency'            => $currency,
             'total_amount'        => $finalPrice,
@@ -217,9 +267,70 @@ class CourseEnrollmentController extends Controller
             'currency'            => $currency,
             'payment_type'        => $paymentType,
             'is_registration_fee' => $isRegistrationFee,
+            'deep_tech_screening_passed' => $screeningPassed,
         ], 201);
     }
 
+
+    /**
+     * Submit the deep-tech readiness screening (laptop, programming
+     * knowledge, reliable internet) for an EXISTING enrollment. This is
+     * called from the payment page — every enrollment path (courses list,
+     * scholarship approval, dashboard modal) funnels through the payment
+     * page, so screening lives here once instead of being gated separately
+     * at each enrollment entry point.
+     *
+     * Soft gate: always succeeds and never blocks payment, it just records
+     * whether the applicant met all three criteria so admins can follow up
+     * (see admin/new_student.blade.php).
+     */
+    public function submitDeepTechScreening(Request $request, $enrollmentId)
+    {
+        $user = auth()->user();
+
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json(['message' => 'Enrollment not found'], 404);
+        }
+
+        if (!in_array($enrollment->learning_track, ['one_on_one', 'group_mentorship'], true)) {
+            return response()->json([
+                'message' => 'Deep-tech screening only applies to mentorship tracks',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'has_laptop'                => 'required|boolean',
+            'has_programming_knowledge' => 'required|boolean',
+            'reliable_internet'         => 'required|boolean',
+        ]);
+
+        $screeningPassed = $validated['has_laptop']
+            && $validated['has_programming_knowledge']
+            && $validated['reliable_internet'];
+
+        $enrollment->update([
+            'deep_tech_screening_passed'  => $screeningPassed,
+            'deep_tech_screening_answers' => [
+                ...$validated,
+                'screened_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        Log::info('🧪 Deep-tech screening submitted on payment page', [
+            'enrollment_id' => $enrollment->id,
+            'user_id'       => $user->id,
+            'passed'        => $screeningPassed,
+        ]);
+
+        return response()->json([
+            'message' => 'Screening recorded',
+            'deep_tech_screening_passed' => $screeningPassed,
+        ]);
+    }
 
     /**
      * Get user's enrolled courses with access status

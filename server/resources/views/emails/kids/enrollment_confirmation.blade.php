@@ -98,6 +98,12 @@
         @endif
     </div>
 
+        <div class="card" style="text-align:center;">
+        <h3>Stay Connected</h3>
+        <p style="color:#475569;font-size:14px;margin:0 0 16px;">Join our parent WhatsApp group for schedules, session reminders, and announcements about {{ $enrollment->student_name }}'s cohort.</p>
+        <a href="https://chat.whatsapp.com/KJntcErzERgBOfQqECkHCI?mode=gi_t" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">Join WhatsApp Group</a>
+        </div>
+
     <div class="footer">
         Learnexity Kids Programme &nbsp;·&nbsp;
         Questions? Email <a href="mailto:info@learnexity.org" style="color:#4A3AFF;">info@learnexity.org</a>

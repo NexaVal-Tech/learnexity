@@ -113,6 +113,14 @@
                 <p>Log in to your dashboard to start learning right away. All course materials are available to you immediately.</p>
             </div>
 
+            <div class="access-box" style="border-left-color:#25D366;background:#F0FDF4;">
+                <h3 style="color:#14532d;">💬 Join Our Community</h3>
+                <p style="color:#166534;">Connect with fellow students, get support, and stay updated — join our WhatsApp community.</p>
+                <div style="margin-top:12px;">
+                    <a href="https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2" style="display:inline-block;background:#25D366;color:#fff !important;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;">Join WhatsApp Group</a>
+                </div>
+            </div>
+
             <div class="divider"></div>
 
             <p><strong>What's Next?</strong></p>

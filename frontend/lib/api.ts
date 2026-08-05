@@ -75,7 +75,7 @@ export interface OnboardingScholarship {
 
 export interface OnboardingStatus {
   show_modal: boolean;
-  intended_course: { course_id: string; title: string } | null;
+  intended_course: { course_id: string; title: string; is_deep_tech?: boolean } | null;
   screening_status: 'not_started' | 'approved' | 'rejected';
   scholarship: OnboardingScholarship | null;
   pending_enrollment_id: number | null;
@@ -284,15 +284,28 @@ export const api = {
     enroll: async (
       courseId: string,
       learningTrack?: LearningTrack,
-      paymentType?: 'onetime' | 'installment'
+      paymentType?: 'onetime' | 'installment',
+      screening?: Record<string, boolean>
     ): Promise<EnrollmentResponse> => {
       const payload = {
         learning_track: learningTrack || 'self_paced',
         payment_type: paymentType || 'onetime',
+        ...(screening ? { screening } : {}),
       };
       const response = await apiClient.post<EnrollmentResponse>(
         `/api/courses/${courseId}/enroll`,
         payload
+      );
+      return response.data;
+    },
+
+    submitDeepTechScreening: async (
+      enrollmentId: string | number,
+      screening: { has_laptop: boolean; has_programming_knowledge: boolean; reliable_internet: boolean }
+    ): Promise<{ message: string; deep_tech_screening_passed: boolean }> => {
+      const response = await apiClient.post(
+        `/api/courses/enrollments/${enrollmentId}/deep-tech-screening`,
+        screening
       );
       return response.data;
     },

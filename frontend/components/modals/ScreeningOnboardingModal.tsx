@@ -20,6 +20,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [selecting, setSelecting] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
 
   const hasIntended = !!status.intended_course;
   const isApproved = status.screening_status === 'approved' && !!status.scholarship && !status.scholarship.is_used;
@@ -33,36 +34,58 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // status.intended_course can legitimately be missing in edge cases even
+  // when a scholarship exists (e.g. an older backend response cached
+  // client-side). A scholarship is permanently tied to exactly one
+  // course, so fall back to its course_id rather than losing the target
+  // course entirely and dead-ending on the courses list.
+  const targetCourseId = status.intended_course?.course_id || status.scholarship?.course_id;
+  const targetIsDeepTech = !!status.intended_course?.is_deep_tech;
+
+  const enrollAndPay = async (learningTrack: 'self_paced' | 'group_mentorship') => {
+    if (!targetCourseId) return;
+    setEnrollError(null);
+    setPayingNow(true);
+    try {
+      const res = await api.enrollment.enroll(targetCourseId, learningTrack, 'onetime');
+      router.push(`/user/payment/${res.enrollment_id}`);
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || 'Something went wrong creating your enrollment. Please try again.';
+
+      // "Already enrolled" (409) still carries an enrollment_id we can pay
+      // against — treat it as success rather than a dead-end error.
+      const existingId = err?.response?.data?.enrollment_id;
+      if (existingId) {
+        router.push(`/user/payment/${existingId}`);
+        return;
+      }
+
+      setEnrollError(message);
+    } finally {
+      setPayingNow(false);
+    }
+  };
+
   const goToPayment = async () => {
     if (status.pending_enrollment_id) {
       router.push(`/user/payment/${status.pending_enrollment_id}`);
       return;
     }
 
-    // status.intended_course can legitimately be missing in edge cases even
-    // when a scholarship exists (e.g. an older backend response cached
-    // client-side). A scholarship is permanently tied to exactly one
-    // course, so fall back to its course_id rather than losing the target
-    // course entirely and dead-ending on the courses list.
-    const targetCourseId = status.intended_course?.course_id || status.scholarship?.course_id;
-
     // Approved for a scholarship but no enrollment exists yet — being
     // "awarded" never auto-creates one, so without this the button had
     // nowhere real to send the person and fell back to browsing courses.
     // Create the registration-fee enrollment now and go straight to
     // payment for it, instead of dumping them back on the course page.
+    //
+    // Use the course's real track (deep-tech vs flexible) so pricing is
+    // correct — the deep-tech readiness screening itself now happens on
+    // the payment page, not here, so every enrollment path funnels through
+    // one consistent screening point.
     if (isApproved && targetCourseId) {
-      setPayingNow(true);
-      try {
-        const res = await api.enrollment.enroll(targetCourseId, 'self_paced', 'onetime');
-        router.push(`/user/payment/${res.enrollment_id}`);
-        return;
-      } catch {
-        // Fall through to the course page if enrollment creation fails —
-        // still better than silently doing nothing.
-      } finally {
-        setPayingNow(false);
-      }
+      await enrollAndPay(targetIsDeepTech ? 'group_mentorship' : 'self_paced');
+      return;
     }
 
     if (targetCourseId) {
@@ -199,11 +222,16 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
             <button type="button" className="som-btn-primary" onClick={goToPayment} disabled={payingNow}>
               {payingNow ? 'Preparing payment…' : 'Proceed to Payment'} <ArrowRight size={16} aria-hidden="true" />
             </button>
+            {enrollError && (
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.75rem', textAlign: 'center' }}>
+                {enrollError}
+              </p>
+            )}
           </>
         ) : showPicker ? (
           <>
-            <h2 id="som-title" className="som-title">Which course are you screening for?</h2>
-            <p className="som-sub">Scholarship screening applies to one course only — pick the one you want to enroll in.</p>
+            <h2 id="som-title" className="som-title">Which course are you applying for full tuition on?</h2>
+            <p className="som-sub">Full-tuition applications apply to one course only — pick the one you want to enroll in.</p>
             <div className="som-picker">
               {loadingCourses ? (
                 <p className="som-empty">Loading courses…</p>
@@ -239,11 +267,11 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
             <p className="som-sub">
               Before you pay full price for{' '}
               <strong style={{ color: '#fff' }}>{status.intended_course.title}</strong>, take a
-              two-minute screening to see if you qualify for a tuition scholarship. No commitment
+              two-minute application to see if you qualify for full tuition. No commitment
               — you can always pay in full instead.
             </p>
             <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
-              Take Screening Now <ArrowRight size={16} aria-hidden="true" />
+              Apply for Full Tuition <ArrowRight size={16} aria-hidden="true" />
             </button>
             <button type="button" className="som-btn-ghost" onClick={goToPayment}>
               Skip — pay full price
@@ -255,10 +283,10 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
               Welcome{userName ? `, ${userName}` : ''}.
             </h2>
             <p className="som-sub">
-              Take a quick screening to see if you qualify for full tuition support on any course.
+              Apply to see if you qualify for full tuition on any course.
             </p>
             <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
-              Take Screening Now <ArrowRight size={16} aria-hidden="true" />
+              Apply for Full Tuition <ArrowRight size={16} aria-hidden="true" />
             </button>
             <button type="button" className="som-btn-ghost" onClick={goToPayment}>
               Browse Courses Instead

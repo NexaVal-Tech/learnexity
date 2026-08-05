@@ -181,9 +181,15 @@
             </div>
         @endif
 
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2" style="display:inline-block;background:#25D366;color:#fff !important;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:700;">
+                💬 Join our WhatsApp Community
+            </a>
+        </div>
+
         <div class="footer">
             <p>
-                If you've already made this payment, please disregard this email. 
+                If you've already made this payment, please disregard this email.
                 It may take up to 24 hours for payments to reflect in our system.
             </p>
             <p>

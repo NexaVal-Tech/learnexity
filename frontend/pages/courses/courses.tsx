@@ -119,6 +119,10 @@ export default function CoursesPage() {
     fetchFlexPreview();
   }, [fetchMentoredCourses, fetchFlexPreview]);
 
+  // Deep-tech screening (laptop / programming knowledge / reliable internet)
+  // now happens on the payment page itself, not before enrollment — so this
+  // enrolls immediately, same as the flexible-track flow. See
+  // frontend/pages/user/payment/[enrollmentId].tsx.
   const handlePurchase = useCallback(
     async (course: Course, e: React.MouseEvent) => {
       e.preventDefault();

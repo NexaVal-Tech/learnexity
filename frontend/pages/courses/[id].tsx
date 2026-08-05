@@ -29,6 +29,7 @@ export default function CoursePage() {
     enrollment: any;
   } | null>(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   const [currency, setCurrency] = useState<"USD" | "NGN">("USD");
   const [currencyDetected, setCurrencyDetected] = useState(false);
@@ -89,10 +90,15 @@ export default function CoursePage() {
   const fetchCourse = async () => {
     try {
       setLoading(true);
+      setFetchError(false);
       const data = await api.courses.getById(id as string);
       setCourse(data);
     } catch (error) {
       console.error("Failed to fetch course:", error);
+      // Distinguish "the course really doesn't exist" from a transient
+      // network/server error — the latter shouldn't tell the user the
+      // course is gone with no way to retry.
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -148,8 +154,7 @@ export default function CoursePage() {
         router.push(`/user/payment/${error.response.data.enrollment_id}`);
       } else {
         const errorMessage = handleApiError(error);
-        setError(errorMessage);
-        alert(errorMessage || "Failed to enroll. Please try again.");
+        setError(errorMessage || "Failed to enroll. Please try again.");
       }
     } finally {
       setEnrolling(false);
@@ -220,18 +225,36 @@ export default function CoursePage() {
       <AppLayout>
         <div className="min-h-screen flex items-center justify-center" style={{ background: "#080808" }}>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Course not found</h2>
-            <button
-              onClick={() => router.push("/courses/courses")}
-              className="text-white font-semibold px-6 py-3 transition-all"
-              style={{
-                borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                background: BRAND,
-                boxShadow: `0 8px 24px ${BRAND}44`,
-              }}
-            >
-              Back to Courses
-            </button>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              {fetchError ? "Couldn't load this course" : "Course not found"}
+            </h2>
+            {fetchError && (
+              <p className="text-gray-400 text-sm mb-4">
+                Something went wrong loading this page. Please check your connection and try again.
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-3">
+              {fetchError && (
+                <button
+                  onClick={() => fetchCourse()}
+                  className="text-white font-semibold px-6 py-3 transition-all border border-white/20"
+                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
+                >
+                  Try Again
+                </button>
+              )}
+              <button
+                onClick={() => router.push("/courses/courses")}
+                className="text-white font-semibold px-6 py-3 transition-all"
+                style={{
+                  borderRadius: "2rem 0.75rem 2rem 0.75rem",
+                  background: BRAND,
+                  boxShadow: `0 8px 24px ${BRAND}44`,
+                }}
+              >
+                Back to Courses
+              </button>
+            </div>
           </div>
         </div>
       </AppLayout>

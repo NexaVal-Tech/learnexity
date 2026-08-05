@@ -23,13 +23,13 @@ const data: Testimonial[] = [
     video: "/videos/testimobial-1.mp4",
     thumbnail: "/thumbnails/thumbnail-3.png",
   },
-  {
-    name: "Diane Johnson",
-    role: "Data Analytics",
-    type: "text",
-    thumbnail: "/thumbnails/images.png",
-    text: "Coming Soon.",
-  },
+  // {
+  //   name: "Diane Johnson",
+  //   role: "Data Analytics",
+  //   type: "text",
+  //   thumbnail: "/thumbnails/images.png",
+  //   text: "Coming Soon.",
+  // },
   {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
@@ -44,13 +44,13 @@ const data: Testimonial[] = [
     video: "/videos/product-manager-review.mp4",
     thumbnail: "/thumbnails/thumbnail-1.png",
   },
-  {
-    name: "Ross Micheal",
-    role: "Frontend Development",
-    type: "text",
-    thumbnail: "/thumbnails/images-2.png",
-    text: "Coming Soon.",
-  },
+  // {
+  //   name: "Ross Micheal",
+  //   role: "Frontend Development",
+  //   type: "text",
+  //   thumbnail: "/thumbnails/images-2.png",
+  //   text: "Coming Soon.",
+  // },
   {
     name: "Lilian",
     role: "AI Automation",
@@ -72,13 +72,13 @@ const data: Testimonial[] = [
     video: "/videos/testimonial-vid-6.mp4",
     thumbnail: "/thumbnails/thumbnail-5.png",
   },
-  {
-    name: "james williams",
-    role: "Cloud Computing",
-    type: "text",
-    thumbnail: "/thumbnails/images-3.png",
-    text: "Coming Soon.",
-  },
+  // {
+  //   name: "james williams",
+  //   role: "Cloud Computing",
+  //   type: "text",
+  //   thumbnail: "/thumbnails/images-3.png",
+  //   text: "Coming Soon.",
+  // },
   {
     name: "Amadineze Christain Chinonso",
     role: "Digital Marketing",
