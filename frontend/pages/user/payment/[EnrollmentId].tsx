@@ -691,7 +691,7 @@ export default function PaymentPage() {
           ← Back
         </button>
 
-        {/* learning track */}
+        {/* learning track mmm */}
         <h1 className="text-lg font-bold text-black mb-4">Complete Your Payment</h1>
 
         {/* ── Single compact Order Summary card — everything lives here ── */}
