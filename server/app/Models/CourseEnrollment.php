@@ -101,7 +101,7 @@ class CourseEnrollment extends Model
     {
         return match($this->learning_track) {
             'one_on_one' => 'One-on-One Coaching',
-            'group_mentorship' => 'Group Mentorship Program',
+            'group_mentorship' => 'Live Classes',
             'self_paced' => 'Self-Paced Learning + Community Support',
             default => 'Self-Paced Learning',
         };

@@ -250,7 +250,7 @@ export default function KidsPaymentSuccess() {
                   <div>
                     <p className="font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>{enrollment.course?.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
-                      {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Group Mentorship"} · {enrollment.course?.duration_months} months
+                      {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Live Classes"} · {enrollment.course?.duration_months} months
                     </p>
                   </div>
                 </div>

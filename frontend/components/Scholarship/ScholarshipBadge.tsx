@@ -65,6 +65,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
 
   // ── Active approved scholarship (not yet used) ────────────────────────────
   if (scholarship?.status === 'approved' && !scholarship.is_used) {
+    const isFullTuition = Number(scholarship.discount_percentage) >= 100;
     return (
       <div
         className=" items-center gap-3 px-4 py-4 rounded-2xl text-sm"
@@ -75,8 +76,12 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
         }}
       >
         <div>
-          <p className="font-bold text-green-400">Full-Tuition Scholarship Approved</p>
-          <p className="text-green-600 text-xs">Pay only the registration fee at checkout</p>
+          <p className="font-bold text-green-400">
+            {isFullTuition ? 'Full-Tuition Scholarship Approved' : `${scholarship.discount_percentage}% Scholarship Approved`}
+          </p>
+          <p className="text-green-600 text-xs">
+            {isFullTuition ? 'Pay only the registration fee at checkout' : 'Discount applied automatically at checkout'}
+          </p>
         </div>
       </div>
     );

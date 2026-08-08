@@ -86,7 +86,7 @@ class StripeController extends Controller
 
             $trackNames = [
                 'one_on_one'       => 'One-on-One Coaching',
-                'group_mentorship' => 'Group Mentorship Program',
+                'group_mentorship' => 'Live Classes',
                 'self_paced'       => 'Self-Paced Learning',
             ];
 

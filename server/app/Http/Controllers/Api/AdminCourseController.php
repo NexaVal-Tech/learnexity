@@ -562,6 +562,12 @@ class AdminCourseController extends Controller
             'self_paced_price_ngn'       => 'nullable|numeric|min:0',
             'onetime_discount_usd'       => 'nullable|numeric|min:0',
             'onetime_discount_ngn'       => 'nullable|numeric|min:0',
+            // Admin-only organization (no user-facing display yet):
+            'course_group_id'            => 'nullable|integer|exists:course_groups,id',
+            // Admin-only pricing-tier override — null means "derive from
+            // learning track automatically" (the pre-existing behaviour, see
+            // RegistrationFeeSetting::categoryForTrack).
+            'fee_category'                => 'nullable|in:deeptech,flexible,intermediate',
         ]);
 
         if (isset($validated['price_usd'])) {

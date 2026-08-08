@@ -263,8 +263,8 @@ class TrackUpgradeController extends Controller
             $options[] = [
                 'type'             => 'track_upgrade',
                 'target_track'     => 'group_mentorship',
-                'label'            => 'Upgrade to Group Mentorship / Live Class',
-                'description'      => 'Join live sessions and group mentorship. Your progress carries over.',
+                'label'            => 'Upgrade to Live Classes',
+                'description'      => 'Join live sessions with a mentor. Your progress carries over.',
                 'charge_amount'    => $diff,
                 'currency'         => $currency,
                 'payment_options'  => ['onetime', 'installment'],

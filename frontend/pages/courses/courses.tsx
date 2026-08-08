@@ -415,7 +415,7 @@ export default function CoursesPage() {
                       textShadow: "0 2px 24px rgba(0,0,0,0.7)",
                     }}
                   >
-                    Expert-led programmes, group mentorship &amp; one-on-one coaching to launch you into high-paying tech careers.
+                    Expert-led programmes, live classes &amp; one-on-one coaching to launch you into high-paying tech careers.
                   </h1>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function CoursesPage() {
                   className="font-semibold mb-6"
                   style={{ color: BRAND, fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)" }}
                 >
-                  Mentorship Programmes
+                  Live Classes &amp; Mentorship
                 </p>
 
                 {/* ── Error state ── */}

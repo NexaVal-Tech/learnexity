@@ -41,16 +41,16 @@
 <body>
   <div class="wrapper">
 
-    <div class="header {{ $isApproved ? 'header-approved' : 'header-rejected' }}">
-      <span class="header-emoji">{{ $isApproved ? '🎓' : '📋' }}</span>
-      <h1>{{ $isApproved ? 'Scholarship Awarded!' : 'Application Reviewed' }}</h1>
+    <div class="header header-approved">
+      <span class="header-emoji">🎓</span>
+      <h1>Scholarship Awarded!</h1>
       <p>{{ $scholarship->course_name }}</p>
     </div>
 
     <div class="body">
       <p class="greeting">Hi {{ explode(' ', $user->name)[0] }},</p>
 
-      @if($isApproved)
+      @if($isFullTuition)
         <p class="text">
           Congratulations! You've been awarded a <strong>full-tuition scholarship</strong> for
           <strong>{{ $scholarship->course_name }}</strong>. Instead of paying the full course price,
@@ -65,11 +65,17 @@
         </div>
       @else
         <p class="text">
-          Thank you for applying for a scholarship for <strong>{{ $scholarship->course_name }}</strong>.
-          After careful review, we're unable to award a scholarship at this time. This doesn't affect
-          your ability to enroll — you're welcome to continue and pay the standard course price
-          (including our flexible installment option) whenever you're ready.
+          Congratulations! You've been awarded a <strong>{{ $scholarship->discount_percentage }}% scholarship</strong>
+          for <strong>{{ $scholarship->course_name }}</strong>. The discount is applied automatically —
+          just pick your learning track and payment plan as normal (installments are still available)
+          and the reduced price shows up at checkout.
         </p>
+
+        <div class="award-box">
+          <p><strong>{{ $scholarship->discount_percentage }}% scholarship:</strong> Your discounted price
+            comes to <strong>{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</strong>
+            to get started — complete it below to lock in your spot.</p>
+        </div>
       @endif
 
       <div class="course-card">
@@ -77,14 +83,12 @@
         <div class="course-name">{{ $scholarship->course_name }}</div>
         <div class="detail-row">
           <span>Status</span>
-          <span class="detail-val">{{ $isApproved ? 'Approved — full tuition' : 'Not approved' }}</span>
+          <span class="detail-val">{{ $isFullTuition ? 'Approved — full tuition' : "Approved — {$scholarship->discount_percentage}% scholarship" }}</span>
         </div>
-        @if($isApproved)
-          <div class="detail-row">
-            <span>Registration fee</span>
-            <span class="detail-val">{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</span>
-          </div>
-        @endif
+        <div class="detail-row">
+          <span>{{ $isFullTuition ? 'Registration fee' : 'Amount due today' }}</span>
+          <span class="detail-val">{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</span>
+        </div>
       </div>
 
       <div class="cta-wrap">

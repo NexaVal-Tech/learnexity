@@ -43,7 +43,7 @@
         <h3>Enrolment Details</h3>
         <div class="row"><span class="label">Course</span>        <span class="value">{{ $enrollment->course->name }}</span></div>
         <div class="row"><span class="label">Track</span>         <span class="value">{{ ucwords(str_replace('_', ' ', $enrollment->chosen_track)) }}</span></div>
-        <div class="row"><span class="label">Session Type</span>  <span class="value">{{ $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Group Mentorship' }}</span></div>
+        <div class="row"><span class="label">Session Type</span>  <span class="value">{{ $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Live Classes' }}</span></div>
         <div class="row"><span class="label">Student</span>       <span class="value">{{ $enrollment->student_name }}, age {{ $enrollment->student_age }}</span></div>
         </div>
 

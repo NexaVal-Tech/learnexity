@@ -759,12 +759,16 @@ settings: {
         price_usd: number; price_ngn: number;
         deeptech_price_usd: number; deeptech_price_ngn: number;
         flexible_price_usd: number; flexible_price_ngn: number;
+        intermediate_price_usd: number; intermediate_price_ngn: number;
+        partial_scholarship_percentage: number;
       }> => {
         return await adminApi.get('/api/admin/registration-fee/settings');
       },
       updateSettings: async (data: {
         deeptech_price_usd: number; deeptech_price_ngn: number;
         flexible_price_usd: number; flexible_price_ngn: number;
+        intermediate_price_usd?: number; intermediate_price_ngn?: number;
+        partial_scholarship_percentage?: number;
       }) => {
         return await adminApi.put('/api/admin/registration-fee/settings', data);
       },
@@ -874,7 +878,7 @@ settings: {
       review: async (
         id: number,
         data: {
-          status: 'approved' | 'rejected';
+          discount_percentage: number;
           review_notes?: string;
         }
       ): Promise<{ message: string }> => {

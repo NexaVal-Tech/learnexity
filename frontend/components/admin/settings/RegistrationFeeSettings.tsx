@@ -9,6 +9,9 @@ export default function RegistrationFeeSettings() {
   const [deeptechNgn, setDeeptechNgn] = useState('');
   const [flexibleUsd, setFlexibleUsd] = useState('');
   const [flexibleNgn, setFlexibleNgn] = useState('');
+  const [intermediateUsd, setIntermediateUsd] = useState('');
+  const [intermediateNgn, setIntermediateNgn] = useState('');
+  const [partialScholarshipPercentage, setPartialScholarshipPercentage] = useState('50');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +25,9 @@ export default function RegistrationFeeSettings() {
         setDeeptechNgn(String(data.deeptech_price_ngn));
         setFlexibleUsd(String(data.flexible_price_usd));
         setFlexibleNgn(String(data.flexible_price_ngn));
+        setIntermediateUsd(String((data as any).intermediate_price_usd ?? 0));
+        setIntermediateNgn(String((data as any).intermediate_price_ngn ?? 0));
+        setPartialScholarshipPercentage(String(data.partial_scholarship_percentage ?? 50));
       } catch (err) {
         setError(handleApiError(err));
       } finally {
@@ -40,6 +46,9 @@ export default function RegistrationFeeSettings() {
         deeptech_price_ngn: parseFloat(deeptechNgn) || 0,
         flexible_price_usd: parseFloat(flexibleUsd) || 0,
         flexible_price_ngn: parseFloat(flexibleNgn) || 0,
+        intermediate_price_usd: parseFloat(intermediateUsd) || 0,
+        intermediate_price_ngn: parseFloat(intermediateNgn) || 0,
+        partial_scholarship_percentage: Math.min(100, Math.max(0, parseFloat(partialScholarshipPercentage) || 0)),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -53,12 +62,14 @@ export default function RegistrationFeeSettings() {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Scholarship Registration Fee</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Scholarship Settings</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Students approved through scholarship screening pay a flat registration fee instead of
-          the course price. The fee depends on which learning track they enroll in — Deep-Tech
-          (one-on-one / group mentorship) and Flexible (self-paced) are priced separately. These
-          are platform-wide settings, not configured per course.
+          Every scholarship applicant is approved for one of two tiers — there's no reject outcome.
+          Full-tuition (100%) applicants pay a flat registration fee instead of the course price; the
+          fee depends on which learning track they enroll in — Deep-Tech (one-on-one / live classes)
+          and Flexible (self-paced) are priced separately. Everyone who doesn't qualify for full
+          tuition gets the partial scholarship percentage below off the normal course price instead.
+          These are platform-wide settings, not configured per course.
         </p>
       </div>
 
@@ -70,7 +81,7 @@ export default function RegistrationFeeSettings() {
       ) : (
         <>
           <div className="mb-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Deep-Tech (one-on-one / group mentorship)</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Deep-Tech (one-on-one / live classes)</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="reg-fee-deeptech-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
@@ -105,7 +116,7 @@ export default function RegistrationFeeSettings() {
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-5">
             <h3 className="text-sm font-semibold text-gray-800 mb-2">Flexible (self-paced)</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -137,6 +148,74 @@ export default function RegistrationFeeSettings() {
                   onChange={(e) => setFlexibleUsd(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Intermediate</h3>
+            <p className="text-xs text-gray-500 mb-2">
+              For courses that don't cleanly fit Deep-Tech or Flexible — assign a course to this
+              category from its Course Settings page.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="reg-fee-intermediate-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Nigeria (₦)
+                </label>
+                <input
+                  id="reg-fee-intermediate-ngn"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={intermediateNgn}
+                  onChange={(e) => setIntermediateNgn(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="reg-fee-intermediate-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                  Other countries ($)
+                </label>
+                <input
+                  id="reg-fee-intermediate-usd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={intermediateUsd}
+                  onChange={(e) => setIntermediateUsd(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-5 pt-1 border-t border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-800 mb-1 mt-4">Partial Scholarship Percentage</h3>
+            <p className="text-xs text-gray-500 mb-2">
+              Awarded to anyone who applies but doesn't qualify for full tuition. Applied as a
+              straight discount off the course's normal price at checkout — the normal payment
+              flow (track selection, installments) still applies.
+            </p>
+            <div className="max-w-[160px]">
+              <label htmlFor="reg-fee-partial-pct" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                Percentage off
+              </label>
+              <div className="relative">
+                <input
+                  id="reg-fee-partial-pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  inputMode="decimal"
+                  value={partialScholarshipPercentage}
+                  onChange={(e) => setPartialScholarshipPercentage(e.target.value)}
+                  className="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">%</span>
               </div>
             </div>
           </div>

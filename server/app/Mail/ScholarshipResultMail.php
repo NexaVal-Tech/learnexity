@@ -11,11 +11,12 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Sent the moment a scholarship application is decided — whether approved
- * or rejected — always with a "Proceed to Payment" button. Approved
- * applicants pay the flat registration fee only; rejected (or not-applied)
- * users pay the normal course price. Either way they land on the same
- * payment page and can complete checkout immediately.
+ * Sent the moment a scholarship application is decided, always with a
+ * "Proceed to Payment" button. Every applicant is approved now — there's no
+ * reject outcome — but the award is one of two tiers: 100% (full tuition,
+ * pay the flat registration fee only) or the admin-configured partial
+ * percentage (discount applied to the normal course price, normal payment
+ * flow still applies).
  */
 class ScholarshipResultMail extends Mailable
 {
@@ -32,9 +33,11 @@ class ScholarshipResultMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = $this->isApproved
+        $isFullTuition = (float) $this->scholarship->discount_percentage >= 100;
+
+        $subject = $isFullTuition
             ? "🎓 You've been awarded a full-tuition scholarship — {$this->scholarship->course_name}"
-            : "Your scholarship application update — {$this->scholarship->course_name}";
+            : "🎓 You've been awarded a {$this->scholarship->discount_percentage}% scholarship — {$this->scholarship->course_name}";
 
         return new Envelope(subject: $subject);
     }
@@ -44,12 +47,13 @@ class ScholarshipResultMail extends Mailable
         return new Content(
             view: 'emails.student.scholarship_result',
             with: [
-                'user'         => $this->user,
-                'scholarship'  => $this->scholarship,
-                'isApproved'   => $this->isApproved,
-                'paymentUrl'   => $this->paymentUrl,
-                'amountDue'    => $this->amountDue,
-                'currency'     => $this->currency,
+                'user'          => $this->user,
+                'scholarship'   => $this->scholarship,
+                'isApproved'    => $this->isApproved,
+                'isFullTuition' => (float) $this->scholarship->discount_percentage >= 100,
+                'paymentUrl'    => $this->paymentUrl,
+                'amountDue'     => $this->amountDue,
+                'currency'      => $this->currency,
             ],
         );
     }

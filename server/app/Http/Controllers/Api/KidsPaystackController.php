@@ -42,7 +42,7 @@ class KidsPaystackController extends Controller
         // Unique reference per payment attempt
         $reference = 'KIDS-' . $enrollment->id . '-' . $installmentNo . '-' . Str::random(8);
 
-        $sessionTypeLabel = $enrollment->session_type === 'one_on_one' ? 'One-on-One' : 'Group Mentorship';
+        $sessionTypeLabel = $enrollment->session_type === 'one_on_one' ? 'One-on-One' : 'Live Classes';
         $installmentLabel = $enrollment->payment_type === 'installment'
             ? ' (Payment ' . $installmentNo . ' of ' . $enrollment->total_installments . ')'
             : '';

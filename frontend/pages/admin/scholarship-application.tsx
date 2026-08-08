@@ -44,11 +44,11 @@ interface ScholarshipStats {
 const DetailModal: React.FC<{
   application: ScholarshipApplication | null;
   onClose: () => void;
-  onUpdateStatus: (id: number, status: 'approved' | 'rejected', notes: string) => Promise<void>;
+  onUpdateStatus: (id: number, discountPercentage: number, notes: string) => Promise<void>;
 }> = ({ application, onClose, onUpdateStatus }) => {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+  const [action, setAction] = useState<'full' | 'partial' | null>(null);
 
   useEffect(() => {
     if (application) {
@@ -58,11 +58,11 @@ const DetailModal: React.FC<{
 
   if (!application) return null;
 
-  const handleSubmit = async (status: 'approved' | 'rejected') => {
-    setAction(status === 'approved' ? 'approve' : 'reject');
+  const handleSubmit = async (discountPercentage: number) => {
+    setAction(discountPercentage >= 100 ? 'full' : 'partial');
     setSaving(true);
     try {
-      await onUpdateStatus(application.id, status, notes);
+      await onUpdateStatus(application.id, discountPercentage, notes);
       onClose();
     } finally {
       setSaving(false);
@@ -136,11 +136,12 @@ const DetailModal: React.FC<{
           {application.status === 'pending' && (
             <div className="border-t border-gray-100 pt-4 space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-green-800">Full-tuition scholarship</p>
+                <p className="text-sm font-semibold text-green-800">Two-tier scholarship — no reject outcome</p>
                 <p className="text-xs text-green-700 mt-0.5">
-                  Approving awards 100% of tuition — the student will only pay the platform's
-                  registration fee (set under Settings) instead of the course price. There are no
-                  partial/percentage awards anymore.
+                  Every applicant gets awarded something. Full tuition (100%) means the student only
+                  pays the platform's registration fee (set under Settings). The partial award
+                  (percentage set under Settings, default 50%) is a straight discount off the normal
+                  course price through the regular payment flow.
                 </p>
               </div>
               <div>
@@ -171,19 +172,19 @@ const DetailModal: React.FC<{
         {application.status === 'pending' && (
           <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
             <button
-              onClick={() => handleSubmit('rejected')}
+              onClick={() => handleSubmit(50)}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
             >
-              {saving && action === 'reject' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
-              Reject
+              {saving && action === 'partial' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+              Approve (partial award)
             </button>
             <button
-              onClick={() => handleSubmit('approved')}
+              onClick={() => handleSubmit(100)}
               disabled={saving}
               className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-60"
             >
-              {saving && action === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+              {saving && action === 'full' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
               Approve (full tuition)
             </button>
           </div>
@@ -241,10 +242,10 @@ function ScholarshipApplicationsPage() {
 
   const handleUpdateStatus = async (
     id: number,
-    status: 'approved' | 'rejected',
+    discountPercentage: number,
     notes: string
   ) => {
-    await adminApi.patch(`/api/admin/scholarships/${id}/review`, { status, review_notes: notes });
+    await adminApi.patch(`/api/admin/scholarships/${id}/review`, { discount_percentage: discountPercentage, review_notes: notes });
     fetchApplications();
     fetchStats();
   };
@@ -352,7 +353,9 @@ function ScholarshipApplicationsPage() {
                           <td className="py-3 px-4 text-sm text-gray-600">{app.applicant_country ?? '—'}</td>
                           <td className="py-3 px-4">
                             {app.status === 'approved' ? (
-                              <span className="text-sm font-semibold text-green-700">Full tuition</span>
+                              <span className="text-sm font-semibold text-green-700">
+                                {app.discount_percentage >= 100 ? 'Full tuition' : `${app.discount_percentage}% scholarship`}
+                              </span>
                             ) : (
                               <span className="text-sm text-gray-400">—</span>
                             )}

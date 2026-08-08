@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\User;
 use App\Http\Controllers\Controller;
 use App\Mail\ScholarshipResultMail;
 use App\Models\Course;
+use App\Models\RegistrationFeeSetting;
 use App\Models\Scholarship;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
@@ -15,22 +16,27 @@ use Illuminate\Support\Facades\Validator;
 
 class ScholarshipController extends Controller
 {
-    // ─── Scholarship rules (CHANGE 5 / full-tuition model) ───────────────────
+    // ─── Scholarship rules (two-tier model — no more 0%/rejected outcome) ────
     //
     // Eligibility: ONE scholarship per user ever (across all courses).
-    // Full tuition is tied to exactly one course — the one applied for.
+    // The award is tied to exactly one course — the one applied for.
     //
-    // Outcome is now BINARY — there are no more 25%/50%/75% tiers:
-    //  • Student (employed or not)                        → approved (full tuition)
-    //  • Not a student but unemployed                      → approved (full tuition)
-    //  • Employed with income under ₦100k / $100           → approved (full tuition)
-    //  • Everyone else                                     → rejected
+    // Outcome now has two tiers, decided in priority order:
+    //  • Student (employed or not)                        → 100% (full tuition)
+    //  • Not a student but unemployed                      → 100% (full tuition)
+    //  • Employed with income under ₦100k / $100           → 100% (full tuition)
+    //  • Everyone else                                     → partial award (admin-configured
+    //                                                          percentage, default 50% — see
+    //                                                          RegistrationFeeSetting::
+    //                                                          partial_scholarship_percentage)
     //
-    // An 'approved' outcome means the student pays only the flat platform
-    // registration fee (set by the admin, see RegistrationFeeSetting) instead
-    // of the course price — see PricingService, the single source of truth
-    // for what anyone actually gets charged. discount_percentage is legacy
-    // and no longer shown to users or read anywhere for pricing.
+    // Every applicant is approved now — there is no reject outcome. A 100%
+    // award means the student pays only the flat platform registration fee
+    // (set by the admin, see RegistrationFeeSetting) instead of the course
+    // price. A partial award means the student pays that percentage off the
+    // normal course price through the regular payment flow (track
+    // selection, installments still available). See PricingService, the
+    // single source of truth for what anyone actually gets charged.
 
     /**
      * Check application eligibility.
@@ -75,8 +81,9 @@ class ScholarshipController extends Controller
         }
 
         return response()->json([
-            'eligible'    => true,
-            'course_name' => $course->title,
+            'eligible'                        => true,
+            'course_name'                     => $course->title,
+            'partial_scholarship_percentage'  => RegistrationFeeSetting::current()->getPartialScholarshipPercentageValue(),
         ]);
     }
 
@@ -131,8 +138,8 @@ class ScholarshipController extends Controller
             'nigeria', 'ng', 'nga', 'nigerian',
         ], true);
 
-        // ── Auto-decision (binary full-tuition model) ────────────────────────
-        [$status, $reviewNote] = $this->autoDecide(
+        // ── Auto-decision (two-tier model — no more reject outcome) ──────────
+        [$status, $discountPercentage, $reviewNote] = $this->autoDecide(
             $isStudent,
             $isEmployed,
             $salaryRange,
@@ -149,7 +156,7 @@ class ScholarshipController extends Controller
             'score'               => 0,          // not used with new rule-based system
             'location_bonus'      => $isNigeria ? 1 : 0,
             'total_score'         => 0,
-            'discount_percentage' => 0, // legacy column — full-tuition model no longer uses percentages
+            'discount_percentage' => $discountPercentage,
             'answers'             => $answers,
             'review_notes'        => $reviewNote,
             'applicant_country'   => $country,
@@ -162,22 +169,23 @@ class ScholarshipController extends Controller
             $user->update(['intended_course_id' => $courseId]);
         }
 
-        Log::info('🎓 Scholarship auto-processed (full-tuition model)', [
-            'user_id'     => $user->id,
-            'course_id'   => $courseId,
-            'is_student'  => $isStudent,
-            'is_employed' => $isEmployed,
-            'salary'      => $salaryRange,
-            'is_nigeria'  => $isNigeria,
-            'status'      => $status,
+        Log::info('🎓 Scholarship auto-processed (two-tier model)', [
+            'user_id'             => $user->id,
+            'course_id'           => $courseId,
+            'is_student'          => $isStudent,
+            'is_employed'         => $isEmployed,
+            'salary'              => $salaryRange,
+            'is_nigeria'          => $isNigeria,
+            'status'              => $status,
+            'discount_percentage' => $discountPercentage,
         ]);
 
         $this->sendResultEmail($user, $scholarship, $course);
 
         return response()->json([
-            'message'     => $status === 'approved'
+            'message'     => $discountPercentage >= 100
                 ? "Congratulations! You've been awarded a full-tuition scholarship. You'll only pay the registration fee to secure your spot."
-                : 'Thank you for applying. Unfortunately your application was not successful this time — you can still enroll and pay the standard course price.',
+                : "Congratulations! You've been awarded a {$discountPercentage}% scholarship — it'll be applied automatically when you check out.",
             'scholarship' => $scholarship,
         ], 201);
     }
@@ -189,9 +197,9 @@ class ScholarshipController extends Controller
      * fee) rather than waiting for the person to click through the modal or
      * payment page — being awarded a scholarship should immediately show up
      * as "enrolled, payment pending" in their dashboard, the same way
-     * starting checkout on a normal course does. Rejected applicants are
-     * NOT auto-enrolled — they haven't chosen this course yet, they just
-     * found out they don't get a scholarship for it.
+     * starting checkout on a normal course does. Every applicant is
+     * approved now (100% or the partial tier) — there's no reject outcome,
+     * so this always runs.
      *
      * Reuses CourseEnrollmentController::enroll() — the single source of
      * truth for enrollment creation/pricing — rather than duplicating it.
@@ -279,41 +287,42 @@ class ScholarshipController extends Controller
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     /**
-     * Rule-based scholarship decision — binary full-tuition model.
+     * Rule-based scholarship decision — two-tier model, no reject outcome.
      *
-     * There are no more 25%/50%/75% tiers. Every approval is the same
-     * outcome: full tuition, pay only the flat registration fee. Rules in
-     * priority order:
-     *  1. Student (any employment status)                 → approved (full tuition)
-     *  2. Not a student but unemployed                     → approved (full tuition)
-     *  3. Employed + income < ₦100k/$100 (under_100)      → approved (full tuition)
-     *  4. Employed + income ₦100k–₦200k / $100–$200       → rejected (can afford partial)
-     *  5. Employed + income > ₦200k / $200                → rejected
-     *  6. Everything else                                  → rejected
+     * Every applicant is approved. Rules in priority order:
+     *  1. Student (any employment status)                 → 100% (full tuition)
+     *  2. Not a student but unemployed                     → 100% (full tuition)
+     *  3. Employed + income < ₦100k/$100 (under_100)      → 100% (full tuition)
+     *  4. Everyone else                                    → partial award (admin-configured
+     *                                                          percentage, default 50%)
      *
-     * @return array{0: string, 1: string}  [status, review_note]
+     * @return array{0: string, 1: float, 2: string}  [status, discount_percentage, review_note]
      */
     private function autoDecide(bool $isStudent, bool $isEmployed, string $salaryRange, bool $isNigeria): array
     {
         // Student (employed or unemployed)
         if ($isStudent) {
-            return ['approved', 'Full-tuition scholarship awarded — student applicant.'];
+            return ['approved', 100.0, 'Full-tuition scholarship awarded — student applicant.'];
         }
 
         // Not a student but unemployed
         if (! $isStudent && ! $isEmployed) {
-            return ['approved', 'Full-tuition scholarship awarded — unemployed applicant.'];
+            return ['approved', 100.0, 'Full-tuition scholarship awarded — unemployed applicant.'];
         }
 
         // Employed with income under ₦100k / $100
         if ($isEmployed && $salaryRange === 'under_100') {
-            return ['approved', 'Full-tuition scholarship awarded — low-income employed applicant.'];
+            return ['approved', 100.0, 'Full-tuition scholarship awarded — low-income employed applicant.'];
         }
 
-        // Everyone else is rejected
+        // Everyone else still gets the partial (admin-configured) award —
+        // there's no more reject outcome.
+        $partialPercent = RegistrationFeeSetting::current()->getPartialScholarshipPercentageValue();
+
         return [
-            'rejected',
-            'Application not approved — your current employment and income level does not meet the scholarship criteria.',
+            'approved',
+            $partialPercent,
+            "{$partialPercent}% scholarship awarded — does not meet full-tuition criteria based on current employment and income level.",
         ];
     }
 }

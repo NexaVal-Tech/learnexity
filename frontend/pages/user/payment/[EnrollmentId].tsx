@@ -71,7 +71,7 @@ const TRACK_OPTIONS: TrackOption[] = [
   },
   {
     id: 'group_mentorship',
-    name: 'Group Mentorship Program',
+    name: 'Live Classes',
     title: 'A collaborative, community-powered learning experience',
     description: "You'll get full access to all courses and meet weekly with an instructor for reviews, discussions, and live Q&A sessions.",
     features: ['Full access to all course materials', 'Weekly live sessions with instructor', 'Peer learning and discussions'],
@@ -458,7 +458,16 @@ export default function PaymentPage() {
   // the whole page branches on. Sourced from the synced enrollment record
   // (server truth) once available, falling back to the scholarship lookup
   // before the first sync completes so the UI doesn't flash the wrong state.
-  const isRegistrationFee = enrollment?.is_registration_fee ?? (!!scholarship && !scholarship.is_used);
+  const isRegistrationFee = enrollment?.is_registration_fee ??
+    (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) >= 100);
+
+  // Partial scholarship (e.g. 50% off) — normal payment flow still applies
+  // (track selection, installments), just at a discounted price. Sourced the
+  // same way as isRegistrationFee: server truth once synced, scholarship
+  // lookup as a fallback before the first sync.
+  const isPartialScholarship = enrollment
+    ? (!enrollment.is_registration_fee && !!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100)
+    : (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100);
 
   // Force one-time when a scholarship applies — installments aren't offered.
   useEffect(() => {
@@ -473,6 +482,9 @@ export default function PaymentPage() {
   // compute what gets charged.
   const getOnetimeDiscount = (): number => {
     if (!course || isRegistrationFee) return 0;
+    // A scholarship discount never stacks with the course's own one-time
+    // discount — the scholarship percentage is the only discount applied.
+    if (isPartialScholarship) return 0;
     // one_on_one track never gets a "one-time" discount — it's already per-hour
     if (selectedTrack === 'one_on_one') return 0;
     return parseFloat(currency === 'NGN' ? course.onetime_discount_ngn : course.onetime_discount_usd) || 0;
@@ -720,6 +732,15 @@ export default function PaymentPage() {
             </div>
           )}
 
+          {/* Partial scholarship notice — normal payment flow still applies, just discounted */}
+          {isPartialScholarship && (
+            <div className="border-b border-gray-200 pb-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-800 leading-snug">
+                You've been awarded a {Number(scholarship?.discount_percentage) || 0}% scholarship — it's applied automatically to the price below. Pick your learning track and payment plan as normal.
+              </div>
+            </div>
+          )}
+
           {/* ── Learning Track: collapsed selector → expands to a compact list ── */}
           <div className="border-b border-gray-200 pb-3">
             <div className="flex justify-between items-center text-sm mb-1">
@@ -859,9 +880,37 @@ export default function PaymentPage() {
                 </>
               )}
 
+              {isPartialScholarship && selectedTrack && selectedTrack !== 'one_on_one' && (
+                <>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Track price</span>
+                    <span className="line-through">
+                      {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>{scholarship?.discount_percentage}% scholarship discount</span>
+                    <span>
+                      -{currency === 'NGN' ? '₦' : '$'}
+                      {Math.round(trackPrices[selectedTrack] * (Number(scholarship?.discount_percentage) || 0) / 100).toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
+
               {selectedTrack === 'one_on_one' && (
                 <div className="text-xs text-gray-500">
-                  {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}/hr × {hourlyQty} hr{hourlyQty > 1 ? 's' : ''}
+                  {isPartialScholarship ? (
+                    <>
+                      <span className="line-through mr-1">{currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}</span>
+                      <span className="text-green-600 font-semibold">
+                        {currency === 'NGN' ? '₦' : '$'}{Math.round(trackPrices[selectedTrack] * (1 - (Number(scholarship?.discount_percentage) || 0) / 100)).toLocaleString()}/hr
+                      </span>
+                      {' '}× {hourlyQty} hr{hourlyQty > 1 ? 's' : ''} ({scholarship?.discount_percentage}% scholarship)
+                    </>
+                  ) : (
+                    <>{currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}/hr × {hourlyQty} hr{hourlyQty > 1 ? 's' : ''}</>
+                  )}
                 </div>
               )}
 

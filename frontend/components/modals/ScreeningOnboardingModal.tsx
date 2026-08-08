@@ -213,11 +213,27 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
               {userName ? `Nice one, ${userName}!` : 'Nice one!'} You're almost in.
             </h2>
             <p className="som-sub">
-              You've been awarded a full-tuition scholarship on{' '}
-              <strong style={{ color: '#fff' }}>
-                {status.intended_course?.title || status.scholarship?.course_name}
-              </strong>
-              . Secure your spot by paying just the registration fee instead of the full course price.
+              {(() => {
+                const pct = Number(status.scholarship?.discount_percentage) || 0;
+                const isFullTuition = pct >= 100;
+                return isFullTuition ? (
+                  <>
+                    You've been awarded a full-tuition scholarship on{' '}
+                    <strong style={{ color: '#fff' }}>
+                      {status.intended_course?.title || status.scholarship?.course_name}
+                    </strong>
+                    . Secure your spot by paying just the registration fee instead of the full course price.
+                  </>
+                ) : (
+                  <>
+                    You've been awarded a {pct}% scholarship on{' '}
+                    <strong style={{ color: '#fff' }}>
+                      {status.intended_course?.title || status.scholarship?.course_name}
+                    </strong>
+                    . The discount is applied automatically — pick your track and payment plan as normal.
+                  </>
+                );
+              })()}
             </p>
             <button type="button" className="som-btn-primary" onClick={goToPayment} disabled={payingNow}>
               {payingNow ? 'Preparing payment…' : 'Proceed to Payment'} <ArrowRight size={16} aria-hidden="true" />

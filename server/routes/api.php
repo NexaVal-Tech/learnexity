@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AdminCourseResourcesController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AdminStudentController;
 use App\Http\Controllers\Api\AdminCourseController;
+use App\Http\Controllers\Api\AdminCourseGroupController;
 use App\Http\Controllers\Api\AdminCourseDetailsController;
 use App\Http\Controllers\Api\AdminRegistrationFeeController;
 use App\Http\Controllers\Api\ReferralController;
@@ -378,6 +379,18 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::get('/{id}',      [AdminConsultationController::class, 'show']);
         Route::patch('/{id}',    [AdminConsultationController::class, 'update']);
         Route::delete('/{id}',  [AdminConsultationController::class, 'destroy']);
+    });
+
+    // Course groups (admin-only organization — e.g. "Data Analysis" holding
+    // several related courses). A group can hold many courses; a course can
+    // also stand alone with no group.
+    Route::prefix('course-groups')->group(function () {
+        Route::get('/',                          [AdminCourseGroupController::class, 'index']);
+        Route::post('/',                         [AdminCourseGroupController::class, 'store']);
+        Route::put('/{id}',                      [AdminCourseGroupController::class, 'update']);
+        Route::delete('/{id}',                   [AdminCourseGroupController::class, 'destroy']);
+        Route::post('/{id}/courses',             [AdminCourseGroupController::class, 'assignCourses']);
+        Route::delete('/{id}/courses/{courseId}', [AdminCourseGroupController::class, 'removeCourse']);
     });
 
     // Courses

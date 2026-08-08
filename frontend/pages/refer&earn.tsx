@@ -120,7 +120,7 @@ export default function ReferAndEarn() {
     <>
       <Head>
         <title>Refer &amp; Earn — Learnexity</title>
-        <meta name="description" content="Share your referral link and earn ₦5,000 for every person who signs up through your link." />
+        <meta name="description" content="Share your referral link and earn 10% for every person who signs up through your link." />
         <link rel="canonical" href="https://learnexity.org/refer-earn" />
       </Head>
 
@@ -339,7 +339,7 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
 
           <h1 style={{ fontSize: "clamp(2.2rem,5vw,3.8rem)", fontWeight: 900, color: "white", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem" }}>
             Share Learnexity.<br />
-            <span className="re-accent">Earn ₦5,000</span> per referral.
+            <span className="re-accent">Earn 10%</span> per referral.
           </h1>
           <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.55)", maxWidth: 520, margin: "0 auto 2.5rem" }}>
             No course enrollment needed. Get your unique link, share it, and earn for every person who signs up through it.
@@ -354,7 +354,7 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
           {[
             { n: "01", title: "Sign Up", desc: "Enter your email and create a password — takes 30 seconds." },
             { n: "02", title: "Get Your Link", desc: "Instantly receive your unique referral link to share anywhere." },
-            { n: "03", title: "Share & Earn", desc: "Every person who registers through your link earns you ₦5,000." },
+            { n: "03", title: "Share & Earn", desc: "Every person who registers through your link earns you 10%." },
           ].map((s) => (
             <div key={s.n} className="re-card" style={{ padding: "1.75rem" }}>
               <div style={{ fontSize: "0.65rem", letterSpacing: "0.14em", color: BRAND, fontWeight: 700, marginBottom: "0.75rem" }}>{s.n}</div>
@@ -365,7 +365,7 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
         </div>
 
         {/* Earnings visual */}
-        <div className="re-card" style={{ padding: "2.5rem", textAlign: "center" }}>
+        {/* <div className="re-card" style={{ padding: "2.5rem", textAlign: "center" }}>
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Your potential earnings</p>
           <div style={{ display: "flex", justifyContent: "center", gap: "2rem", flexWrap: "wrap" }}>
             {[
@@ -380,7 +380,7 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );
@@ -484,7 +484,7 @@ function AuthView({ onSuccess, onBack }: { onSuccess: (s: ReferrerSession) => vo
               <strong style={{ color: "white" }}>You're already a Learnexity student.</strong><br />
               Student referrals are managed from your{" "}
               <a href="/user/dashboard" style={{ color: BRAND, fontWeight: 600, textDecoration: "none" }}>
-                student dashboard →
+                student dashboard 
               </a>
             </p>
           </div>

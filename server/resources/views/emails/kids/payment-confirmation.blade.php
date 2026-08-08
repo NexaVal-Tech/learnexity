@@ -210,7 +210,7 @@
                 <div class="info-row">
                     <span class="info-label">Session Format:</span>
                     <span class="info-value">
-                        {{ $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Group Mentorship (3–5 kids)' }}
+                        {{ $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Live Classes (3–5 kids)' }}
                     </span>
                 </div>
                 <div class="info-row">

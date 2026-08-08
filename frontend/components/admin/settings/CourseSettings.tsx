@@ -23,6 +23,7 @@ interface PricingSettings {
   self_paced_price_ngn: string;
   onetime_discount_usd: string;
   onetime_discount_ngn: string;
+  fee_category: '' | 'deeptech' | 'flexible' | 'intermediate';
 }
 
 export default function CourseSettings({ courseId }: CourseSettingsProps) {
@@ -41,6 +42,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
     self_paced_price_ngn: '',
     onetime_discount_usd: '',
     onetime_discount_ngn: '',
+    fee_category: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         self_paced_price_ngn: '',
         onetime_discount_usd: course.onetime_discount_usd?.toString() || '',
         onetime_discount_ngn: course.onetime_discount_ngn?.toString() || '',
+        fee_category: course.fee_category || '',
       });
 
       setSavedPrices({
@@ -148,6 +151,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         self_paced_price_ngn:       resolvePrice(settings.self_paced_price_ngn,       savedPrices.self_paced_price_ngn),
         onetime_discount_usd: parseFloat(settings.onetime_discount_usd || '0'),
         onetime_discount_ngn: parseFloat(settings.onetime_discount_ngn || '0'),
+        fee_category: settings.fee_category || null,
       };
 
       await adminApi.put(`/api/admin/courses/${courseId}/pricing`, dataToSave);
@@ -293,6 +297,29 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
             </div>
           </label>
         </div>
+      </div>
+
+      {/* Registration Fee Category (scholarship registration fee tier) */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Registration Fee Category</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Which registration-fee tier a full-tuition scholarship applies for this course (set the
+          actual amounts under Scholarship Settings above). By default this is derived
+          automatically from the learning track a student picks — Deep-Tech for one-on-one / live
+          classes, Flexible for self-paced. Choosing a category here overrides that and always
+          applies, regardless of track — use this for courses that don't cleanly fit Deep-Tech or
+          Flexible, or to move an existing course into Intermediate.
+        </p>
+        <select
+          value={settings.fee_category}
+          onChange={(e) => setSettings({ ...settings, fee_category: e.target.value as PricingSettings['fee_category'] })}
+          className="w-full sm:w-72 px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-medium text-gray-900"
+        >
+          <option value="">Auto (derive from learning track)</option>
+          <option value="deeptech">Deep-Tech</option>
+          <option value="flexible">Flexible</option>
+          <option value="intermediate">Intermediate</option>
+        </select>
       </div>
 
       {/* Pricing Configuration */}

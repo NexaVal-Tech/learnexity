@@ -106,7 +106,7 @@ class PaystackWebhookController extends Controller
                             $trackName = $field['value'] ?? '';
                             if (str_contains($trackName, 'One-on-One')) {
                                 $learningTrack = 'one_on_one';
-                            } elseif (str_contains($trackName, 'Group Mentorship')) {
+                            } elseif (str_contains($trackName, 'Group Mentorship') || str_contains($trackName, 'Live Class')) {
                                 $learningTrack = 'group_mentorship';
                             } elseif (str_contains($trackName, 'Self-Paced')) {
                                 $learningTrack = 'self_paced';

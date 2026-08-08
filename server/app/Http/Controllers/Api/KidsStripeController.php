@@ -53,7 +53,7 @@ class KidsStripeController extends Controller
             ? ' (Payment ' . ($enrollment->installments_paid + 1) . ' of ' . $enrollment->total_installments . ')'
             : '';
 
-        $sessionTypeLabel = $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Group Mentorship';
+        $sessionTypeLabel = $enrollment->session_type === 'one_on_one' ? 'One-on-One Coaching' : 'Live Classes';
 
         try {
             $session = Session::create([

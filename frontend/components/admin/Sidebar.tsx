@@ -16,6 +16,7 @@ import {
   Component,
   Award,
   FileBadge,
+  FolderTree,
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -28,6 +29,7 @@ const Sidebar = () => {
     { icon: User, label: 'Instructors Management', href: '/admin/instructors' },
     { icon: GraduationCap, label: 'Students Management', href: '/admin/students' },
     { icon: BookCopy, label: 'Course Management', href: '/admin/courses' },
+    { icon: FolderTree, label: 'Course Groups', href: '/admin/course-groups' },
     { icon: Calendar, label: 'Consultations', href: '/admin/consultation' },
     { icon: SlidersHorizontal, label: 'Course Settings', href: '/admin/settings/courses' },
     { icon: GraduationCap, label: 'Kids Management', href: '/admin/kids' },

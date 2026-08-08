@@ -35,7 +35,7 @@ type Props = {
 
 const TRACK_LABELS: Record<string, string> = {
   self_paced: "Self-Paced",
-  group_mentorship: "Group Mentorship",
+  group_mentorship: "Live Classes",
   one_on_one: "One-on-One",
 };
 

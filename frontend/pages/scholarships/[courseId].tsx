@@ -58,43 +58,44 @@ function ResultCard({
   courseName: string;
   onContinue: () => void;
 }) {
-  const approved = scholarship.status === 'approved';
+  // Every application is approved now — there's no reject outcome. The only
+  // question is which tier: 100% (full tuition) or the partial award.
+  const isFullTuition = Number(scholarship.discount_percentage) >= 100;
+  const pct = Number(scholarship.discount_percentage) || 0;
 
   return (
     <div className="text-center py-8 px-4">
       <div
         className="mx-auto mb-6 w-24 h-24 rounded-full flex items-center justify-center text-5xl"
         style={{
-          background: approved ? 'rgba(22,163,74,0.15)' : 'rgba(239,68,68,0.1)',
-          border: `2px solid ${approved ? 'rgba(22,163,74,0.4)' : 'rgba(239,68,68,0.3)'}`,
+          background: 'rgba(22,163,74,0.15)',
+          border: '2px solid rgba(22,163,74,0.4)',
           animation: 'pop 0.5s cubic-bezier(0.34,1.56,0.64,1)',
         }}
       >
-        {approved ? '🎓' : '💙'}
+        🎓
       </div>
 
       <h2 className="text-3xl font-bold text-white mb-3">
-        {approved ? 'You got a Full-Tuition Scholarship!' : 'Application Reviewed'}
+        {isFullTuition ? 'You got a Full-Tuition Scholarship!' : `You got a ${pct}% Scholarship!`}
       </h2>
 
       <p className="text-gray-400 mb-2 max-w-md mx-auto leading-relaxed">
-        {approved
+        {isFullTuition
           ? `Congratulations — your full-tuition scholarship has been applied to ${courseName}. This is tied exclusively to your account and this course. You'll only need to pay the registration fee to secure your spot.`
-          : "We reviewed your application carefully. You didn't qualify this time, but the course is still open to you at the standard price."}
+          : `Congratulations — your ${pct}% scholarship has been applied to ${courseName}. This is tied exclusively to your account and this course. The discount is applied automatically — just pick your learning track and payment plan as normal.`}
       </p>
 
-      {approved && (
-        <div
-          className="mx-auto mt-6 mb-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
-          style={{
-            background: 'rgba(22,163,74,0.12)',
-            border: '1px solid rgba(22,163,74,0.3)',
-          }}
-        >
-          <span className="text-green-400 text-2xl font-black">100% TUITION</span>
-          <span className="text-green-300 text-sm">just pay the registration fee</span>
-        </div>
-      )}
+      <div
+        className="mx-auto mt-6 mb-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
+        style={{
+          background: 'rgba(22,163,74,0.12)',
+          border: '1px solid rgba(22,163,74,0.3)',
+        }}
+      >
+        <span className="text-green-400 text-2xl font-black">{isFullTuition ? '100% TUITION' : `${pct}% OFF`}</span>
+        <span className="text-green-300 text-sm">{isFullTuition ? 'just pay the registration fee' : 'applied automatically at checkout'}</span>
+      </div>
 
       <div
         className="mx-auto mt-2 mb-8 max-w-sm p-4 rounded-xl text-sm text-left"
@@ -116,7 +117,7 @@ function ResultCard({
           boxShadow: `0 8px 28px ${BRAND}55`,
         }}
       >
-        {approved ? 'Continue to Payment' : 'View Course'}
+        Continue to Payment
       </button>
 
       <style>{`
@@ -314,6 +315,7 @@ export default function ScholarshipPage() {
   }
 
   const courseName = eligibility?.course_name || result?.course_name || 'this course';
+  const partialPct = eligibility?.partial_scholarship_percentage ?? 50;
 
   return (
     <AppLayout>
@@ -440,7 +442,7 @@ export default function ScholarshipPage() {
                 {[
                   // { text: '4 quick questions — decision in under 60 seconds' },
                   { text: 'One scholarship per user across all courses' },
-                  { text: 'Full tuition covered — pay only the registration fee' },
+                  { text: `Every applicant is awarded 100% or ${partialPct}% off tuition` },
                 ].map((item) => (
                   <div
                     key={item.text}
@@ -457,10 +459,16 @@ export default function ScholarshipPage() {
                 className="p-4 rounded-xl mb-8 text-sm"
                 style={{ background: `${BRAND}10`, border: `1px solid ${BRAND}25` }}
               >
-                <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcome</p>
-                <div className="mt-2 text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
-                  <p className="text-xl font-black text-white">100% Full Tuition</p>
-                  <p className="text-xs text-gray-400 mt-1">approved applicants pay only the registration fee</p>
+                <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                    <p className="text-xl font-black text-white">100%</p>
+                    <p className="text-xs text-gray-400 mt-1">full tuition — pay only the registration fee</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                    <p className="text-xl font-black text-white">{partialPct}%</p>
+                    <p className="text-xs text-gray-400 mt-1">off the normal course price</p>
+                  </div>
                 </div>
               </div>
 
@@ -600,7 +608,7 @@ export default function ScholarshipPage() {
                 Which country are you from?
               </h2>
               <p className="text-sm text-gray-500 mb-6">
-                Used to confirm your eligibility for the full-tuition scholarship.
+                Used to confirm your eligibility and scholarship tier.
               </p>
 
               <input

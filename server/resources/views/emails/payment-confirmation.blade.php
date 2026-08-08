@@ -41,7 +41,7 @@
     <div class="container">
         <div class="header">
             <span class="emoji">🎉</span>
-            <h1>Congartulations - Payment Confirmed!</h1>
+            <h1>Congratulations - Payment Confirmed!</h1>
         </div>
 
         <div class="content">
@@ -71,7 +71,7 @@
                         @php
                             $trackNames = [
                                 'one_on_one' => 'One-on-One Coaching',
-                                'group_mentorship' => 'Group Mentorship',
+                                'group_mentorship' => 'Live Classes',
                                 'self_paced' => 'Self-Paced + Community',
                             ];
                         @endphp
@@ -108,29 +108,24 @@
             </div>
             @endif
 
-            <div class="access-box">
-                <h3>✅ You have full access</h3>
-                <p>Log in to your dashboard to start learning right away. All course materials are available to you immediately.</p>
-            </div>
-
             <div class="access-box" style="border-left-color:#25D366;background:#F0FDF4;">
-                <h3 style="color:#14532d;">💬 Join Our Community</h3>
-                <p style="color:#166534;">Connect with fellow students, get support, and stay updated — join our WhatsApp community.</p>
+                <h3 style="color:#14532d;">💬 Join Our Paid Student Community</h3>
+                <p style="color:#166534;">Connect with fellow paid students, get support, and stay updated — join our WhatsApp group.</p>
                 <div style="margin-top:12px;">
-                    <a href="https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2" style="display:inline-block;background:#25D366;color:#fff !important;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;">Join WhatsApp Group</a>
+                    <a href="https://chat.whatsapp.com/EsEIusMnGS5HvrUz8Vv6oA" style="display:inline-block;background:#25D366;color:#fff !important;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:14px;">Join WhatsApp Group</a>
                 </div>
             </div>
 
             <div class="divider"></div>
 
-            <p><strong>What's Next?</strong></p>
+            <!-- <p><strong>What's Next?</strong></p>
             <p>Head to your dashboard to access your course materials, track your progress, and connect with your instructor.</p>
 
             <div class="button-container">
                 <a href="{{ config('app.frontend_url') }}/user/dashboard?tab=your-course" class="button">
                     Go to My Dashboard →
                 </a>
-            </div>
+            </div> -->
 
             <div class="divider"></div>
 

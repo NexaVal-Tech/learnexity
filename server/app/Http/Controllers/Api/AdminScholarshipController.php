@@ -53,23 +53,24 @@ class AdminScholarshipController extends Controller
     // PATCH /api/admin/scholarships/{id}/review
     // ─────────────────────────────────────────────
     //
-    // Full-tuition model: there's no discount_percentage input anymore —
-    // approving a scholarship always means "full tuition, pay the flat
-    // registration fee only". The percentage tiers (25%/50%/75%) are gone.
+    // Two-tier model: every scholarship is approved — there's no reject
+    // outcome anymore. Admins can manually set the award to 100% (full
+    // tuition) or any other percentage (e.g. the partial tier) if they need
+    // to override the auto-decision.
     public function review(Request $request, $id)
     {
         $scholarship = Scholarship::findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'review_notes' => 'nullable|string',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'review_notes'        => 'nullable|string',
         ]);
 
-        // discount_percentage is legacy-only now; force to 0 regardless of
-        // what it held before so nothing downstream can read a stale %.
-        $scholarship->update(array_merge($validated, [
-            'discount_percentage' => 0,
-        ]));
+        $scholarship->update([
+            'status'              => 'approved',
+            'discount_percentage' => $validated['discount_percentage'],
+            'review_notes'        => $validated['review_notes'] ?? $scholarship->review_notes,
+        ]);
 
         // Notify the applicant either way, with a "Proceed to Payment" CTA —
         // same email the auto-decision path sends.
@@ -92,8 +93,8 @@ class AdminScholarshipController extends Controller
      * controllers don't share a base class for this). For an APPROVED
      * outcome this also creates the enrollment now (pending, registration
      * fee) so it shows up in the student's dashboard immediately, rather
-     * than only after they click through an email/modal. Rejected
-     * applicants are not auto-enrolled.
+     * than only after they click through an email/modal. Every scholarship
+     * is approved now (100% or partial) — there's no reject outcome.
      */
     private function sendResultEmail(\App\Models\User $user, Scholarship $scholarship, Course $course): void
     {
