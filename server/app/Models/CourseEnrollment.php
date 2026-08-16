@@ -103,6 +103,7 @@ class CourseEnrollment extends Model
             'one_on_one' => 'One-on-One Coaching',
             'group_mentorship' => 'Live Classes',
             'self_paced' => 'Self-Paced Learning + Community Support',
+            'intermediate' => 'Intermediate',
             default => 'Self-Paced Learning',
         };
     }

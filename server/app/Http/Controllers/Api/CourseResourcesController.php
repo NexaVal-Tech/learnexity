@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\User;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\CourseMaterial;
 use App\Models\MaterialItem;
 use App\Models\SprintProgress;
@@ -33,12 +35,35 @@ class CourseResourcesController extends Controller
     {
         $userId = $request->user()->id;
 
+        // Freemium preview: computed once up front (not per-sprint — this
+        // used to mean a Course + CourseEnrollment lookup for every single
+        // sprint in the course, which is wasteful). Sprints 1 & 2 are always
+        // free for a freemium course; sprint 3+ needs paid access.
+        $course     = Course::where('course_id', $courseId)->first();
+        $enrollment = CourseEnrollment::where('user_id', $userId)->where('course_id', $courseId)->first();
+        if ($enrollment) {
+            $enrollment->updateAccessStatus();
+            $enrollment->refresh();
+        }
+        $hasPaidAccess     = (bool) ($enrollment && $enrollment->has_access);
+        $isFreemiumPreview = (bool) ($course && $course->is_freemium && !$hasPaidAccess);
+
+        // Non-freemium courses still require paid access to see resources
+        // at all (freemium courses fall through to the sprint-1/2 preview
+        // below instead).
+        if (!$hasPaidAccess && !$isFreemiumPreview) {
+            return response()->json([
+                'message' => 'Payment required to access this course\'s resources.',
+                'payment_required' => true,
+            ], 403);
+        }
+
         // Get course materials with progress
         $materials = CourseMaterial::where('course_id', $courseId)
             ->with(['items'])
             ->orderBy('order')
             ->get()
-            ->map(function ($material) use ($userId) {
+            ->map(function ($material) use ($userId, $isFreemiumPreview) {
                 $progress = SprintProgress::firstOrCreate(
                     [
                         'user_id' => $userId,
@@ -52,14 +77,33 @@ class CourseResourcesController extends Controller
                     ]
                 );
 
+                $locked = $isFreemiumPreview && $material->sprint_number > 2;
+
                 return [
                     'id' => $material->id,
                     'sprint_name' => $material->sprint_name,
                     'sprint_number' => $material->sprint_number,
+                    'locked' => $locked,
                     'progress_percentage' => $progress->progress_percentage,
                     'completed_items' => $progress->completed_items,
                     'total_items' => $progress->total_items,
-                    'items' => $material->items->map(function ($item) use ($userId) {
+                    'items' => $material->items->map(function ($item) use ($userId, $locked) {
+                        // Locked sprint — return just enough for the UI to
+                        // show a paywalled preview (title/type), never the
+                        // actual content, download link, or completion state.
+                        if ($locked) {
+                            return [
+                                'id' => $item->id,
+                                'title' => $item->title,
+                                'type' => $item->type,
+                                'locked' => true,
+                                'file_size' => null,
+                                'download_url' => null,
+                                'text_content' => null,
+                                'is_completed' => false,
+                            ];
+                        }
+
                         $itemProgress = MaterialItemProgress::where('user_id', $userId)
                             ->where('material_item_id', $item->id)
                             ->first();
@@ -80,6 +124,7 @@ class CourseResourcesController extends Controller
                             'id' => $item->id,
                             'title' => $item->title,
                             'type' => $item->type,
+                            'locked' => false,
                             'file_size' => $item->file_size,
                             'download_url' => $downloadUrl,
                             'text_content' => $item->text_content ?? null,
@@ -175,6 +220,8 @@ class CourseResourcesController extends Controller
 
         return response()->json([
             'materials' => $materials,
+            'is_freemium_preview' => $isFreemiumPreview,
+            'has_paid_access' => $hasPaidAccess,
             'statistics' => [
                 'overall_progress' => $statistics->overall_progress,
                 'time_spent' => $this->formatTimeSpent($statistics->time_spent_minutes),
@@ -190,6 +237,52 @@ class CourseResourcesController extends Controller
     }
 
     /**
+     * Freemium preview gate. For a course with is_freemium = true, sprint 1
+     * and sprint 2 are always free to preview; sprint 3 onward requires the
+     * student to have paid access (a completed enrollment with
+     * has_access = true). Non-freemium courses are never locked by this
+     * check — they're governed by whatever access rules apply elsewhere.
+     */
+    private function isFreemiumLocked(string $courseId, int $userId, int $sprintNumber): bool
+    {
+        if ($sprintNumber <= 2) {
+            return false;
+        }
+
+        $course = Course::where('course_id', $courseId)->first();
+        if (!$course || !$course->is_freemium) {
+            return false;
+        }
+
+        $enrollment = CourseEnrollment::where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if ($enrollment) {
+            $enrollment->updateAccessStatus();
+            $enrollment->refresh();
+        }
+
+        return !($enrollment && $enrollment->has_access);
+    }
+
+    /**
+     * Resolve an item to its course_id + sprint_number, for the freemium
+     * gate checks in the item-level endpoints below (download/preview/
+     * complete). Returns null if the item or its parent sprint can't be
+     * found, in which case callers should let the existing 404 handling run.
+     */
+    private function freemiumLockForItem(int $itemId, int $userId): bool
+    {
+        $item = MaterialItem::with('courseMaterial')->find($itemId);
+        if (!$item || !$item->courseMaterial) {
+            return false;
+        }
+
+        return $this->isFreemiumLocked($item->courseMaterial->course_id, $userId, $item->courseMaterial->sprint_number);
+    }
+
+    /**
      * Stream a file inline (for in-modal preview, no download)
      */
 public function previewMaterial(Request $request, int $itemId): mixed
@@ -198,6 +291,10 @@ public function previewMaterial(Request $request, int $itemId): mixed
 
     if (!$materialItem) {
         return response()->json(['error' => 'Material not found'], 404);
+    }
+
+    if ($this->freemiumLockForItem($itemId, $request->user()->id)) {
+        return response()->json(['error' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
     }
 
     // Item exists but has no file stored — not an error worth logging
@@ -254,9 +351,13 @@ public function previewMaterial(Request $request, int $itemId): mixed
     public function markItemCompleted(Request $request, int $itemId): JsonResponse
     {
         $userId = $request->user()->id;
- 
+
         $materialItem = MaterialItem::findOrFail($itemId);
- 
+
+        if ($this->freemiumLockForItem($itemId, $userId)) {
+            return response()->json(['message' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
+        }
+
         // Mark item as completed
         MaterialItemProgress::updateOrCreate(
             ['user_id' => $userId, 'material_item_id' => $itemId],
@@ -357,6 +458,10 @@ public function previewMaterial(Request $request, int $itemId): mixed
 
         $materialItem = MaterialItem::findOrFail($itemId);
 
+        if ($this->freemiumLockForItem($itemId, $userId)) {
+            return response()->json(['message' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
+        }
+
         // Mark item as incomplete
         MaterialItemProgress::updateOrCreate(
             [
@@ -390,6 +495,10 @@ public function previewMaterial(Request $request, int $itemId): mixed
     public function downloadMaterial(Request $request, int $itemId): mixed
     {
         $materialItem = MaterialItem::findOrFail($itemId);
+
+        if ($this->freemiumLockForItem($itemId, $request->user()->id)) {
+            return response()->json(['error' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
+        }
 
         // TEXT type
         if ($materialItem->type === 'text') {
@@ -435,6 +544,10 @@ public function previewMaterial(Request $request, int $itemId): mixed
     public function getPreviewUrl(Request $request, int $itemId): JsonResponse
     {
         $materialItem = MaterialItem::findOrFail($itemId);
+
+        if ($this->freemiumLockForItem($itemId, $request->user()->id)) {
+            return response()->json(['error' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
+        }
 
         if (!$materialItem->file_path) {
             return response()->json(['error' => 'No file available'], 404);

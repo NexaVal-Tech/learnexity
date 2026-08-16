@@ -21,19 +21,19 @@ function SkeletonCard() {
       className="w-full animate-pulse p-8 flex flex-col"
       style={{
         borderRadius: "2rem 0.75rem 2rem 0.75rem",
-        background: "#0f0f0f",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "var(--surface)",
+        border: "1px solid var(--border-subtle)",
       }}
     >
-      <div className="h-7 bg-gray-800 rounded-full w-3/4 mb-4" />
-      <div className="h-4 bg-gray-800 rounded-full w-full mb-2" />
-      <div className="h-4 bg-gray-800 rounded-full w-5/6 mb-6" />
+      <div className="h-7 bg-[var(--border-strong)] rounded-full w-3/4 mb-4" />
+      <div className="h-4 bg-[var(--border-strong)] rounded-full w-full mb-2" />
+      <div className="h-4 bg-[var(--border-strong)] rounded-full w-5/6 mb-6" />
       <div className="space-y-3 flex-1">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-gray-800 rounded-full px-2 py-3 h-10" />
+          <div key={i} className="bg-[var(--border-strong)] rounded-full px-2 py-3 h-10" />
         ))}
       </div>
-      <div className="mt-6 h-9 bg-gray-800 rounded-full w-36" />
+      <div className="mt-6 h-9 bg-[var(--border-strong)] rounded-full w-36" />
     </div>
   );
 }
@@ -149,8 +149,8 @@ export default function FlexPage() {
         <style>{`
           .course-card {
             borderRadius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-elevated);
             backdrop-filter: blur(8px);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
             transition: all 0.3s ease;
@@ -193,8 +193,8 @@ export default function FlexPage() {
             gap: 0.375rem;
             padding: 0.5rem 0.875rem;
             border-radius: 2rem;
-            border: 1.5px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.55);
+            border: 1.5px solid var(--border-strong);
+            color: var(--text-muted);
             background: transparent;
             font-size: 0.8rem;
             font-weight: 500;
@@ -231,8 +231,8 @@ export default function FlexPage() {
             stroke: #fff;
           }
           .learning-pill {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--surface-alt);
+            border: 1px solid var(--border-subtle);
             border-radius: 999px;
             padding: 0.5rem 0.75rem;
             display: flex;
@@ -339,9 +339,9 @@ export default function FlexPage() {
 
                 {/* ── Empty state ── */}
                 {!loading && !error && courses.length === 0 && (
-                  <div className="text-center text-gray-400 py-20">
+                  <div className="text-center text-[var(--text-secondary)] py-20">
                     <p className="text-xl mb-2">No flexible courses available yet.</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[var(--text-muted)]">
                       Check our{" "}
                       <Link href="/courses/courses" className="underline" style={{ color: BRAND }}>
                         mentorship programmes
@@ -365,21 +365,55 @@ export default function FlexPage() {
                             className="course-card p-8 flex flex-col h-full w-full"
                             style={{
                               borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              background: "rgba(15,15,15,0.9)",
+                              border: "1px solid var(--border-subtle)",
+                              background: "var(--surface-elevated)",
                               backdropFilter: "blur(8px)",
                               boxShadow: "0 25px 50px rgba(0,0,0,0.8)",
                               transition: "all 0.3s ease",
                             }}
                           >
+                            {/* Icon */}
+                            <div className="course-icon-wrap">
+                              <svg
+                                className="w-6 h-6"
+                                style={{ color: BRAND }}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                />
+                              </svg>
+                            </div>
 
                             {/* Title */}
-                            <h3 className="text-2xl font-bold text-white mb-3">
+                            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
                               {course.title}
                             </h3>
 
+                            {/* Free-course price badge */}
+                            {course.is_free && (
+                              <div className="flex items-center gap-2 mb-4">
+                                <span
+                                  className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                                  style={{ background: `${BRAND}26`, color: BRAND, border: `1px solid ${BRAND}59` }}
+                                >
+                                  Free
+                                </span>
+                                {(course.price_usd ?? course.price) > 0 && (
+                                  <span className="text-sm text-[var(--text-muted)] line-through">
+                                    ${Number(course.price_usd ?? course.price).toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             {/* Description */}
-                            <p className="text-gray-400 mb-6 text-sm leading-relaxed line-clamp-2">
+                            <p className="text-[var(--text-secondary)] mb-6 text-sm leading-relaxed line-clamp-2">
                               {course.description}
                             </p>
 
@@ -406,7 +440,7 @@ export default function FlexPage() {
                                       />
                                     </svg>
                                   </div>
-                                  <span className="text-gray-300 font-medium text-sm">
+                                  <span className="text-[var(--text-secondary)] font-medium text-sm">
                                     {learning.learning_point}
                                   </span>
                                 </div>

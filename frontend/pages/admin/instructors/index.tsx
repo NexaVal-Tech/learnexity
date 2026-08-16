@@ -167,8 +167,8 @@ export default function AdminInstructorsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Instructor Management</h1>
-              <p className="text-sm text-gray-500 mt-1">{instructors.length} instructor{instructors.length !== 1 ? 's' : ''} registered</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Instructor Management</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{instructors.length} instructor{instructors.length !== 1 ? 's' : ''} registered</p>
             </div>
             <button
               onClick={() => setCreateOpen(true)}
@@ -180,75 +180,75 @@ export default function AdminInstructorsPage() {
 
           {/* Search */}
           <div className="relative max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or email…"
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
 
           {/* Table */}
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
+                    <tr className="border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
                       {['Instructor', 'Email', 'Specialisation', 'Courses', 'Status', 'Last Login', 'Actions'].map((h) => (
-                        <th key={h} className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{h}</th>
+                        <th key={h} className="py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {filtered.length === 0 ? (
-                      <tr><td colSpan={7} className="py-10 text-center text-gray-500">No instructors found.</td></tr>
+                      <tr><td colSpan={7} className="py-10 text-center text-gray-500 dark:text-gray-400">No instructors found.</td></tr>
                     ) : filtered.map((instructor) => (
-                      <tr key={instructor.id} className="hover:bg-gray-50">
+                      <tr key={instructor.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-semibold text-xs">
                               {instructor.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-sm font-medium text-gray-900">{instructor.name}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{instructor.name}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{instructor.email}</td>
-                        <td className="py-3 px-4 text-sm text-gray-500">{instructor.specialisation || '—'}</td>
-                        <td className="py-3 px-4 text-sm text-gray-500">
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{instructor.email}</td>
+                        <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">{instructor.specialisation || '—'}</td>
+                        <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                           {instructor.assigned_course_ids?.length ?? 0} course{instructor.assigned_course_ids?.length !== 1 ? 's' : ''}
                         </td>
                         <td className="py-3 px-4">
                           {instructor.is_active ? (
-                            <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-0.5 rounded-full w-fit">
+                            <span className="flex items-center gap-1 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-500/15 px-2.5 py-0.5 rounded-full w-fit">
                               <CheckCircle size={11} /> Active
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full w-fit">
+                            <span className="flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/15 px-2.5 py-0.5 rounded-full w-fit">
                               <XCircle size={11} /> Inactive
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-xs text-gray-400">
+                        <td className="py-3 px-4 text-xs text-gray-400 dark:text-gray-500">
                           {instructor.last_login_at
                             ? new Date(instructor.last_login_at).toLocaleDateString()
                             : 'Never'}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => openEdit(instructor)} title="Edit" className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+                            <button onClick={() => openEdit(instructor)} title="Edit" className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg">
                               <Edit size={15} />
                             </button>
-                            <button onClick={() => handleResetPassword(instructor.id, instructor.name)} title="Reset Password" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <button onClick={() => handleResetPassword(instructor.id, instructor.name)} title="Reset Password" className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/15 rounded-lg">
                               <RefreshCw size={15} />
                             </button>
-                            <button onClick={() => handleDelete(instructor.id, instructor.name)} title="Delete" className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                            <button onClick={() => handleDelete(instructor.id, instructor.name)} title="Delete" className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                               <Trash size={15} />
                             </button>
                           </div>
@@ -265,62 +265,62 @@ export default function AdminInstructorsPage() {
         {/* ══ CREATE MODAL ══════════════════════════════════════════════════ */}
         {createOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
-                <h2 className="text-lg font-semibold text-gray-900">Add New Instructor</h2>
-                <button onClick={() => setCreateOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-[#0f0f14]">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Instructor</h2>
+                <button onClick={() => setCreateOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
               </div>
               <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="label text-gray-900">Full Name *</label>
+                    <label className="label text-gray-900 dark:text-white">Full Name *</label>
                     <input required value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} className={iCls} placeholder="John Doe" />
                   </div>
                   <div>
-                    <label className="label text-gray-900">Email Address *</label>
+                    <label className="label text-gray-900 dark:text-white">Email Address *</label>
                     <input required type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} className={iCls} placeholder="john@example.com" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="label text-gray-900">Phone</label>
+                    <label className="label text-gray-900 dark:text-white">Phone</label>
                     <input value={createForm.phone} onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })} className={iCls} placeholder="+234..." />
                   </div>
                   <div>
-                    <label className="label text-gray-900">Specialisation</label>
+                    <label className="label text-gray-900 dark:text-white">Specialisation</label>
                     <input value={createForm.specialisation} onChange={(e) => setCreateForm({ ...createForm, specialisation: e.target.value })} className={iCls} placeholder="e.g. Product Design" />
                   </div>
                 </div>
                 <div>
-                  <label className="label text-gray-900">Bio (optional)</label>
+                  <label className="label text-gray-900 dark:text-white">Bio (optional)</label>
                   <textarea rows={2} value={createForm.bio} onChange={(e) => setCreateForm({ ...createForm, bio: e.target.value })} className={iCls} placeholder="Brief bio…" />
                 </div>
                 <div>
-                  <label className="label text-gray-900">Assign Courses</label>
-                  <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                  <label className="label text-gray-900 dark:text-white">Assign Courses</label>
+                  <div className="border border-gray-200 dark:border-white/10 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
                     {courses.length === 0 ? (
-                      <p className="text-xs text-gray-400">No courses available.</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">No courses available.</p>
                     ) : courses.map((course) => (
-                      <label key={course.course_id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded">
+                      <label key={course.course_id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 px-1 py-0.5 rounded">
                         <input
                           type="checkbox"
                           checked={createForm.course_ids.includes(course.course_id)}
                           onChange={() => toggleCourse(course.course_id, createForm.course_ids, (ids) => setCreateForm({ ...createForm, course_ids: ids }))}
                           className="rounded text-indigo-600"
                         />
-                        <span className="text-sm text-gray-700">{course.title}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{course.title}</span>
                       </label>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">The instructor will only be able to manage selected courses.</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">The instructor will only be able to manage selected courses.</p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                <div className="bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
                   <strong>Note:</strong> A random password will be generated and emailed to the instructor automatically.
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
-                  <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                   <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                     {submitting && <Loader2 size={15} className="animate-spin" />}
                     {submitting ? 'Creating…' : 'Create & Send Credentials'}
@@ -334,51 +334,51 @@ export default function AdminInstructorsPage() {
         {/* ══ EDIT MODAL ════════════════════════════════════════════════════ */}
         {editOpen && editTarget && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
-                <h2 className="text-lg font-semibold text-gray-900">Edit Instructor</h2>
-                <button onClick={() => setEditOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-[#0f0f14]">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Instructor</h2>
+                <button onClick={() => setEditOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
               </div>
               <form onSubmit={handleEdit} className="px-6 py-5 space-y-4">
                 <div>
-                  <label className="label">Full Name</label>
+                  <label className="label text-gray-900 dark:text-white">Full Name</label>
                   <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className={iCls} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="label">Phone</label>
+                    <label className="label text-gray-900 dark:text-white">Phone</label>
                     <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className={iCls} />
                   </div>
                   <div>
-                    <label className="label">Specialisation</label>
+                    <label className="label text-gray-900 dark:text-white">Specialisation</label>
                     <input value={editForm.specialisation} onChange={(e) => setEditForm({ ...editForm, specialisation: e.target.value })} className={iCls} />
                   </div>
                 </div>
                 <div>
-                  <label className="label">Status</label>
+                  <label className="label text-gray-900 dark:text-white">Status</label>
                   <select value={editForm.is_active ? '1' : '0'} onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === '1' })} className={iCls}>
                     <option value="1">Active</option>
                     <option value="0">Inactive</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">Assigned Courses</label>
-                  <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
+                  <label className="label text-gray-900 dark:text-white">Assigned Courses</label>
+                  <div className="border border-gray-200 dark:border-white/10 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
                     {courses.map((course) => (
-                      <label key={course.course_id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded">
+                      <label key={course.course_id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 px-1 py-0.5 rounded">
                         <input
                           type="checkbox"
                           checked={editForm.course_ids.includes(course.course_id)}
                           onChange={() => toggleCourse(course.course_id, editForm.course_ids, (ids) => setEditForm({ ...editForm, course_ids: ids }))}
                           className="rounded text-indigo-600"
                         />
-                        <span className="text-sm text-gray-700">{course.title}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{course.title}</span>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-2">
-                  <button type="button" onClick={() => setEditOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="button" onClick={() => setEditOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                   <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                     {submitting && <Loader2 size={15} className="animate-spin" />}
                     {submitting ? 'Saving…' : 'Save Changes'}
@@ -401,4 +401,4 @@ export default function AdminInstructorsPage() {
   );
 }
 
-const iCls = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
+const iCls = 'w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';

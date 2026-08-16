@@ -45,17 +45,17 @@ export default function InstructorDashboard() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { icon: BookCopy,     label: 'Assigned Courses', value: courses.length,  color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { icon: BookOpen,     label: 'Total Sprints',    value: totalSprints,     color: 'text-violet-600', bg: 'bg-violet-50' },
-              { icon: FolderKanban, label: 'Active Projects',  value: '—',             color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { icon: BookCopy,     label: 'Assigned Courses', value: courses.length,  color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-500/15' },
+              { icon: BookOpen,     label: 'Total Sprints',    value: totalSprints,     color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-500/15' },
+              { icon: FolderKanban, label: 'Active Projects',  value: '—',             color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-500/15' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+              <div key={stat.label} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-5 flex items-center gap-4">
                 <div className={`w-11 h-11 rounded-xl ${stat.bg} flex items-center justify-center`}>
                   <stat.icon size={20} className={stat.color} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{stat.label}</p>
                 </div>
               </div>
             ))}
@@ -64,7 +64,7 @@ export default function InstructorDashboard() {
           {/* Courses */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Your Courses</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your Courses</h2>
               <Link href="/instructors/courses" className="text-sm text-indigo-600 hover:underline flex items-center gap-1">
                 View all <ArrowRight size={14} />
               </Link>
@@ -75,10 +75,10 @@ export default function InstructorDashboard() {
                 <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
               </div>
             ) : courses.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
-                <BookCopy size={40} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500 font-medium">No courses assigned yet.</p>
-                <p className="text-sm text-gray-400 mt-1">Contact your admin to get courses assigned.</p>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-10 text-center">
+                <BookCopy size={40} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-gray-500 dark:text-gray-400 font-medium">No courses assigned yet.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Contact your admin to get courses assigned.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -86,17 +86,17 @@ export default function InstructorDashboard() {
                   <div
                     key={course.course_id}
                     onClick={() => router.push(`/instructors/courses/${course.course_id}`)}
-                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                    className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
                   >
                     <div
-                      className="h-36 bg-cover bg-center bg-gray-100"
+                      className="h-36 bg-cover bg-center bg-gray-100 dark:bg-white/5"
                       style={{ backgroundImage: course.hero_image ? `url(${course.hero_image})` : undefined }}
                     />
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 text-sm mb-1 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1 group-hover:text-indigo-600 transition-colors line-clamp-2">
                         {course.title}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {course.sprint_count} sprint{course.sprint_count !== 1 ? 's' : ''}
                       </p>
                       <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-indigo-600">
@@ -110,8 +110,8 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Quick actions */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/instructors/courses"
@@ -121,7 +121,7 @@ export default function InstructorDashboard() {
               </Link>
               <Link
                 href="/instructors/projects"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition"
               >
                 <FolderKanban size={16} /> View Projects
               </Link>

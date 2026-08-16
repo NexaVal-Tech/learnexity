@@ -37,11 +37,11 @@ export default function CurriculumPartners() {
           {/* Header — same card style as Method */}
           <div
             className="partner-header-box max-w-3xl mx-auto mb-10 px-10 py-6
-              border border-white/10
-              bg-[#0f0f0f]/90 backdrop-blur-sm
+              border border-[var(--border-subtle)]
+              bg-[var(--surface-elevated)] backdrop-blur-sm
               shadow-2xl shadow-black/80"
           >
-            <h2 className="text-4xl md:text-3xl font-semibold text-white leading-tight">
+            <h2 className="text-4xl md:text-3xl font-semibold text-[var(--text-primary)] leading-tight">
               Imagine working with global<br /> tech giants like:
             </h2>
           </div>
@@ -52,8 +52,8 @@ export default function CurriculumPartners() {
               <div
                 key={partner.name}
                 className="partner-card flex items-center justify-center
-                  border border-white/10
-                  bg-[#0f0f0f]/90 backdrop-blur-sm
+                  border border-[var(--border-subtle)]
+                  bg-[var(--surface-elevated)] backdrop-blur-sm
                   rounded-xl px-5 py-4
                   min-w-[100px] h-20
                   transition-all duration-300 cursor-pointer"

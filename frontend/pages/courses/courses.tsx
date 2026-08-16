@@ -21,19 +21,19 @@ function SkeletonCard() {
       className="w-full animate-pulse p-8 flex flex-col"
       style={{
         borderRadius: "2rem 0.75rem 2rem 0.75rem",
-        background: "#0f0f0f",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "var(--surface)",
+        border: "1px solid var(--border-subtle)",
       }}
     >
-      <div className="h-7 bg-gray-800 rounded-full w-3/4 mb-4" />
-      <div className="h-4 bg-gray-800 rounded-full w-full mb-2" />
-      <div className="h-4 bg-gray-800 rounded-full w-5/6 mb-6" />
+      <div className="h-7 bg-[var(--border-strong)] rounded-full w-3/4 mb-4" />
+      <div className="h-4 bg-[var(--border-strong)] rounded-full w-full mb-2" />
+      <div className="h-4 bg-[var(--border-strong)] rounded-full w-5/6 mb-6" />
       <div className="space-y-3 flex-1">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-gray-800 rounded-full px-2 py-3 h-10" />
+          <div key={i} className="bg-[var(--border-strong)] rounded-full px-2 py-3 h-10" />
         ))}
       </div>
-      <div className="mt-6 h-9 bg-gray-800 rounded-full w-36" />
+      <div className="mt-6 h-9 bg-[var(--border-strong)] rounded-full w-36" />
     </div>
   );
 }
@@ -44,19 +44,19 @@ function FlexSkeletonCard() {
       className="w-full animate-pulse p-7 flex flex-col"
       style={{
         borderRadius: "2rem 0.75rem 2rem 0.75rem",
-        background: "#0f0f0f",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "var(--surface)",
+        border: "1px solid var(--border-subtle)",
       }}
     >
-      <div className="h-6 bg-gray-800 rounded-full w-2/3 mb-3" />
-      <div className="h-3 bg-gray-800 rounded-full w-full mb-2" />
-      <div className="h-3 bg-gray-800 rounded-full w-4/5 mb-5" />
+      <div className="h-6 bg-[var(--border-strong)] rounded-full w-2/3 mb-3" />
+      <div className="h-3 bg-[var(--border-strong)] rounded-full w-full mb-2" />
+      <div className="h-3 bg-[var(--border-strong)] rounded-full w-4/5 mb-5" />
       <div className="space-y-2 flex-1">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-gray-800 rounded-full h-8" />
+          <div key={i} className="bg-[var(--border-strong)] rounded-full h-8" />
         ))}
       </div>
-      <div className="mt-5 h-8 bg-gray-800 rounded-full w-28" />
+      <div className="mt-5 h-8 bg-[var(--border-strong)] rounded-full w-28" />
     </div>
   );
 }
@@ -74,6 +74,14 @@ export default function CoursesPage() {
   // Flex preview state
   const [flexCourses, setFlexCourses] = useState<Course[]>([]);
   const [flexLoading, setFlexLoading] = useState(true);
+
+  // Intermediate preview state
+  const [intermediateCourses, setIntermediateCourses] = useState<Course[]>([]);
+  const [intermediateLoading, setIntermediateLoading] = useState(true);
+
+  // Free courses preview state
+  const [freeCourses, setFreeCourses] = useState<Course[]>([]);
+  const [freeLoading, setFreeLoading] = useState(true);
 
   const fetchMentoredCourses = useCallback(async () => {
     setLoading(true);
@@ -114,10 +122,48 @@ export default function CoursesPage() {
     }
   }, []);
 
+  const fetchIntermediatePreview = useCallback(async () => {
+    setIntermediateLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/courses/by-track?track[]=intermediate`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) return;
+      const data: Course[] = await res.json();
+      // Show up to 3 intermediate courses as a preview
+      setIntermediateCourses(data.slice(0, 3));
+    } catch {
+      // Silent fail — intermediate preview is non-critical
+    } finally {
+      setIntermediateLoading(false);
+    }
+  }, []);
+
+  const fetchFreePreview = useCallback(async () => {
+    setFreeLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/courses/free`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) return;
+      const data: Course[] = await res.json();
+      // Show up to 3 free courses as a preview
+      setFreeCourses(data.slice(0, 3));
+    } catch {
+      // Silent fail — free preview is non-critical
+    } finally {
+      setFreeLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMentoredCourses();
     fetchFlexPreview();
-  }, [fetchMentoredCourses, fetchFlexPreview]);
+    fetchIntermediatePreview();
+    fetchFreePreview();
+  }, [fetchMentoredCourses, fetchFlexPreview, fetchIntermediatePreview, fetchFreePreview]);
 
   // Deep-tech screening (laptop / programming knowledge / reliable internet)
   // now happens on the payment page itself, not before enrollment — so this
@@ -201,8 +247,8 @@ export default function CoursesPage() {
         <style>{`
           .course-card {
             borderRadius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-elevated);
             backdrop-filter: blur(8px);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
             transition: all 0.3s ease;
@@ -244,8 +290,8 @@ export default function CoursesPage() {
             gap: 0.375rem;
             padding: 0.5rem 0.875rem;
             border-radius: 2rem;
-            border: 1.5px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.55);
+            border: 1.5px solid var(--border-strong);
+            color: var(--text-secondary);
             background: transparent;
             font-size: 0.8rem;
             font-weight: 500;
@@ -282,8 +328,8 @@ export default function CoursesPage() {
             stroke: #fff;
           }
           .learning-pill {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--surface-alt);
+            border: 1px solid var(--border-subtle);
             border-radius: 999px;
             padding: 0.5rem 0.75rem;
             display: flex;
@@ -314,7 +360,7 @@ export default function CoursesPage() {
 
           /* ── Flex preview section ── */
           .flex-preview-section {
-            border-top: 1px solid rgba(255,255,255,0.07);
+            border-top: 1px solid var(--border-subtle);
             margin-top: 2rem;
             padding-top: 1.75rem;
           }
@@ -333,8 +379,8 @@ export default function CoursesPage() {
             text-transform: uppercase;
           }
           .flex-card {
-            border: 1px solid rgba(255,255,255,0.07);
-            background: rgba(15,15,15,0.6);
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-elevated);
             backdrop-filter: blur(8px);
             border-radius: 2rem 0.75rem 2rem 0.75rem;
             transition: all 0.3s ease;
@@ -457,9 +503,9 @@ export default function CoursesPage() {
 
                 {/* ── Empty state ── */}
                 {!loading && !error && courses.length === 0 && (
-                  <div className="text-center text-gray-400 py-20">
+                  <div className="text-center text-[var(--text-secondary)] py-20">
                     <p className="text-xl mb-2">No mentorship courses available at the moment.</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[var(--text-muted)]">
                       Looking to learn at your own pace? Check our{" "}
                       <Link href="/flex" className="underline" style={{ color: BRAND }}>
                         flexible programmes
@@ -483,8 +529,8 @@ export default function CoursesPage() {
                             className="course-card p-8 flex flex-col h-full w-full"
                             style={{
                               borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              background: "rgba(15,15,15,0.9)",
+                              border: "1px solid var(--border-subtle)",
+                              background: "var(--surface-elevated)",
                               backdropFilter: "blur(8px)",
                               boxShadow: "0 25px 50px rgba(0,0,0,0.8)",
                               transition: "all 0.3s ease",
@@ -509,12 +555,29 @@ export default function CoursesPage() {
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-2xl font-bold text-white mb-3">
+                            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
                               {course.title}
                             </h3>
 
+                            {/* Free-course price badge */}
+                            {course.is_free && (
+                              <div className="flex items-center gap-2 mb-4">
+                                <span
+                                  className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                                  style={{ background: `${BRAND}26`, color: BRAND, border: `1px solid ${BRAND}59` }}
+                                >
+                                  Free
+                                </span>
+                                {(course.price_usd ?? course.price) > 0 && (
+                                  <span className="text-sm text-[var(--text-muted)] line-through">
+                                    ${Number(course.price_usd ?? course.price).toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             {/* Description */}
-                            <p className="text-gray-400 mb-6 text-sm leading-relaxed line-clamp-2">
+                            <p className="text-[var(--text-secondary)] mb-6 text-sm leading-relaxed line-clamp-2">
                               {course.description}
                             </p>
 
@@ -541,7 +604,7 @@ export default function CoursesPage() {
                                       />
                                     </svg>
                                   </div>
-                                  <span className="text-gray-300 font-medium text-sm">
+                                  <span className="text-[var(--text-secondary)] font-medium text-sm">
                                     {learning.learning_point}
                                   </span>
                                 </div>
@@ -602,10 +665,10 @@ export default function CoursesPage() {
                     {/* Section header */}
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                       <div>
-                        <h2 className="text-white font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
+                        <h2 className="text-[var(--text-primary)] font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
                           Explore flexible programmes
                         </h2>
-                        <p className="text-gray-500 text-sm mt-1">
+                        <p className="text-[var(--text-muted)] text-sm mt-1">
                           Prefer to learn on your own schedule? Browse our self-paced courses.
                         </p>
                       </div>
@@ -634,12 +697,29 @@ export default function CoursesPage() {
                             >
 
                               {/* Title */}
-                              <h3 className="text-2xl font-bold text-white mb-3 leading-snug">
+                              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3 leading-snug">
                                 {course.title}
                               </h3>
 
+                              {/* Free-course price badge */}
+                              {course.is_free && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span
+                                    className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                                    style={{ background: `${BRAND}26`, color: BRAND, border: `1px solid ${BRAND}59` }}
+                                  >
+                                    Free
+                                  </span>
+                                  {(course.price_usd ?? course.price) > 0 && (
+                                    <span className="text-sm text-[var(--text-muted)] line-through">
+                                      ${Number(course.price_usd ?? course.price).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
                               {/* Description */}
-                              <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
+                              <p className="text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
                                 {course.description}
                               </p>
 
@@ -667,7 +747,7 @@ export default function CoursesPage() {
                                           />
                                         </svg>
                                       </div>
-                                      <span className="text-gray-300 font-medium text-sm">
+                                      <span className="text-[var(--text-secondary)] font-medium text-sm">
                                         {learning.learning_point}
                                       </span>
                                     </div>
@@ -707,11 +787,293 @@ export default function CoursesPage() {
                                 style={{ color: BRAND }}
                               />
                             </div>
-                            <p className="text-white font-semibold text-base mb-1">
+                            <p className="text-[var(--text-primary)] font-semibold text-base mb-1">
                               See all flexible courses
                             </p>
-                            <p className="text-gray-500 text-xs">
+                            <p className="text-[var(--text-muted)] text-xs">
                               Browse the full self-paced catalogue
+                            </p>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── INTERMEDIATE PREVIEW SECTION ────────────────────── */}
+                {(intermediateLoading || intermediateCourses.length > 0) && (
+                  <div className="flex-preview-section mt-16">
+
+                    {/* Section header */}
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-[var(--text-primary)] font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
+                          Explore Intermediate courses
+                        </h2>
+                        <p className="text-[var(--text-muted)] text-sm mt-1">
+                          Already have foundational knowledge? Move faster with our Intermediate track.
+                        </p>
+                      </div>
+
+                      <Link href="/intermediate" className="flex-view-all-btn flex-shrink-0">
+                        View all
+                        <ArrowRight size={16} strokeWidth={2.5} />
+                      </Link>
+                    </div>
+
+                    {/* Skeleton */}
+                    {intermediateLoading && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {[1, 2, 3].map((i) => <FlexSkeletonCard key={i} />)}
+                      </div>
+                    )}
+
+                    {/* Course cards */}
+                    {!intermediateLoading && intermediateCourses.length > 0 && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {intermediateCourses.map((course) => (
+                          <div key={course.id} className="flex">
+                            <Link
+                              href={`/courses/${course.course_id}`}
+                              className="flex-card p-7 flex flex-col h-full w-full"
+                            >
+
+                              {/* Title */}
+                              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3 leading-snug">
+                                {course.title}
+                              </h3>
+
+                              {/* Free-course price badge */}
+                              {course.is_free && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span
+                                    className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                                    style={{ background: `${BRAND}26`, color: BRAND, border: `1px solid ${BRAND}59` }}
+                                  >
+                                    Free
+                                  </span>
+                                  {(course.price_usd ?? course.price) > 0 && (
+                                    <span className="text-sm text-[var(--text-muted)] line-through">
+                                      ${Number(course.price_usd ?? course.price).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Description */}
+                              <p className="text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
+                                {course.description}
+                              </p>
+
+                              {/* Learning points — up to 3 */}
+                              {course.learnings && course.learnings.length > 0 && (
+                                <div className="space-y-1.5 mb-5">
+                                  {course.learnings.slice(0, 3).map((learning) => (
+                                    <div key={learning.id} className="flex items-center gap-2">
+                                      <div
+                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${BRAND}22` }}
+                                      >
+                                        <svg
+                                          className="w-2.5 h-2.5"
+                                          style={{ color: BRAND }}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={3}
+                                            d="M5 13l4 4L19 7"
+                                          />
+                                        </svg>
+                                      </div>
+                                      <span className="text-[var(--text-secondary)] font-medium text-sm">
+                                        {learning.learning_point}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* CTA */}
+                              <div
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
+                                style={{ color: `${BRAND}cc` }}
+                              >
+                                View course
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+
+                        {/* "See all" card — only when there are courses */}
+                        <div className="flex">
+                          <Link
+                            href="/intermediate"
+                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
+                            style={{ minHeight: "220px" }}
+                          >
+                            <div
+                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                              style={{
+                                background: `${BRAND}18`,
+                                border: `1.5px solid ${BRAND}44`,
+                                transition: "all 0.3s",
+                              }}
+                            >
+                              <ArrowRight
+                                size={20}
+                                strokeWidth={2.5}
+                                style={{ color: BRAND }}
+                              />
+                            </div>
+                            <p className="text-[var(--text-primary)] font-semibold text-base mb-1">
+                              See all Intermediate courses
+                            </p>
+                            <p className="text-[var(--text-muted)] text-xs">
+                              Browse the full Intermediate catalogue
+                            </p>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── FREE COURSES PREVIEW SECTION ────────────────────── */}
+                {(freeLoading || freeCourses.length > 0) && (
+                  <div className="flex-preview-section mt-16">
+
+                    {/* Section header */}
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-[var(--text-primary)] font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
+                          Explore our free courses
+                        </h2>
+                        <p className="text-[var(--text-muted)] text-sm mt-1">
+                          Enroll and get full access — no payment required.
+                        </p>
+                      </div>
+
+                      <Link href="/free-courses" className="flex-view-all-btn flex-shrink-0">
+                        View all
+                        <ArrowRight size={16} strokeWidth={2.5} />
+                      </Link>
+                    </div>
+
+                    {/* Skeleton */}
+                    {freeLoading && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {[1, 2, 3].map((i) => <FlexSkeletonCard key={i} />)}
+                      </div>
+                    )}
+
+                    {/* Course cards */}
+                    {!freeLoading && freeCourses.length > 0 && (
+                      <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                        {freeCourses.map((course) => (
+                          <div key={course.id} className="flex">
+                            <Link
+                              href={`/courses/${course.course_id}`}
+                              className="flex-card p-7 flex flex-col h-full w-full"
+                            >
+
+                              {/* Title */}
+                              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3 leading-snug">
+                                {course.title}
+                              </h3>
+
+                              {/* Free-course price badge */}
+                              <div className="flex items-center gap-2 mb-3">
+                                <span
+                                  className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                                  style={{ background: `${BRAND}26`, color: BRAND, border: `1px solid ${BRAND}59` }}
+                                >
+                                  Free
+                                </span>
+                                {(course.price_usd ?? course.price) > 0 && (
+                                  <span className="text-sm text-[var(--text-muted)] line-through">
+                                    ${Number(course.price_usd ?? course.price).toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Description */}
+                              <p className="text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-2 mb-6 flex-1">
+                                {course.description}
+                              </p>
+
+                              {/* Learning points — up to 3 */}
+                              {course.learnings && course.learnings.length > 0 && (
+                                <div className="space-y-1.5 mb-5">
+                                  {course.learnings.slice(0, 3).map((learning) => (
+                                    <div key={learning.id} className="flex items-center gap-2">
+                                      <div
+                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${BRAND}33` }}
+                                      >
+                                        <svg
+                                          className="w-2.5 h-2.5"
+                                          style={{ color: BRAND }}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={3}
+                                            d="M5 13l4 4L19 7"
+                                          />
+                                        </svg>
+                                      </div>
+                                      <span className="text-[var(--text-secondary)] font-medium text-sm">
+                                        {learning.learning_point}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* CTA */}
+                              <div
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
+                                style={{ color: `${BRAND}cc` }}
+                              >
+                                View course
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+
+                        {/* "See all" card — only when there are courses */}
+                        <div className="flex">
+                          <Link
+                            href="/free-courses"
+                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
+                            style={{ minHeight: "220px" }}
+                          >
+                            <div
+                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                              style={{
+                                background: `${BRAND}18`,
+                                border: `1.5px solid ${BRAND}44`,
+                                transition: "all 0.3s",
+                              }}
+                            >
+                              <ArrowRight
+                                size={20}
+                                strokeWidth={2.5}
+                                style={{ color: BRAND }}
+                              />
+                            </div>
+                            <p className="text-[var(--text-primary)] font-semibold text-base mb-1">
+                              See all free courses
+                            </p>
+                            <p className="text-[var(--text-muted)] text-xs">
+                              Browse the full free catalogue
                             </p>
                           </Link>
                         </div>

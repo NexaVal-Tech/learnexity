@@ -19,8 +19,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
   const yAxisTicks = Array.from({ length: 5 }, (_, i) => Math.round((yAxisMax / 4) * i));
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">
-      <h3 className="text-lg font-bold text-gray-900 mb-6">Course Performance</h3>
+    <div className="bg-white dark:bg-[#0f0f14] p-6 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm h-full">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Course Performance</h3>
       <div className="h-[250px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} barGap={8} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>

@@ -143,7 +143,7 @@ export const CourseActionButton = ({
         top: '100%',
         left: 0,
         marginTop: '8px',
-        background: '#1f1f1f',
+        background: 'var(--surface-elevated)',
         color: '#fca5a5',
         border: '1px solid rgba(248,113,113,0.35)',
         borderRadius: '8px',

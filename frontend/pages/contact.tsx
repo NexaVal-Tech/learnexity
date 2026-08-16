@@ -87,10 +87,10 @@ export default function Contact() {
         {/* Hero Section — no bg so particle shows through */}
         <section className="pt-30 pb-52 px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-[var(--text-primary)] mb-4">
               Get in touch
             </h1>
-            <p className="text-xl text-gray-400">
+            <p className="text-xl text-[var(--text-secondary)]">
               Have questions? We&apos;re here to help. Choose the best way to reach us.
             </p>
           </div>
@@ -122,15 +122,15 @@ export default function Contact() {
               </ScrollFadeIn>
 
               <ScrollFadeIn delay={0.15} duration={0.3}>
-                <div className="contact-card border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
+                <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center mb-6"
                     style={{ backgroundColor: `${BRAND}22` }}
                   >
                     <MessageCircle className="w-6 h-6" style={{ color: BRAND }} />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Chat on WhatsApp</h3>
-                  <p className="mb-6 text-gray-400">
+                  <h3 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">Chat on WhatsApp</h3>
+                  <p className="mb-6 text-[var(--text-secondary)]">
                     Get instant responses to your questions
                   </p>
                   <a href="https://wa.me/+12762528415" className="font-semibold flex items-center gap-2 hover:gap-3 transition-all" style={{ color: BRAND }}>
@@ -140,15 +140,15 @@ export default function Contact() {
               </ScrollFadeIn>
 
               <ScrollFadeIn delay={0.3} duration={0.3}>
-                <div className="contact-card border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
+                <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center mb-6"
                     style={{ backgroundColor: `${BRAND}22` }}
                   >
                     <HelpCircle className="w-6 h-6" style={{ color: BRAND }} />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Email Us</h3>
-                  <p className="mb-6 text-gray-400">
+                  <h3 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">Email Us</h3>
+                  <p className="mb-6 text-[var(--text-secondary)]">
                     For detailed enquiries, send an email to{" "}
                     <a href="mailto:info@learnexity.org" className="underline" style={{ color: BRAND }}>
                       info@learnexity.org
@@ -166,16 +166,16 @@ export default function Contact() {
             <div className="grid md:grid-cols-3 gap-6 py-8">
 
               <ScrollFadeIn delay={0} duration={0.3}>
-                <div className="contact-card border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
+                <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
                   <div className="flex justify-center mb-4">
                     <div className="flex -space-x-2">
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10" style={{ backgroundColor: `${BRAND}44` }}></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10" style={{ backgroundColor: `${BRAND}66` }}></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10" style={{ backgroundColor: `${BRAND}88` }}></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)]" style={{ backgroundColor: `${BRAND}44` }}></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)]" style={{ backgroundColor: `${BRAND}66` }}></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)]" style={{ backgroundColor: `${BRAND}88` }}></div>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-white">Current Students</h3>
-                  <p className="text-gray-400 text-sm mb-6">
+                  <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Current Students</h3>
+                  <p className="text-[var(--text-secondary)] text-sm mb-6">
                     Already enrolled? Access your dashboard or contact support.
                   </p>
                   <Link href="/user/dashboard">
@@ -185,16 +185,16 @@ export default function Contact() {
               </ScrollFadeIn>
 
               <ScrollFadeIn delay={0.15} duration={0.3}>
-                <div className="contact-card border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
+                <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
                   <div className="flex justify-center mb-4">
                     <div className="flex -space-x-2">
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-green-900/40"></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-yellow-900/40"></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-orange-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-green-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-yellow-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-orange-900/40"></div>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-white">Course Information</h3>
-                  <p className="text-gray-400 text-sm mb-6">
+                  <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Course Information</h3>
+                  <p className="text-[var(--text-secondary)] text-sm mb-6">
                     Looking for course details? Browse our catalog.
                   </p>
                   <Link href="/courses/courses">
@@ -204,16 +204,16 @@ export default function Contact() {
               </ScrollFadeIn>
 
               <ScrollFadeIn delay={0.3} duration={0.3}>
-                <div className="contact-card border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
+                <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 text-center transition-all duration-300 cursor-pointer h-full">
                   <div className="flex justify-center mb-4">
                     <div className="flex -space-x-2">
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-red-900/40"></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-indigo-900/40"></div>
-                      <div className="w-10 h-10 rounded-full border-2 border-white/10 bg-teal-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-red-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-indigo-900/40"></div>
+                      <div className="w-10 h-10 rounded-full border-2 border-[var(--border-subtle)] bg-teal-900/40"></div>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-white">Help Centre</h3>
-                  <p className="text-gray-400 text-sm mb-6">
+                  <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Help Centre</h3>
+                  <p className="text-[var(--text-secondary)] text-sm mb-6">
                     Find answers to common questions.
                   </p>
                   <button className="outline-btn">Visit FAQ</button>
@@ -229,15 +229,15 @@ export default function Contact() {
           <section className="py-16 px-6">
             <div
               className="contact-header-box max-w-[1230px] mx-auto px-10 py-12
-                border border-white/10
-                bg-[#0f0f0f]/90 backdrop-blur-sm
+                border border-[var(--border-subtle)]
+                bg-[var(--surface-elevated)] backdrop-blur-sm
                 shadow-2xl shadow-black/80 text-center"
             >
-              <h2 className="text-4xl font-bold text-white mb-8">Business Hours & Response Times</h2>
-              <div className="space-y-2 text-gray-400">
-                <p>Response time: <span className="font-bold text-white">Within 24 hours (Monday - Friday)</span></p>
-                <p>Business hours: <span className="font-bold text-white">9:00 AM - 5:00 PM WAT</span></p>
-                <p>Weekend: <span className="font-bold text-white">Messages received on weekends will be answered on Monday</span></p>
+              <h2 className="text-4xl font-bold text-[var(--text-primary)] mb-8">Business Hours & Response Times</h2>
+              <div className="space-y-2 text-[var(--text-secondary)]">
+                <p>Response time: <span className="font-bold text-[var(--text-primary)]">Within 24 hours (Monday - Friday)</span></p>
+                <p>Business hours: <span className="font-bold text-[var(--text-primary)]">9:00 AM - 5:00 PM WAT</span></p>
+                <p>Weekend: <span className="font-bold text-[var(--text-primary)]">Messages received on weekends will be answered on Monday</span></p>
               </div>
             </div>
           </section>
@@ -247,7 +247,7 @@ export default function Contact() {
         <FadeUpOnScroll>
           <section className="py-16 px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl font-bold text-white mb-8">Connect with us</h2>
+              <h2 className="text-4xl font-bold text-[var(--text-primary)] mb-8">Connect with us</h2>
               <div className="flex justify-center gap-4">
                 <SocialIcon Icon={Instagram} link="https://www.instagram.com/learnexity?igsh=enoyZGV3NTA2ZXVp" />
                 <SocialIcon Icon={Facebook} link="https://www.facebook.com/Learnexity" />
@@ -270,9 +270,9 @@ function SocialIcon({ Icon, link }: SocialIconProps) {
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className="social-icon-btn w-12 h-12 border border-white/10 bg-[#0f0f0f] flex items-center justify-center transition-all duration-300"
+      className="social-icon-btn w-12 h-12 border border-[var(--border-subtle)] bg-[var(--surface-elevated)] flex items-center justify-center transition-all duration-300"
     >
-      <Icon className="w-5 h-5 text-gray-400" />
+      <Icon className="w-5 h-5 text-[var(--text-secondary)]" />
     </a>
   );
 }

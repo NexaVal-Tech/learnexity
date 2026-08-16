@@ -26,7 +26,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
-type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced';
+type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced' | 'intermediate';
 
 interface TrackOption {
   id: LearningTrack;
@@ -77,6 +77,14 @@ const TRACK_OPTIONS: TrackOption[] = [
     features: ['Full access to all course materials', 'Weekly live sessions with instructor', 'Peer learning and discussions'],
     icon: '👥',
     popular: true,
+  },
+  {
+    id: 'intermediate',
+    name: 'Intermediate',
+    title: 'For learners ready to move beyond the basics',
+    description: "A step up track for students who already have foundational knowledge and want a faster, more advanced path through the material.",
+    features: ['Advanced curriculum pacing', 'Full course material access', 'Weekly group review sessions'],
+    icon: '🚀',
   },
   {
     id: 'one_on_one',
@@ -134,7 +142,7 @@ export default function PaymentPage() {
   // clicked, and collapses back once one is chosen.
   const [trackPickerOpen,  setTrackPickerOpen]  = useState(false);
   const [trackPrices,      setTrackPrices]      = useState<Record<LearningTrack, number>>({
-    one_on_one: 0, group_mentorship: 0, self_paced: 0,
+    one_on_one: 0, group_mentorship: 0, self_paced: 0, intermediate: 0,
   });
 
   const [hourlyQty, setHourlyQty] = useState<number>(1);
@@ -303,6 +311,7 @@ export default function PaymentPage() {
       one_on_one:       { ngn: 'one_on_one_price_ngn',       usd: 'one_on_one_price_usd' },
       group_mentorship: { ngn: 'group_mentorship_price_ngn', usd: 'group_mentorship_price_usd' },
       self_paced:       { ngn: 'self_paced_price_ngn',       usd: 'self_paced_price_usd' },
+      intermediate:     { ngn: 'intermediate_price_ngn',     usd: 'intermediate_price_usd' },
     };
     const field = curr === 'NGN' ? fieldMap[track].ngn : fieldMap[track].usd;
     return parseFloat(courseData[field] ?? 0);
@@ -328,12 +337,13 @@ export default function PaymentPage() {
 
         const tracks: LearningTrack[] = [];
         const prices: Record<LearningTrack, number> = {
-          one_on_one: 0, group_mentorship: 0, self_paced: 0,
+          one_on_one: 0, group_mentorship: 0, self_paced: 0, intermediate: 0,
         };
 
         if (courseData.offers_one_on_one)       { tracks.push('one_on_one');       prices.one_on_one       = getTrackPrice(courseData, 'one_on_one',       curr); }
         if (courseData.offers_group_mentorship)  { tracks.push('group_mentorship'); prices.group_mentorship = getTrackPrice(courseData, 'group_mentorship', curr); }
         if (courseData.offers_self_paced)        { tracks.push('self_paced');       prices.self_paced       = getTrackPrice(courseData, 'self_paced',       curr); }
+        if (courseData.offers_intermediate)      { tracks.push('intermediate');     prices.intermediate     = getTrackPrice(courseData, 'intermediate',     curr); }
 
         if (tracks.length === 0) {
           setPageError('This course has no learning tracks configured. Please contact support.');
@@ -416,7 +426,11 @@ export default function PaymentPage() {
       }
 
       if (found.payment_status === 'completed') {
-        showToast('This course is already paid for!');
+        showToast(
+          found.amount_paid == 0
+            ? 'This course is free — you already have full access!'
+            : 'This course is already paid for!'
+        );
         router.push('/user/dashboard?tab=your-course');
         return;
       }
@@ -640,7 +654,7 @@ export default function PaymentPage() {
         <div className="max-w-2xl mx-auto p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4" />
-            <p className="text-gray-600">Loading payment details...</p>
+            <p className="text-gray-600 dark:text-gray-300">Loading payment details...</p>
           </div>
         </div>
       </UserDashboardLayout>
@@ -652,8 +666,8 @@ export default function PaymentPage() {
       <UserDashboardLayout>
         <div className="max-w-2xl mx-auto p-8 text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{pageError || 'Enrollment not found'}</h2>
-          <p className="text-gray-600 mb-6">We couldn't load your enrollment details. Please try again.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{pageError || 'Enrollment not found'}</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">We couldn't load your enrollment details. Please try again.</p>
           <button onClick={() => router.push('/user/dashboard')}
             className="bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700 transition-colors">
             Back to Dashboard
@@ -689,43 +703,43 @@ export default function PaymentPage() {
 
       {processing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+          <div className="bg-white dark:bg-[#0f0f14] rounded-2xl p-8 max-w-md mx-4 text-center">
             <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Processing Payment...</h3>
-            <p className="text-gray-600">Please wait while we confirm your payment.</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Processing Payment...</h3>
+            <p className="text-gray-600 dark:text-gray-300">Please wait while we confirm your payment.</p>
           </div>
         </div>
       )}
 
       <div className="max-w-md mx-auto px-4 pt-8 mt-16 pb-10 overflow-x-hidden">
         <button onClick={handleBack}
-          className="mb-3 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1.5 transition-colors">
+          className="mb-3 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1.5 transition-colors">
           ← Back
         </button>
 
         {/* learning track     mmm */}
-        <h1 className="text-lg font-bold text-black mb-4">Complete Your Payment</h1>
+        <h1 className="text-lg font-bold text-black dark:text-white mb-4">Complete Your Payment</h1>
 
         {/* ── Single compact Order Summary card — everything lives here ── */}
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
-          <h2 className="text-sm font-bold text-black uppercase tracking-wide">Order Summary</h2>
+        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 space-y-3">
+          <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wide">Order Summary</h2>
 
           {/* Course */}
-          <div className="flex justify-between items-start text-sm border-b border-gray-200 pb-3">
-            <span className="text-gray-500">Course</span>
-            <span className="font-semibold text-black text-right max-w-[65%]">{enrollment.course_name}</span>
+          <div className="flex justify-between items-start text-sm border-b border-gray-200 dark:border-white/10 pb-3">
+            <span className="text-gray-500 dark:text-gray-400">Course</span>
+            <span className="font-semibold text-black dark:text-white text-right max-w-[65%]">{enrollment.course_name}</span>
           </div>
 
           {/* Scholarship / registration-fee notice — right under Course, before everything else */}
           {isRegistrationFee && (
-            <div className="space-y-2 border-b border-gray-200 pb-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-800 leading-snug">
+            <div className="space-y-2 border-b border-gray-200 dark:border-white/10 pb-3">
+              <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-800 dark:text-green-300 leading-snug">
                 You've been awarded a full-tuition scholarship — you only pay the registration fee below, in one payment. Installments and course pricing don't apply.
               </div>
-              <div className="border border-green-200 bg-green-50 rounded-lg px-3 py-2">
-                <p className="text-xs font-bold text-black">Registration Fee Payment</p>
-                <p className="text-xs text-gray-600 mb-1">One payment secures your spot — no discounts or installments apply.</p>
-                <p className="text-base font-bold text-green-700">
+              <div className="border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/15 rounded-lg px-3 py-2">
+                <p className="text-xs font-bold text-black dark:text-white">Registration Fee Payment</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">One payment secures your spot — no discounts or installments apply.</p>
+                <p className="text-base font-bold text-green-700 dark:text-green-400">
                   {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
                 </p>
               </div>
@@ -734,21 +748,21 @@ export default function PaymentPage() {
 
           {/* Partial scholarship notice — normal payment flow still applies, just discounted */}
           {isPartialScholarship && (
-            <div className="border-b border-gray-200 pb-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-800 leading-snug">
+            <div className="border-b border-gray-200 dark:border-white/10 pb-3">
+              <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-800 dark:text-green-300 leading-snug">
                 You've been awarded a {Number(scholarship?.discount_percentage) || 0}% scholarship — it's applied automatically to the price below. Pick your learning track and payment plan as normal.
               </div>
             </div>
           )}
 
           {/* ── Learning Track: collapsed selector → expands to a compact list ── */}
-          <div className="border-b border-gray-200 pb-3">
+          <div className="border-b border-gray-200 dark:border-white/10 pb-3">
             <div className="flex justify-between items-center text-sm mb-1">
-              <span className="text-gray-500">Learning Track</span>
+              <span className="text-gray-500 dark:text-gray-400">Learning Track</span>
               {selectedTrack && availableTracks.length > 1 && (
                 <button
                   onClick={() => setTrackPickerOpen(o => !o)}
-                  className="text-xs font-semibold text-indigo-600 hover:underline"
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   {trackPickerOpen ? 'Close' : 'Change'}
                 </button>
@@ -757,18 +771,18 @@ export default function PaymentPage() {
 
             {selectedTrack && !trackPickerOpen ? (
               <div className="flex justify-between items-center">
-                <span className="font-semibold text-black text-sm">{selectedTrackDef?.name}</span>
-                <span className="font-semibold text-indigo-600 text-sm">
+                <span className="font-semibold text-black dark:text-white text-sm">{selectedTrackDef?.name}</span>
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400 text-sm">
                   {currency === 'NGN' ? '₦' : '$'}{trackPrice(selectedTrack)?.toLocaleString()}
                   {selectedTrackDef?.priceLabel}
                 </span>
               </div>
             ) : availableTracks.length === 0 ? (
-              <p className="text-xs text-gray-400">Loading learning tracks...</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Loading learning tracks...</p>
             ) : (
               <button
                 onClick={() => setTrackPickerOpen(true)}
-                className="w-full flex justify-between items-center text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg px-3 py-2 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                className="w-full flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-white/20 rounded-lg px-3 py-2 hover:border-indigo-400 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors"
               >
                 Select your learning track
                 <ArrowIcon />
@@ -783,17 +797,17 @@ export default function PaymentPage() {
                     onClick={() => { setSelectedTrack(track.id); setTrackPickerOpen(false); }}
                     className={`w-full flex justify-between items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors border ${
                       selectedTrack === track.id
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 bg-white hover:border-indigo-300'
+                        ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/15'
+                        : 'border-gray-200 bg-white dark:border-white/10 dark:bg-white/5 hover:border-indigo-300 dark:hover:border-indigo-400/50'
                     }`}
                   >
                     <span className="min-w-0">
-                      <span className="font-semibold text-black block truncate">
+                      <span className="font-semibold text-black dark:text-white block truncate">
                         {track.name}
-                        {track.popular && <span className="ml-1.5 text-[10px] font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full">POPULAR</span>}
+                        {track.popular && <span className="ml-1.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/25 px-1.5 py-0.5 rounded-full">POPULAR</span>}
                       </span>
                     </span>
-                    <span className="font-semibold text-indigo-600 flex-shrink-0 text-xs">
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0 text-xs">
                       {currency === 'NGN' ? '₦' : '$'}{trackPrice(track.id)?.toLocaleString()}{track.priceLabel}
                     </span>
                   </button>
@@ -804,17 +818,17 @@ export default function PaymentPage() {
 
           {/* Hourly quantity — compact inline stepper, one_on_one only */}
           {selectedTrack === 'one_on_one' && !trackPickerOpen && (
-            <div className="flex justify-between items-center text-sm border-b border-gray-200 pb-3">
-              <span className="text-gray-500">Hours</span>
+            <div className="flex justify-between items-center text-sm border-b border-gray-200 dark:border-white/10 pb-3">
+              <span className="text-gray-500 dark:text-gray-400">Hours</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setHourlyQty(q => Math.max(1, q - 1))}
-                  className="w-6 h-6 rounded-full border border-indigo-300 text-indigo-600 font-bold text-sm flex items-center justify-center hover:bg-indigo-50"
+                  className="w-6 h-6 rounded-full border border-indigo-300 dark:border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
                 >−</button>
-                <span className="w-5 text-center font-semibold text-black">{hourlyQty}</span>
+                <span className="w-5 text-center font-semibold text-black dark:text-white">{hourlyQty}</span>
                 <button
                   onClick={() => setHourlyQty(q => Math.min(20, q + 1))}
-                  className="w-6 h-6 rounded-full border border-indigo-300 text-indigo-600 font-bold text-sm flex items-center justify-center hover:bg-indigo-50"
+                  className="w-6 h-6 rounded-full border border-indigo-300 dark:border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
                 >+</button>
               </div>
             </div>
@@ -822,13 +836,13 @@ export default function PaymentPage() {
 
           {/* ── Payment Method: one-line segmented toggle ── */}
           {selectedTrack && !isRegistrationFee && !isHourlyTrack && !trackPickerOpen && (
-            <div className="flex justify-between items-center text-sm border-b border-gray-200 pb-3">
-              <span className="text-gray-500">Payment Method</span>
-              <div className="flex bg-gray-200 rounded-full p-0.5">
+            <div className="flex justify-between items-center text-sm border-b border-gray-200 dark:border-white/10 pb-3">
+              <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
+              <div className="flex bg-gray-200 dark:bg-white/10 rounded-full p-0.5">
                 <button
                   onClick={() => setPaymentType('onetime')}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                    paymentType === 'onetime' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+                    paymentType === 'onetime' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   One-Time
@@ -836,7 +850,7 @@ export default function PaymentPage() {
                 <button
                   onClick={() => setPaymentType('installment')}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                    paymentType === 'installment' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+                    paymentType === 'installment' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   Installments
@@ -847,14 +861,14 @@ export default function PaymentPage() {
 
           {/* Hourly notice */}
           {!isRegistrationFee && isHourlyTrack && !trackPickerOpen && (
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-500/15 dark:border-amber-500/30 rounded-lg px-3 py-2">
               Billed per hour, one-time payment only.
             </p>
           )}
 
           {/* Installment note */}
           {paymentType === 'installment' && selectedTrack && selectedTrack !== 'one_on_one' && !isRegistrationFee && !trackPickerOpen && (
-            <p className="text-xs text-black bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+            <p className="text-xs text-black bg-yellow-50 border border-yellow-200 dark:text-yellow-200 dark:bg-yellow-500/15 dark:border-yellow-500/30 rounded-lg px-3 py-2">
               Split into 4 monthly payments · must pay on time to keep access.
             </p>
           )}
@@ -864,13 +878,13 @@ export default function PaymentPage() {
             <div className="space-y-1 pt-1">
               {!isRegistrationFee && selectedTrack && selectedTrack !== 'one_on_one' && onetimeDiscountPercent > 0 && paymentType === 'onetime' && (
                 <>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Track price</span>
                     <span className="line-through">
                       {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs text-green-600">
+                  <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
                     <span>{onetimeDiscountPercent}% one-time discount</span>
                     <span>
                       -{currency === 'NGN' ? '₦' : '$'}
@@ -882,13 +896,13 @@ export default function PaymentPage() {
 
               {isPartialScholarship && selectedTrack && selectedTrack !== 'one_on_one' && (
                 <>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Track price</span>
                     <span className="line-through">
                       {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs text-green-600">
+                  <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
                     <span>{scholarship?.discount_percentage}% scholarship discount</span>
                     <span>
                       -{currency === 'NGN' ? '₦' : '$'}
@@ -899,11 +913,11 @@ export default function PaymentPage() {
               )}
 
               {selectedTrack === 'one_on_one' && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   {isPartialScholarship ? (
                     <>
                       <span className="line-through mr-1">{currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}</span>
-                      <span className="text-green-600 font-semibold">
+                      <span className="text-green-600 dark:text-green-400 font-semibold">
                         {currency === 'NGN' ? '₦' : '$'}{Math.round(trackPrices[selectedTrack] * (1 - (Number(scholarship?.discount_percentage) || 0) / 100)).toLocaleString()}/hr
                       </span>
                       {' '}× {hourlyQty} hr{hourlyQty > 1 ? 's' : ''} ({scholarship?.discount_percentage}% scholarship)
@@ -915,12 +929,12 @@ export default function PaymentPage() {
               )}
 
               <div className="flex justify-between items-baseline pt-1">
-                <span className="text-sm font-bold text-black">
+                <span className="text-sm font-bold text-black dark:text-white">
                   {selectedTrack === 'one_on_one'
                     ? `Total (${hourlyQty} hr${hourlyQty > 1 ? 's' : ''})`
                     : paymentType === 'installment' ? 'Pay Now' : 'Total'}
                 </span>
-                <span className="text-lg font-bold text-indigo-600">
+                <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
                   {currency === 'NGN' ? '₦' : '$'}{getCurrentPrice().toLocaleString()}
                 </span>
               </div>
@@ -956,7 +970,7 @@ export default function PaymentPage() {
           )}
 
           {!trackPickerOpen && (
-            <div className="flex items-center justify-center gap-3 text-[11px] text-gray-400 pt-1">
+            <div className="flex items-center justify-center gap-3 text-[11px] text-gray-400 dark:text-gray-500 pt-1">
               <span>🔒 Secure payment</span>
               <span>·</span>
               <span>🛡️ 256-bit encryption</span>

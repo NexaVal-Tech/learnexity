@@ -131,9 +131,9 @@ export default function CommunityPage() {
               transform: translateY(-2px);
             }
             .input-field {
-              background-color: #090909;
-              border: 1px solid rgba(255,255,255,0.1);
-              color: white;
+              background-color: var(--surface);
+              border: 1px solid var(--border-subtle);
+              color: var(--text-primary);
               border-radius: 0.75rem;
               width: 100%;
               padding: 0.5rem 1rem;
@@ -145,12 +145,12 @@ export default function CommunityPage() {
               box-shadow: 0 0 0 2px ${BRAND}22;
             }
             .input-field::placeholder {
-              color: #6b7280;
+              color: var(--text-muted);
             }
             .select-field {
-              background-color: #090909;
-              border: 1px solid rgba(255,255,255,0.1);
-              color: white;
+              background-color: var(--surface);
+              border: 1px solid var(--border-subtle);
+              color: var(--text-primary);
               border-radius: 0.75rem;
               padding: 0.5rem 0.75rem;
               outline: none;
@@ -160,7 +160,7 @@ export default function CommunityPage() {
               border-color: ${BRAND}99;
             }
             .select-field option {
-              background-color: #0f0f0f;
+              background-color: var(--surface);
             }
           `}</style>
 

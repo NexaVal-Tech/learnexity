@@ -19,8 +19,8 @@ const EnrollmentChart: React.FC<EnrollmentChartProps> = ({ data }) => {
   const yAxisTicks = Array.from({ length: 5 }, (_, i) => Math.round((yAxisMax / 4) * i));
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">
-      <h3 className="text-lg font-bold text-gray-900 mb-6">Enrollment Trends</h3>
+    <div className="bg-white dark:bg-[#0f0f14] p-6 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm h-full">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Enrollment Trends</h3>
       <div className="h-[250px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -62,7 +62,7 @@ const EnrollmentChart: React.FC<EnrollmentChartProps> = ({ data }) => {
         </ResponsiveContainer>
       </div>
       <div className="flex justify-center gap-6 mt-4">
-        <div className="flex items-center text-xs text-gray-500">
+        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
           <span className="w-2 h-2 rounded-full bg-[#3B82F6] mr-2"></span>
           Monthly Enrollments
         </div>

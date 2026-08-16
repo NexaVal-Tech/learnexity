@@ -186,6 +186,7 @@ class AdminCourseController extends Controller
                 'duration'                   => $course->duration,
                 'level'                      => $course->level,
                 'is_freemium'                => $course->is_freemium,
+                'is_free'                    => $course->is_free,
                 'is_premium'                 => $course->is_premium,
                 'is_active'                  => (bool) $course->is_active,
                 'hero_image'                 => $course->hero_image_url,
@@ -196,14 +197,17 @@ class AdminCourseController extends Controller
                 'offers_one_on_one'          => $course->offers_one_on_one,
                 'offers_group_mentorship'    => $course->offers_group_mentorship,
                 'offers_self_paced'          => $course->offers_self_paced,
+                'offers_intermediate'        => $course->offers_intermediate,
                 'price_usd'                  => $course->price_usd,
                 'price_ngn'                  => $course->price_ngn,
                 'one_on_one_price_usd'       => $course->one_on_one_price_usd,
                 'group_mentorship_price_usd' => $course->group_mentorship_price_usd,
                 'self_paced_price_usd'       => $course->self_paced_price_usd,
+                'intermediate_price_usd'     => $course->intermediate_price_usd,
                 'one_on_one_price_ngn'       => $course->one_on_one_price_ngn,
                 'group_mentorship_price_ngn' => $course->group_mentorship_price_ngn,
                 'self_paced_price_ngn'       => $course->self_paced_price_ngn,
+                'intermediate_price_ngn'     => $course->intermediate_price_ngn,
                 'onetime_discount_usd'       => $course->onetime_discount_usd,
                 'onetime_discount_ngn'       => $course->onetime_discount_ngn,
             ],
@@ -303,6 +307,7 @@ class AdminCourseController extends Controller
                 'level'       => 'nullable|string',
                 'is_freemium' => 'nullable|in:0,1,true,false',
                 'is_premium'  => 'nullable|in:0,1,true,false',
+                'is_free'     => 'nullable|in:0,1,true,false',
 
                 // Images — accept file upload OR a plain string URL
                 'hero_image'      => 'nullable',
@@ -316,16 +321,19 @@ class AdminCourseController extends Controller
                 'offers_one_on_one'       => 'nullable|in:0,1,true,false',
                 'offers_group_mentorship' => 'nullable|in:0,1,true,false',
                 'offers_self_paced'       => 'nullable|in:0,1,true,false',
+                'offers_intermediate'     => 'nullable|in:0,1,true,false',
 
                 // Track Prices (USD)
                 'one_on_one_price_usd'       => 'nullable|numeric|min:0',
                 'group_mentorship_price_usd' => 'nullable|numeric|min:0',
                 'self_paced_price_usd'       => 'nullable|numeric|min:0',
+                'intermediate_price_usd'     => 'nullable|numeric|min:0',
 
                 // Track Prices (NGN)
                 'one_on_one_price_ngn'       => 'nullable|numeric|min:0',
                 'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
                 'self_paced_price_ngn'       => 'nullable|numeric|min:0',
+                'intermediate_price_ngn'     => 'nullable|numeric|min:0',
 
                 // One-time Discounts
                 'onetime_discount_usd' => 'nullable|numeric|min:0',
@@ -351,9 +359,11 @@ class AdminCourseController extends Controller
         // Cast booleans (FormData sends strings)
         $validated['is_freemium']             = filter_var($validated['is_freemium'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $validated['is_premium']              = filter_var($validated['is_premium'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $validated['is_free']                 = filter_var($validated['is_free'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $validated['offers_one_on_one']       = filter_var($validated['offers_one_on_one'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $validated['offers_group_mentorship'] = filter_var($validated['offers_group_mentorship'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $validated['offers_self_paced']       = filter_var($validated['offers_self_paced'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $validated['offers_intermediate']     = filter_var($validated['offers_intermediate'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         // Handle images
         $validated['hero_image']      = $this->handleImageInput($request, 'hero_image');
@@ -434,6 +444,7 @@ class AdminCourseController extends Controller
                 'level'       => 'nullable|string',
                 'is_freemium' => 'nullable|in:0,1,true,false',
                 'is_premium'  => 'nullable|in:0,1,true,false',
+                'is_free'     => 'nullable|in:0,1,true,false',
 
                 'hero_image'      => 'nullable',
                 'secondary_image' => 'nullable',
@@ -444,13 +455,16 @@ class AdminCourseController extends Controller
                 'offers_one_on_one'       => 'nullable|in:0,1,true,false',
                 'offers_group_mentorship' => 'nullable|in:0,1,true,false',
                 'offers_self_paced'       => 'nullable|in:0,1,true,false',
+                'offers_intermediate'     => 'nullable|in:0,1,true,false',
 
                 'one_on_one_price_usd'       => 'nullable|numeric|min:0',
                 'group_mentorship_price_usd' => 'nullable|numeric|min:0',
                 'self_paced_price_usd'       => 'nullable|numeric|min:0',
+                'intermediate_price_usd'     => 'nullable|numeric|min:0',
                 'one_on_one_price_ngn'       => 'nullable|numeric|min:0',
                 'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
                 'self_paced_price_ngn'       => 'nullable|numeric|min:0',
+                'intermediate_price_ngn'     => 'nullable|numeric|min:0',
 
                 'onetime_discount_usd' => 'nullable|numeric|min:0',
                 'onetime_discount_ngn' => 'nullable|numeric|min:0',
@@ -478,6 +492,9 @@ class AdminCourseController extends Controller
         if (array_key_exists('is_premium', $validated)) {
             $validated['is_premium'] = filter_var($validated['is_premium'], FILTER_VALIDATE_BOOLEAN);
         }
+        if (array_key_exists('is_free', $validated)) {
+            $validated['is_free'] = filter_var($validated['is_free'], FILTER_VALIDATE_BOOLEAN);
+        }
         if (array_key_exists('offers_one_on_one', $validated)) {
             $validated['offers_one_on_one'] = filter_var($validated['offers_one_on_one'], FILTER_VALIDATE_BOOLEAN);
         }
@@ -486,6 +503,9 @@ class AdminCourseController extends Controller
         }
         if (array_key_exists('offers_self_paced', $validated)) {
             $validated['offers_self_paced'] = filter_var($validated['offers_self_paced'], FILTER_VALIDATE_BOOLEAN);
+        }
+        if (array_key_exists('offers_intermediate', $validated)) {
+            $validated['offers_intermediate'] = filter_var($validated['offers_intermediate'], FILTER_VALIDATE_BOOLEAN);
         }
 
         // Handle image uploads — only update if a new file/value was provided
@@ -552,14 +572,17 @@ class AdminCourseController extends Controller
             'offers_one_on_one'          => 'boolean',
             'offers_group_mentorship'    => 'boolean',
             'offers_self_paced'          => 'boolean',
+            'offers_intermediate'        => 'boolean',
             'price_usd'                  => 'nullable|numeric|min:0',
             'price_ngn'                  => 'nullable|numeric|min:0',
             'one_on_one_price_usd'       => 'nullable|numeric|min:0',
             'group_mentorship_price_usd' => 'nullable|numeric|min:0',
             'self_paced_price_usd'       => 'nullable|numeric|min:0',
+            'intermediate_price_usd'     => 'nullable|numeric|min:0',
             'one_on_one_price_ngn'       => 'nullable|numeric|min:0',
             'group_mentorship_price_ngn' => 'nullable|numeric|min:0',
             'self_paced_price_ngn'       => 'nullable|numeric|min:0',
+            'intermediate_price_ngn'     => 'nullable|numeric|min:0',
             'onetime_discount_usd'       => 'nullable|numeric|min:0',
             'onetime_discount_ngn'       => 'nullable|numeric|min:0',
             // Admin-only organization (no user-facing display yet):

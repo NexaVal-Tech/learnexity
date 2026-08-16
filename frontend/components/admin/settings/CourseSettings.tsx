@@ -12,15 +12,18 @@ interface PricingSettings {
   offers_one_on_one: boolean;
   offers_group_mentorship: boolean;
   offers_self_paced: boolean;
+  offers_intermediate: boolean;
   offers_real_world_exposure: boolean;
   price_usd: number;
   price_ngn: number;
   one_on_one_price_usd: string;
   group_mentorship_price_usd: string;
   self_paced_price_usd: string;
+  intermediate_price_usd: string;
   one_on_one_price_ngn: string;
   group_mentorship_price_ngn: string;
   self_paced_price_ngn: string;
+  intermediate_price_ngn: string;
   onetime_discount_usd: string;
   onetime_discount_ngn: string;
   fee_category: '' | 'deeptech' | 'flexible' | 'intermediate';
@@ -31,15 +34,18 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
     offers_one_on_one: true,
     offers_group_mentorship: true,
     offers_self_paced: true,
+    offers_intermediate: false,
     offers_real_world_exposure: false,
     price_usd: 0,
     price_ngn: 0,
     one_on_one_price_usd: '',
     group_mentorship_price_usd: '',
     self_paced_price_usd: '',
+    intermediate_price_usd: '',
     one_on_one_price_ngn: '',
     group_mentorship_price_ngn: '',
     self_paced_price_ngn: '',
+    intermediate_price_ngn: '',
     onetime_discount_usd: '',
     onetime_discount_ngn: '',
     fee_category: '',
@@ -54,9 +60,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
     one_on_one_price_usd: '',
     group_mentorship_price_usd: '',
     self_paced_price_usd: '',
+    intermediate_price_usd: '',
     one_on_one_price_ngn: '',
     group_mentorship_price_ngn: '',
     self_paced_price_ngn: '',
+    intermediate_price_ngn: '',
   });
 
   useEffect(() => {
@@ -73,6 +81,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         offers_one_on_one: course.offers_one_on_one ?? true,
         offers_group_mentorship: course.offers_group_mentorship ?? true,
         offers_self_paced: course.offers_self_paced ?? true,
+        offers_intermediate: course.offers_intermediate ?? false,
         offers_real_world_exposure: course.offers_real_world_exposure ?? false,
         price_usd: course.price_usd ?? 0,
         price_ngn: course.price_ngn ?? 0,
@@ -80,9 +89,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         one_on_one_price_usd: '',
         group_mentorship_price_usd: '',
         self_paced_price_usd: '',
+        intermediate_price_usd: '',
         one_on_one_price_ngn: '',
         group_mentorship_price_ngn: '',
         self_paced_price_ngn: '',
+        intermediate_price_ngn: '',
         onetime_discount_usd: course.onetime_discount_usd?.toString() || '',
         onetime_discount_ngn: course.onetime_discount_ngn?.toString() || '',
         fee_category: course.fee_category || '',
@@ -92,9 +103,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         one_on_one_price_usd: course.one_on_one_price_usd?.toString() || '',
         group_mentorship_price_usd: course.group_mentorship_price_usd?.toString() || '',
         self_paced_price_usd: course.self_paced_price_usd?.toString() || '',
+        intermediate_price_usd: course.intermediate_price_usd?.toString() || '',
         one_on_one_price_ngn: course.one_on_one_price_ngn?.toString() || '',
         group_mentorship_price_ngn: course.group_mentorship_price_ngn?.toString() || '',
         self_paced_price_ngn: course.self_paced_price_ngn?.toString() || '',
+        intermediate_price_ngn: course.intermediate_price_ngn?.toString() || '',
       });
 
     } catch (err) {
@@ -146,9 +159,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         one_on_one_price_usd:       resolvePrice(settings.one_on_one_price_usd,       savedPrices.one_on_one_price_usd),
         group_mentorship_price_usd: resolvePrice(settings.group_mentorship_price_usd, savedPrices.group_mentorship_price_usd),
         self_paced_price_usd:       resolvePrice(settings.self_paced_price_usd,       savedPrices.self_paced_price_usd),
+        intermediate_price_usd:     resolvePrice(settings.intermediate_price_usd,     savedPrices.intermediate_price_usd),
         one_on_one_price_ngn:       resolvePrice(settings.one_on_one_price_ngn,       savedPrices.one_on_one_price_ngn),
         group_mentorship_price_ngn: resolvePrice(settings.group_mentorship_price_ngn, savedPrices.group_mentorship_price_ngn),
         self_paced_price_ngn:       resolvePrice(settings.self_paced_price_ngn,       savedPrices.self_paced_price_ngn),
+        intermediate_price_ngn:     resolvePrice(settings.intermediate_price_ngn,     savedPrices.intermediate_price_ngn),
         onetime_discount_usd: parseFloat(settings.onetime_discount_usd || '0'),
         onetime_discount_ngn: parseFloat(settings.onetime_discount_ngn || '0'),
         fee_category: settings.fee_category || null,
@@ -161,9 +176,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         one_on_one_price_usd:       dataToSave.one_on_one_price_usd.toString(),
         group_mentorship_price_usd: dataToSave.group_mentorship_price_usd.toString(),
         self_paced_price_usd:       dataToSave.self_paced_price_usd.toString(),
+        intermediate_price_usd:     dataToSave.intermediate_price_usd.toString(),
         one_on_one_price_ngn:       dataToSave.one_on_one_price_ngn.toString(),
         group_mentorship_price_ngn: dataToSave.group_mentorship_price_ngn.toString(),
         self_paced_price_ngn:       dataToSave.self_paced_price_ngn.toString(),
+        intermediate_price_ngn:     dataToSave.intermediate_price_ngn.toString(),
       });
 
       // Clear inputs so placeholders show the freshly saved values
@@ -172,9 +189,11 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         one_on_one_price_usd: '',
         group_mentorship_price_usd: '',
         self_paced_price_usd: '',
+        intermediate_price_usd: '',
         one_on_one_price_ngn: '',
         group_mentorship_price_ngn: '',
         self_paced_price_ngn: '',
+        intermediate_price_ngn: '',
       }));
 
       setSuccess(true);
@@ -190,7 +209,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-gray-600">Loading settings...</div>
+        <div className="text-gray-600 dark:text-gray-300">Loading settings...</div>
       </div>
     );
   }
@@ -200,12 +219,12 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-purple-100 dark:bg-purple-500/15 rounded-lg flex items-center justify-center">
             <Settings className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Course Pricing & Settings</h2>
-            <p className="text-sm text-gray-500">Configure pricing and available learning tracks</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Pricing & Settings</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-500">Configure pricing and available learning tracks</p>
           </div>
         </div>
         <button
@@ -229,36 +248,36 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
       {/* Alerts */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-red-900">Error</h4>
-            <p className="text-sm text-red-700">{error}</p>
+            <h4 className="font-semibold text-red-900 dark:text-red-300">Error</h4>
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+        <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg p-4 flex items-start gap-3">
           <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
           <div>
-            <h4 className="font-semibold text-green-900">Success</h4>
-            <p className="text-sm text-green-700">Settings saved successfully</p>
+            <h4 className="font-semibold text-green-900 dark:text-green-300">Success</h4>
+            <p className="text-sm text-green-700 dark:text-green-300">Settings saved successfully</p>
           </div>
         </div>
       )}
 
       {/* Learning Tracks Availability */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Learning Tracks</h3>
-        <p className="text-sm text-gray-600 mb-4">Select which learning tracks are available for this course</p>
-        
+      <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Available Learning Tracks</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Select which learning tracks are available for this course</p>
+
         <div className="space-y-3">
-          <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5">
             <input
               type="checkbox"
               checked={settings.offers_one_on_one}
@@ -266,12 +285,12 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
               className="w-5 h-5 text-purple-600 rounded"
             />
             <div className="flex-1">
-              <div className="font-medium text-gray-900">One-on-One Coaching</div>
-              <div className="text-sm text-gray-500">Private sessions with instructor</div>
+              <div className="font-medium text-gray-900 dark:text-white">One-on-One Coaching</div>
+              <div className="text-sm text-gray-500 dark:text-gray-500">Private sessions with instructor</div>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5">
             <input
               type="checkbox"
               checked={settings.offers_group_mentorship}
@@ -279,12 +298,12 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
               className="w-5 h-5 text-purple-600 rounded"
             />
             <div className="flex-1">
-              <div className="font-medium text-gray-900">Group Mentorship</div>
-              <div className="text-sm text-gray-500">Weekly sessions with peer learning</div>
+              <div className="font-medium text-gray-900 dark:text-white">Group Mentorship</div>
+              <div className="text-sm text-gray-500 dark:text-gray-500">Weekly sessions with peer learning</div>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5">
             <input
               type="checkbox"
               checked={settings.offers_self_paced}
@@ -292,17 +311,30 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
               className="w-5 h-5 text-purple-600 rounded"
             />
             <div className="flex-1">
-              <div className="font-medium text-gray-900">Self-Paced Learning</div>
-              <div className="text-sm text-gray-500">Learn at your own pace with community support</div>
+              <div className="font-medium text-gray-900 dark:text-white">Self-Paced Learning</div>
+              <div className="text-sm text-gray-500 dark:text-gray-500">Learn at your own pace with community support</div>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5">
+            <input
+              type="checkbox"
+              checked={settings.offers_intermediate}
+              onChange={(e) => setSettings({ ...settings, offers_intermediate: e.target.checked })}
+              className="w-5 h-5 text-purple-600 rounded"
+            />
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 dark:text-white">Intermediate</div>
+              <div className="text-sm text-gray-500 dark:text-gray-500">For learners ready to move beyond the basics</div>
             </div>
           </label>
         </div>
       </div>
 
       {/* Registration Fee Category (scholarship registration fee tier) */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Registration Fee Category</h3>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Registration Fee Category</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Which registration-fee tier a full-tuition scholarship applies for this course (set the
           actual amounts under Scholarship Settings above). By default this is derived
           automatically from the learning track a student picks — Deep-Tech for one-on-one / live
@@ -313,7 +345,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
         <select
           value={settings.fee_category}
           onChange={(e) => setSettings({ ...settings, fee_category: e.target.value as PricingSettings['fee_category'] })}
-          className="w-full sm:w-72 px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-medium text-gray-900"
+          className="w-full sm:w-72 px-3 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-medium text-gray-900 dark:text-white"
         >
           <option value="">Auto (derive from learning track)</option>
           <option value="deeptech">Deep-Tech</option>
@@ -323,40 +355,40 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
       </div>
 
       {/* Pricing Configuration */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <DollarSign className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Pricing Configuration</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pricing Configuration</h3>
         </div>
-        <p className="text-sm text-gray-600 mb-1">Set prices for each learning track in both USD and NGN</p>
-        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-6">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Set prices for each learning track in both USD and NGN</p>
+        <p className="text-xs text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded px-3 py-2 mb-6">
           💡 Leave a field blank to keep its current price unchanged. Only fields you type in will be updated.
         </p>
 
         {/* USD Pricing */}
         <div className="mb-8">
-          <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">$</span>
             USD Pricing (International)
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {settings.offers_one_on_one && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   One-on-One Coaching
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">$</span>
                   <input
                     type="text"
                     value={settings.one_on_one_price_usd}
                     onChange={(e) => handleNumberChange('one_on_one_price_usd', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.one_on_one_price_usd || '0'}
                   />
                 </div>
                 {settings.one_on_one_price_usd && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ${formatNumberDisplay(settings.one_on_one_price_usd)}
                   </p>
                 )}
@@ -365,21 +397,21 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
             {settings.offers_group_mentorship && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Group Mentorship
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">$</span>
                   <input
                     type="text"
                     value={settings.group_mentorship_price_usd}
                     onChange={(e) => handleNumberChange('group_mentorship_price_usd', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.group_mentorship_price_usd || '0'}
                   />
                 </div>
                 {settings.group_mentorship_price_usd && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ${formatNumberDisplay(settings.group_mentorship_price_usd)}
                   </p>
                 )}
@@ -388,29 +420,52 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
             {settings.offers_self_paced && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Self-Paced Learning
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">$</span>
                   <input
                     type="text"
                     value={settings.self_paced_price_usd}
                     onChange={(e) => handleNumberChange('self_paced_price_usd', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.self_paced_price_usd || '0'}
                   />
                 </div>
                 {settings.self_paced_price_usd && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ${formatNumberDisplay(settings.self_paced_price_usd)}
                   </p>
                 )}
               </div>
             )}
 
+            {settings.offers_intermediate && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Intermediate
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">$</span>
+                  <input
+                    type="text"
+                    value={settings.intermediate_price_usd}
+                    onChange={(e) => handleNumberChange('intermediate_price_usd', e.target.value)}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
+                    placeholder={savedPrices.intermediate_price_usd || '0'}
+                  />
+                </div>
+                {settings.intermediate_price_usd && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    ${formatNumberDisplay(settings.intermediate_price_usd)}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 One-Time Payment Discount
               </label>
               <div className="relative">
@@ -418,12 +473,12 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                   type="text"
                   value={settings.onetime_discount_usd}
                   onChange={(e) => handleNumberChange('onetime_discount_usd', e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                   placeholder="0"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base font-medium">%</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 % off each track price when paying upfront (0–100)
               </p>
               {settings.onetime_discount_usd && (() => {
@@ -437,9 +492,9 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                 return (
                   <div className="mt-2 space-y-1">
                     {tracks.map(t => (
-                      <p key={t.label} className="text-xs text-green-700 font-medium">
+                      <p key={t.label} className="text-xs text-green-700 dark:text-green-400 font-medium">
                         {t.label}: ${t.price.toLocaleString()} → ${(t.price * (1 - pct / 100)).toLocaleString('en-US', { maximumFractionDigits: 2 })}
-                        <span className="text-gray-400 ml-1">(saves ${(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                        <span className="text-gray-400 dark:text-gray-500 ml-1">(saves ${(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
                       </p>
                     ))}
                   </div>
@@ -451,28 +506,28 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
         {/* NGN Pricing */}
         <div>
-          <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">₦</span>
             NGN Pricing (Nigeria)
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {settings.offers_one_on_one && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   One-on-One Coaching
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">₦</span>
                   <input
                     type="text"
                     value={settings.one_on_one_price_ngn}
                     onChange={(e) => handleNumberChange('one_on_one_price_ngn', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.one_on_one_price_ngn || '0'}
                   />
                 </div>
                 {settings.one_on_one_price_ngn && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ₦{formatNumberDisplay(settings.one_on_one_price_ngn)}
                   </p>
                 )}
@@ -481,21 +536,21 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
             {settings.offers_group_mentorship && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Group Mentorship
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">₦</span>
                   <input
                     type="text"
                     value={settings.group_mentorship_price_ngn}
                     onChange={(e) => handleNumberChange('group_mentorship_price_ngn', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.group_mentorship_price_ngn || '0'}
                   />
                 </div>
                 {settings.group_mentorship_price_ngn && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ₦{formatNumberDisplay(settings.group_mentorship_price_ngn)}
                   </p>
                 )}
@@ -504,29 +559,52 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
 
             {settings.offers_self_paced && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Self-Paced Learning
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">₦</span>
                   <input
                     type="text"
                     value={settings.self_paced_price_ngn}
                     onChange={(e) => handleNumberChange('self_paced_price_ngn', e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                     placeholder={savedPrices.self_paced_price_ngn || '0'}
                   />
                 </div>
                 {settings.self_paced_price_ngn && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                     ₦{formatNumberDisplay(settings.self_paced_price_ngn)}
                   </p>
                 )}
               </div>
             )}
 
+            {settings.offers_intermediate && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Intermediate
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">₦</span>
+                  <input
+                    type="text"
+                    value={settings.intermediate_price_ngn}
+                    onChange={(e) => handleNumberChange('intermediate_price_ngn', e.target.value)}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
+                    placeholder={savedPrices.intermediate_price_ngn || '0'}
+                  />
+                </div>
+                {settings.intermediate_price_ngn && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    ₦{formatNumberDisplay(settings.intermediate_price_ngn)}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 One-Time Payment Discount
               </label>
               <div className="relative">
@@ -534,12 +612,12 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                   type="text"
                   value={settings.onetime_discount_ngn}
                   onChange={(e) => handleNumberChange('onetime_discount_ngn', e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900"
+                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 dark:border-white/20 dark:bg-white/5 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base font-medium text-gray-900 dark:text-white"
                   placeholder="0"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base font-medium">%</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 % off each track price when paying upfront (0–100)
               </p>
               {settings.onetime_discount_ngn && (() => {
@@ -553,9 +631,9 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
                 return (
                   <div className="mt-2 space-y-1">
                     {tracks.map(t => (
-                      <p key={t.label} className="text-xs text-green-700 font-medium">
+                      <p key={t.label} className="text-xs text-green-700 dark:text-green-400 font-medium">
                         {t.label}: ₦{t.price.toLocaleString()} → ₦{(t.price * (1 - pct / 100)).toLocaleString('en-US', { maximumFractionDigits: 2 })}
-                        <span className="text-gray-400 ml-1">(saves ₦{(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                        <span className="text-gray-400 dark:text-gray-500 ml-1">(saves ₦{(t.price * pct / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
                       </p>
                     ))}
                   </div>
@@ -567,9 +645,9 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
       </div>
 
       {/* Payment Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 mb-2">Payment Information</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
+        <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Payment Information</h4>
+        <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
           <li>• Nigerian users will automatically see NGN pricing and pay via Paystack</li>
           <li>• International users will see USD pricing and pay via Stripe</li>
           <li>• Installment payments are split across 4 months (16 weeks)</li>

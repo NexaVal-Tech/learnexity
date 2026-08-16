@@ -55,14 +55,14 @@ export default function FAQs() {
           {/* Header */}
           <div
             className="faq-header-box max-w-3xl mx-auto text-center mb-12 px-10 py-6
-              border border-white/10
-              bg-[#0f0f0f]/90 backdrop-blur-sm
-              shadow-2xl shadow-black/80"
+              border border-gray-200 dark:border-white/10
+              bg-white dark:bg-[#0f0f0f]/90 backdrop-blur-sm
+              shadow-2xl shadow-black/10 dark:shadow-black/80"
           >
-            <h2 className="text-5xl font-bold text-white mb-4">
+            <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Frequently asked questions
             </h2>
-            <p className="text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400">
               Can&apos;t find the answers you are looking for?{" "}
               <a href="/contact" className="underline" style={{ color: BRAND }}>
                 Contact Us
@@ -75,12 +75,12 @@ export default function FAQs() {
             {faqs.map((f, idx) => (
               <div
                 key={idx}
-                className={`faq-item border border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm
-                  shadow-2xl shadow-black/80 transition-all duration-300
+                className={`faq-item border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f0f0f]/90 backdrop-blur-sm
+                  shadow-2xl shadow-black/10 dark:shadow-black/80 transition-all duration-300
                   ${open === idx ? "faq-item-open" : ""}`}
               >
                 <button
-                  className="w-full flex justify-between items-center text-left py-8 px-6 font-medium text-xl text-white transition-colors"
+                  className="w-full flex justify-between items-center text-left py-8 px-6 font-medium text-xl text-gray-900 dark:text-white transition-colors"
                   onClick={() => setOpen(open === idx ? null : idx)}
                 >
                   <span className="pr-8">{f.q}</span>
@@ -89,7 +89,7 @@ export default function FAQs() {
                     style={
                       open === idx
                         ? { backgroundColor: `${BRAND}33`, border: `1px solid ${BRAND}66`, color: "white" }
-                        : { color: "#9ca3af" }
+                        : { color: "var(--text-muted)" }
                     }
                   >
                     {open === idx ? "−" : "+"}
@@ -97,7 +97,7 @@ export default function FAQs() {
                 </button>
                 {open === idx && (
                   <div className="px-6 pb-8">
-                    <p className="text-gray-400 text-lg leading-relaxed">{f.a}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">{f.a}</p>
                   </div>
                 )}
               </div>

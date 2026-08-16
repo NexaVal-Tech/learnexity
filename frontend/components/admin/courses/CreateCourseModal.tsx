@@ -29,6 +29,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     level: 'Beginner',
     is_freemium: false,
     is_premium: false,
+    is_free: false,
   });
 
   // Step 2: Pricing (USD & NGN)
@@ -41,16 +42,19 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     offers_one_on_one: true,
     offers_group_mentorship: true,
     offers_self_paced: true,
-    
+    offers_intermediate: false,
+
     // Track prices (USD)
     one_on_one_price_usd: '',
     group_mentorship_price_usd: '',
     self_paced_price_usd: '',
-    
+    intermediate_price_usd: '',
+
     // Track prices (NGN)
     one_on_one_price_ngn: '',
     group_mentorship_price_ngn: '',
     self_paced_price_ngn: '',
+    intermediate_price_ngn: '',
     
     // One-time discounts
     onetime_discount_usd: '',
@@ -165,6 +169,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
       if (formData.level) formDataPayload.append('level', formData.level);
       formDataPayload.append('is_freemium', String(formData.is_freemium ? 1 : 0));
       formDataPayload.append('is_premium', String(formData.is_premium ? 1 : 0));
+      formDataPayload.append('is_free', String(formData.is_free ? 1 : 0));
 
       // Images
       if (heroFile) formDataPayload.append('hero_image', heroFile);
@@ -177,13 +182,16 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
       formDataPayload.append('offers_one_on_one', String(pricingData.offers_one_on_one ? 1 : 0));
       formDataPayload.append('offers_group_mentorship', String(pricingData.offers_group_mentorship ? 1 : 0));
       formDataPayload.append('offers_self_paced', String(pricingData.offers_self_paced ? 1 : 0));
+      formDataPayload.append('offers_intermediate', String(pricingData.offers_intermediate ? 1 : 0));
 
       if (pricingData.one_on_one_price_usd) formDataPayload.append('one_on_one_price_usd', pricingData.one_on_one_price_usd);
       if (pricingData.group_mentorship_price_usd) formDataPayload.append('group_mentorship_price_usd', pricingData.group_mentorship_price_usd);
       if (pricingData.self_paced_price_usd) formDataPayload.append('self_paced_price_usd', pricingData.self_paced_price_usd);
+      if (pricingData.intermediate_price_usd) formDataPayload.append('intermediate_price_usd', pricingData.intermediate_price_usd);
       if (pricingData.one_on_one_price_ngn) formDataPayload.append('one_on_one_price_ngn', pricingData.one_on_one_price_ngn);
       if (pricingData.group_mentorship_price_ngn) formDataPayload.append('group_mentorship_price_ngn', pricingData.group_mentorship_price_ngn);
       if (pricingData.self_paced_price_ngn) formDataPayload.append('self_paced_price_ngn', pricingData.self_paced_price_ngn);
+      if (pricingData.intermediate_price_ngn) formDataPayload.append('intermediate_price_ngn', pricingData.intermediate_price_ngn);
       if (pricingData.onetime_discount_usd) formDataPayload.append('onetime_discount_usd', pricingData.onetime_discount_usd);
       if (pricingData.onetime_discount_ngn) formDataPayload.append('onetime_discount_ngn', pricingData.onetime_discount_ngn);
 
@@ -202,8 +210,8 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
   const handleClose = () => {
     setCurrentStep(1);
-    setFormData({ title: '', course_id: '', description: '', project: '', duration: '', level: 'Beginner', is_freemium: false, is_premium: false });
-    setPricingData({ price_usd: '', price_ngn: '', offers_one_on_one: true, offers_group_mentorship: true, offers_self_paced: true, one_on_one_price_usd: '', group_mentorship_price_usd: '', self_paced_price_usd: '', one_on_one_price_ngn: '', group_mentorship_price_ngn: '', self_paced_price_ngn: '', onetime_discount_usd: '', onetime_discount_ngn: '' });
+    setFormData({ title: '', course_id: '', description: '', project: '', duration: '', level: 'Beginner', is_freemium: false, is_premium: false, is_free: false });
+    setPricingData({ price_usd: '', price_ngn: '', offers_one_on_one: true, offers_group_mentorship: true, offers_self_paced: true, offers_intermediate: false, one_on_one_price_usd: '', group_mentorship_price_usd: '', self_paced_price_usd: '', intermediate_price_usd: '', one_on_one_price_ngn: '', group_mentorship_price_ngn: '', self_paced_price_ngn: '', intermediate_price_ngn: '', onetime_discount_usd: '', onetime_discount_ngn: '' });
     setHeroFile(null); setHeroPreview(null);
     setSecondaryFile(null); setSecondaryPreview(null);
     onClose();
@@ -213,7 +221,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0F172A] to-gray-800 px-6 py-5">
           <div className="flex items-center justify-between mb-4">
@@ -254,7 +262,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
           {currentStep === 1 && (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Course Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -262,14 +270,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   name="title"
                   value={formData.title}
                   onChange={handleTitleChange}
-                  className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                   placeholder="e.g., Advanced Web Development"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Course ID <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -277,17 +285,17 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   name="course_id"
                   value={formData.course_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border text-gray-700 border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border text-gray-700 dark:text-white border-gray-200 dark:border-white/20 rounded-xl bg-gray-50 dark:bg-white/5 focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                   placeholder="auto-generated-from-title"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   Auto-generated from title. Customize if needed.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -295,14 +303,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   value={formData.description}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all resize-none"
                   placeholder="Describe what students will learn..."
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project (Optional)
                 </label>
                 <input
@@ -310,14 +318,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   name="project"
                   value={formData.project}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                   placeholder="e.g., Build a Full-Stack E-commerce Platform"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Clock className="w-4 h-4 inline mr-1" />
                     Duration
                   </label>
@@ -326,13 +334,13 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     name="duration"
                     value={formData.duration}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                     placeholder="e.g., 12 weeks"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <BarChart3 className="w-4 h-4 inline mr-1" />
                     Level
                   </label>
@@ -340,7 +348,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     name="level"
                     value={formData.level}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -350,8 +358,8 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">Course Type</p>
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 rounded-xl p-5 border border-gray-200 dark:border-white/10">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Course Type</p>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input
@@ -359,11 +367,11 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       name="is_freemium"
                       checked={formData.is_freemium}
                       onChange={handleChange}
-                      className="w-5 h-5 rounded border-gray-300 text-[#0F172A] focus:ring-2 focus:ring-[#0F172A]"
+                      className="w-5 h-5 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A] focus:ring-2 focus:ring-[#0F172A]"
                     />
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
                         Freemium (Free tier available)
                       </span>
                     </div>
@@ -375,12 +383,28 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       name="is_premium"
                       checked={formData.is_premium}
                       onChange={handleChange}
-                      className="w-5 h-5 rounded border-gray-300 text-[#0F172A] focus:ring-2 focus:ring-[#0F172A]"
+                      className="w-5 h-5 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A] focus:ring-2 focus:ring-[#0F172A]"
                     />
                     <div className="flex items-center gap-2">
                       <Crown className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
                         Premium (Exclusive content)
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="is_free"
+                      checked={formData.is_free}
+                      onChange={handleChange}
+                      className="w-5 h-5 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A] focus:ring-2 focus:ring-[#0F172A]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                        Free (Users enroll and get full access without paying — price is still shown, marked as FREE)
                       </span>
                     </div>
                   </label>
@@ -394,14 +418,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
             <div className="space-y-6">
               {/* Base Prices */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Base Prices</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Base Prices</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       USD Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
                         type="number"
                         name="price_usd"
@@ -409,7 +433,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                         placeholder="299.00"
                         required
                       />
@@ -417,11 +441,11 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       NGN Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₦</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
                         type="number"
                         name="price_ngn"
@@ -429,7 +453,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                         placeholder="150000.00"
                         required
                       />
@@ -439,8 +463,8 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
               </div>
 
               {/* Learning Tracks */}
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Available Learning Tracks</h3>
+              <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-5 border border-gray-200 dark:border-white/10">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Available Learning Tracks</h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -448,9 +472,9 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       name="offers_one_on_one"
                       checked={pricingData.offers_one_on_one}
                       onChange={handlePricingChange}
-                      className="w-5 h-5 text-gray-700 rounded border-gray-300 text-[#0F172A]"
+                      className="w-5 h-5 text-gray-700 dark:text-gray-300 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A]"
                     />
-                    <span className="text-sm text-gray-700">One-on-One Mentorship</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">One-on-One Mentorship</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -459,9 +483,9 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       name="offers_group_mentorship"
                       checked={pricingData.offers_group_mentorship}
                       onChange={handlePricingChange}
-                      className="w-5 h-5 text-gray-700 rounded border-gray-300 text-[#0F172A]"
+                      className="w-5 h-5 text-gray-700 dark:text-gray-300 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A]"
                     />
-                    <span className="text-sm text-gray-700">Group Mentorship</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Group Mentorship</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -470,23 +494,34 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       name="offers_self_paced"
                       checked={pricingData.offers_self_paced}
                       onChange={handlePricingChange}
-                      className="w-5 h-5 text-gray-700 rounded border-gray-300 text-[#0F172A]"
+                      className="w-5 h-5 text-gray-700 dark:text-gray-300 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A]"
                     />
-                    <span className="text-sm text-gray-700">Self-Paced</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Self-Paced</span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="offers_intermediate"
+                      checked={pricingData.offers_intermediate}
+                      onChange={handlePricingChange}
+                      className="w-5 h-5 text-gray-700 dark:text-gray-300 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A]"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Intermediate</span>
                   </label>
                 </div>
               </div>
 
               {/* Track Pricing - USD */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Track Pricing (USD)</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Track Pricing (USD)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       One-on-One
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
                         type="number"
                         name="one_on_one_price_usd"
@@ -495,18 +530,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_one_on_one}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="499.00"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Group
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
                         type="number"
                         name="group_mentorship_price_usd"
@@ -515,18 +550,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_group_mentorship}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="349.00"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Self-Paced
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
                         type="number"
                         name="self_paced_price_usd"
@@ -535,8 +570,28 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_self_paced}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="199.00"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Intermediate
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
+                      <input
+                        type="number"
+                        name="intermediate_price_usd"
+                        value={pricingData.intermediate_price_usd}
+                        onChange={handlePricingChange}
+                        step="0.01"
+                        min="0"
+                        disabled={!pricingData.offers_intermediate}
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
+                        placeholder="299.00"
                       />
                     </div>
                   </div>
@@ -545,14 +600,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
               {/* Track Pricing - NGN */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Track Pricing (NGN)</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Track Pricing (NGN)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       One-on-One
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₦</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
                         type="number"
                         name="one_on_one_price_ngn"
@@ -561,18 +616,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_one_on_one}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="250000.00"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Group
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₦</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
                         type="number"
                         name="group_mentorship_price_ngn"
@@ -581,18 +636,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_group_mentorship}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="175000.00"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Self-Paced
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₦</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
                         type="number"
                         name="self_paced_price_ngn"
@@ -601,8 +656,28 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         step="0.01"
                         min="0"
                         disabled={!pricingData.offers_self_paced}
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
                         placeholder="100000.00"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Intermediate
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
+                      <input
+                        type="number"
+                        name="intermediate_price_ngn"
+                        value={pricingData.intermediate_price_ngn}
+                        onChange={handlePricingChange}
+                        step="0.01"
+                        min="0"
+                        disabled={!pricingData.offers_intermediate}
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed"
+                        placeholder="150000.00"
                       />
                     </div>
                   </div>
@@ -611,14 +686,14 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
               {/* One-time Discounts */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">One-Time Payment Discounts (Optional)</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">One-Time Payment Discounts (Optional)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       USD Discount
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
                         type="number"
                         name="onetime_discount_usd"
@@ -626,18 +701,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                         placeholder="50.00"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       NGN Discount
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₦</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
                         type="number"
                         name="onetime_discount_ngn"
@@ -645,7 +720,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
-                        className="w-full pl-8 pr-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
+                        className="w-full pl-8 pr-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all"
                         placeholder="25000.00"
                       />
                     </div>
@@ -658,18 +733,18 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
           {/* Step 3: Images */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 rounded-xl p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
                   Upload image files directly. Supported formats: PNG, JPG, WebP up to 5MB.
                 </p>
               </div>
 
               {/* Hero Image */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hero Image</label>
                 <div
                   onClick={() => document.getElementById('hero-upload')?.click()}
-                  className="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
+                  className="relative border-2 border-dashed border-gray-200 dark:border-white/20 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
                   style={{ minHeight: '180px' }}
                 >
                   {heroPreview ? (
@@ -681,13 +756,13 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setHeroFile(null); setHeroPreview(null); }}
-                        className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow text-red-500 hover:bg-red-50"
+                        className="absolute top-2 right-2 p-1.5 bg-white dark:bg-[#14141c] rounded-full shadow text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15"
                       >
                         <X size={14} />
                       </button>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
                       <Upload size={28} className="mb-2" />
                       <span className="text-sm">Click or drag to upload hero image</span>
                       <span className="text-xs mt-1 text-gray-300">PNG, JPG, WebP up to 5MB</span>
@@ -695,15 +770,15 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   )}
                 </div>
                 <input id="hero-upload" type="file" accept="image/*" className="hidden" onChange={onHeroChange} />
-                {heroFile && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><Check size={12} /> {heroFile.name} ready to upload</p>}
+                {heroFile && <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1"><Check size={12} /> {heroFile.name} ready to upload</p>}
               </div>
 
               {/* Secondary Image */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Image</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secondary Image</label>
                 <div
                   onClick={() => document.getElementById('secondary-upload')?.click()}
-                  className="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
+                  className="relative border-2 border-dashed border-gray-200 dark:border-white/20 rounded-xl overflow-hidden cursor-pointer hover:border-[#0F172A] transition-colors group"
                   style={{ minHeight: '180px' }}
                 >
                   {secondaryPreview ? (
@@ -715,13 +790,13 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setSecondaryFile(null); setSecondaryPreview(null); }}
-                        className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow text-red-500 hover:bg-red-50"
+                        className="absolute top-2 right-2 p-1.5 bg-white dark:bg-[#14141c] rounded-full shadow text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15"
                       >
                         <X size={14} />
                       </button>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
                       <Upload size={28} className="mb-2" />
                       <span className="text-sm">Click or drag to upload secondary image</span>
                       <span className="text-xs mt-1 text-gray-300">PNG, JPG, WebP up to 5MB</span>
@@ -729,11 +804,11 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                   )}
                 </div>
                 <input id="secondary-upload" type="file" accept="image/*" className="hidden" onChange={onSecondaryChange} />
-                {secondaryFile && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><Check size={12} /> {secondaryFile.name} ready to upload</p>}
+                {secondaryFile && <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1"><Check size={12} /> {secondaryFile.name} ready to upload</p>}
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-sm text-amber-800">
+              <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4">
+                <p className="text-sm text-amber-800 dark:text-amber-300">
                   <strong>Tip:</strong> After creating the course, you can add tools, learnings, benefits, career paths, industries, and salary from the edit modal.
                 </p>
               </div>
@@ -742,12 +817,12 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
           {currentStep > 1 && (
             <button
               type="button"
               onClick={handlePrevious}
-              className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
             >
               <ArrowLeft size={18} />
               Previous

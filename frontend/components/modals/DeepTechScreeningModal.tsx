@@ -89,14 +89,14 @@ export function DeepTechScreeningModal({ courseTitle, submitting, onContinue, on
     >
       <style>{`
         .dts-overlay {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 90;
+          position: fixed; inset: 0; background: var(--overlay); z-index: 90;
           display: flex; align-items: center; justify-content: center; padding: 1rem;
           animation: dtsFade 0.2s ease both;
         }
         @keyframes dtsFade { from { opacity: 0; } to { opacity: 1; } }
         .dts-card {
           width: 100%; max-width: 32rem;
-          background: #0c0c0e; border: 1px solid rgba(255,255,255,0.08);
+          background: var(--surface-elevated); border: 1px solid var(--border-subtle);
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
           padding: 2rem; position: relative;
@@ -105,26 +105,26 @@ export function DeepTechScreeningModal({ courseTitle, submitting, onContinue, on
         }
         @keyframes dtsPop { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .dts-close {
-          position: absolute; top: 1.1rem; right: 1.1rem; color: rgba(255,255,255,0.4);
+          position: absolute; top: 1.1rem; right: 1.1rem; color: var(--text-muted);
           background: none; border: none; cursor: pointer; padding: 0.3rem; border-radius: 999px;
           transition: color 0.2s, background 0.2s;
         }
-        .dts-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
-        .dts-title { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.4rem; line-height: 1.3; padding-right: 1.5rem; }
-        .dts-sub { font-size: 0.88rem; color: rgba(255,255,255,0.55); line-height: 1.55; margin-bottom: 1.5rem; }
+        .dts-close:hover { color: var(--text-primary); background: var(--border-subtle); }
+        .dts-title { font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.4rem; line-height: 1.3; padding-right: 1.5rem; }
+        .dts-sub { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.5rem; }
         .dts-q { margin-bottom: 1.25rem; }
         .dts-q-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
         .dts-q-icon {
           width: 2.25rem; height: 2.25rem; border-radius: 0.9rem 0.3rem 0.9rem 0.3rem; flex-shrink: 0;
           background: ${BRAND}22; display: flex; align-items: center; justify-content: center; color: ${BRAND};
         }
-        .dts-q-label { font-size: 0.92rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem; }
-        .dts-q-sub { font-size: 0.78rem; color: rgba(255,255,255,0.45); line-height: 1.4; }
+        .dts-q-label { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem; }
+        .dts-q-sub { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
         .dts-choices { display: flex; gap: 0.6rem; margin-left: 3rem; }
         .dts-choice {
           flex: 1; padding: 0.55rem 0.5rem; border-radius: 0.9rem 0.3rem 0.9rem 0.3rem;
-          border: 1.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03);
-          color: rgba(255,255,255,0.7); font-size: 0.82rem; font-weight: 700; cursor: pointer;
+          border: 1.5px solid var(--border-subtle); background: var(--surface-alt);
+          color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; cursor: pointer;
           transition: all 0.2s; text-align: center;
         }
         .dts-choice:hover { border-color: ${BRAND}66; background: ${BRAND}0f; }
@@ -146,14 +146,14 @@ export function DeepTechScreeningModal({ courseTitle, submitting, onContinue, on
         }
         .dts-btn-whatsapp:hover { box-shadow: 0 8px 28px rgba(37,211,102,0.45); transform: translateY(-1px); }
         .dts-btn-ghost {
-          width: 100%; margin-top: 0.6rem; background: transparent; color: rgba(255,255,255,0.7);
+          width: 100%; margin-top: 0.6rem; background: transparent; color: var(--text-secondary);
           font-weight: 600; font-size: 0.85rem; padding: 0.75rem 1rem;
-          border-radius: 2rem 0.75rem 2rem 0.75rem; border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 2rem 0.75rem 2rem 0.75rem; border: 1px solid var(--border-subtle);
           cursor: pointer; transition: background 0.2s, border-color 0.2s;
         }
-        .dts-btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+        .dts-btn-ghost:hover { background: var(--surface-alt); border-color: var(--border-strong); }
         .dts-note {
-          font-size: 0.75rem; color: rgba(255,255,255,0.35); text-align: center; margin-top: 0.9rem; line-height: 1.5;
+          font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 0.9rem; line-height: 1.5;
         }
         .dts-badge {
           display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700;

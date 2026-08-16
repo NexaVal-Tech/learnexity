@@ -40,23 +40,23 @@ type ActivityLog = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  enrolled:                      { label: "Enrolled in course",     color: "bg-blue-100 text-blue-700" },
-  payment_completed:             { label: "Payment completed",      color: "bg-green-100 text-green-700" },
-  track_upgraded:                { label: "Track upgraded",         color: "bg-purple-100 text-purple-700" },
-  one_on_one_booked:             { label: "1-on-1 hours booked",    color: "bg-amber-100 text-amber-700" },
-  profile_updated:               { label: "Profile updated",        color: "bg-gray-100 text-gray-600" },
-  avatar_uploaded:               { label: "Avatar changed",         color: "bg-gray-100 text-gray-600" },
-  avatar_removed:                { label: "Avatar removed",         color: "bg-gray-100 text-gray-600" },
-  password_changed:              { label: "Password changed",       color: "bg-red-100 text-red-700" },
-  notification_settings_updated: { label: "Notifications updated",  color: "bg-gray-100 text-gray-600" },
-  upgrade_initiated:             { label: "Upgrade initiated",      color: "bg-indigo-100 text-indigo-700" },
-  upgrade_options_checked:       { label: "Viewed upgrade options", color: "bg-gray-100 text-gray-500" },
+  enrolled:                      { label: "Enrolled in course",     color: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+  payment_completed:             { label: "Payment completed",      color: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
+  track_upgraded:                { label: "Track upgraded",         color: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
+  one_on_one_booked:             { label: "1-on-1 hours booked",    color: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
+  profile_updated:               { label: "Profile updated",        color: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300" },
+  avatar_uploaded:               { label: "Avatar changed",         color: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300" },
+  avatar_removed:                { label: "Avatar removed",         color: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300" },
+  password_changed:              { label: "Password changed",       color: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" },
+  notification_settings_updated: { label: "Notifications updated",  color: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300" },
+  upgrade_initiated:             { label: "Upgrade initiated",      color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
+  upgrade_options_checked:       { label: "Viewed upgrade options", color: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400" },
 };
 
 function getActionMeta(action: string) {
   return ACTION_LABELS[action] ?? {
     label: action.replace(/_/g, " "),
-    color: "bg-gray-100 text-gray-500",
+    color: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400",
   };
 }
 
@@ -108,7 +108,7 @@ function Field({ label, icon, children }: {
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
         {icon}{label}
       </label>
       {children}
@@ -242,22 +242,22 @@ export default function ProfilePage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Manage your personal information and account activity.
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-gray-100 dark:bg-white/10 rounded-xl p-1 w-fit">
           {(["profile", "activity"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-gray-900 dark:bg-[#0f0f14] dark:text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               {tab === "activity" ? "Activity Log" : "Profile"}
@@ -270,11 +270,11 @@ export default function ProfilePage() {
           <form onSubmit={handleSave} className="space-y-5">
 
             {/* Avatar card */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">Profile Photo</h2>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Profile Photo</h2>
               <div className="flex items-center gap-5">
                 <div className="relative shrink-0">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#6C63FF]/20 bg-gray-100 flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#6C63FF]/20 bg-gray-100 dark:bg-white/10 flex items-center justify-center">
                     {avatarSrc ? (
                       <Image
                         src={avatarSrc}
@@ -285,7 +285,7 @@ export default function ProfilePage() {
                         unoptimized
                       />
                     ) : (
-                      <span className="text-xl font-bold text-gray-500">{initials}</span>
+                      <span className="text-xl font-bold text-gray-500 dark:text-gray-400">{initials}</span>
                     )}
                   </div>
                   {avatarUploading && (
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     disabled={avatarUploading}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-white/20 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
                   >
                     <Camera className="w-4 h-4" /> Upload photo
                   </button>
@@ -316,19 +316,19 @@ export default function ProfilePage() {
                       type="button"
                       onClick={handleRemoveAvatar}
                       disabled={avatarUploading}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" /> Remove
                     </button>
                   )}
-                  <p className="text-xs text-gray-400">JPG, PNG or WebP · Max 2 MB</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">JPG, PNG or WebP · Max 2 MB</p>
                 </div>
               </div>
             </div>
 
             {/* Basic info */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">Basic Information</h2>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Basic Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Full name" icon={<User className="w-4 h-4" />}>
                   <input
@@ -345,7 +345,7 @@ export default function ProfilePage() {
                     type="email"
                     value={profile?.email ?? ""}
                     disabled
-                    className="profile-input opacity-60 cursor-not-allowed bg-gray-50"
+                    className="profile-input opacity-60 cursor-not-allowed bg-gray-50 dark:bg-white/5"
                   />
                 </Field>
 
@@ -379,7 +379,7 @@ export default function ProfilePage() {
                       placeholder="Tell us a little about yourself…"
                       className="profile-input resize-none"
                     />
-                    <p className="text-xs text-gray-400 mt-1 text-right">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
                       {form.bio.length}/500
                     </p>
                   </Field>
@@ -388,25 +388,25 @@ export default function ProfilePage() {
             </div>
 
             {/* Social links */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">Social Links</h2>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Social Links</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="LinkedIn" icon={<Linkedin className="w-4 h-4 text-blue-600" />}>
+                <Field label="LinkedIn" icon={<Linkedin className="w-4 h-4 text-blue-600 dark:text-blue-400" />}>
                   <input type="url" value={form.linkedin_url}
                     onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
                     placeholder="https://linkedin.com/in/you" className="profile-input" />
                 </Field>
-                <Field label="Twitter / X" icon={<Twitter className="w-4 h-4 text-sky-500" />}>
+                <Field label="Twitter / X" icon={<Twitter className="w-4 h-4 text-sky-500 dark:text-sky-400" />}>
                   <input type="url" value={form.twitter_url}
                     onChange={(e) => setForm((f) => ({ ...f, twitter_url: e.target.value }))}
                     placeholder="https://x.com/you" className="profile-input" />
                 </Field>
-                <Field label="GitHub" icon={<Github className="w-4 h-4" />}>
+                <Field label="GitHub" icon={<Github className="w-4 h-4 dark:text-gray-400" />}>
                   <input type="url" value={form.github_url}
                     onChange={(e) => setForm((f) => ({ ...f, github_url: e.target.value }))}
                     placeholder="https://github.com/you" className="profile-input" />
                 </Field>
-                <Field label="Website" icon={<Globe className="w-4 h-4 text-gray-500" />}>
+                <Field label="Website" icon={<Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />}>
                   <input type="url" value={form.website_url}
                     onChange={(e) => setForm((f) => ({ ...f, website_url: e.target.value }))}
                     placeholder="https://yoursite.com" className="profile-input" />
@@ -415,9 +415,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Account meta */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Account Info</h2>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Account Info</h2>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
                   Joined {new Date(profile?.created_at ?? "").toLocaleDateString("en-US", {
@@ -425,12 +425,12 @@ export default function ProfilePage() {
                   })}
                 </span>
                 {profile?.email_verified_at && (
-                  <span className="flex items-center gap-1.5 text-green-600">
+                  <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
                     <CheckCircle className="w-4 h-4" /> Email verified
                   </span>
                 )}
                 {profile?.google_id && (
-                  <span className="flex items-center gap-1.5 text-blue-500">
+                  <span className="flex items-center gap-1.5 text-blue-500 dark:text-blue-400">
                     <Globe className="w-4 h-4" /> Google connected
                   </span>
                 )}
@@ -464,18 +464,18 @@ export default function ProfilePage() {
 
         {/* ══ ACTIVITY TAB ══ */}
         {activeTab === "activity" && (
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">Recent Activity</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Last 50 actions on your account</p>
+          <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recent Activity</h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Last 50 actions on your account</p>
             </div>
 
             {activity.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">
+              <div className="text-center py-12 text-gray-400 dark:text-gray-500 text-sm">
                 No activity recorded yet.
               </div>
             ) : (
-              <ul className="divide-y divide-gray-100">
+              <ul className="divide-y divide-gray-100 dark:divide-white/10">
                 {activity.map((log) => {
                   const meta   = getActionMeta(log.action);
                   const detail = log.metadata?.course_name
@@ -488,14 +488,14 @@ export default function ProfilePage() {
 
                   return (
                     <li key={log.id}
-                      className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50 transition-colors">
+                      className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                       <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${meta.color}`}>
                         {meta.label}
                       </span>
                       {detail && (
-                        <p className="flex-1 text-xs text-gray-400 truncate">{detail}</p>
+                        <p className="flex-1 text-xs text-gray-400 dark:text-gray-500 truncate">{detail}</p>
                       )}
-                      <span className="text-xs text-gray-400 whitespace-nowrap shrink-0 ml-auto">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0 ml-auto">
                         {timeAgo(log.created_at)}
                       </span>
                     </li>
@@ -526,6 +526,14 @@ export default function ProfilePage() {
         .profile-input:focus {
           border-color: #6C63FF;
           box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+        }
+        [data-theme="dark"] .profile-input {
+          border-color: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+        [data-theme="dark"] .profile-input::placeholder {
+          color: #9098a8;
         }
       `}</style>
     </UserDashboardLayout>

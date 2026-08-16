@@ -52,7 +52,7 @@ const CourseSettingsPage = () => {
       <AdminRouteGuard>
         <AdminLayout>
           <div className="flex items-center justify-center h-96">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
           </div>
         </AdminLayout>
       </AdminRouteGuard>
@@ -62,11 +62,11 @@ const CourseSettingsPage = () => {
   return (
     <AdminRouteGuard>
       <AdminLayout>
-        <div className="min-h-screen bg-gray-50/50 p-6">
+        <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900">Course Settings</h1>
-            <p className="text-sm text-gray-500 mt-1">Configure pricing and payment options for your courses</p>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Course Settings</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure pricing and payment options for your courses</p>
           </div>
 
           {/* Platform-wide scholarship registration fee — not per-course */}
@@ -75,17 +75,17 @@ const CourseSettingsPage = () => {
           <div className="grid lg:grid-cols-12 gap-6">
             {/* Left Sidebar - Course List */}
             <div className="lg:col-span-4 xl:col-span-3">
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden sticky top-6">
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden sticky top-6">
                 {/* Search */}
-                <div className="p-4 border-b border-gray-200">
+                <div className="p-4 border-b border-gray-200 dark:border-white/10">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search courses..."
-                      className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                      className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                     />
                   </div>
                 </div>
@@ -94,27 +94,27 @@ const CourseSettingsPage = () => {
                 <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                   {error ? (
                     <div className="p-4 text-center">
-                      <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                      <p className="text-sm text-red-600">{error}</p>
+                      <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400 mx-auto mb-2" />
+                      <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                     </div>
                   ) : filteredCourses.length === 0 ? (
                     <div className="p-8 text-center">
-                      <p className="text-sm text-gray-500">No courses found</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No courses found</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-gray-100 dark:divide-white/10">
                       {filteredCourses.map((course) => (
                         <button
                           key={course.id}
                           onClick={() => setSelectedCourse(course)}
-                          className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
-                            selectedCourse?.id === course.id ? 'bg-purple-50 border-l-4 border-l-purple-600' : ''
+                          className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${
+                            selectedCourse?.id === course.id ? 'bg-purple-50 dark:bg-indigo-500/15 border-l-4 border-l-purple-600' : ''
                           }`}
                         >
-                          <div className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
+                          <div className="font-medium text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
                             {course.title || course.name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             ID: {course.course_id}
                           </div>
                         </button>
@@ -130,13 +130,13 @@ const CourseSettingsPage = () => {
               {selectedCourse ? (
                 <CourseSettings courseId={selectedCourse.course_id} />
               ) : (
-                <div className="bg-white border border-gray-200 rounded-xl p-12">
+                <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-12">
                   <div className="text-center max-w-md mx-auto">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Settings className="w-8 h-8 text-gray-400" />
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Settings className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a Course</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Select a Course</h3>
+                    <p className="text-gray-600 dark:text-gray-300">
                       Choose a course from the list to configure its pricing and payment settings
                     </p>
                   </div>

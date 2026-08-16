@@ -403,8 +403,13 @@ consultations: {
     return response.data;
   },
 
-  getBookedSlots: async (date: string): Promise<{ booked_slots: string[] }> => {
+  getBookedSlots: async (date: string): Promise<{ booked_slots: string[]; is_free_day?: boolean }> => {
     const response = await apiClient.get(`/api/consultations/booked-slots?date=${date}`);
+    return response.data;
+  },
+
+  getFreeDays: async (): Promise<{ free_days: string[] }> => {
+    const response = await apiClient.get('/api/consultations/free-days');
     return response.data;
   },
 
@@ -417,7 +422,14 @@ consultations: {
     message?: string;
     preferred_date: string;
     preferred_time: string;
-  }): Promise<{ checkout_url: string; consultation_id: number; currency: string; amount: number }> => {
+  }): Promise<{
+    checkout_url?: string;
+    consultation_id: number;
+    currency?: string;
+    amount?: number;
+    is_free?: boolean;
+    message?: string;
+  }> => {
     const response = await apiClient.post('/api/consultations/initiate', data);
     return response.data;
   },
@@ -749,6 +761,15 @@ settings: {
       },
       updateSettings: async (data: { price_usd: number; price_ngn: number }) => {
         return await adminApi.put('/api/admin/consultations/settings', data);
+      },
+      getFreeDays: async (): Promise<{ free_days: { id: number; date: string; note: string | null }[] }> => {
+        return await adminApi.get('/api/admin/consultations/free-days');
+      },
+      addFreeDay: async (data: { date: string; note?: string }) => {
+        return await adminApi.post('/api/admin/consultations/free-days', data);
+      },
+      removeFreeDay: async (id: number) => {
+        return await adminApi.delete(`/api/admin/consultations/free-days/${id}`);
       },
     },
 

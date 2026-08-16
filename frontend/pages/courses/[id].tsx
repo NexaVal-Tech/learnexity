@@ -208,7 +208,7 @@ export default function CoursePage() {
           .spinner { width:48px; height:48px; border:3px solid rgba(74,58,255,0.2); border-top-color:${BRAND}; border-radius:50%; animation:spin 0.8s linear infinite; }
           @keyframes spin { to { transform:rotate(360deg); } }
         `}</style>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "#080808" }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
           <div className="text-center">
             <div className="spinner mx-auto mb-4" />
             <p className="text-gray-500 text-sm">
@@ -223,13 +223,13 @@ export default function CoursePage() {
   if (!course) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "#080808" }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
               {fetchError ? "Couldn't load this course" : "Course not found"}
             </h2>
             {fetchError && (
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-[var(--text-secondary)] text-sm mb-4">
                 Something went wrong loading this page. Please check your connection and try again.
               </p>
             )}
@@ -237,7 +237,7 @@ export default function CoursePage() {
               {fetchError && (
                 <button
                   onClick={() => fetchCourse()}
-                  className="text-white font-semibold px-6 py-3 transition-all border border-white/20"
+                  className="text-[var(--text-primary)] font-semibold px-6 py-3 transition-all border border-[var(--border-subtle)]"
                   style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
                 >
                   Try Again
@@ -268,8 +268,8 @@ export default function CoursePage() {
       <style>{`
         .dc-card {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(15,15,15,0.92);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-elevated);
           backdrop-filter: blur(12px);
           box-shadow: 0 25px 50px rgba(0,0,0,0.7);
           transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
@@ -341,10 +341,10 @@ export default function CoursePage() {
         }
         .dc-pill {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-alt);
           padding: 1rem 1.25rem;
-          color: #d1d5db;
+          color: var(--text-secondary);
           font-size: 0.95rem;
           line-height: 1.5;
           transition: border-color 0.2s, background 0.2s;
@@ -361,46 +361,46 @@ export default function CoursePage() {
           color: ${BRAND};
           margin-bottom: 0.5rem;
         }
-        .dc-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); }
+        .dc-divider { border: none; border-top: 1px solid var(--border-subtle); }
         .dc-tool {
           padding: 1rem;
           border-radius: 1rem 0.5rem 1rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-alt);
           transition: border-color 0.25s, background 0.25s, transform 0.25s;
         }
         .dc-tool:hover { border-color: ${BRAND}44; background: ${BRAND}0d; transform: translateY(-3px); }
         .dc-career {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-alt);
           padding: 1.25rem;
           transition: border-color 0.25s, background 0.25s;
         }
         .dc-career:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
         .dc-industry {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-alt);
           padding: 1.5rem;
           transition: border-color 0.25s, background 0.25s;
         }
         .dc-industry:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
         .dc-salary-grid {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(15,15,15,0.92);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-elevated);
           overflow: hidden;
         }
-        .dc-salary-cell { border-right: 1px solid rgba(255,255,255,0.07); }
+        .dc-salary-cell { border-right: 1px solid var(--border-subtle); }
         .dc-salary-cell:last-child { border-right: none; }
         .dc-benefits-bg {
-          border-top: 1px solid rgba(255,255,255,0.06);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          border-top: 1px solid var(--border-subtle);
+          border-bottom: 1px solid var(--border-subtle);
         }
         .dc-benefit-card {
           border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
+          border: 1px solid var(--border-subtle);
           padding: 1.5rem;
           transition: border-color 0.25s, background 0.25s;
         }
@@ -429,10 +429,10 @@ export default function CoursePage() {
             {/* Left */}
             <div className="space-y-6">
               <p className="dc-section-label">Course Details</p>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-white">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-[var(--text-primary)]">
                 {course.title}
               </h1>
-              <p className="text-lg text-gray-400 leading-relaxed">
+              <p className="text-lg text-[var(--text-secondary)] leading-relaxed">
                 {course.description}
               </p>
 {/* 
@@ -547,7 +547,7 @@ export default function CoursePage() {
                   width: "clamp(130px,18vw,220px)",
                   height: "clamp(200px,28vw,360px)",
                   borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  border: "1px solid var(--border-subtle)",
                   boxShadow: `0 30px 60px rgba(0,0,0,0.7), 0 0 40px ${BRAND}22`,
                 }}
               />
@@ -559,7 +559,7 @@ export default function CoursePage() {
                   width: "clamp(130px,18vw,220px)",
                   height: "clamp(200px,28vw,360px)",
                   borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  border: "1px solid var(--border-subtle)",
                   boxShadow: `0 30px 60px rgba(0,0,0,0.7)`,
                 }}
               />
@@ -572,7 +572,7 @@ export default function CoursePage() {
           <section className="py-10 px-6">
             <div className="max-w-[1230px] mx-auto">
               <p className="dc-section-label text-center">Stack</p>
-              <h2 className="text-3xl font-bold text-center text-white mb-12">
+              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-12">
                 Key Tools &amp; Technologies
               </h2>
               <div className="flex flex-wrap justify-center items-center gap-6">
@@ -629,7 +629,7 @@ export default function CoursePage() {
           <section className="py-16 px-6">
             <div className="max-w-[1230px] mx-auto">
               <p className="dc-section-label text-center">Curriculum</p>
-              <h2 className="text-3xl font-bold text-center text-white mb-12">
+              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-12">
                 What you will learn
               </h2>
               <div className="grid md:grid-cols-3 gap-4">
@@ -657,7 +657,7 @@ export default function CoursePage() {
             <div className="max-w-[1230px] mx-auto">
               <div className="mb-12">
                 <p className="dc-section-label">Project</p>
-                <h2 className="text-3xl md:text-4xl font-bold text-white">
+                <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
                   {course.project || "Complete AI-powered solution with automation"}
                 </h2>
               </div>
@@ -668,8 +668,8 @@ export default function CoursePage() {
                     <div key={benefit.id} className="dc-benefit-card flex gap-4">
                       <span style={{ color: BRAND }} className="text-2xl flex-shrink-0">★</span>
                       <div>
-                        <h4 className="font-bold text-white text-lg mb-1">{benefit.title}</h4>
-                        <p className="text-gray-400 text-sm leading-relaxed">{benefit.text}</p>
+                        <h4 className="font-bold text-[var(--text-primary)] text-lg mb-1">{benefit.title}</h4>
+                        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{benefit.text}</p>
                       </div>
                     </div>
                   ))}
@@ -684,7 +684,7 @@ export default function CoursePage() {
           <section className="py-6 px-6">
             <div className="max-w-[1230px] mx-auto">
               <p className="dc-section-label text-center">Growth</p>
-              <h2 className="text-3xl font-bold text-center text-white mb-3">
+              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
                 Career Path &amp; Progression
               </h2>
               <p className="text-center text-gray-500 mb-12">
@@ -710,10 +710,10 @@ export default function CoursePage() {
                           <span>{icons[level]}</span>
                         </div>
                         <div>
-                          <h3 className="font-bold text-white mb-1 capitalize">
+                          <h3 className="font-bold text-[var(--text-primary)] mb-1 capitalize">
                             {level === "specialized" ? "Specialized Roles" : `${level} Level`}
                           </h3>
-                          <p className="text-gray-400 text-sm">{positions}</p>
+                          <p className="text-[var(--text-secondary)] text-sm">{positions}</p>
                         </div>
                       </div>
                     );
@@ -727,7 +727,7 @@ export default function CoursePage() {
                     style={{
                       borderRadius: "2rem 0.75rem 2rem 0.75rem",
                       height: "clamp(300px, 40vw, 500px)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid var(--border-subtle)",
                     }}
                   />
                 </div>
@@ -741,7 +741,7 @@ export default function CoursePage() {
           <section className="py-6 px-6">
             <div className="max-w-[1230px] mx-auto">
               <p className="dc-section-label text-center">Applications</p>
-              <h2 className="text-3xl font-bold text-center text-white mb-3">
+              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
                 Industries &amp; Applications
               </h2>
               <p className="text-center text-gray-500 mb-12">
@@ -758,8 +758,8 @@ export default function CoursePage() {
                         <span>📄</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white mb-1">{industry.title}</h3>
-                        <p className="text-gray-400 text-sm leading-relaxed">{industry.text}</p>
+                        <h3 className="font-bold text-[var(--text-primary)] mb-1">{industry.title}</h3>
+                        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{industry.text}</p>
                       </div>
                     </div>
                   </div>
@@ -774,7 +774,7 @@ export default function CoursePage() {
           <section className="py-6 px-6">
             <div className="max-w-[1230px] mx-auto">
               <p className="dc-section-label text-center">Earnings</p>
-              <h2 className="text-3xl font-bold text-center text-white mb-3">
+              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
                 Salary Expectations
               </h2>
               <p className="text-center text-gray-500 mb-12">Global Remote Opportunities</p>
@@ -789,7 +789,7 @@ export default function CoursePage() {
                     className={`p-8 text-center ${i < arr.length - 1 ? "dc-salary-cell" : ""}`}
                   >
                     <p className="text-gray-500 text-sm font-medium mb-2">{row.label}</p>
-                    <p className="text-white font-bold text-lg">{row.value}</p>
+                    <p className="text-[var(--text-primary)] font-bold text-lg">{row.value}</p>
                   </div>
                 ))}
               </div>

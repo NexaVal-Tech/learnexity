@@ -151,9 +151,9 @@ export default function EditorPage() {
         <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
-      <div style={{ minHeight: "100vh", background: "#080811", fontFamily: "'Inter', sans-serif", color: "#e2e8f0" }}>
+      <div style={{ minHeight: "100vh", background: "var(--page-bg)", fontFamily: "'Inter', sans-serif", color: "var(--text-primary)" }}>
         {/* Hero */}
-        <div style={{ background: "linear-gradient(135deg, #0f0f1a 0%, #13102a 100%)", borderBottom: "1px solid #1e1e30", padding: "48px 24px 40px" }}>
+        <div style={{ background: "linear-gradient(135deg, #0f0f1a 0%, #13102a 100%)", borderBottom: "1px solid var(--border-subtle)", padding: "48px 24px 40px" }}>
           <div style={{ maxWidth: "1230px", margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
               <div style={{ background: "#4A3AFF", borderRadius: "8px", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>⚡</div>
@@ -165,7 +165,7 @@ export default function EditorPage() {
                 Directly in Your Browser
               </span>
             </h1>
-            <p style={{ color: "#6b7280", fontSize: "15px", margin: "0 0 28px", maxWidth: "560px" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "15px", margin: "0 0 28px", maxWidth: "560px" }}>
               No setup required. Write HTML, CSS, JavaScript, Python, and SQL — all powered by WebAssembly, running entirely on your machine.
             </p>
 
@@ -189,7 +189,7 @@ export default function EditorPage() {
         <div style={{ maxWidth: "1230px", margin: "0 auto", padding: "32px 24px" }}>
           {/* Starter snippets */}
           <div style={{ marginBottom: "24px" }}>
-            <h2 style={{ fontSize: "14px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 12px" }}>
+            <h2 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 12px" }}>
               Starter Examples
             </h2>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -198,10 +198,10 @@ export default function EditorPage() {
                   key={snippet.title}
                   onClick={() => loadSnippet(snippet)}
                   style={{
-                    background: activeSnippet?.title === snippet.title ? "#4A3AFF" : "#13131f",
-                    border: `1px solid ${activeSnippet?.title === snippet.title ? "#4A3AFF" : "#1e1e30"}`,
+                    background: activeSnippet?.title === snippet.title ? "#4A3AFF" : "var(--surface)",
+                    border: `1px solid ${activeSnippet?.title === snippet.title ? "#4A3AFF" : "var(--border-subtle)"}`,
                     borderRadius: "8px", padding: "8px 16px", cursor: "pointer",
-                    color: activeSnippet?.title === snippet.title ? "#fff" : "#9ca3af",
+                    color: activeSnippet?.title === snippet.title ? "#fff" : "var(--text-secondary)",
                     fontSize: "13px", fontWeight: 600, transition: "all 0.15s",
                     fontFamily: "'JetBrains Mono', monospace",
                   }}
@@ -213,8 +213,8 @@ export default function EditorPage() {
               <button
                 onClick={() => { setActiveSnippet(null); setEditorKey(k => k + 1); }}
                 style={{
-                  background: "transparent", border: "1px solid #1e1e30", borderRadius: "8px",
-                  padding: "8px 14px", cursor: "pointer", color: "#4b5563", fontSize: "12px",
+                  background: "transparent", border: "1px solid var(--border-subtle)", borderRadius: "8px",
+                  padding: "8px 14px", cursor: "pointer", color: "var(--text-muted)", fontSize: "12px",
                   fontFamily: "'JetBrains Mono', monospace", transition: "all 0.15s",
                 }}
               >
@@ -240,11 +240,11 @@ export default function EditorPage() {
               { icon: "↔️", tip: "Drag divider", desc: "Resize editor/output panes" },
               { icon: "🔄", tip: "Switch languages", desc: "Code persists per language" },
             ].map(t => (
-              <div key={t.tip} style={{ background: "#0d0d1a", border: "1px solid #1e1e30", borderRadius: "8px", padding: "12px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
+              <div key={t.tip} style={{ background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "8px", padding: "12px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
                 <span style={{ fontSize: "20px" }}>{t.icon}</span>
                 <div>
                   <div style={{ fontSize: "12px", fontWeight: 700, color: "#a78bfa", fontFamily: "'JetBrains Mono', monospace" }}>{t.tip}</div>
-                  <div style={{ fontSize: "11px", color: "#4b5563" }}>{t.desc}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{t.desc}</div>
                 </div>
               </div>
             ))}

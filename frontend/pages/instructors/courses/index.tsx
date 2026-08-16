@@ -32,8 +32,8 @@ export default function InstructorCoursesPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Courses</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Courses</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {courses.length} course{courses.length !== 1 ? 's' : ''} assigned to you
               </p>
             </div>
@@ -41,13 +41,13 @@ export default function InstructorCoursesPage() {
 
           {/* Search */}
           <div className="relative max-w-sm">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search courses…"
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
 
@@ -56,9 +56,9 @@ export default function InstructorCoursesPage() {
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <BookCopy size={48} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500 font-medium">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
+              <BookCopy size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-gray-500 dark:text-gray-400 font-medium">
                 {search ? 'No courses match your search.' : 'No courses assigned yet.'}
               </p>
             </div>
@@ -68,17 +68,17 @@ export default function InstructorCoursesPage() {
                 <div
                   key={course.course_id}
                   onClick={() => router.push(`/instructors/courses/${course.course_id}`)}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                  className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
                 >
                   <div
-                    className="h-40 bg-cover bg-center bg-gray-100"
+                    className="h-40 bg-cover bg-center bg-gray-100 dark:bg-white/5"
                     style={{ backgroundImage: course.hero_image ? `url(${course.hero_image})` : undefined }}
                   />
                   <div className="p-5">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-indigo-600 transition-colors">
                       {course.title}
                     </h3>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{course.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{course.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">
                         {course.sprint_count} Sprint{course.sprint_count !== 1 ? 's' : ''}

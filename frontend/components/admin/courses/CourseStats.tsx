@@ -32,29 +32,29 @@ const CourseStats = () => {
       label: 'Total Courses',
       value: stats.total_courses,
       icon: BookOpen,
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-600',
+      bgColor: 'bg-blue-100 dark:bg-blue-500/15',
+      textColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       label: 'Active Courses',
       value: stats.active_courses,
       icon: TrendingUp,
-      bgColor: 'bg-green-100',
-      textColor: 'text-green-600',
+      bgColor: 'bg-green-100 dark:bg-green-500/15',
+      textColor: 'text-green-600 dark:text-green-400',
     },
     {
       label: 'Total Enrollments',
       value: stats.total_enrollments,
       icon: Users,
-      bgColor: 'bg-purple-100',
-      textColor: 'text-purple-600',
+      bgColor: 'bg-purple-100 dark:bg-purple-500/15',
+      textColor: 'text-purple-600 dark:text-purple-400',
     },
     {
       label: 'Avg. Completion',
       value: `${stats.average_completion_rate}%`,
       icon: TrendingUp,
-      bgColor: 'bg-yellow-100',
-      textColor: 'text-yellow-600',
+      bgColor: 'bg-yellow-100 dark:bg-yellow-500/15',
+      textColor: 'text-yellow-600 dark:text-yellow-400',
     },
   ];
 
@@ -62,8 +62,8 @@ const CourseStats = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center justify-center h-24">
-            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <div key={i} className="bg-white dark:bg-[#0f0f14] p-6 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center h-24">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
           </div>
         ))}
       </div>
@@ -73,10 +73,10 @@ const CourseStats = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {statsCards.map((stat, index) => (
-        <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center justify-between">
+        <div key={index} className="bg-white dark:bg-[#0f0f14] p-6 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500 mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-semibold text-gray-900">{stat.value}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{stat.label}</p>
+            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</h3>
           </div>
           <div className={`p-3 rounded-lg ${stat.bgColor} ${stat.textColor}`}>
             <stat.icon size={24} />

@@ -257,6 +257,7 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
 Route::middleware('throttle:api')->prefix('consultations')->group(function () {
     Route::get('/pricing',      [ConsultationController::class, 'getPricing']);
     Route::get('/booked-slots', [ConsultationController::class, 'bookedSlots']);
+    Route::get('/free-days',    [ConsultationController::class, 'freeDays']);
     Route::get('/verify',       [ConsultationPaymentController::class, 'verify']);
 });
 
@@ -301,6 +302,7 @@ Route::middleware('throttle:api')->prefix('courses')->group(function () {
     Route::get('/',           [CourseController::class, 'index']);
     Route::get('/featured',   [CourseController::class, 'featured']);
     Route::get('/freemium',   [CourseController::class, 'freemium']);
+    Route::get('/free',       [CourseController::class, 'free']);
     Route::get('/search',     [CourseController::class, 'search']);
     Route::get('/by-track',   [CourseController::class, 'byTrack']);
     Route::get('/{courseId}', [CourseController::class, 'show']);
@@ -372,8 +374,11 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     // consultation
 
     Route::prefix('consultations')->group(function () {
-        Route::get('/settings',  [AdminConsultationController::class, 'getSettings']);
-        Route::put('/settings',  [AdminConsultationController::class, 'updateSettings']);
+        Route::get('/settings',           [AdminConsultationController::class, 'getSettings']);
+        Route::put('/settings',           [AdminConsultationController::class, 'updateSettings']);
+        Route::get('/free-days',          [AdminConsultationController::class, 'getFreeDays']);
+        Route::post('/free-days',         [AdminConsultationController::class, 'addFreeDay']);
+        Route::delete('/free-days/{id}',  [AdminConsultationController::class, 'removeFreeDay']);
         Route::get('/stats',     [AdminConsultationController::class, 'stats']);
         Route::get('/',          [AdminConsultationController::class, 'index']);
         Route::get('/{id}',      [AdminConsultationController::class, 'show']);

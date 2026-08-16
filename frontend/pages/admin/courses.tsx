@@ -40,11 +40,11 @@ const CoursesPage = () => {
   return (
     <AdminRouteGuard>
       <AdminLayout>
-        <div className="min-h-screen bg-gray-50/50 p-6">
+        <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Course Management</h1>
-              <p className="text-sm text-gray-500 mt-1">Manage courses, content, and student enrollments</p>
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Course Management</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage courses, content, and student enrollments</p>
             </div>
             <button
               onClick={() => setIsCreateModalOpen(true)}

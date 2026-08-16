@@ -90,15 +90,19 @@ export default function KidsPaymentSuccess() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: "#080808" }}>
-        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: "var(--page-bg)" }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
+        </Head>
         <div className="relative w-16 h-16">
           <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: BRAND, borderRightColor: `${BRAND}44` }} />
           <div className="absolute inset-2 rounded-full" style={{ background: `${BRAND}15` }} />
         </div>
         <div className="text-center">
           <p className="font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>Verifying your payment…</p>
-          <p className="text-sm mt-1" style={{ color: "#6b7280", fontFamily: "Outfit, sans-serif" }}>This usually takes just a second.</p>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)", fontFamily: "Outfit, sans-serif" }}>This usually takes just a second.</p>
         </div>
       </div>
     );
@@ -106,11 +110,15 @@ export default function KidsPaymentSuccess() {
 
   if (error && !enrollment) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-5" style={{ background: "#080808" }}>
-        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-5" style={{ background: "var(--page-bg)" }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
+        </Head>
         <div className="text-6xl">😔</div>
         <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>Verification Issue</h2>
-        <p className="text-sm max-w-sm text-center" style={{ color: "#9ca3af" }}>{error}</p>
+        <p className="text-sm max-w-sm text-center" style={{ color: "var(--text-secondary)" }}>{error}</p>
         <button onClick={() => router.push("/kids")}
           className="px-8 py-4 font-bold text-white transition-all hover:opacity-90"
           style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 10px 32px ${BRAND}44`, fontFamily: "Outfit, sans-serif" }}>
@@ -131,12 +139,14 @@ export default function KidsPaymentSuccess() {
     <>
       <Head>
         <title>{isFullyPaid ? "Enrollment Confirmed! 🎉" : "Payment Received! ✅"} — Learnexity Kids</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
       </Head>
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap');
         * { box-sizing: border-box; }
-        body { margin: 0; background: #080808; }
+        body { margin: 0; background: var(--page-bg); }
         @keyframes successPop {
           0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
           70%  { transform: scale(1.1) rotate(3deg); opacity: 1; }
@@ -175,12 +185,12 @@ export default function KidsPaymentSuccess() {
         <div style={{ position: "absolute", bottom: "0%", left: "0%", width: "500px", height: "500px", borderRadius: "50%", background: `radial-gradient(circle, ${BRAND}12 0%, transparent 70%)`, filter: "blur(80px)" }} />
       </div>
 
-      <div className="relative min-h-screen" style={{ fontFamily: "Outfit, sans-serif", color: "#fff", zIndex: 1 }}>
+      <div className="relative min-h-screen" style={{ fontFamily: "Outfit, sans-serif", color: "var(--text-primary)", zIndex: 1 }}>
 
         {/* ── Top bar ── */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)" }}>
+        <div style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--page-bg)", backdropFilter: "blur(12px)" }}>
           <div className="max-w-3xl mx-auto px-6 py-4">
-            <button onClick={() => router.push("/kids")} className="flex items-center gap-2 text-sm font-semibold transition-all hover:text-white" style={{ color: "#6b7280" }}>← Back to Kids</button>
+            <button onClick={() => router.push("/kids")} className="flex items-center gap-2 text-sm font-semibold transition-all hover:text-white" style={{ color: "var(--text-muted)" }}>← Back to Kids</button>
           </div>
         </div>
 
@@ -197,7 +207,7 @@ export default function KidsPaymentSuccess() {
             <h1 className="text-4xl font-bold text-white fade-up-1" style={{ fontFamily: "Poppins, sans-serif" }}>
               {isFullyPaid ? "You're all set!" : "Payment received!"}
             </h1>
-            <p className="text-lg mt-3 fade-up-1" style={{ color: "#9ca3af" }}>
+            <p className="text-lg mt-3 fade-up-1" style={{ color: "var(--text-secondary)" }}>
               {isFullyPaid
                 ? `${enrollment.student_name}'s enrollment is fully confirmed. Welcome to Learnexity! 🚀`
                 : `Payment ${enrollment.installments_paid} of ${enrollment.total_installments} confirmed for ${enrollment.student_name}.`}
@@ -208,7 +218,7 @@ export default function KidsPaymentSuccess() {
           <div className="mb-6 fade-up-1 flex items-center gap-3 px-5 py-4"
             style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: `${BRAND}08`, border: `1px solid ${BRAND}25` }}>
             <Mail className="w-5 h-5 flex-shrink-0" style={{ color: BRAND }} />
-            <p className="text-sm" style={{ color: "#d1d5db" }}>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               <span className="font-bold text-white">Confirmation email sent</span> to <span style={{ color: BRAND }}>{enrollment.parent_email}</span>. Check your inbox (and spam folder).
             </p>
           </div>
@@ -227,7 +237,7 @@ export default function KidsPaymentSuccess() {
             </div>
             <div className="flex-1">
               <p className="font-bold text-sm text-white">Join Our Closed group</p>
-              <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                 Schedules, session reminders & cohort updates for {enrollment.student_name}
               </p>
             </div>
@@ -243,13 +253,13 @@ export default function KidsPaymentSuccess() {
             <div className="lg:col-span-3 space-y-4">
 
               {/* Course card */}
-              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
                 <div className="px-6 py-5 flex items-center gap-4"
-                  style={{ background: `linear-gradient(135deg, ${color}18 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  style={{ background: `linear-gradient(135deg, ${color}18 0%, transparent 100%)`, borderBottom: "1px solid var(--border-subtle)" }}>
                   <div className="text-4xl" style={{ animation: "kidsFloat 4s ease-in-out infinite" }}>{enrollment.course?.emoji ?? "📚"}</div>
                   <div>
                     <p className="font-bold text-white" style={{ fontFamily: "Poppins, sans-serif" }}>{enrollment.course?.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
                       {trackLabel(enrollment.chosen_track)} · {enrollment.session_type === "one_on_one" ? "🎯 One-on-One Coaching" : "👥 Live Classes"} · {enrollment.course?.duration_months} months
                     </p>
                   </div>
@@ -258,36 +268,36 @@ export default function KidsPaymentSuccess() {
                 <div className="px-6 py-5 space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Student</p>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--text-muted)" }}>Student</p>
                       <p className="font-bold text-sm text-white">{enrollment.student_name}</p>
-                      <p className="text-xs" style={{ color: "#6b7280" }}>Age {enrollment.student_age}</p>
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>Age {enrollment.student_age}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Parent</p>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--text-muted)" }}>Parent</p>
                       <p className="font-bold text-sm text-white">{enrollment.parent_name}</p>
-                      <p className="text-xs truncate" style={{ color: "#6b7280" }}>{enrollment.parent_email}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{enrollment.parent_email}</p>
                     </div>
                   </div>
 
-                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+                  <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)" }} />
 
                   {/* Payment summary */}
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Payment Summary</p>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--text-muted)" }}>Payment Summary</p>
                     <div className="space-y-2 text-sm">
                       {lastPayment && (
                         <div className="flex justify-between">
-                          <span style={{ color: "#9ca3af" }}>Paid now</span>
+                          <span style={{ color: "var(--text-secondary)" }}>Paid now</span>
                           <span className="font-bold text-white">{fmt(lastPayment.amount, lastPayment.currency)}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span style={{ color: "#9ca3af" }}>Total paid so far</span>
+                        <span style={{ color: "var(--text-secondary)" }}>Total paid so far</span>
                         <span className="font-bold" style={{ color: "#22c55e" }}>{fmt(enrollment.amount_paid, enrollment.currency)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "#9ca3af" }}>Total course fee</span>
-                        <span className="font-semibold" style={{ color: "#d1d5db" }}>{fmt(enrollment.total_price, enrollment.currency)}</span>
+                        <span style={{ color: "var(--text-secondary)" }}>Total course fee</span>
+                        <span className="font-semibold" style={{ color: "var(--text-secondary)" }}>{fmt(enrollment.total_price, enrollment.currency)}</span>
                       </div>
                       {isPartial && (
                         <>
@@ -305,8 +315,8 @@ export default function KidsPaymentSuccess() {
                           </div>
                         </>
                       )}
-                      <div className="flex justify-between pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <span style={{ color: "#9ca3af" }}>Status</span>
+                      <div className="flex justify-between pt-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>Status</span>
                         <span className="font-bold text-xs px-3 py-1 rounded-full"
                           style={{ background: isFullyPaid ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)", color: isFullyPaid ? "#22c55e" : BRAND_ORANGE }}>
                           {isFullyPaid ? "✓ Fully Paid" : `${enrollment.installments_paid} of ${enrollment.total_installments} paid`}
@@ -317,9 +327,9 @@ export default function KidsPaymentSuccess() {
 
                   {/* Transaction ref */}
                   {lastPayment?.transaction_id && (
-                    <div className="px-4 py-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4b5563" }}>Transaction Reference</p>
-                      <p className="text-xs font-mono break-all" style={{ color: "#6b7280" }}>{lastPayment.transaction_id}</p>
+                    <div className="px-4 py-3" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "var(--surface-alt)", border: "1px solid var(--border-subtle)" }}>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--text-muted)" }}>Transaction Reference</p>
+                      <p className="text-xs font-mono break-all" style={{ color: "var(--text-muted)" }}>{lastPayment.transaction_id}</p>
                     </div>
                   )}
                 </div>
@@ -330,9 +340,9 @@ export default function KidsPaymentSuccess() {
             <div className="lg:col-span-2 space-y-4 fade-up-3">
 
               {/* What happens next */}
-              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
-                <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4b5563" }}>What Happens Next</p>
+              <div style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+                <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>What Happens Next</p>
                 </div>
                 <div className="px-6 py-5 space-y-5">
                   {[
@@ -383,12 +393,12 @@ export default function KidsPaymentSuccess() {
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: step.done ? `${step.iconColor}20` : "rgba(255,255,255,0.04)", border: `1px solid ${step.done ? `${step.iconColor}40` : "rgba(255,255,255,0.08)"}`, color: step.iconColor }}>
+                        style={{ background: step.done ? `${step.iconColor}20` : "var(--surface-alt)", border: `1px solid ${step.done ? `${step.iconColor}40` : "var(--border-subtle)"}`, color: step.iconColor }}>
                         {step.icon}
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-sm text-white">{step.title}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>{step.desc}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{step.desc}</p>
                         {step.action}
                       </div>
                       {step.done && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 ml-auto" style={{ color: "#22c55e" }} />}
@@ -408,13 +418,13 @@ export default function KidsPaymentSuccess() {
                 )}
                 <button onClick={() => router.push("/kids")}
                   className="w-full py-4 font-bold text-sm text-white transition-all hover:bg-white/5"
-                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>
+                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>
                   ← Back to Kids Programme
                 </button>
               </div>
 
               {/* Support */}
-              <p className="text-center text-xs" style={{ color: "#4b5563" }}>
+              <p className="text-center text-xs" style={{ color: "var(--text-muted)" }}>
                 Questions?{" "}
                 <a href="mailto:info@learnexity.org" className="underline transition-all hover:text-white" style={{ color: BRAND }}>
                   info@learnexity.org

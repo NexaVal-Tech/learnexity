@@ -43,32 +43,32 @@ export default function CertificatePreviewModal({ open, onClose, pdfUrl, title, 
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
           <div>
-            <p className="text-sm font-semibold text-gray-900">{title}</p>
-            {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{title}</p>
+            {subtitle && <p className="text-xs text-gray-500 dark:text-gray-300 mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div style={{ height: '65vh' }} className="bg-gray-100">
+        <div style={{ height: '65vh' }} className="bg-gray-100 dark:bg-white/5">
           <iframe src={viewerUrl} className="w-full h-full border-0" title={title} />
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-3 px-5 py-3 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
           <a
             href={pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900"
+            className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             <ExternalLink size={14} />
             Open in new tab

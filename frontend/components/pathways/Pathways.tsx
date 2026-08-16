@@ -52,10 +52,10 @@ export default function Pathways() {
           {/* Header */}
           <div className="mb-16 flex flex-col gap-6 text-center md:text-left lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-4xl font-semibold text-white mb-4 component-headers">
+              <h2 className="text-4xl font-semibold text-[var(--text-primary)] mb-4 component-headers">
                 Our Pathways
               </h2>
-              <p className="w-full text-xl text-gray-400 text-center md:text-left">
+              <p className="w-full text-xl text-[var(--text-secondary)] text-center md:text-left">
                 Flexible delivery designed to suit your needs, plus access to remote opportunities,
                 <br />
                 community support, and job search assistance.
@@ -99,8 +99,8 @@ export default function Pathways() {
               <ScrollFadeIn key={card.number} delay={index * 0.15} duration={0.3}>
                 <div
                   className="pathway-card p-5 sm:p-8 h-full
-                    border border-white/10
-                    bg-[#0f0f0f]/90 backdrop-blur-sm
+                    border border-[var(--border-subtle)]
+                    bg-[var(--surface-elevated)] backdrop-blur-sm
                     shadow-lg shadow-black/40
                     hover:-translate-y-2
                     cursor-pointer transition-all duration-300"
@@ -110,10 +110,10 @@ export default function Pathways() {
                       {card.number}
                     </span>
                   </div>
-                  <h3 className="text-2xl font-semibold text-white mb-4 sub-component-headers">
+                  <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-4 sub-component-headers">
                     {card.title}
                   </h3>
-                  <p className="text-xl text-gray-400 mb-8 leading-relaxed">
+                  <p className="text-xl text-[var(--text-secondary)] mb-8 leading-relaxed">
                     {card.description}
                   </p>
                 </div>

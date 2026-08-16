@@ -12,11 +12,11 @@ import {
 
 const PHASES = ['brief', 'team', 'execution', 'review', 'delivery'];
 const PHASE_META: Record<string, { label: string; color: string; bg: string; desc: string }> = {
-  brief:     { label: 'Project Brief',   color: 'text-blue-700',   bg: 'bg-blue-50',   desc: 'Read the project brief and understand the task.' },
-  team:      { label: 'Team Assignment', color: 'text-violet-700', bg: 'bg-violet-50', desc: 'Your role has been assigned. Review your responsibilities.' },
-  execution: { label: 'Execution',       color: 'text-amber-700',  bg: 'bg-amber-50',  desc: 'Work on the project. Submit daily check-ins and your deliverable.' },
-  review:    { label: 'Review',          color: 'text-orange-700', bg: 'bg-orange-50', desc: 'Your instructor is reviewing your submission. Await feedback.' },
-  delivery:  { label: 'Delivery',        color: 'text-green-700',  bg: 'bg-green-50',  desc: 'Project delivered. Review final feedback from your instructor.' },
+  brief:     { label: 'Project Brief',   color: 'text-blue-700 dark:text-blue-300',     bg: 'bg-blue-50 dark:bg-blue-500/15',     desc: 'Read the project brief and understand the task.' },
+  team:      { label: 'Team Assignment', color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-50 dark:bg-violet-500/15', desc: 'Your role has been assigned. Review your responsibilities.' },
+  execution: { label: 'Execution',       color: 'text-amber-700 dark:text-amber-300',   bg: 'bg-amber-50 dark:bg-amber-500/15',   desc: 'Work on the project. Submit daily check-ins and your deliverable.' },
+  review:    { label: 'Review',          color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 dark:bg-orange-500/15', desc: 'Your instructor is reviewing your submission. Await feedback.' },
+  delivery:  { label: 'Delivery',        color: 'text-green-700 dark:text-green-300',   bg: 'bg-green-50 dark:bg-green-500/15',   desc: 'Project delivered. Review final feedback from your instructor.' },
 };
 
 export default function StudentProjectDetail() {
@@ -117,7 +117,7 @@ export default function StudentProjectDetail() {
     <UserDashboardLayout>
       <div className="max-w-xl mx-auto pt-32 text-center px-4">
         <AlertCircle size={40} className="mx-auto text-red-400 mb-3" />
-        <p className="text-red-600 mb-4">{error || 'Project not found.'}</p>
+        <p className="text-red-600 dark:text-red-400 mb-4">{error || 'Project not found.'}</p>
         <button onClick={() => router.back()} className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">Go Back</button>
       </div>
     </UserDashboardLayout>
@@ -132,24 +132,24 @@ export default function StudentProjectDetail() {
       <div className="max-w-[1255px] mx-auto px-4 py-8 pt-25">
 
         {/* Back */}
-        <button onClick={() => router.push('/user/projects')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6">
+        <button onClick={() => router.push('/user/projects')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-6">
           <ArrowLeft size={15} /> Back to Projects
         </button>
 
         {/* Header */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-xl font-bold text-gray-900">{project.title}</h1>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">{project.title}</h1>
                 <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
                   {meta.label}
                 </span>
               </div>
-              <p className="text-sm text-gray-500">{meta.desc}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{meta.desc}</p>
             </div>
             {my_team_role && (
-              <span className="text-sm bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded-full flex-shrink-0">
+              <span className="text-sm bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 font-semibold px-3 py-1.5 rounded-full flex-shrink-0">
                 Your Role: {my_team_role.role}
               </span>
             )}
@@ -165,10 +165,10 @@ export default function StudentProjectDetail() {
                 <div key={ph} className="flex-1 text-center">
                   <div className={`h-2 rounded-full mb-1.5 ${
                     isDone    ? 'bg-indigo-600' :
-                    isCurrent ? 'bg-indigo-300' :
-                    'bg-gray-200'
+                    isCurrent ? 'bg-indigo-300 dark:bg-indigo-500/40' :
+                    'bg-gray-200 dark:bg-white/10'
                   }`} />
-                  <p className={`text-[10px] font-medium hidden sm:block ${isCurrent ? 'text-indigo-600' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] font-medium hidden sm:block ${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
                     {phMeta.label.split(' ')[0]}
                   </p>
                 </div>
@@ -178,7 +178,7 @@ export default function StudentProjectDetail() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 overflow-x-auto">
+        <div className="flex gap-1 bg-gray-100 dark:bg-white/10 p-1 rounded-xl mb-6 overflow-x-auto">
           {[
             { key: 'overview', label: 'Brief' },
             { key: 'submit',   label: 'Submit Work' },
@@ -190,8 +190,8 @@ export default function StudentProjectDetail() {
               onClick={() => setActiveTab(tab.key as any)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.key
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white text-gray-900 dark:bg-[#0f0f14] dark:text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
               {tab.label}
@@ -203,30 +203,30 @@ export default function StudentProjectDetail() {
         {activeTab === 'overview' && (
           <div className="space-y-5">
             {/* Brief */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <FileText size={16} className="text-indigo-600" /> Project Brief
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <FileText size={16} className="text-indigo-600 dark:text-indigo-400" /> Project Brief
               </h2>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{project.brief}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{project.brief}</p>
             </div>
 
             {/* Expected outcome */}
             {project.expected_outcome && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <CheckCircle size={16} className="text-green-600" /> Expected Outcome
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <CheckCircle size={16} className="text-green-600 dark:text-green-400" /> Expected Outcome
                 </h2>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{project.expected_outcome}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{project.expected_outcome}</p>
               </div>
             )}
 
             {/* Deadline */}
             {project.deadline && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-center gap-3">
-                <Clock size={20} className="text-amber-600 flex-shrink-0" />
+              <div className="bg-amber-50 border border-amber-200 dark:bg-amber-500/15 dark:border-amber-500/30 rounded-xl p-5 flex items-center gap-3">
+                <Clock size={20} className="text-amber-600 dark:text-amber-400 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">Deadline</p>
-                  <p className="text-sm text-amber-700">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Deadline</p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
                     {new Date(project.deadline).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
@@ -235,18 +235,18 @@ export default function StudentProjectDetail() {
 
             {/* Team */}
             {team_roles?.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users size={16} className="text-indigo-600" /> Team Roles
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Users size={16} className="text-indigo-600 dark:text-indigo-400" /> Team Roles
                 </h2>
                 <div className="space-y-2">
                   {team_roles.map((tr: any) => (
-                    <div key={tr.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div key={tr.id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-white/10 last:border-0">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{tr.user?.name}</p>
-                        <p className="text-xs text-gray-500">{tr.user?.email}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{tr.user?.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{tr.user?.email}</p>
                       </div>
-                      <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full capitalize">
+                      <span className="text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 font-semibold px-2.5 py-1 rounded-full capitalize">
                         {tr.role}
                       </span>
                     </div>
@@ -259,52 +259,52 @@ export default function StudentProjectDetail() {
 
         {/* ── SUBMIT WORK TAB ───────────────────────────────────────────── */}
         {activeTab === 'submit' && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-1">Submit Your Work</h2>
-            <p className="text-sm text-gray-500 mb-5">
+          <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Submit Your Work</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
               You can submit text, a file, or both. Your instructor will review and provide feedback.
             </p>
 
             {submitSuccess && (
-              <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-4 text-green-700 text-sm">
+              <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 dark:bg-green-500/15 dark:border-green-500/30 rounded-xl p-4 text-green-700 dark:text-green-300 text-sm">
                 <CheckCircle size={16} /> {submitSuccess}
               </div>
             )}
             {submitError && (
-              <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+              <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 rounded-xl p-4 text-red-700 dark:text-red-300 text-sm">
                 <AlertCircle size={16} /> {submitError}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1.5">
-                  Written Submission <span className="text-gray-400 font-normal">(optional if uploading a file)</span>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
+                  Written Submission <span className="text-gray-400 dark:text-gray-500 font-normal">(optional if uploading a file)</span>
                 </label>
                 <textarea
                   rows={6}
                   value={submitText}
                   onChange={(e) => setSubmitText(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
                   placeholder="Describe your work, your approach, key decisions, and any challenges you faced…"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1.5">
-                  Upload File <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
+                  Upload File <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                 </label>
-                <label className="w-full flex flex-col items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition">
-                  <Upload size={24} className="text-gray-400" />
+                <label className="w-full flex flex-col items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-200 dark:border-white/20 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10 transition">
+                  <Upload size={24} className="text-gray-400 dark:text-gray-500" />
                   {submitFile ? (
                     <>
-                      <span className="text-sm font-medium text-gray-800 text-center">{submitFile.name}</span>
-                      <span className="text-xs text-indigo-600">Click to change</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white text-center">{submitFile.name}</span>
+                      <span className="text-xs text-indigo-600 dark:text-indigo-400">Click to change</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-sm text-gray-500">Click to upload your work</span>
-                      <span className="text-xs text-gray-400">PDF, DOCX, PPTX, ZIP — max 50MB</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Click to upload your work</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">PDF, DOCX, PPTX, ZIP — max 50MB</span>
                     </>
                   )}
                   <input
@@ -332,51 +332,51 @@ export default function StudentProjectDetail() {
         {activeTab === 'checkin' && (
           <div className="space-y-5">
             {checkin_today && (
-              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4 text-green-700 text-sm">
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 dark:bg-green-500/15 dark:border-green-500/30 rounded-xl p-4 text-green-700 dark:text-green-300 text-sm">
                 <CheckCircle size={16} /> You've already submitted today's check-in. You can update it below.
               </div>
             )}
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-base font-semibold text-gray-900 mb-1">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                 {checkin_today ? 'Update Today\'s Check-in' : "Today's Check-in"}
               </h2>
-              <p className="text-sm text-gray-500 mb-5">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
                 Share a quick update on what you worked on and flag any blockers.
               </p>
 
               {checkinSuccess && (
-                <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-4 text-green-700 text-sm">
+                <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 dark:bg-green-500/15 dark:border-green-500/30 rounded-xl p-4 text-green-700 dark:text-green-300 text-sm">
                   <CheckCircle size={16} /> {checkinSuccess}
                 </div>
               )}
               {checkinError && (
-                <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+                <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 rounded-xl p-4 text-red-700 dark:text-red-300 text-sm">
                   <AlertCircle size={16} /> {checkinError}
                 </div>
               )}
 
               <form onSubmit={handleCheckin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1.5">What did you work on today? *</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">What did you work on today? *</label>
                   <textarea
                     required
                     rows={4}
                     value={checkinText}
                     onChange={(e) => setCheckinText(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
                     placeholder="e.g. Completed the wireframes for the landing page, reviewed the brand guidelines…"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1.5">
-                    Any blockers? <span className="text-gray-400 font-normal">(optional)</span>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
+                    Any blockers? <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                   </label>
                   <textarea
                     rows={2}
                     value={checkinBlocker}
                     onChange={(e) => setCheckinBlocker(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
                     placeholder="e.g. Waiting for feedback on the colour palette before proceeding…"
                   />
                 </div>
@@ -395,17 +395,17 @@ export default function StudentProjectDetail() {
 
             {/* Previous checkins */}
             {my_checkins?.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Previous Check-ins</h3>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-6">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Previous Check-ins</h3>
                 <div className="space-y-4">
                   {my_checkins.map((c: any) => (
-                    <div key={c.id} className="border-l-2 border-indigo-200 pl-4 py-1">
-                      <p className="text-xs text-gray-400 mb-1">
+                    <div key={c.id} className="border-l-2 border-indigo-200 dark:border-indigo-500/30 pl-4 py-1">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
                         {new Date(c.checkin_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </p>
-                      <p className="text-sm text-gray-700">{c.update}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{c.update}</p>
                       {c.blocker && (
-                        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5 mt-2">
+                        <p className="text-xs text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 rounded-lg px-3 py-1.5 mt-2">
                           🚧 Blocker: {c.blocker}
                         </p>
                       )}
@@ -421,53 +421,53 @@ export default function StudentProjectDetail() {
         {activeTab === 'history' && (
           <div className="space-y-4">
             {!my_submissions || my_submissions.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <FileText size={40} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">No submissions yet.</p>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
+                <FileText size={40} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">No submissions yet.</p>
                 <button
                   onClick={() => setActiveTab('submit')}
-                  className="mt-4 text-sm text-indigo-600 font-semibold hover:underline"
+                  className="mt-4 text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
                 >
                   Submit your work →
                 </button>
               </div>
             ) : my_submissions.map((sub: any) => (
-              <div key={sub.id} className="bg-white rounded-xl border border-gray-200 p-5">
+              <div key={sub.id} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       Submitted {new Date(sub.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5 capitalize">Phase: {sub.phase}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 capitalize">Phase: {sub.phase}</p>
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
-                    sub.status === 'approved'           ? 'bg-green-100 text-green-700' :
-                    sub.status === 'revision_requested' ? 'bg-orange-100 text-orange-700' :
-                    sub.status === 'reviewed'           ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-600'
+                    sub.status === 'approved'           ? 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300' :
+                    sub.status === 'revision_requested' ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300' :
+                    sub.status === 'reviewed'           ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' :
+                    'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300'
                   }`}>
                     {sub.status.replace('_', ' ')}
                   </span>
                 </div>
 
                 {sub.content && (
-                  <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 mb-3 leading-relaxed">
+                  <p className="text-sm text-gray-700 bg-gray-50 dark:text-gray-300 dark:bg-white/5 rounded-lg p-3 mb-3 leading-relaxed">
                     {sub.content}
                   </p>
                 )}
 
                 {sub.file_name && (
-                  <div className="flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2 mb-3 w-fit">
+                  <div className="flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-500/15 rounded-lg px-3 py-2 mb-3 w-fit">
                     <FileText size={12} /> {sub.file_name}
                   </div>
                 )}
 
                 {sub.instructor_feedback && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-blue-800 mb-1"> Instructor Feedback</p>
-                    <p className="text-sm text-blue-700 leading-relaxed">{sub.instructor_feedback}</p>
+                  <div className="bg-blue-50 border border-blue-200 dark:bg-blue-500/15 dark:border-blue-500/30 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1"> Instructor Feedback</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">{sub.instructor_feedback}</p>
                     {sub.reviewed_at && (
-                      <p className="text-xs text-blue-400 mt-2">
+                      <p className="text-xs text-blue-400 dark:text-blue-400/80 mt-2">
                         Reviewed {new Date(sub.reviewed_at).toLocaleDateString()}
                       </p>
                     )}

@@ -18,11 +18,11 @@ const PHASES = ['brief', 'team', 'execution', 'review', 'delivery'] as const;
 type Phase = typeof PHASES[number];
 
 const phaseMeta: Record<Phase, { label: string; color: string; bg: string }> = {
-  brief:     { label: 'Brief',     color: 'text-blue-700',   bg: 'bg-blue-50' },
-  team:      { label: 'Team',      color: 'text-violet-700', bg: 'bg-violet-50' },
-  execution: { label: 'Execution', color: 'text-amber-700',  bg: 'bg-amber-50' },
-  review:    { label: 'Review',    color: 'text-orange-700', bg: 'bg-orange-50' },
-  delivery:  { label: 'Delivery',  color: 'text-green-700',  bg: 'bg-green-50' },
+  brief:     { label: 'Brief',     color: 'text-blue-700 dark:text-blue-400',     bg: 'bg-blue-50 dark:bg-blue-500/15' },
+  team:      { label: 'Team',      color: 'text-violet-700 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-500/15' },
+  execution: { label: 'Execution', color: 'text-amber-700 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-500/15' },
+  review:    { label: 'Review',    color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-500/15' },
+  delivery:  { label: 'Delivery',  color: 'text-green-700 dark:text-green-400',   bg: 'bg-green-50 dark:bg-green-500/15' },
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ export default function InstructorCourseDetail() {
       <InstructorLayout>
         <div className="flex flex-col items-center justify-center h-96">
           <AlertCircle className="w-12 h-12 text-red-500 mb-3" />
-          <p className="text-red-600 mb-4">{error || 'Course not found'}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">{error || 'Course not found'}</p>
           <button onClick={() => router.back()} className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">Go Back</button>
         </div>
       </InstructorLayout>
@@ -228,13 +228,13 @@ export default function InstructorCourseDetail() {
 
           {/* Header */}
           <div>
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-4">
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
               <ArrowLeft size={16} /> Back to Courses
             </button>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
-                <p className="text-sm text-gray-500 mt-1">{sprints?.length ?? 0} sprints · {students?.length ?? 0} enrolled students</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{course.title}</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{sprints?.length ?? 0} sprints · {students?.length ?? 0} enrolled students</p>
               </div>
               {activeTab === 'sprints' && (
                 <button onClick={() => setAddSprintOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
@@ -250,7 +250,7 @@ export default function InstructorCourseDetail() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-gray-200">
+          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10">
             {[
               { key: 'sprints',  label: 'Sprints & Materials' },
               { key: 'students', label: `Students (${students?.length ?? 0})` },
@@ -260,7 +260,7 @@ export default function InstructorCourseDetail() {
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key as any); setSelectedProject(null); }}
                 className={`px-5 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-                  activeTab === tab.key ? 'text-indigo-700' : 'text-gray-500 hover:text-gray-700'
+                  activeTab === tab.key ? 'text-indigo-700 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 {tab.label}
@@ -275,17 +275,17 @@ export default function InstructorCourseDetail() {
           {activeTab === 'sprints' && (
             <div className="space-y-4">
               {!sprints || sprints.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                  <p className="text-gray-500">No sprints yet. Click "Add Sprint" to create one.</p>
+                <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">No sprints yet. Click "Add Sprint" to create one.</p>
                 </div>
               ) : sprints.map((sprint: any) => (
-                <div key={sprint.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="p-4 flex items-center justify-between border-b border-gray-100 bg-gray-50">
+                <div key={sprint.id} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                  <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
                     <div className="flex items-center gap-3">
                       <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
                         Sprint {sprint.number}
                       </span>
-                      <span className="text-sm font-medium text-gray-900">{sprint.title}</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{sprint.title}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -294,11 +294,11 @@ export default function InstructorCourseDetail() {
                           setSprintForm({ sprint_name: sprint.title, sprint_number: String(sprint.number) });
                           setEditSprintOpen(true);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded-lg"
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-white/10 rounded-lg"
                       >
                         <Edit size={15} />
                       </button>
-                      <button onClick={() => handleDeleteSprint(sprint.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                      <button onClick={() => handleDeleteSprint(sprint.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                         <Trash size={15} />
                       </button>
                     </div>
@@ -306,16 +306,16 @@ export default function InstructorCourseDetail() {
 
                   <div className="p-4 space-y-2">
                     {[...(sprint.topics || [])].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)).map((topic: any) => (
-                      <div key={topic.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
+                      <div key={topic.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg group hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            topic.type === 'pdf'      ? 'bg-red-100 text-red-600' :
-                            topic.type === 'document' ? 'bg-orange-100 text-orange-600' :
-                            'bg-blue-100 text-blue-600'
+                            topic.type === 'pdf'      ? 'bg-red-100 dark:bg-red-500/15 text-red-600 dark:text-red-400' :
+                            topic.type === 'document' ? 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400' :
+                            'bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400'
                           }`}>
                             {topic.type.toUpperCase().slice(0, 3)}
                           </div>
-                          <span className="text-sm text-gray-700">{topic.title}</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{topic.title}</span>
                         </div>
                         <button
                           onClick={() => handleDeleteTopic(topic.id)}
@@ -328,7 +328,7 @@ export default function InstructorCourseDetail() {
 
                     <button
                       onClick={() => { setSelectedSprint(sprint); setAddTopicOpen(true); }}
-                      className="w-full py-2 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 hover:border-gray-300 transition-colors"
+                      className="w-full py-2 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 transition-colors"
                     >
                       <Plus size={15} /> Add Topic
                     </button>
@@ -340,14 +340,14 @@ export default function InstructorCourseDetail() {
 
           {/* ── STUDENTS TAB ─────────────────────────────────────────────────── */}
           {activeTab === 'students' && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-5 border-b border-gray-100">
-                <h2 className="font-semibold text-gray-900">Enrolled Students</h2>
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+              <div className="p-5 border-b border-gray-100 dark:border-white/10">
+                <h2 className="font-semibold text-gray-900 dark:text-white">Enrolled Students</h2>
               </div>
               {!students || students.length === 0 ? (
-                <div className="p-10 text-center text-gray-500">No enrolled students yet.</div>
+                <div className="p-10 text-center text-gray-500 dark:text-gray-400">No enrolled students yet.</div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-white/10">
                   {students.map((student: any) => (
                     <div key={student.id} className="flex items-center justify-between px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -355,15 +355,15 @@ export default function InstructorCourseDetail() {
                           {student.name?.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{student.name}</p>
-                          <p className="text-xs text-gray-500">{student.email}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{student.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-24 bg-gray-100 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
                           <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${student.progress}%` }} />
                         </div>
-                        <span className="text-xs font-semibold text-gray-700 w-10 text-right">{student.progress}%</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 w-10 text-right">{student.progress}%</span>
                       </div>
                     </div>
                   ))}
@@ -376,25 +376,25 @@ export default function InstructorCourseDetail() {
           {activeTab === 'projects' && !selectedProject && (
             <div className="space-y-4">
               {!projects || projects.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                  <FolderKanban size={40} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500">No projects yet. Create one to get started.</p>
+                <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
+                  <FolderKanban size={40} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400">No projects yet. Create one to get started.</p>
                 </div>
               ) : projects.map((project: InstructorProject) => {
                 const meta = phaseMeta[project.phase];
                 return (
-                  <div key={project.id} className="bg-white rounded-xl border border-gray-200 p-5">
+                  <div key={project.id} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">{project.title}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{project.title}</h3>
                           <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
                             {meta.label}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-2">{project.brief}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.brief}</p>
                         {project.deadline && (
-                          <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
                             <Clock size={11} /> Deadline: {new Date(project.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
                         )}
@@ -425,8 +425,8 @@ export default function InstructorCourseDetail() {
                         const isCurrent  = i === phaseIndex;
                         return (
                           <div key={ph} className="flex-1">
-                            <div className={`h-1.5 rounded-full ${isDone ? 'bg-indigo-600' : isCurrent ? 'bg-indigo-300' : 'bg-gray-200'}`} />
-                            <p className="text-[10px] text-gray-400 mt-1 text-center capitalize hidden md:block">{ph}</p>
+                            <div className={`h-1.5 rounded-full ${isDone ? 'bg-indigo-600' : isCurrent ? 'bg-indigo-300' : 'bg-gray-200 dark:bg-white/10'}`} />
+                            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 text-center capitalize hidden md:block">{ph}</p>
                           </div>
                         );
                       })}
@@ -440,42 +440,42 @@ export default function InstructorCourseDetail() {
           {/* ── PROJECT SUBMISSIONS VIEW ──────────────────────────────────────── */}
           {activeTab === 'projects' && selectedProject && (
             <div className="space-y-4">
-              <button onClick={() => setSelectedProject(null)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900">
+              <button onClick={() => setSelectedProject(null)} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                 <ArrowLeft size={15} /> Back to Projects
               </button>
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h2 className="font-semibold text-gray-900 mb-1">{selectedProject.title} — Submissions</h2>
-                <p className="text-sm text-gray-500 mb-5">Phase: {phaseMeta[selectedProject.phase].label}</p>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-5">
+                <h2 className="font-semibold text-gray-900 dark:text-white mb-1">{selectedProject.title} — Submissions</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Phase: {phaseMeta[selectedProject.phase].label}</p>
 
                 {submissions.length === 0 ? (
-                  <p className="text-center text-gray-400 py-8">No submissions yet.</p>
+                  <p className="text-center text-gray-400 dark:text-gray-500 py-8">No submissions yet.</p>
                 ) : (
                   <div className="space-y-3">
                     {submissions.map((sub) => (
-                      <div key={sub.id} className="border border-gray-200 rounded-xl p-4">
+                      <div key={sub.id} className="border border-gray-200 dark:border-white/10 rounded-xl p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{sub.user?.name}</p>
-                            <p className="text-xs text-gray-500">{sub.user?.email}</p>
-                            {sub.content && <p className="text-sm text-gray-700 mt-2 line-clamp-3">{sub.content}</p>}
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{sub.user?.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{sub.user?.email}</p>
+                            {sub.content && <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-3">{sub.content}</p>}
                             {sub.file_name && (
                               <p className="text-xs text-indigo-600 mt-1 flex items-center gap-1">
                                 <FileText size={11} /> {sub.file_name}
                               </p>
                             )}
                             {sub.instructor_feedback && (
-                              <div className="mt-3 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
-                                <span className="font-semibold text-gray-800">Feedback: </span>
+                              <div className="mt-3 bg-gray-50 dark:bg-white/5 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold text-gray-800 dark:text-white">Feedback: </span>
                                 {sub.instructor_feedback}
                               </div>
                             )}
                           </div>
                           <div className="flex flex-col items-end gap-2 flex-shrink-0">
                             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              sub.status === 'approved'           ? 'bg-green-100 text-green-700' :
-                              sub.status === 'revision_requested' ? 'bg-orange-100 text-orange-700' :
-                              sub.status === 'reviewed'           ? 'bg-blue-100 text-blue-700' :
-                              'bg-gray-100 text-gray-600'
+                              sub.status === 'approved'           ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400' :
+                              sub.status === 'revision_requested' ? 'bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400' :
+                              sub.status === 'reviewed'           ? 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400' :
+                              'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'
                             }`}>
                               {sub.status.replace('_', ' ')}
                             </span>
@@ -545,10 +545,10 @@ export default function InstructorCourseDetail() {
               </Field>
               {(topicForm.type === 'pdf' || topicForm.type === 'document') && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload File</label>
-                  <label className="w-full flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition">
-                    <Upload size={20} className="text-gray-400" />
-                    <span className="text-sm text-gray-500">{topicFile ? topicFile.name : 'Click to select file'}</span>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Upload File</label>
+                  <label className="w-full flex flex-col items-center justify-center gap-2 px-4 py-6 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/10 transition">
+                    <Upload size={20} className="text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{topicFile ? topicFile.name : 'Click to select file'}</span>
                     <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => setTopicFile(e.target.files?.[0] ?? null)} />
                   </label>
                 </div>
@@ -605,15 +605,15 @@ export default function InstructorCourseDetail() {
 
 // ── Shared modal sub-components ───────────────────────────────────────────────
 
-const inputCls = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
+const inputCls = 'w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1"><X size={20} /></button>
+      <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-[#0f0f14]">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"><X size={20} /></button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>
@@ -624,7 +624,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-900 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -633,7 +633,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ModalActions({ onCancel, submitting, submitLabel }: { onCancel: () => void; submitting: boolean; submitLabel: string }) {
   return (
     <div className="flex items-center gap-3 pt-2">
-      <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+      <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
       <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50">
         {submitting && <Loader2 size={15} className="animate-spin" />}
         {submitting ? 'Saving…' : submitLabel}

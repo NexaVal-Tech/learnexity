@@ -50,7 +50,7 @@ export default function ScholarshipCoursePrompt() {
           align-items: center;
           justify-content: center;
           padding: 1.5rem;
-          background: rgba(0, 0, 0, 0.72);
+          background: var(--overlay);
           backdrop-filter: blur(6px);
           animation: schprompt-backdrop-in 0.28s ease both;
         }
@@ -73,7 +73,7 @@ export default function ScholarshipCoursePrompt() {
           max-width: 480px;
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           border: 1px solid rgba(74, 58, 255, 0.25);
-          background: rgba(10, 10, 18, 0.98);
+          background: var(--surface-elevated);
           box-shadow:
             0 40px 80px rgba(0, 0, 0, 0.9),
             0 0 0 1px rgba(255, 255, 255, 0.04) inset,
@@ -141,7 +141,7 @@ export default function ScholarshipCoursePrompt() {
         .schprompt-title {
           font-size: 1.35rem;
           font-weight: 700;
-          color: #ffffff;
+          color: var(--text-primary);
           line-height: 1.25;
           margin-bottom: 1rem;
           letter-spacing: -0.015em;
@@ -149,7 +149,7 @@ export default function ScholarshipCoursePrompt() {
 
         .schprompt-body-text {
           font-size: 0.95rem;
-          color: rgba(255, 255, 255, 0.55);
+          color: var(--text-secondary);
           line-height: 1.65;
           margin-bottom: 0.75rem;
         }
@@ -234,7 +234,7 @@ export default function ScholarshipCoursePrompt() {
             <p className="schprompt-body-text">
               Browse the courses below and open the one you'd like to apply a
               scholarship for. Once you're on the course page, tap{' '}
-              <strong style={{ color: 'rgba(255,255,255,0.85)' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>
                 "Apply for a Scholarship"
               </strong>{' '}
               to begin your 2-minute application.

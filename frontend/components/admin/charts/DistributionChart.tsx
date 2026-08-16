@@ -18,8 +18,8 @@ const DistributionChart: React.FC<DistributionChartProps> = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">
-      <h3 className="text-lg font-bold text-gray-900 mb-6">
+    <div className="bg-white dark:bg-[#0f0f14] p-6 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm h-full">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
         Payment Status Distribution
       </h3>
 
@@ -98,7 +98,7 @@ const DistributionChart: React.FC<DistributionChartProps> = ({ data }) => {
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-xs text-gray-600">{item.name}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-300">{item.name}</span>
           </div>
         ))}
       </div>

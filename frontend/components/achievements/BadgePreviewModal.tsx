@@ -25,13 +25,13 @@ export default function BadgePreviewModal({ open, onClose, name, description, ba
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden"
+        className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-end px-4 pt-4">
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
           >
             <X size={18} />
           </button>
@@ -45,11 +45,11 @@ export default function BadgePreviewModal({ open, onClose, name, description, ba
             <Award size={44} />
           </span>
 
-          <h3 className="text-lg font-bold text-gray-900">{name}</h3>
-          <p className="text-sm text-gray-500 mt-2 leading-relaxed">{description}</p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-300 mt-2 leading-relaxed">{description}</p>
 
           {unlockedAt && (
-            <p className="text-xs text-gray-400 mt-4">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
               Unlocked {new Date(unlockedAt).toLocaleDateString()}
             </p>
           )}

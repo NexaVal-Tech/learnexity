@@ -212,9 +212,9 @@ function SocialLink({ href, children }: { href: string; children: React.ReactNod
         width: "36px",
         height: "36px",
         borderRadius: "50%",
-        border: "1px solid rgba(255,255,255,0.15)",
-        color: "rgba(255,255,255,0.7)",
-        background: "rgba(255,255,255,0.03)",
+        border: "1px solid var(--border-strong)",
+        color: "var(--text-secondary)",
+        background: "var(--surface-alt)",
         transition: "all 0.25s ease",
       }}
     >
@@ -231,7 +231,7 @@ function BioParagraphs({ paragraphs, style }: { paragraphs: string[]; style?: Re
         <p
           key={i}
           style={{
-            color: "rgba(255,255,255,0.7)",
+            color: "var(--text-secondary)",
             fontSize: "0.95rem",
             lineHeight: 1.75,
             margin: i === 0 ? "0 0 1rem" : "0 0 1rem",
@@ -256,7 +256,7 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(0,0,0,0.75)",
+        background: "var(--overlay)",
         backdropFilter: "blur(6px)",
         display: "flex",
         alignItems: "center",
@@ -274,7 +274,7 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
           overflowY: "auto",
           borderRadius: "2rem 0.75rem 2rem 0.75rem",
           border: `1px solid ${BRAND}44`,
-          background: "rgba(20,20,24,0.98)",
+          background: "var(--surface-elevated)",
           boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.8)`,
           padding: "2.5rem",
         }}
@@ -289,9 +289,9 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
             width: "36px",
             height: "36px",
             borderRadius: "50%",
-            border: "1px solid rgba(255,255,255,0.15)",
-            background: "rgba(255,255,255,0.05)",
-            color: "rgba(255,255,255,0.8)",
+            border: "1px solid var(--border-strong)",
+            background: "var(--surface-alt)",
+            color: "var(--text-secondary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -308,7 +308,7 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
             </div>
           )}
           <div>
-            <h3 style={{ color: "white", fontSize: "1.3rem", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>{member.name}</h3>
+            <h3 style={{ color: "var(--text-primary)", fontSize: "1.3rem", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>{member.name}</h3>
             <p style={{ color: BRAND, fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0.35rem 0 0" }}>
               {member.role}
             </p>
@@ -340,7 +340,7 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
             >
               <ClockIcon />
             </div>
-            <h4 style={{ color: "white", fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+            <h4 style={{ color: "var(--text-primary)", fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
               Bio coming soon
             </h4>
           </div>
@@ -372,7 +372,7 @@ function BioModal({ member, onClose }: { member: TeamMember; onClose: () => void
 // ─── FEATURED CARD (CEO) ──────────────────────────────────────────────────────
 function FeaturedCard({ member }: { member: TeamMember }) {
   return (
-    <div className="featured-card" style={{borderRadius: "2.5rem 1rem 2.5rem 1rem", border: `1px solid ${BRAND}44`, background: "rgba(28,28,32,0.97)", backdropFilter: "blur(12px)", padding: "0", overflow: "hidden",
+    <div className="featured-card" style={{borderRadius: "2.5rem 1rem 2.5rem 1rem", border: `1px solid ${BRAND}44`, background: "var(--surface-elevated)", backdropFilter: "blur(12px)", padding: "0", overflow: "hidden",
         display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.7)`, }}>
       {/* Photo side */}
       <div style={{position: "relative", minHeight: "460px", background: `linear-gradient(135deg, ${BRAND}18 0%, #1a1a22 100%)`, overflow: "hidden", }} >
@@ -424,7 +424,7 @@ function FeaturedCard({ member }: { member: TeamMember }) {
           <p style={{color: BRAND, fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.5rem",}}>
             {member.role}
           </p>
-          <h2 style={{color: "white", fontSize: "clamp(1.6rem, 2.5vw, 2.25rem)", fontWeight: 800, lineHeight: 1.1, margin: 0,}}>
+          <h2 style={{color: "var(--text-primary)", fontSize: "clamp(1.6rem, 2.5vw, 2.25rem)", fontWeight: 800, lineHeight: 1.1, margin: 0,}}>
             {member.name}
           </h2>
         </div>
@@ -458,7 +458,7 @@ function FeaturedCard({ member }: { member: TeamMember }) {
 // ─── REGULAR MEMBER CARD ──────────────────────────────────────────────────────
 function MemberCard({ member, onReadBio }: { member: TeamMember; onReadBio: (member: TeamMember) => void }) {
   return (
-    <div className="member-card" style={{borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(28,28,32,0.95)", backdropFilter: "blur(8px)", overflow: "hidden",
+    <div className="member-card" style={{borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", backdropFilter: "blur(8px)", overflow: "hidden",
         display: "flex", flexDirection: "column", boxShadow: "0 25px 50px rgba(0,0,0,0.6)", transition: "all 0.35s ease",}}>
       {/* Photo */}
       <div style={{position: "relative", height: "320px", background: `linear-gradient(135deg, ${BRAND}14 0%, #18181f 100%)`, overflow: "hidden", flexShrink: 0,}} >
@@ -527,7 +527,7 @@ function MemberCard({ member, onReadBio }: { member: TeamMember; onReadBio: (mem
         </p>
         <h3
           style={{
-            color: "white",
+            color: "var(--text-primary)",
             fontSize: "1.2rem",
             fontWeight: 700,
             margin: 0,
@@ -622,7 +622,7 @@ export default function Team() {
         `}</style>
 
         {/* ── Deep dark page background ── */}
-        <div style={{ minHeight: "100vh", background: "#090909", paddingBottom: "5rem" }}>
+        <div style={{ minHeight: "100vh", background: "var(--page-bg)", paddingBottom: "5rem" }}>
 
           {/* ── HERO ── */}
           <div
@@ -696,7 +696,7 @@ export default function Team() {
 
               <h1
                 style={{
-                  color: "white",
+                  color: "var(--text-primary)",
                   fontSize: "clamp(2.2rem, 5vw, 3.75rem)",
                   fontWeight: 800,
                   lineHeight: 1.08,

@@ -41,22 +41,22 @@ export default function AchievementsPage() {
   return (
     <UserDashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 pt-25">
-        <h1 className="text-2xl font-bold text-gray-900">Badges &amp; Certificates</h1>
-        <p className="mt-1 text-gray-500 text-sm">Achievements you've earned across your courses.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Badges &amp; Certificates</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400 text-sm">Achievements you've earned across your courses.</p>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-gray-400" size={28} /></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={28} /></div>
         ) : (
           <>
            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
               {/* Badges */}
               <section>
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-4">
                   Badges
                 </h2>
 
                 {badges.length === 0 ? (
-                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-gray-200 p-6 text-gray-400 text-sm">
+                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-gray-200 dark:border-white/10 p-6 text-gray-400 dark:text-gray-500 text-sm">
                     <Lock size={16} /> No badges unlocked yet — keep progressing through your course.
                   </div>
                 ) : (
@@ -65,7 +65,7 @@ export default function AchievementsPage() {
                       <button
                         key={b.id}
                         onClick={() => setPreviewBadge(b)}
-                        className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col items-center text-center shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+                        className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f0f14] p-4 flex flex-col items-center text-center shadow-sm hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md transition-all"
                       >
                         <span
                           className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
@@ -77,16 +77,16 @@ export default function AchievementsPage() {
                           <Award size={22} />
                         </span>
 
-                        <div className="text-sm font-semibold text-gray-900">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
                           {b.name}
                         </div>
 
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {b.description}
                         </div>
 
                         {b.unlocked_at && (
-                          <div className="text-[11px] text-gray-400 mt-2">
+                          <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-2">
                             {new Date(b.unlocked_at).toLocaleDateString()}
                           </div>
                         )}
@@ -98,12 +98,12 @@ export default function AchievementsPage() {
 
               {/* Certificates */}
               <section>
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-4">
                   Certificates
                 </h2>
 
                 {certificates.length === 0 ? (
-                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-gray-200 p-6 text-gray-400 text-sm">
+                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-gray-200 dark:border-white/10 p-6 text-gray-400 dark:text-gray-500 text-sm">
                     <Lock size={16} /> No certificates yet — finish a course to earn one automatically.
                   </div>
                 ) : (
@@ -118,17 +118,17 @@ export default function AchievementsPage() {
                       return (
                         <div
                           key={c.id}
-                          className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm gap-3"
+                          className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f0f14] p-4 shadow-sm gap-3"
                         >
                           <div>
-                            <div className="text-sm font-semibold text-gray-900">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
                               {c.course_title}
                             </div>
 
-                            <div className="text-xs text-gray-500 mt-0.5">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                               Issued {new Date(c.issued_at).toLocaleDateString()}
                               {c.revoked_at && (
-                                <span className="ml-2 text-red-600 font-medium">
+                                <span className="ml-2 text-red-600 dark:text-red-400 font-medium">
                                   Revoked
                                 </span>
                               )}
@@ -141,7 +141,7 @@ export default function AchievementsPage() {
                                 <div className="flex items-center gap-3 flex-shrink-0">
                                   <button
                                     onClick={() => setPreviewCert(c)}
-                                    className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                   >
                                     <Eye size={15} />
                                     Preview
@@ -150,7 +150,7 @@ export default function AchievementsPage() {
                                     href={downloadUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-sm font-medium text-purple-700 hover:text-purple-900"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300"
                                   >
                                     <Download size={15} />
                                     Download
@@ -159,7 +159,7 @@ export default function AchievementsPage() {
                               ) : (
                                 <button
                                   onClick={() => enrollment && router.push(`/user/payment/${enrollment.enrollmentId}`)}
-                                  className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5 hover:bg-amber-100 flex-shrink-0"
+                                  className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-full px-3 py-1.5 hover:bg-amber-100 dark:hover:bg-amber-500/25 flex-shrink-0"
                                   title="Your certificate is ready, but payment for this course must be completed first"
                                 >
                                   <CreditCard size={13} />
@@ -167,7 +167,7 @@ export default function AchievementsPage() {
                                 </button>
                               )
                             ) : (
-                              <span className="text-xs text-gray-400 flex-shrink-0">
+                              <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
                                 Preparing PDF…
                               </span>
                             )

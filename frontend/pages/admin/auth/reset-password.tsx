@@ -66,8 +66,8 @@ export default function AdminResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#08080c] dark:to-[#0f0f1a] px-4">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-[#0f0f14] p-8 rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-indigo-600 rounded-full flex items-center justify-center">
@@ -85,17 +85,17 @@ export default function AdminResetPassword() {
               />
             </svg>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
             Reset Password
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Enter your new password below
           </p>
         </div>
 
         {/* Success Message */}
         {success ? (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+          <div className="bg-green-50 dark:bg-green-500/15 border-l-4 border-green-500 p-4 rounded">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
@@ -111,7 +111,7 @@ export default function AdminResetPassword() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-green-700 dark:text-green-400">
                   Password reset successful! Redirecting to login...
                 </p>
               </div>
@@ -121,7 +121,7 @@ export default function AdminResetPassword() {
           <>
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <div className="bg-red-50 dark:bg-red-500/15 border-l-4 border-red-500 p-4 rounded">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg
@@ -137,7 +137,7 @@ export default function AdminResetPassword() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
                   </div>
                 </div>
               </div>
@@ -148,7 +148,7 @@ export default function AdminResetPassword() {
               <div className="space-y-4">
                 {/* New Password Field */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     New Password
                   </label>
                   <div className="mt-1 relative">
@@ -159,7 +159,7 @@ export default function AdminResetPassword() {
                       required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-10"
+                      className="block w-full px-4 py-3 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-10"
                       placeholder="Enter new password"
                     />
                     <button
@@ -168,25 +168,25 @@ export default function AdminResetPassword() {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       )}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Must be at least 8 characters
                   </p>
                 </div>
 
                 {/* Confirm Password Field */}
                 <div>
-                  <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Confirm New Password
                   </label>
                   <div className="mt-1 relative">
@@ -197,7 +197,7 @@ export default function AdminResetPassword() {
                       required
                       value={formData.password_confirmation}
                       onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-10"
+                      className="block w-full px-4 py-3 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-10"
                       placeholder="Confirm new password"
                     />
                     <button
@@ -206,11 +206,11 @@ export default function AdminResetPassword() {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showConfirmPassword ? (
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
@@ -243,7 +243,7 @@ export default function AdminResetPassword() {
             <div className="text-center">
               <Link
                 href="/admin/auth/login"
-                className="text-sm text-gray-600 hover:text-indigo-600 transition"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
               >
                 ← Back to login
               </Link>

@@ -25,7 +25,7 @@ export default function ParticlesBackground() {
         fullScreen: { enable: true },
 
         particles: {
-          number: { value: 50 },
+          number: { value: 35 },
 
           color: {
             value: ["#5B1EF6", "#F59E0B", "#DE492B"],
@@ -35,7 +35,7 @@ export default function ParticlesBackground() {
 
           opacity: { value: 0.6 },
 
-          size: { value: { min: 2, max: 6 } },
+          size: { value: { min: 0.4, max: 1.2 } },
 
           move: {
             enable: true,

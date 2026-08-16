@@ -22,9 +22,9 @@ export default function Skills() {
 
   return (
     <FadeUpOnScroll>
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-[#0a0a0f]">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-8">
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-8">
             In - Demand Tech Skills We Support
           </h2>
 
@@ -33,7 +33,7 @@ export default function Skills() {
               {skills.map((skill) => (
                 <div
                   key={skill}
-                  className="bg-gray-100 px-2 py-1 rounded-lg text-gray-800 font-medium text-sm md:text-base"
+                  className="bg-gray-100 dark:bg-white/10 px-2 py-1 rounded-lg text-gray-800 dark:text-white font-medium text-sm md:text-base"
                 >
                   {skill}
                 </div>

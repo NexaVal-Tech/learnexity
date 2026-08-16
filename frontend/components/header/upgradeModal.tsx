@@ -37,12 +37,14 @@ const TRACK_LABELS: Record<string, string> = {
   self_paced: "Self-Paced",
   group_mentorship: "Live Classes",
   one_on_one: "One-on-One",
+  intermediate: "Intermediate",
 };
 
 const TRACK_ICONS: Record<string, React.ReactNode> = {
   self_paced: <Zap className="w-4 h-4" />,
   group_mentorship: <Users className="w-4 h-4" />,
   one_on_one: <Clock className="w-4 h-4" />,
+  intermediate: <Zap className="w-4 h-4" />,
 };
 
 function fmt(amount: number, currency: string) {
@@ -210,13 +212,13 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
           onClick={(e) => e.target === e.currentTarget && setOpen(false)}
         >
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#0f0f14] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/10">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Upgrade your plan</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upgrade your plan</h2>
                 {upgradeState?.current_track && (
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-gray-500 dark:text-gray-300 mt-0.5">
                     Currently on{" "}
                     <span className="font-medium text-[#4A3AFF]">
                       {TRACK_LABELS[upgradeState.current_track] ?? upgradeState.current_track}
@@ -226,7 +228,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-gray-500 dark:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -238,13 +240,13 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
               {loading && (
                 <div className="flex flex-col items-center py-10 gap-3">
                   <div className="w-8 h-8 border-2 border-[#4A3AFF] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-gray-500">Checking your upgrade options…</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Checking your upgrade options…</p>
                 </div>
               )}
 
               {/* Error */}
               {error && !loading && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 rounded-xl px-4 py-3 text-sm">
                   {error}
                 </div>
               )}
@@ -252,10 +254,10 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
               {/* No enrollment */}
               {!loading && upgradeState && !upgradeState.can_upgrade && upgradeState.options.length === 0 && (
                 <div className="text-center py-8">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
                     <CheckCircle className="w-6 h-6 text-gray-400" />
                   </div>
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {upgradeState.current_track
                       ? "You're already on the highest track."
                       : "You don't have an active enrollment for this course."}
@@ -283,8 +285,8 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                     key={option.target_track}
                     className={`rounded-xl border-2 p-4 transition-colors ${
                       isDone
-                        ? "border-green-400 bg-green-50"
-                        : "border-gray-200 hover:border-[#4A3AFF]/40"
+                        ? "border-green-400 bg-green-50 dark:bg-green-950/30"
+                        : "border-gray-200 dark:border-white/10 hover:border-[#4A3AFF]/40"
                     }`}
                   >
                     {/* Option header */}
@@ -297,8 +299,8 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                         {TRACK_ICONS[option.target_track] ?? <ArrowRight className="w-4 h-4" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm">{option.label}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{option.description}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm">{option.label}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-300 mt-0.5 leading-relaxed">{option.description}</p>
                       </div>
                       {isDone && <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />}
                     </div>
@@ -306,7 +308,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                     {/* One-on-one: hour picker */}
                     {option.type === "addon" && (
                       <div className="mb-3">
-                        <label className="text-xs text-gray-500 font-medium mb-1.5 block">
+                        <label className="text-xs text-gray-500 dark:text-gray-300 font-medium mb-1.5 block">
                           Number of hours
                         </label>
                         <div className="flex items-center gap-2">
@@ -317,11 +319,11 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                                 [option.target_track]: Math.max(1, (prev[option.target_track] ?? 1) - 1),
                               }))
                             }
-                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 font-medium text-sm"
+                            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 font-medium text-sm"
                           >
                             −
                           </button>
-                          <span className="w-8 text-center font-semibold text-gray-900 text-sm">
+                          <span className="w-8 text-center font-semibold text-gray-900 dark:text-white text-sm">
                             {hours}
                           </span>
                           <button
@@ -331,7 +333,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                                 [option.target_track]: Math.min(100, (prev[option.target_track] ?? 1) + 1),
                               }))
                             }
-                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 font-medium text-sm"
+                            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 font-medium text-sm"
                           >
                             +
                           </button>
@@ -345,7 +347,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                     {/* Payment type selector (track_upgrade only) */}
                     {option.type === "track_upgrade" && option.payment_options.length > 1 && (
                       <div className="mb-3">
-                        <label className="text-xs text-gray-500 font-medium mb-1.5 block">
+                        <label className="text-xs text-gray-500 dark:text-gray-300 font-medium mb-1.5 block">
                           Payment plan
                         </label>
                         <div className="relative">
@@ -357,7 +359,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                                 [option.target_track]: e.target.value as "onetime" | "installment",
                               }))
                             }
-                            className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-800 bg-white focus:outline-none focus:border-[#4A3AFF] transition-colors"
+                            className="w-full appearance-none border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-gray-800 dark:text-white bg-white dark:bg-[#0f0f14] focus:outline-none focus:border-[#4A3AFF] transition-colors"
                           >
                             <option value="onetime">Pay in full (one-time)</option>
                             <option value="installment">4 installments</option>
@@ -370,7 +372,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
                     {/* Amount + CTA */}
                     <div className="flex items-center justify-between mt-1">
                       <div>
-                        <span className="text-lg font-bold text-gray-900">
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">
                           {fmt(displayAmount, option.currency)}
                         </span>
                         {isInstallment && (
@@ -424,7 +426,7 @@ export default function UpgradeModal({ courseId, trigger, onUpgradeComplete }: P
             {/* Footer note */}
             {!loading && upgradeState?.can_upgrade && (
               <div className="px-6 pb-5">
-                <p className="text-xs text-gray-400 text-center">
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
                   Upgrades are processed securely via Paystack or Stripe.
                 </p>
               </div>

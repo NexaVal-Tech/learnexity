@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationSetting;
+use App\Models\ConsultationFreeDay;
 use App\Services\ConsultationPaymentService;
 use App\Services\LocationService;
+use App\Mail\ConsultationBookedAdmin;
+use App\Mail\ConsultationConfirmation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Stripe;
@@ -42,6 +46,49 @@ class ConsultationPaymentController extends Controller
         $date = Carbon::parse($request->preferred_date);
         if ($date->isWeekend()) {
             return response()->json(['message' => 'Consultations are only available Monday–Friday.'], 422);
+        }
+
+        // ── Admin-marked free day: unlimited bookings, no payment ─────────
+        // Skip the slot-taken check entirely (any number of people can book
+        // any time on this date) and skip Stripe/Paystack — grant the
+        // booking immediately, same as the legacy free ConsultationController
+        // flow, but through this endpoint so the frontend wizard doesn't
+        // need a separate code path.
+        if (ConsultationFreeDay::isFreeDay($request->preferred_date)) {
+            $consultation = Consultation::create([
+                'user_id'           => auth('api')->id(),
+                'full_name'         => $request->full_name,
+                'email'             => $request->email,
+                'phone'             => $request->phone,
+                'consultation_type' => $request->consultation_type,
+                'course'            => $request->course,
+                'message'           => $request->message,
+                'preferred_date'    => $request->preferred_date,
+                'preferred_time'    => $request->preferred_time,
+                'status'            => 'scheduled',
+                'payment_status'    => 'free',
+                'amount'            => 0,
+            ]);
+
+            try {
+                Mail::to($consultation->email)->send(new ConsultationConfirmation($consultation));
+            } catch (\Throwable $e) {
+                Log::error('Consultation confirmation email failed: ' . $e->getMessage());
+            }
+
+            $adminEmail = config('mail.admin_email', env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS')));
+            try {
+                Mail::to($adminEmail)->send(new ConsultationBookedAdmin($consultation));
+            } catch (\Throwable $e) {
+                Log::error('Consultation admin notification email failed: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'is_free'        => true,
+                'message'        => 'Consultation booked successfully — this day is free!',
+                'consultation'   => $consultation,
+                'consultation_id' => $consultation->id,
+            ], 201);
         }
 
         $slotTaken = Consultation::where('preferred_date', $request->preferred_date)

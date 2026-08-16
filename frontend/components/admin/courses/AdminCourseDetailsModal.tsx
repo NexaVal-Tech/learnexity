@@ -291,7 +291,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex">
+      <div className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex">
         {/* Sidebar */}
         <div className="w-64 bg-gradient-to-b from-[#0F172A] to-gray-800 p-6">
           <div className="mb-6">
@@ -330,11 +330,11 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">
+          <div className="p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               {sections.find(s => s.id === activeSection)?.label}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Add {sections.find(s => s.id === activeSection)?.label.toLowerCase()} for your course
             </p>
           </div>
@@ -344,19 +344,19 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
             {activeSection === 'tools' && (
               <div className="space-y-4">
                 {tools.map((tool, index) => (
-                  <div key={index} className="border border-gray-200 rounded-xl p-4">
+                  <div key={index} className="border border-gray-200 dark:border-white/10 rounded-xl p-4">
                     <div className="flex gap-3 items-start mb-3">
                       <input
                         type="text"
                         placeholder="Tool name (e.g., React)"
                         value={tool.name}
                         onChange={(e) => updateToolName(index, e.target.value)}
-                        className="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                        className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                       />
                       {tools.length > 1 && (
                         <button
                           onClick={() => removeTool(index)}
-                          className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -365,9 +365,9 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
 
                     {/* Icon Upload — optional */}
                     <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                        <Upload size={18} className="text-gray-600" />
-                        <span className="text-sm text-gray-700">
+                      <label className="flex items-center gap-2 px-4 py-3 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                        <Upload size={18} className="text-gray-600 dark:text-gray-300" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
                           {tool.icon ? 'Change Icon' : 'Upload Icon (optional)'}
                         </span>
                         <input
@@ -384,7 +384,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                         <img
                           src={tool.iconPreview}
                           alt="Icon preview"
-                          className="w-12 h-12 object-contain rounded-lg border border-gray-200"
+                          className="w-12 h-12 object-contain rounded-lg border border-gray-200 dark:border-white/10"
                         />
                       )}
                     </div>
@@ -392,7 +392,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                 ))}
                 <button
                   onClick={addTool}
-                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
                   Add Tool
@@ -410,12 +410,12 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                       placeholder="What will students learn? (e.g., Master React hooks)"
                       value={learning.learning_point}
                       onChange={(e) => updateLearning(index, e.target.value)}
-                      className="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                      className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                     />
                     {learnings.length > 1 && (
                       <button
                         onClick={() => removeLearning(index)}
-                        className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -424,7 +424,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                 ))}
                 <button
                   onClick={addLearning}
-                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
                   Add Learning Point
@@ -436,19 +436,19 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
             {activeSection === 'benefits' && (
               <div className="space-y-4">
                 {benefits.map((benefit, index) => (
-                  <div key={index} className="border border-gray-200 rounded-xl p-4">
+                  <div key={index} className="border border-gray-200 dark:border-white/10 rounded-xl p-4">
                     <div className="flex gap-3 mb-3">
                       <input
                         type="text"
                         placeholder="Benefit title"
                         value={benefit.title}
                         onChange={(e) => updateBenefit(index, 'title', e.target.value)}
-                        className="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                        className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                       />
                       {benefits.length > 1 && (
                         <button
                           onClick={() => removeBenefit(index)}
-                          className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -459,13 +459,13 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                       value={benefit.text}
                       onChange={(e) => updateBenefit(index, 'text', e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent resize-none"
                     />
                   </div>
                 ))}
                 <button
                   onClick={addBenefit}
-                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
                   Add Benefit
@@ -481,7 +481,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                     <select
                       value={path.level}
                       onChange={(e) => updateCareerPath(index, 'level', e.target.value)}
-                      className="px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                      className="px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                     >
                       <option value="entry">Entry Level</option>
                       <option value="mid">Mid Level</option>
@@ -493,12 +493,12 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                       placeholder="Position (e.g., Junior Developer)"
                       value={path.position}
                       onChange={(e) => updateCareerPath(index, 'position', e.target.value)}
-                      className="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                      className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                     />
                     {careerPaths.length > 1 && (
                       <button
                         onClick={() => removeCareerPath(index)}
-                        className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -507,7 +507,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                 ))}
                 <button
                   onClick={addCareerPath}
-                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
                   Add Career Path
@@ -519,19 +519,19 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
             {activeSection === 'industries' && (
               <div className="space-y-4">
                 {industries.map((industry, index) => (
-                  <div key={index} className="border border-gray-200 rounded-xl p-4">
+                  <div key={index} className="border border-gray-200 dark:border-white/10 rounded-xl p-4">
                     <div className="flex gap-3 mb-3">
                       <input
                         type="text"
                         placeholder="Industry title"
                         value={industry.title}
                         onChange={(e) => updateIndustry(index, 'title', e.target.value)}
-                        className="flex-1 px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                        className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                       />
                       {industries.length > 1 && (
                         <button
                           onClick={() => removeIndustry(index)}
-                          className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -542,13 +542,13 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                       value={industry.text}
                       onChange={(e) => updateIndustry(index, 'text', e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent resize-none"
                     />
                   </div>
                 ))}
                 <button
                   onClick={addIndustry}
-                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
                   Add Industry
@@ -560,7 +560,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
             {activeSection === 'salary' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Entry Level Salary
                   </label>
                   <input
@@ -568,12 +568,12 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                     placeholder="e.g., $30,000 - $55,000 USD annually"
                     value={salary.entry_level}
                     onChange={(e) => updateSalary('entry_level', e.target.value)}
-                    className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                    className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mid Level Salary
                   </label>
                   <input
@@ -581,12 +581,12 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                     placeholder="e.g., $55,000 - $90,000 USD annually"
                     value={salary.mid_level}
                     onChange={(e) => updateSalary('mid_level', e.target.value)}
-                    className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                    className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Senior Level Salary
                   </label>
                   <input
@@ -594,7 +594,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                     placeholder="e.g., $150,000+ USD annually"
                     value={salary.senior_level}
                     onChange={(e) => updateSalary('senior_level', e.target.value)}
-                    className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
+                    className="w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -602,9 +602,9 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-200 bg-gray-50">
+          <div className="p-6 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 You can skip sections and add details later
               </p>
               <button

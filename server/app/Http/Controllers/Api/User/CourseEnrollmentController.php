@@ -67,7 +67,7 @@ class CourseEnrollmentController extends Controller
         ]);
 
         $validator = Validator::make($request->all(), [
-            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
+            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced,intermediate',
             'payment_type'   => 'required|in:onetime,installment',
             // Deep-tech screening (one_on_one / group_mentorship only) — a
             // soft-gate self-attestation. Optional so existing clients that
@@ -89,6 +89,90 @@ class CourseEnrollmentController extends Controller
         $currency      = LocationService::detectCurrency();
         $learningTrack = $request->input('learning_track', 'self_paced');
         $paymentType   = $request->input('payment_type');
+
+        // ── Free courses: skip payment entirely ────────────────────────────
+        // Admin has marked this course is_free — the student gets instant,
+        // full access to resources with no checkout step. We still record a
+        // nominal total_amount (the course's normal track price) purely for
+        // display purposes ("this course is normally worth $X — free right
+        // now"); no money ever changes hands and payment_status is set
+        // straight to 'completed' with has_access true.
+        if ($course->is_free) {
+            if ($user->intended_course_id !== $courseId) {
+                $user->update(['intended_course_id' => $courseId]);
+            }
+
+            $existingFreeEnrollment = CourseEnrollment::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->first();
+
+            if ($existingFreeEnrollment) {
+                if (!$existingFreeEnrollment->has_access || $existingFreeEnrollment->payment_status !== 'completed') {
+                    $existingFreeEnrollment->update([
+                        'payment_status' => 'completed',
+                        'has_access'     => true,
+                        'payment_date'   => $existingFreeEnrollment->payment_date ?? now(),
+                        'transaction_id' => $existingFreeEnrollment->transaction_id ?? 'FREE-ENROLLMENT',
+                    ]);
+                }
+
+                return response()->json([
+                    'message'       => 'You are already enrolled in this free course',
+                    'enrollment_id' => $existingFreeEnrollment->id,
+                    'is_free'       => true,
+                    'has_access'    => true,
+                ], 200);
+            }
+
+            $nominalPrice = $course->getTrackPriceByCurrency($learningTrack, $currency);
+
+            $freeEnrollment = CourseEnrollment::create([
+                'user_id'             => $user->id,
+                'course_id'           => $courseId,
+                'course_name'         => $course->title,
+                'learning_track'      => $learningTrack,
+                'payment_type'        => 'onetime',
+                'currency'            => $currency,
+                'total_amount'        => $nominalPrice,
+                'amount_paid'         => 0,
+                'total_installments'  => 1,
+                'installments_paid'   => 1,
+                'installment_amount'  => 0,
+                'payment_status'      => 'completed',
+                'has_access'          => true,
+                'next_payment_due'    => null,
+                'enrollment_date'     => now(),
+                'payment_date'        => now(),
+                'transaction_id'      => 'FREE-ENROLLMENT',
+                'is_registration_fee' => false,
+            ]);
+
+            Log::info('✅ Free course enrollment granted', [
+                'enrollment_id' => $freeEnrollment->id,
+                'user_id'       => $user->id,
+                'course_id'     => $courseId,
+            ]);
+
+            \App\Services\ActivityLogger::log(
+                'enrollment.created',
+                "{$user->name} enrolled in {$course->title} (free)",
+                actorType: 'user',
+                actorId: $user->id,
+                actorName: $user->name,
+                metadata: ['enrollment_id' => $freeEnrollment->id, 'is_free' => true],
+                courseId: $courseId,
+                request: $request
+            );
+
+            return response()->json([
+                'message'       => 'Enrolled successfully — this course is free!',
+                'enrollment_id' => $freeEnrollment->id,
+                'is_free'       => true,
+                'has_access'    => true,
+                'total_amount'  => $nominalPrice,
+                'currency'      => $currency,
+            ], 201);
+        }
 
         // ── Deep-tech screening (soft gate) ───────────────────────────────
         // Only meaningful for the mentorship tracks. Self-attestation only —
@@ -378,7 +462,7 @@ class CourseEnrollmentController extends Controller
             'payment_status' => 'required|in:pending,completed,failed',
             'transaction_id' => 'nullable|string',
             'scholarship_id' => 'nullable|integer',
-            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced',
+            'learning_track' => 'nullable|in:one_on_one,group_mentorship,self_paced,intermediate',
         ]);
 
         if ($validator->fails()) {

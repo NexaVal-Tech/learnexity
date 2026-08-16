@@ -50,9 +50,9 @@ interface Meta {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const statusStyle = (s: string) => {
-  if (s === 'completed') return 'bg-green-50 text-green-700 border-green-200';
-  if (s === 'failed') return 'bg-red-50 text-red-700 border-red-200';
-  return 'bg-amber-50 text-amber-700 border-amber-200';
+  if (s === 'completed') return 'bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/30';
+  if (s === 'failed') return 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/30';
+  return 'bg-amber-50 dark:bg-yellow-500/15 text-amber-700 dark:text-yellow-400 border-amber-200 dark:border-yellow-500/30';
 };
 
 const statusIcon = (s: string) => {
@@ -155,24 +155,24 @@ const ReferralHistoryPage: React.FC = () => {
         <div className="p-6 space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Referral History</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Track all referral activity and public referrer accounts</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Referral History</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Track all referral activity and public referrer accounts</p>
           </div>
 
           {/* Stats (history tab only) */}
           {tab === 'history' && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total (this page)', value: history.length, icon: <Link2 size={16} />, color: 'text-gray-600' },
-                { label: 'Completed', value: completedCount, icon: <CheckCircle size={16} />, color: 'text-green-600' },
-                { label: 'Pending', value: pendingCount, icon: <Clock size={16} />, color: 'text-amber-600' },
-                { label: 'Public Referrers', value: referrersMeta.total || '—', icon: <Users size={16} />, color: 'text-blue-600' },
+                { label: 'Total (this page)', value: history.length, icon: <Link2 size={16} />, color: 'text-gray-600 dark:text-gray-300' },
+                { label: 'Completed', value: completedCount, icon: <CheckCircle size={16} />, color: 'text-green-600 dark:text-green-400' },
+                { label: 'Pending', value: pendingCount, icon: <Clock size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
+                { label: 'Public Referrers', value: referrersMeta.total || '—', icon: <Users size={16} />, color: 'text-blue-600 dark:text-blue-400' },
               ].map(s => (
-                <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+                <div key={s.label} className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3">
                   <div className={s.color}>{s.icon}</div>
                   <div>
-                    <p className="text-xs text-gray-500">{s.label}</p>
-                    <p className="text-lg font-semibold text-gray-900">{s.value}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{s.value}</p>
                   </div>
                 </div>
               ))}
@@ -180,13 +180,13 @@ const ReferralHistoryPage: React.FC = () => {
           )}
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100 p-1.5 rounded-full w-fit">
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1.5 rounded-full w-fit">
             {(['history', 'public_referrers'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                  tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  tab === t ? 'bg-white dark:bg-[#0f0f14] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 {t === 'history' ? 'All Referrals' : 'Public Referrers'}
@@ -200,18 +200,18 @@ const ReferralHistoryPage: React.FC = () => {
               {/* Filters */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 max-w-sm">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                   <input
                     value={historySearch}
                     onChange={e => setHistorySearch(e.target.value)}
                     placeholder="Search by email, code…"
-                    className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <select
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg bg-white dark:bg-white/5 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Statuses</option>
                   <option value="pending">Pending</option>
@@ -221,81 +221,81 @@ const ReferralHistoryPage: React.FC = () => {
               </div>
 
               {/* Table */}
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
                 {historyLoading ? (
                   <div className="flex items-center justify-center h-48">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
                   </div>
                 ) : history.length === 0 ? (
                   <div className="text-center py-16">
-                    <Link2 size={32} className="mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">No referral records found.</p>
+                    <Link2 size={32} className="mx-auto text-gray-300 dark:text-white/10 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">No referral records found.</p>
                   </div>
                 ) : (
                   <>
                     {/* Desktop */}
                     <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
                           <tr>
                             {['Referrer', 'Referred User', 'Code', 'Type', 'Reward', 'Status', 'Date'].map(h => (
-                              <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                              <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                             ))}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                           {history.map(item => (
-                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                               <td className="py-3 px-4">
                                 {item.public_referrer ? (
                                   <div>
-                                    <p className="text-sm text-gray-900">{item.public_referrer.email}</p>
-                                    <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-1.5 py-0.5 rounded">Public</span>
+                                    <p className="text-sm text-gray-900 dark:text-white">{item.public_referrer.email}</p>
+                                    <span className="text-xs bg-purple-50 dark:bg-indigo-500/15 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-indigo-500/30 px-1.5 py-0.5 rounded">Public</span>
                                   </div>
                                 ) : item.referrer ? (
                                   <div>
-                                    <p className="text-sm text-gray-900">{item.referrer.name || item.referrer.email}</p>
-                                    <p className="text-xs text-gray-500">{item.referrer.email}</p>
+                                    <p className="text-sm text-gray-900 dark:text-white">{item.referrer.name || item.referrer.email}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.referrer.email}</p>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-gray-400">—</span>
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
                                 )}
                               </td>
                               <td className="py-3 px-4">
                                 {item.referred_user ? (
                                   <div>
-                                    <p className="text-sm text-gray-900">{item.referred_user.name}</p>
-                                    <p className="text-xs text-gray-500">{item.referred_user.email}</p>
+                                    <p className="text-sm text-gray-900 dark:text-white">{item.referred_user.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.referred_user.email}</p>
                                   </div>
-                                ) : <span className="text-xs text-gray-400">—</span>}
+                                ) : <span className="text-xs text-gray-400 dark:text-gray-500">—</span>}
                               </td>
                               <td className="py-3 px-4">
                                 <button
                                   onClick={() => copyCode(item.referral_code)}
-                                  className="flex items-center gap-1.5 text-xs font-mono bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
+                                  className="flex items-center gap-1.5 text-xs font-mono bg-gray-100 dark:bg-white/10 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-white/20"
                                 >
-                                  {item.referral_code} <Copy size={11} className="text-gray-400" />
+                                  {item.referral_code} <Copy size={11} className="text-gray-400 dark:text-gray-500" />
                                 </button>
                               </td>
                               <td className="py-3 px-4">
                                 <span className={`text-xs px-2 py-0.5 rounded border font-medium ${
                                   item.referrer_type === 'public'
-                                    ? 'bg-purple-50 text-purple-700 border-purple-100'
-                                    : 'bg-blue-50 text-blue-700 border-blue-100'
+                                    ? 'bg-purple-50 dark:bg-indigo-500/15 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-indigo-500/30'
+                                    : 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/30'
                                 }`}>
                                   {item.referrer_type === 'public' ? 'Public' : 'User'}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 text-sm text-gray-700">
+                              <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
                                 {item.reward_amount != null ? `$${item.reward_amount}` : '—'}
-                                {item.reward_paid && <span className="ml-1 text-xs text-green-600">✓</span>}
+                                {item.reward_paid && <span className="ml-1 text-xs text-green-600 dark:text-green-400">✓</span>}
                               </td>
                               <td className="py-3 px-4">
                                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded border text-xs font-medium ${statusStyle(item.status)}`}>
                                   {statusIcon(item.status)} {item.status}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
+                              <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(item.created_at).toLocaleDateString()}
                               </td>
                             </tr>
@@ -305,15 +305,15 @@ const ReferralHistoryPage: React.FC = () => {
                     </div>
 
                     {/* Mobile */}
-                    <div className="md:hidden divide-y divide-gray-100">
+                    <div className="md:hidden divide-y divide-gray-100 dark:divide-white/10">
                       {history.map(item => (
                         <div key={item.id} className="p-4 space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
                                 {item.referred_user?.name || `User #${item.referred_user_id}`}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Referred by: {item.public_referrer?.email || item.referrer?.email || '—'}
                               </p>
                             </div>
@@ -321,8 +321,8 @@ const ReferralHistoryPage: React.FC = () => {
                               {statusIcon(item.status)} {item.status}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{item.referral_code}</span>
+                          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span className="font-mono bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded">{item.referral_code}</span>
                             <span>{new Date(item.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -330,15 +330,15 @@ const ReferralHistoryPage: React.FC = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{historyMeta.total} total records</span>
+                    <div className="px-4 py-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{historyMeta.total} total records</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">Page {historyMeta.current_page} of {historyMeta.last_page}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-300">Page {historyMeta.current_page} of {historyMeta.last_page}</span>
                         <div className="flex items-center gap-1">
-                          <button onClick={() => fetchHistory(1)} disabled={historyMeta.current_page === 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronsLeft size={15} /></button>
-                          <button onClick={() => fetchHistory(historyMeta.current_page - 1)} disabled={historyMeta.current_page === 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronLeft size={15} /></button>
-                          <button onClick={() => fetchHistory(historyMeta.current_page + 1)} disabled={historyMeta.current_page === historyMeta.last_page} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronRight size={15} /></button>
-                          <button onClick={() => fetchHistory(historyMeta.last_page)} disabled={historyMeta.current_page === historyMeta.last_page} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronsRight size={15} /></button>
+                          <button onClick={() => fetchHistory(1)} disabled={historyMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsLeft size={15} /></button>
+                          <button onClick={() => fetchHistory(historyMeta.current_page - 1)} disabled={historyMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronLeft size={15} /></button>
+                          <button onClick={() => fetchHistory(historyMeta.current_page + 1)} disabled={historyMeta.current_page === historyMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronRight size={15} /></button>
+                          <button onClick={() => fetchHistory(historyMeta.last_page)} disabled={historyMeta.current_page === historyMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsRight size={15} /></button>
                         </div>
                       </div>
                     </div>
@@ -352,60 +352,60 @@ const ReferralHistoryPage: React.FC = () => {
           {tab === 'public_referrers' && (
             <div className="space-y-4">
               <div className="relative max-w-sm">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                 <input
                   value={referrersSearch}
                   onChange={e => setReferrersSearch(e.target.value)}
                   placeholder="Search by email or code…"
-                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
                 {referrersLoading ? (
                   <div className="flex items-center justify-center h-48">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
                   </div>
                 ) : referrers.length === 0 ? (
                   <div className="text-center py-16">
-                    <Users size={32} className="mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">No public referrers found.</p>
+                    <Users size={32} className="mx-auto text-gray-300 dark:text-white/10 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">No public referrers found.</p>
                   </div>
                 ) : (
                   <>
                     {/* Desktop */}
                     <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
                           <tr>
                             {['Email', 'Code', 'Total', 'Successful', 'Pending', 'Total Earnings', 'Joined'].map(h => (
-                              <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                              <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                             ))}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                           {referrers.map(r => (
-                            <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-4 text-sm text-gray-900">{r.email}</td>
+                            <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                              <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">{r.email}</td>
                               <td className="py-3 px-4">
                                 <button
                                   onClick={() => copyCode(r.referral_code)}
-                                  className="flex items-center gap-1.5 text-xs font-mono bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
+                                  className="flex items-center gap-1.5 text-xs font-mono bg-gray-100 dark:bg-white/10 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-white/20"
                                 >
-                                  {r.referral_code} <Copy size={11} className="text-gray-400" />
+                                  {r.referral_code} <Copy size={11} className="text-gray-400 dark:text-gray-500" />
                                 </button>
                               </td>
-                              <td className="py-3 px-4 text-sm text-gray-700">{r.total_referrals}</td>
+                              <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{r.total_referrals}</td>
                               <td className="py-3 px-4">
-                                <span className="text-sm font-medium text-green-600">{r.successful_referrals}</span>
+                                <span className="text-sm font-medium text-green-600 dark:text-green-400">{r.successful_referrals}</span>
                               </td>
                               <td className="py-3 px-4">
-                                <span className="text-sm font-medium text-amber-600">{r.pending_referrals}</span>
+                                <span className="text-sm font-medium text-amber-600 dark:text-yellow-400">{r.pending_referrals}</span>
                               </td>
-                              <td className="py-3 px-4 text-sm font-semibold text-gray-900">
+                              <td className="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
                                 ${Number(r.total_earnings).toFixed(2)}
                               </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
+                              <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(r.created_at).toLocaleDateString()}
                               </td>
                             </tr>
@@ -415,27 +415,27 @@ const ReferralHistoryPage: React.FC = () => {
                     </div>
 
                     {/* Mobile */}
-                    <div className="md:hidden divide-y divide-gray-100">
+                    <div className="md:hidden divide-y divide-gray-100 dark:divide-white/10">
                       {referrers.map(r => (
                         <div key={r.id} className="p-4 space-y-3">
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{r.email}</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">{r.email}</p>
                               <button onClick={() => copyCode(r.referral_code)}
-                                className="flex items-center gap-1 text-xs font-mono bg-gray-100 px-2 py-0.5 rounded mt-0.5">
-                                {r.referral_code} <Copy size={10} className="text-gray-400" />
+                                className="flex items-center gap-1 text-xs font-mono bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded mt-0.5">
+                                {r.referral_code} <Copy size={10} className="text-gray-400 dark:text-gray-500" />
                               </button>
                             </div>
-                            <span className="text-sm font-bold text-gray-900">${Number(r.total_earnings).toFixed(2)}</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">${Number(r.total_earnings).toFixed(2)}</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             {[
-                              { label: 'Total', value: r.total_referrals, color: 'text-gray-900' },
-                              { label: 'Success', value: r.successful_referrals, color: 'text-green-600' },
-                              { label: 'Pending', value: r.pending_referrals, color: 'text-amber-600' },
+                              { label: 'Total', value: r.total_referrals, color: 'text-gray-900 dark:text-white' },
+                              { label: 'Success', value: r.successful_referrals, color: 'text-green-600 dark:text-green-400' },
+                              { label: 'Pending', value: r.pending_referrals, color: 'text-amber-600 dark:text-yellow-400' },
                             ].map(s => (
-                              <div key={s.label} className="bg-gray-50 rounded-lg p-2">
-                                <p className="text-xs text-gray-500">{s.label}</p>
+                              <div key={s.label} className="bg-gray-50 dark:bg-white/5 rounded-lg p-2">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
                                 <p className={`text-sm font-semibold ${s.color}`}>{s.value}</p>
                               </div>
                             ))}
@@ -445,15 +445,15 @@ const ReferralHistoryPage: React.FC = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{referrersMeta.total} total referrers</span>
+                    <div className="px-4 py-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{referrersMeta.total} total referrers</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">Page {referrersMeta.current_page} of {referrersMeta.last_page}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-300">Page {referrersMeta.current_page} of {referrersMeta.last_page}</span>
                         <div className="flex items-center gap-1">
-                          <button onClick={() => fetchReferrers(1)} disabled={referrersMeta.current_page === 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronsLeft size={15} /></button>
-                          <button onClick={() => fetchReferrers(referrersMeta.current_page - 1)} disabled={referrersMeta.current_page === 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronLeft size={15} /></button>
-                          <button onClick={() => fetchReferrers(referrersMeta.current_page + 1)} disabled={referrersMeta.current_page === referrersMeta.last_page} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronRight size={15} /></button>
-                          <button onClick={() => fetchReferrers(referrersMeta.last_page)} disabled={referrersMeta.current_page === referrersMeta.last_page} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ChevronsRight size={15} /></button>
+                          <button onClick={() => fetchReferrers(1)} disabled={referrersMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsLeft size={15} /></button>
+                          <button onClick={() => fetchReferrers(referrersMeta.current_page - 1)} disabled={referrersMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronLeft size={15} /></button>
+                          <button onClick={() => fetchReferrers(referrersMeta.current_page + 1)} disabled={referrersMeta.current_page === referrersMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronRight size={15} /></button>
+                          <button onClick={() => fetchReferrers(referrersMeta.last_page)} disabled={referrersMeta.current_page === referrersMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsRight size={15} /></button>
                         </div>
                       </div>
                     </div>
@@ -467,7 +467,7 @@ const ReferralHistoryPage: React.FC = () => {
         {/* Toast */}
         {toast && (
           <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
-            ${toast.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+            ${toast.type === 'success' ? 'bg-green-50 dark:bg-green-500/15 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-500/30' : 'bg-red-50 dark:bg-red-500/15 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-500/30'}`}>
             {toast.type === 'success' ? <Check size={16} /> : <X size={16} />}
             {toast.msg}
           </div>

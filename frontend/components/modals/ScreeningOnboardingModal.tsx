@@ -137,14 +137,14 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
     >
       <style>{`
         .som-overlay {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 80;
+          position: fixed; inset: 0; background: var(--overlay); z-index: 80;
           display: flex; align-items: center; justify-content: center; padding: 1rem;
           animation: somFade 0.2s ease both;
         }
         @keyframes somFade { from { opacity: 0; } to { opacity: 1; } }
         .som-card {
           width: 100%; max-width: 30rem;
-          background: #0c0c0e; border: 1px solid rgba(255,255,255,0.08);
+          background: var(--surface-elevated); border: 1px solid var(--border-subtle);
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
           padding: 2rem; position: relative;
@@ -152,18 +152,18 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         }
         @keyframes somPop { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .som-close {
-          position: absolute; top: 1.1rem; right: 1.1rem; color: rgba(255,255,255,0.4);
+          position: absolute; top: 1.1rem; right: 1.1rem; color: var(--text-muted);
           background: none; border: none; cursor: pointer; padding: 0.3rem; border-radius: 999px;
           transition: color 0.2s, background 0.2s;
         }
-        .som-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .som-close:hover { color: var(--text-primary); background: var(--border-subtle); }
         .som-icon {
           width: 3rem; height: 3rem; border-radius: 1rem 0.4rem 1rem 0.4rem;
           background: ${BRAND}22; display: flex; align-items: center; justify-content: center;
           color: ${BRAND}; margin-bottom: 1.25rem;
         }
-        .som-title { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; line-height: 1.3; }
-        .som-sub { font-size: 0.9rem; color: rgba(255,255,255,0.55); line-height: 1.55; margin-bottom: 1.75rem; }
+        .som-title { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.3; }
+        .som-sub { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.75rem; }
         .som-btn-primary {
           width: 100%; background: ${BRAND}; color: #fff; font-weight: 700; font-size: 0.9rem;
           padding: 0.85rem 1rem; border-radius: 2rem 0.75rem 2rem 0.75rem; border: none; cursor: pointer;
@@ -173,12 +173,12 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         .som-btn-primary:hover { box-shadow: 0 8px 28px ${BRAND}55; transform: translateY(-1px); }
         .som-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
         .som-btn-ghost {
-          width: 100%; margin-top: 0.6rem; background: transparent; color: rgba(255,255,255,0.7);
+          width: 100%; margin-top: 0.6rem; background: transparent; color: var(--text-secondary);
           font-weight: 600; font-size: 0.85rem; padding: 0.75rem 1rem;
-          border-radius: 2rem 0.75rem 2rem 0.75rem; border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 2rem 0.75rem 2rem 0.75rem; border: 1px solid var(--border-subtle);
           cursor: pointer; transition: background 0.2s, border-color 0.2s;
         }
-        .som-btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+        .som-btn-ghost:hover { background: var(--surface-alt); border-color: var(--border-strong); }
         .som-btn-primary:focus-visible, .som-btn-ghost:focus-visible,
         .som-close:focus-visible, .som-course-row:focus-visible {
           outline: 2px solid ${BRAND}; outline-offset: 2px;
@@ -187,8 +187,8 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         .som-course-row {
           display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
           width: 100%; padding: 0.75rem 0.9rem; border-radius: 1rem 0.4rem 1rem 0.4rem;
-          border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
-          cursor: pointer; text-align: left; color: #fff; font-size: 0.85rem; font-weight: 600;
+          border: 1px solid var(--border-subtle); background: var(--surface-alt);
+          cursor: pointer; text-align: left; color: var(--text-primary); font-size: 0.85rem; font-weight: 600;
           transition: border-color 0.2s, background 0.2s;
         }
         .som-course-row:hover { border-color: ${BRAND}66; background: ${BRAND}0f; }
@@ -198,7 +198,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
           color: #4ade80; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
           padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 1rem;
         }
-        .som-empty { font-size: 0.85rem; color: rgba(255,255,255,0.4); text-align: center; padding: 1.5rem 0; }
+        .som-empty { font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0; }
       `}</style>
 
       <div className="som-card">
@@ -219,7 +219,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
                 return isFullTuition ? (
                   <>
                     You've been awarded a full-tuition scholarship on{' '}
-                    <strong style={{ color: '#fff' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>
                       {status.intended_course?.title || status.scholarship?.course_name}
                     </strong>
                     . Secure your spot by paying just the registration fee instead of the full course price.
@@ -227,7 +227,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
                 ) : (
                   <>
                     You've been awarded a {pct}% scholarship on{' '}
-                    <strong style={{ color: '#fff' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>
                       {status.intended_course?.title || status.scholarship?.course_name}
                     </strong>
                     . The discount is applied automatically — pick your track and payment plan as normal.
@@ -282,7 +282,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
             </h2>
             <p className="som-sub">
               Before you pay full price for{' '}
-              <strong style={{ color: '#fff' }}>{status.intended_course.title}</strong>, take a
+              <strong style={{ color: 'var(--text-primary)' }}>{status.intended_course.title}</strong>, take a
               two-minute application to see if you qualify for full tuition. No commitment
               — you can always pay in full instead.
             </p>

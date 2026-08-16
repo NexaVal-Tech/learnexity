@@ -69,8 +69,8 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; disabled?: bool
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const INPUT =
-  'w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all bg-white';
-const LABEL = 'block text-sm font-medium text-gray-700 mb-2';
+  'w-full px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent transition-all bg-white dark:bg-white/5';
+const LABEL = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2';
 
 function PriceInput({
   symbol,
@@ -89,7 +89,7 @@ function PriceInput({
 }) {
   return (
     <div className="relative">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 pointer-events-none">
         {symbol}
       </span>
       <input
@@ -101,7 +101,7 @@ function PriceInput({
         min="0"
         disabled={disabled}
         placeholder={placeholder}
-        className={`${INPUT} pl-8 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+        className={`${INPUT} pl-8 disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed`}
       />
     </div>
   );
@@ -132,7 +132,7 @@ function ImageDropZone({
       <label className={LABEL}>{label}</label>
       <div
         onClick={() => inputRef.current?.click()}
-        className="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer
+        className="relative border-2 border-dashed border-gray-200 dark:border-white/20 rounded-xl overflow-hidden cursor-pointer
                    hover:border-[#0F172A] transition-colors group"
         style={{ minHeight: '180px' }}
       >
@@ -152,16 +152,16 @@ function ImageDropZone({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onClear(); }}
-              className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow text-red-500 hover:bg-red-50 transition-colors"
+              className="absolute top-2 right-2 p-1.5 bg-white dark:bg-[#14141c] rounded-full shadow text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 transition-colors"
             >
               <X size={14} />
             </button>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+          <div className="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
             <Upload size={28} className="mb-2" />
             <span className="text-sm">Click or drag to upload</span>
-            <span className="text-xs mt-1 text-gray-300">PNG, JPG, WebP up to 5MB</span>
+            <span className="text-xs mt-1 text-gray-300 dark:text-gray-600">PNG, JPG, WebP up to 5MB</span>
           </div>
         )}
       </div>
@@ -173,7 +173,7 @@ function ImageDropZone({
         onChange={(e) => onFileChange(e.target.files?.[0] || null)}
       />
       {file && (
-        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+        <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
           <Check size={12} /> {file.name} ready to upload
         </p>
       )}
@@ -202,6 +202,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
     level: 'Beginner',
     is_freemium: false,
     is_premium: false,
+    is_free: false,
   });
 
   // Pricing
@@ -211,12 +212,15 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
     offers_one_on_one: true,
     offers_group_mentorship: true,
     offers_self_paced: true,
+    offers_intermediate: false,
     one_on_one_price_usd: '',
     group_mentorship_price_usd: '',
     self_paced_price_usd: '',
+    intermediate_price_usd: '',
     one_on_one_price_ngn: '',
     group_mentorship_price_ngn: '',
     self_paced_price_ngn: '',
+    intermediate_price_ngn: '',
     onetime_discount_usd: '',
     onetime_discount_ngn: '',
   });
@@ -249,6 +253,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
       level: course.level || 'Beginner',
       is_freemium: !!course.is_freemium,
       is_premium: !!course.is_premium,
+      is_free: !!course.is_free,
     });
 
     // Populate pricing
@@ -258,12 +263,15 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
       offers_one_on_one: course.offers_one_on_one ?? true,
       offers_group_mentorship: course.offers_group_mentorship ?? true,
       offers_self_paced: course.offers_self_paced ?? true,
+      offers_intermediate: course.offers_intermediate ?? false,
       one_on_one_price_usd: course.one_on_one_price_usd ?? '',
       group_mentorship_price_usd: course.group_mentorship_price_usd ?? '',
       self_paced_price_usd: course.self_paced_price_usd ?? '',
+      intermediate_price_usd: course.intermediate_price_usd ?? '',
       one_on_one_price_ngn: course.one_on_one_price_ngn ?? '',
       group_mentorship_price_ngn: course.group_mentorship_price_ngn ?? '',
       self_paced_price_ngn: course.self_paced_price_ngn ?? '',
+      intermediate_price_ngn: course.intermediate_price_ngn ?? '',
       onetime_discount_usd: course.onetime_discount_usd ?? '',
       onetime_discount_ngn: course.onetime_discount_ngn ?? '',
     });
@@ -401,7 +409,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0F172A] to-gray-800 px-6 py-4 flex items-center justify-between shrink-0">
@@ -418,7 +426,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar tabs */}
-          <aside className="w-52 shrink-0 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+          <aside className="w-52 shrink-0 bg-gray-50 dark:bg-white/5 border-r border-gray-200 dark:border-white/10 overflow-y-auto">
             {TABS.map(({ id, label, icon: Icon, disabled }) => (
               <button
                 key={id}
@@ -426,16 +434,16 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 disabled={disabled}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left border-l-2
                   ${disabled
-                    ? 'border-transparent text-gray-300 cursor-not-allowed'
+                    ? 'border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed'
                     : activeTab === id
-                      ? 'bg-white border-[#0F172A] text-[#0F172A]'
-                      : 'border-transparent text-gray-500 hover:bg-white hover:text-gray-800'
+                      ? 'bg-white dark:bg-white/10 border-[#0F172A] dark:border-white/40 text-[#0F172A] dark:text-white'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 hover:text-gray-800 dark:hover:text-white'
                   }`}
               >
                 <Icon size={16} />
                 {label}
                 {disabled && (
-                  <span className="ml-auto text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-normal">
+                  <span className="ml-auto text-[10px] bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 px-1.5 py-0.5 rounded font-normal">
                     locked
                   </span>
                 )}
@@ -446,7 +454,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
           {/* Main content */}
           <div className="flex-1 overflow-y-auto p-6">
             {loading && (
-              <div className="flex items-center justify-center h-32 text-gray-400">
+              <div className="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500">
                 <Loader2 className="animate-spin mr-2" size={20} />
                 Loading details…
               </div>
@@ -457,7 +465,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── BASIC INFO ── */}
                 {activeTab === 'basic' && (
                   <div className="space-y-5">
-                    <h3 className="text-base font-semibold text-gray-900">Basic Information</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Basic Information</h3>
 
                     <div>
                       <label className={LABEL}>Course Title</label>
@@ -495,22 +503,29 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Course Type</p>
+                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/10">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Course Type</p>
                       <div className="flex gap-6">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" checked={basic.is_freemium}
                             onChange={e => setBasic(p => ({ ...p, is_freemium: e.target.checked }))}
-                            className="w-4 h-4 rounded" />
+                            className="w-4 h-4 rounded dark:border-white/20 dark:bg-white/5" />
                           <Sparkles size={14} className="text-blue-500" />
-                          <span className="text-sm text-gray-700">Freemium</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Freemium</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" checked={basic.is_premium}
                             onChange={e => setBasic(p => ({ ...p, is_premium: e.target.checked }))}
-                            className="w-4 h-4 rounded" />
+                            className="w-4 h-4 rounded dark:border-white/20 dark:bg-white/5" />
                           <Crown size={14} className="text-amber-500" />
-                          <span className="text-sm text-gray-700">Premium</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Premium</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={basic.is_free}
+                            onChange={e => setBasic(p => ({ ...p, is_free: e.target.checked }))}
+                            className="w-4 h-4 rounded dark:border-white/20 dark:bg-white/5" />
+                          <Sparkles size={14} className="text-green-500" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Free (no payment required)</span>
                         </label>
                       </div>
                     </div>
@@ -520,8 +535,8 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── IMAGES ── */}
                 {activeTab === 'images' && (
                   <div className="space-y-6">
-                    <h3 className="text-base font-semibold text-gray-900">Course Images</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Course Images</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
                       Upload image files directly. Existing images are shown below — click to replace.
                     </p>
                       <ImageDropZone
@@ -546,10 +561,10 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── PRICING ── */}
                 {activeTab === 'pricing' && (
                   <div className="space-y-6">
-                    <h3 className="text-base font-semibold text-gray-900">Pricing</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Pricing</h3>
 
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">Base Prices</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Base Prices</p>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className={LABEL}>USD</label>
@@ -564,14 +579,14 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Available Tracks</p>
-                      {(['offers_one_on_one', 'offers_group_mentorship', 'offers_self_paced'] as const).map(key => (
+                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/10">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Available Tracks</p>
+                      {(['offers_one_on_one', 'offers_group_mentorship', 'offers_self_paced', 'offers_intermediate'] as const).map(key => (
                         <label key={key} className="flex items-center gap-3 mb-2 cursor-pointer">
                           <input type="checkbox" checked={pricing[key] as boolean}
                             onChange={e => setPricing(p => ({ ...p, [key]: e.target.checked }))}
-                            className="w-4 h-4 rounded" />
-                          <span className="text-sm text-gray-700 capitalize">
+                            className="w-4 h-4 rounded dark:border-white/20 dark:bg-white/5" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
                             {key.replace('offers_', '').replace(/_/g, ' ')}
                           </span>
                         </label>
@@ -580,12 +595,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
                     {/* USD track prices */}
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">Track Prices (USD)</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Track Prices (USD)</p>
                       <div className="grid grid-cols-3 gap-4">
                         {[
-                          { label: 'One-on-One', key: 'one_on_one_price_usd', flag: 'offers_one_on_one' },
-                          { label: 'Group',       key: 'group_mentorship_price_usd', flag: 'offers_group_mentorship' },
-                          { label: 'Self-Paced',  key: 'self_paced_price_usd', flag: 'offers_self_paced' },
+                          { label: 'One-on-One',  key: 'one_on_one_price_usd', flag: 'offers_one_on_one' },
+                          { label: 'Group',        key: 'group_mentorship_price_usd', flag: 'offers_group_mentorship' },
+                          { label: 'Self-Paced',   key: 'self_paced_price_usd', flag: 'offers_self_paced' },
+                          { label: 'Intermediate', key: 'intermediate_price_usd', flag: 'offers_intermediate' },
                         ].map(({ label, key, flag }) => (
                           <div key={key}>
                             <label className={LABEL}>{label}</label>
@@ -600,12 +616,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
                     {/* NGN track prices */}
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">Track Prices (NGN)</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Track Prices (NGN)</p>
                       <div className="grid grid-cols-3 gap-4">
                         {[
-                          { label: 'One-on-One', key: 'one_on_one_price_ngn', flag: 'offers_one_on_one' },
-                          { label: 'Group',       key: 'group_mentorship_price_ngn', flag: 'offers_group_mentorship' },
-                          { label: 'Self-Paced',  key: 'self_paced_price_ngn', flag: 'offers_self_paced' },
+                          { label: 'One-on-One',  key: 'one_on_one_price_ngn', flag: 'offers_one_on_one' },
+                          { label: 'Group',        key: 'group_mentorship_price_ngn', flag: 'offers_group_mentorship' },
+                          { label: 'Self-Paced',   key: 'self_paced_price_ngn', flag: 'offers_self_paced' },
+                          { label: 'Intermediate', key: 'intermediate_price_ngn', flag: 'offers_intermediate' },
                         ].map(({ label, key, flag }) => (
                           <div key={key}>
                             <label className={LABEL}>{label}</label>
@@ -620,7 +637,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
                     {/* Discounts */}
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">One-Time Payment Discounts</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">One-Time Payment Discounts</p>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className={LABEL}>USD Discount Amount</label>
@@ -640,9 +657,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── TOOLS ── */}
                 {activeTab === 'tools' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">Tools &amp; Technologies</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Tools &amp; Technologies</h3>
                     {tools.map((tool, i) => (
-                      <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                      <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 space-y-3">
                         <div className="flex gap-3 items-center">
                           <input type="text" placeholder="Tool name (e.g. React)" value={tool.name}
                             onChange={e => {
@@ -651,7 +668,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                             className={`${INPUT} flex-1`} />
                           {tools.length > 1 && (
                             <button onClick={() => setTools(tools.filter((_, j) => j !== i))}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                              className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                               <Trash2 size={16} />
                             </button>
                           )}
@@ -659,7 +676,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
 
                         {/* Icon */}
                         <div className="flex items-center gap-4">
-                          <label className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 text-sm text-gray-700">
+                          <label className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 text-sm text-gray-700 dark:text-gray-300">
                             <Upload size={16} />
                             {tool.icon ? 'Replace icon' : 'Upload icon'}
                             <input type="file" accept="image/*" className="hidden"
@@ -674,7 +691,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                             <img
                               src={tool.iconPreview || tool.icon_url}
                               alt="icon"
-                              className="w-10 h-10 object-contain rounded-lg border border-gray-200"
+                              className="w-10 h-10 object-contain rounded-lg border border-gray-200 dark:border-white/10"
                               onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
                           )}
@@ -682,7 +699,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                       </div>
                     ))}
                     <button onClick={() => setTools([...tools, { name: '', icon: null, iconPreview: null }])}
-                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 text-sm">
+                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
                       <Plus size={16} /> Add Tool
                     </button>
                   </div>
@@ -691,7 +708,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── LEARNINGS ── */}
                 {activeTab === 'learnings' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">What Students Will Learn</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">What Students Will Learn</h3>
                     {learnings.map((l, i) => (
                       <div key={i} className="flex gap-3 items-center">
                         <input type="text" placeholder="e.g. Master React hooks"
@@ -702,14 +719,14 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                           className={`${INPUT} flex-1`} />
                         {learnings.length > 1 && (
                           <button onClick={() => setLearnings(learnings.filter((_, j) => j !== i))}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                            className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                             <Trash2 size={16} />
                           </button>
                         )}
                       </div>
                     ))}
                     <button onClick={() => setLearnings([...learnings, { learning_point: '' }])}
-                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 text-sm">
+                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
                       <Plus size={16} /> Add Learning Point
                     </button>
                   </div>
@@ -718,9 +735,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── BENEFITS ── */}
                 {activeTab === 'benefits' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">Course Benefits</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Course Benefits</h3>
                     {benefits.map((b, i) => (
-                      <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                      <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 space-y-3">
                         <div className="flex gap-3">
                           <input type="text" placeholder="Benefit title" value={b.title}
                             onChange={e => {
@@ -729,7 +746,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                             className={`${INPUT} flex-1`} />
                           {benefits.length > 1 && (
                             <button onClick={() => setBenefits(benefits.filter((_, j) => j !== i))}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                              className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                               <Trash2 size={16} />
                             </button>
                           )}
@@ -742,7 +759,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                       </div>
                     ))}
                     <button onClick={() => setBenefits([...benefits, { title: '', text: '' }])}
-                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 text-sm">
+                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
                       <Plus size={16} /> Add Benefit
                     </button>
                   </div>
@@ -751,7 +768,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── CAREER PATHS ── */}
                 {activeTab === 'career_paths' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">Career Paths</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Career Paths</h3>
                     {careerPaths.map((c, i) => (
                       <div key={i} className="flex gap-3 items-center">
                         <select value={c.level}
@@ -771,14 +788,14 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                           className={`${INPUT} flex-1`} />
                         {careerPaths.length > 1 && (
                           <button onClick={() => setCareerPaths(careerPaths.filter((_, j) => j !== i))}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                            className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                             <Trash2 size={16} />
                           </button>
                         )}
                       </div>
                     ))}
                     <button onClick={() => setCareerPaths([...careerPaths, { level: 'entry', position: '' }])}
-                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 text-sm">
+                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
                       <Plus size={16} /> Add Career Path
                     </button>
                   </div>
@@ -787,9 +804,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── INDUSTRIES ── */}
                 {activeTab === 'industries' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">Industries</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Industries</h3>
                     {industries.map((ind, i) => (
-                      <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                      <div key={i} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 space-y-3">
                         <div className="flex gap-3">
                           <input type="text" placeholder="Industry title" value={ind.title}
                             onChange={e => {
@@ -798,7 +815,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                             className={`${INPUT} flex-1`} />
                           {industries.length > 1 && (
                             <button onClick={() => setIndustries(industries.filter((_, j) => j !== i))}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                              className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
                               <Trash2 size={16} />
                             </button>
                           )}
@@ -811,7 +828,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                       </div>
                     ))}
                     <button onClick={() => setIndustries([...industries, { title: '', text: '' }])}
-                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] border border-gray-200 rounded-lg hover:bg-gray-50 text-sm">
+                      className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
                       <Plus size={16} /> Add Industry
                     </button>
                   </div>
@@ -820,7 +837,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                 {/* ── SALARY ── */}
                 {activeTab === 'salary' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900">Salary Information</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Salary Information</h3>
                     {[
                       { label: 'Entry Level Salary', key: 'entry_level', placeholder: '$30,000 – $55,000 USD annually' },
                       { label: 'Mid Level Salary',   key: 'mid_level',   placeholder: '$55,000 – $90,000 USD annually' },
@@ -842,13 +859,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <span className="text-sm text-gray-400">
-            Editing: <span className="font-medium text-gray-600">{TABS.find(t => t.id === activeTab)?.label}</span>
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+          <span className="text-sm text-gray-400 dark:text-gray-500">
+            Editing: <span className="font-medium text-gray-600 dark:text-gray-300">{TABS.find(t => t.id === activeTab)?.label}</span>
           </span>
           <div className="flex gap-3">
             <button onClick={handleClose}
-              className="px-4 py-2.5 text-gray-700 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors">
+              className="px-4 py-2.5 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving}

@@ -207,22 +207,22 @@ export default function AdminBadgesPage() {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Badges</h1>
-              <p className="mt-2 text-gray-600">Create achievement badges and award them to students.</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Badges</h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-300">Create achievement badges and award them to students.</p>
             </div>
             <button onClick={openCreate} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
               <Plus size={16} /> New Badge
             </button>
           </div>
 
-          <div className="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="mt-6 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f0f14] shadow-sm overflow-hidden">
             {loading ? (
-              <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 className="animate-spin" size={24} /></div>
+              <div className="flex items-center justify-center py-16 text-gray-400 dark:text-gray-500"><Loader2 className="animate-spin" size={24} /></div>
             ) : badges.length === 0 ? (
-              <div className="py-16 text-center text-gray-500">No badges yet. Create your first one.</div>
+              <div className="py-16 text-center text-gray-500 dark:text-gray-400">No badges yet. Create your first one.</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                <thead className="bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">
                   <tr>
                     <th className="text-left px-5 py-3">Badge</th>
                     <th className="text-left px-5 py-3">Course</th>
@@ -231,33 +231,33 @@ export default function AdminBadgesPage() {
                     <th className="text-right px-5 py-3">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                   {badges.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50">
+                    <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${b.badge_color}22`, color: b.badge_color }}>
                             <Award size={16} />
                           </span>
                           <div>
-                            <div className="font-semibold text-gray-900">{b.name}</div>
-                            <div className="text-xs text-gray-500 max-w-xs truncate">{b.description}</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{b.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate">{b.description}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-gray-600">{b.course_title || b.course_id}</td>
-                      <td className="px-5 py-3 text-gray-600">{unlockLabel(b)}</td>
+                      <td className="px-5 py-3 text-gray-600 dark:text-gray-300">{b.course_title || b.course_id}</td>
+                      <td className="px-5 py-3 text-gray-600 dark:text-gray-300">{unlockLabel(b)}</td>
                       <td className="px-5 py-3">
-                        <button onClick={() => openHolders(b)} className="flex items-center gap-1 text-purple-700 hover:underline font-medium">
+                        <button onClick={() => openHolders(b)} className="flex items-center gap-1 text-purple-700 dark:text-purple-400 hover:underline font-medium">
                           <Users size={13} /> {b.holders_count}
                         </button>
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => setPreviewBadge(b)} title="Preview" className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-900"><Eye size={15} /></button>
-                          <button onClick={() => setAwardFor(b)} title="Manually award" className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-purple-700"><Plus size={15} /></button>
-                          <button onClick={() => openEdit(b)} title="Edit" className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-900"><Pencil size={15} /></button>
-                          <button onClick={() => deleteBadge(b)} title="Delete" className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600"><Trash2 size={15} /></button>
+                          <button onClick={() => setPreviewBadge(b)} title="Preview" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"><Eye size={15} /></button>
+                          <button onClick={() => setAwardFor(b)} title="Manually award" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-purple-700 dark:hover:text-purple-400"><Plus size={15} /></button>
+                          <button onClick={() => openEdit(b)} title="Edit" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"><Pencil size={15} /></button>
+                          <button onClick={() => deleteBadge(b)} title="Delete" className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-500/15 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 size={15} /></button>
                         </div>
                       </td>
                     </tr>
@@ -271,54 +271,54 @@ export default function AdminBadgesPage() {
         {/* Create / edit modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => !saving && setShowForm(false)}>
-            <form onClick={(e) => e.stopPropagation()} onSubmit={submitForm} className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <form onClick={(e) => e.stopPropagation()} onSubmit={submitForm} className="bg-white dark:bg-[#0f0f14] rounded-xl shadow-2xl w-full max-w-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{editing ? 'Edit Badge' : 'New Badge'}</h3>
-                <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editing ? 'Edit Badge' : 'New Badge'}</h3>
+                <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X size={18} /></button>
               </div>
 
               <div className="space-y-4">
                 {!editing && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Course</label>
-                    <select required value={form.course_id} onChange={(e) => setForm({ ...form, course_id: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Course</label>
+                    <select required value={form.course_id} onChange={(e) => setForm({ ...form, course_id: e.target.value })} className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm">
                       <option value="" disabled>Select a course</option>
                       {courses.map((c) => <option key={c.course_id} value={c.course_id}>{c.title}</option>)}
                     </select>
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
-                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Sprint 1 Champion" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name</label>
+                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Sprint 1 Champion" className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
-                  <textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Description</label>
+                  <textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Color</label>
-                    <input type="color" value={form.badge_color} onChange={(e) => setForm({ ...form, badge_color: e.target.value })} className="w-full h-9 border border-gray-200 rounded-lg" />
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Color</label>
+                    <input type="color" value={form.badge_color} onChange={(e) => setForm({ ...form, badge_color: e.target.value })} className="w-full h-9 border border-gray-200 dark:border-white/10 rounded-lg" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Icon (optional)</label>
-                    <input value={form.badge_icon} onChange={(e) => setForm({ ...form, badge_icon: e.target.value })} placeholder="icon name/url" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Icon (optional)</label>
+                    <input value={form.badge_icon} onChange={(e) => setForm({ ...form, badge_icon: e.target.value })} placeholder="icon name/url" className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Unlock Rule</label>
-                    <select value={form.unlock_type} onChange={(e) => setForm({ ...form, unlock_type: e.target.value as Badge['unlock_type'] })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Unlock Rule</label>
+                    <select value={form.unlock_type} onChange={(e) => setForm({ ...form, unlock_type: e.target.value as Badge['unlock_type'] })} className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm">
                       <option value="course_completion">Course completion</option>
                       <option value="sprint_completion">Sprint completion</option>
                       <option value="milestone">Milestone</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                       {form.unlock_type === 'sprint_completion' ? 'Sprint #' : 'Value'}
                     </label>
-                    <input type="number" min={1} value={form.unlock_value} onChange={(e) => setForm({ ...form, unlock_value: parseInt(e.target.value || '1', 10) })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                    <input type="number" min={1} value={form.unlock_value} onChange={(e) => setForm({ ...form, unlock_value: parseInt(e.target.value || '1', 10) })} className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" />
                   </div>
                 </div>
               </div>
@@ -333,24 +333,24 @@ export default function AdminBadgesPage() {
         {/* Holders modal */}
         {holdersFor && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setHoldersFor(null)}>
-            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-[#0f0f14] rounded-xl shadow-2xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{holdersFor.name} — Holders</h3>
-                <button onClick={() => setHoldersFor(null)} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{holdersFor.name} — Holders</h3>
+                <button onClick={() => setHoldersFor(null)} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X size={18} /></button>
               </div>
               {holdersLoading ? (
-                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-gray-400" size={20} /></div>
+                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={20} /></div>
               ) : holders.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">No one has earned this badge yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">No one has earned this badge yet.</p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-gray-100 dark:divide-white/10">
                   {holders.map((h) => (
                     <li key={h.user_id} className="py-2.5 flex items-center justify-between text-sm">
                       <div>
-                        <div className="font-medium text-gray-900">{h.name}</div>
-                        <div className="text-xs text-gray-500">{h.email}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{h.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{h.email}</div>
                       </div>
-                      <span className="text-xs text-gray-400">{new Date(h.unlocked_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{new Date(h.unlocked_at).toLocaleDateString()}</span>
                     </li>
                   ))}
                 </ul>
@@ -362,27 +362,27 @@ export default function AdminBadgesPage() {
         {/* Award modal */}
         {awardFor && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setAwardFor(null)}>
-            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-[#0f0f14] rounded-xl shadow-2xl w-full max-w-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Award "{awardFor.name}"</h3>
-                <button onClick={() => setAwardFor(null)} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Award "{awardFor.name}"</h3>
+                <button onClick={() => setAwardFor(null)} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X size={18} /></button>
               </div>
               <div className="relative mb-3">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input autoFocus value={userQuery} onChange={(e) => searchUsers(e.target.value)} placeholder="Search by name or email…" className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm" />
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                <input autoFocus value={userQuery} onChange={(e) => searchUsers(e.target.value)} placeholder="Search by name or email…" className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] text-gray-900 dark:text-white rounded-lg pl-9 pr-3 py-2 text-sm" />
               </div>
-              <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+              <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-white/10">
                 {userResults.map((u) => (
                   <li key={u.id} className="py-2.5 flex items-center justify-between text-sm">
                     <div>
-                      <div className="font-medium text-gray-900">{u.name}</div>
-                      <div className="text-xs text-gray-500">{u.email}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{u.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{u.email}</div>
                     </div>
-                    <button disabled={awarding} onClick={() => award(u)} className="text-purple-700 hover:underline font-medium text-xs disabled:opacity-50">Award</button>
+                    <button disabled={awarding} onClick={() => award(u)} className="text-purple-700 dark:text-purple-400 hover:underline font-medium text-xs disabled:opacity-50">Award</button>
                   </li>
                 ))}
                 {userQuery.length >= 2 && userResults.length === 0 && (
-                  <li className="py-4 text-center text-xs text-gray-400">No matching users</li>
+                  <li className="py-4 text-center text-xs text-gray-400 dark:text-gray-500">No matching users</li>
                 )}
               </ul>
             </div>

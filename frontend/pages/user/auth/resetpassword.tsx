@@ -62,9 +62,17 @@ export default function ResetPassword() {
   if (!router.isReady || isValidLink === null) {
     return (
       <AppLayout>
+        <style>{`
+          .auth-card {
+            border-radius: 2rem 0.75rem 2rem 0.75rem;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-elevated);
+            backdrop-filter: blur(20px);
+          }
+        `}</style>
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="auth-card w-full max-w-md p-10 text-center">
-            <p className="text-gray-500 text-sm">Loading…</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Loading…</p>
           </div>
         </div>
       </AppLayout>
@@ -81,26 +89,26 @@ export default function ResetPassword() {
         .auth-card {
           animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(12, 12, 14, 0.92);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-elevated);
           backdrop-filter: blur(20px);
           box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
         }
         .underline-input {
           background: transparent;
           border: none;
-          border-bottom: 1.5px solid rgba(255,255,255,0.18);
+          border-bottom: 1.5px solid var(--border-strong);
           border-radius: 0;
           width: 100%;
           padding: 0.5rem 0 0.5rem 0;
-          color: white;
+          color: var(--text-primary);
           font-size: 0.95rem;
           outline: none;
           transition: border-color 0.25s ease;
           caret-color: ${BRAND};
         }
         .underline-input::placeholder {
-          color: rgba(255,255,255,0.25);
+          color: var(--text-muted);
           font-size: 0.875rem;
           letter-spacing: 0.01em;
         }
@@ -110,7 +118,7 @@ export default function ResetPassword() {
           font-size: 0.7rem;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: rgba(255,255,255,0.4);
+          color: var(--text-muted);
           margin-bottom: 0.35rem;
           display: block;
         }
@@ -136,11 +144,11 @@ export default function ResetPassword() {
           align-items: center;
           gap: 0.5rem;
           font-size: 0.85rem;
-          color: rgba(255,255,255,0.45);
+          color: var(--text-muted);
           transition: color 0.2s;
           margin-bottom: 1.25rem;
         }
-        .back-btn:hover { color: rgba(255,255,255,0.8); }
+        .back-btn:hover { color: var(--text-primary); }
         .alert-box {
           padding: 0.85rem 1rem;
           border-radius: 0.75rem;
@@ -150,13 +158,15 @@ export default function ResetPassword() {
         .alert-error {
           background: rgba(239,68,68,0.1);
           border: 1px solid rgba(239,68,68,0.25);
-          color: #fca5a5;
+          color: #dc2626;
         }
+        [data-theme="dark"] .alert-error { color: #fca5a5; }
         .alert-success {
           background: rgba(34,197,94,0.08);
           border: 1px solid rgba(34,197,94,0.2);
-          color: #86efac;
+          color: #15803d;
         }
+        [data-theme="dark"] .alert-success { color: #86efac; }
       `}</style>
 
       <div className="min-h-screen flex items-center justify-center px-4 pt-16 pb-12">
@@ -168,9 +178,9 @@ export default function ResetPassword() {
 
           <div className="auth-card p-10">
             <div className="mb-8">
-              <p className="text-xs tracking-widest uppercase text-gray-500 mb-2">Security</p>
-              <h1 className="text-3xl font-bold text-white">Set New Password</h1>
-              <p className="text-sm text-gray-500 mt-2">Enter your new password below.</p>
+              <p className="text-xs tracking-widest uppercase text-gray-500 dark:text-gray-400 mb-2">Security</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Set New Password</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Enter your new password below.</p>
             </div>
 
             {error && <div className="alert-box alert-error">{error}</div>}
@@ -190,7 +200,7 @@ export default function ResetPassword() {
                       className="underline-input pr-10"
                     />
                     <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                       {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -208,7 +218,7 @@ export default function ResetPassword() {
                       className="underline-input pr-10"
                     />
                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                       {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -222,7 +232,7 @@ export default function ResetPassword() {
 
             {!isValidLink && (
               <div className="text-center pt-2">
-                <p className="text-gray-500 text-sm mb-4">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                   This password reset link is invalid or has expired.
                 </p>
                 <button onClick={() => router.push('/user/auth/forgot-password')}

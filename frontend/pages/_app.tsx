@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { InstructorAuthProvider } from '@/contexts/InstructorAuthContext';
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import WhatsAppButton from "@/components/chat/WhatsappButton";
 import Head from "next/head";
 
@@ -71,22 +72,24 @@ export default function App({ Component, pageProps }: AppProps) {
         />
       </Head>
 
-      <main className={GeistSans.variable}>
-        {isAdminRoute ? (
-          <AdminAuthProvider>
-            <Component {...pageProps} />
-          </AdminAuthProvider>
-        ) : isInstructorRoute ? (
-          <InstructorAuthProvider>
-            <Component {...pageProps} />
-          </InstructorAuthProvider>
-        ) : (
-          <AuthProvider>
-            <Component {...pageProps} />
-            <WhatsAppButton /> 
-          </AuthProvider>
-        )}
-      </main>
+      <ThemeProvider>
+        <main className={GeistSans.variable}>
+          {isAdminRoute ? (
+            <AdminAuthProvider>
+              <Component {...pageProps} />
+            </AdminAuthProvider>
+          ) : isInstructorRoute ? (
+            <InstructorAuthProvider>
+              <Component {...pageProps} />
+            </InstructorAuthProvider>
+          ) : (
+            <AuthProvider>
+              <Component {...pageProps} />
+              <WhatsAppButton />
+            </AuthProvider>
+          )}
+        </main>
+      </ThemeProvider>
     </>
   );
 }

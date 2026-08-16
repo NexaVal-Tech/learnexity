@@ -46,7 +46,7 @@ public function byTrack(Request $request): JsonResponse
 {
     $request->validate([
         'track'   => 'nullable|array',
-        'track.*' => 'string|in:self_paced,group_mentorship,one_on_one',
+        'track.*' => 'string|in:self_paced,group_mentorship,one_on_one,intermediate',
     ]);
 
     $tracks = $request->input('track', []);
@@ -63,6 +63,7 @@ public function byTrack(Request $request): JsonResponse
                     'self_paced'       => $q->orWhere('offers_self_paced', true),
                     'group_mentorship' => $q->orWhere('offers_group_mentorship', true),
                     'one_on_one'       => $q->orWhere('offers_one_on_one', true),
+                    'intermediate'     => $q->orWhere('offers_intermediate', true),
                 };
             }
         });
@@ -85,6 +86,21 @@ public function byTrack(Request $request): JsonResponse
     public function freemium(): JsonResponse
     {
         $courses = Course::where('is_freemium', true)
+            ->where('is_active', true)
+            ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
+            ->get();
+
+        return response()->json($courses);
+    }
+
+    /**
+     * Courses the admin has marked fully free (see Course::is_free) — users
+     * can enroll and get instant full access with no payment step. Separate
+     * from freemium() above, which only unlocks a preview (sprints 1-2).
+     */
+    public function free(): JsonResponse
+    {
+        $courses = Course::where('is_free', true)
             ->where('is_active', true)
             ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
             ->get();

@@ -42,7 +42,7 @@ function Toggle({ checked, onChange, disabled }: {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#6C63FF] focus:ring-offset-2 disabled:opacity-50 ${
-        checked ? "bg-[#6C63FF]" : "bg-gray-200"
+        checked ? "bg-[#6C63FF]" : "bg-gray-200 dark:bg-white/20"
       }`}
     >
       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
@@ -57,10 +57,10 @@ function SectionCard({ title, icon, children }: {
   title: string; icon: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100">
+    <div className="bg-white dark:bg-[#0f0f14] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+      <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="p-1.5 bg-[#6C63FF]/10 rounded-lg text-[#6C63FF]">{icon}</div>
-        <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+        <h2 className="text-sm font-semibold text-gray-800 dark:text-white">{title}</h2>
       </div>
       <div className="px-6 py-5 space-y-4">{children}</div>
     </div>
@@ -75,8 +75,8 @@ function ToggleRow({ label, description, checked, onChange, disabled }: {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
-        <p className="text-sm font-medium text-gray-800">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-sm font-medium text-gray-800 dark:text-white">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
       </div>
       <Toggle checked={checked} onChange={onChange} disabled={disabled} />
     </div>
@@ -90,7 +90,7 @@ function PasswordField({ label, value, show, onToggle, onChange, error }: {
 }) {
   return (
     <div>
-      <label className="text-xs font-medium text-gray-500 block mb-1">{label}</label>
+      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -102,12 +102,12 @@ function PasswordField({ label, value, show, onToggle, onChange, error }: {
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         >
           {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{error}</p>}
     </div>
   );
 }
@@ -266,8 +266,8 @@ export default function SettingsPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Manage your account preferences and security.
           </p>
         </div>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
         {/* ── Password ── */}
         <SectionCard title="Password & Security" icon={<Lock className="w-4 h-4" />}>
           {googleConnected && !hasPassword && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700">
+            <div className="bg-blue-50 border border-blue-100 dark:bg-blue-500/15 dark:border-blue-500/30 rounded-lg px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
               Your account uses Google sign-in. Set a password below to also enable email login.
             </div>
           )}
@@ -360,15 +360,15 @@ export default function SettingsPage() {
         <SectionCard title="Danger Zone" icon={<Shield className="w-4 h-4 text-red-500" />}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-800">Delete account</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-medium text-gray-800 dark:text-white">Delete account</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Permanently delete your account and all associated data. This cannot be undone.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setDeleteOpen(true)}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors"
             >
               <Trash2 className="w-4 h-4" /> Delete
             </button>
@@ -379,13 +379,13 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={async () => { await logout(); router.push("/"); }}
-          className="w-full flex items-center justify-between px-6 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
         >
           <span className="flex items-center gap-2">
-            <LogOut className="w-4 h-4 text-gray-400" />
+            <LogOut className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             Sign out of your account
           </span>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         </button>
       </div>
 
@@ -395,21 +395,21 @@ export default function SettingsPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
           onClick={(e) => e.target === e.currentTarget && setDeleteOpen(false)}
         >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+          <div className="bg-white dark:bg-[#0f0f14] rounded-2xl w-full max-w-md shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <Trash2 className="w-5 h-5 text-red-600" />
+              <div className="p-2 bg-red-100 dark:bg-red-500/15 rounded-full">
+                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Delete account</h3>
-                <p className="text-xs text-gray-500">This action is permanent and irreversible.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Delete account</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">This action is permanent and irreversible.</p>
               </div>
             </div>
 
             <form onSubmit={handleDeleteAccount} className="space-y-3">
               {hasPassword && (
                 <div>
-                  <label className="text-xs font-medium text-gray-500 block mb-1">
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">
                     Your password
                   </label>
                   <input
@@ -420,14 +420,14 @@ export default function SettingsPage() {
                     className="settings-input"
                   />
                   {deleteErrors.password && (
-                    <p className="text-xs text-red-500 mt-1">{deleteErrors.password}</p>
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">{deleteErrors.password}</p>
                   )}
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">
-                  Type <span className="font-bold text-red-600">DELETE</span> to confirm
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">
+                  Type <span className="font-bold text-red-600 dark:text-red-400">DELETE</span> to confirm
                 </label>
                 <input
                   type="text"
@@ -437,7 +437,7 @@ export default function SettingsPage() {
                   className="settings-input"
                 />
                 {deleteErrors.confirmation && (
-                  <p className="text-xs text-red-500 mt-1">{deleteErrors.confirmation}</p>
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">{deleteErrors.confirmation}</p>
                 )}
               </div>
 
@@ -449,7 +449,7 @@ export default function SettingsPage() {
                     setDeleteForm({ password: "", confirmation: "" });
                     setDeleteErrors({});
                   }}
-                  className="flex-1 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2.5 border border-gray-200 dark:border-white/20 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
@@ -487,6 +487,14 @@ export default function SettingsPage() {
         .settings-input:focus {
           border-color: #6C63FF;
           box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+        }
+        [data-theme="dark"] .settings-input {
+          border-color: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+        [data-theme="dark"] .settings-input::placeholder {
+          color: #9098a8;
         }
       `}</style>
     </UserDashboardLayout>

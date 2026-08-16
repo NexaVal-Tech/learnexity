@@ -60,10 +60,10 @@ export default function RegistrationFeeSettings() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+    <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-6 mb-6">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Scholarship Settings</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Scholarship Settings</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
           Every scholarship applicant is approved for one of two tiers — there's no reject outcome.
           Full-tuition (100%) applicants pay a flat registration fee instead of the course price; the
           fee depends on which learning track they enroll in — Deep-Tech (one-on-one / live classes)
@@ -75,16 +75,16 @@ export default function RegistrationFeeSettings() {
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" aria-hidden="true" />
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" aria-hidden="true" />
           <span className="sr-only">Loading registration fee settings…</span>
         </div>
       ) : (
         <>
           <div className="mb-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Deep-Tech (one-on-one / live classes)</h3>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-2">Deep-Tech (one-on-one / live classes)</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="reg-fee-deeptech-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-deeptech-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
                 <input
@@ -95,11 +95,11 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={deeptechNgn}
                   onChange={(e) => setDeeptechNgn(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
               <div>
-                <label htmlFor="reg-fee-deeptech-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-deeptech-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
                 <input
@@ -110,17 +110,17 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={deeptechUsd}
                   onChange={(e) => setDeeptechUsd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
             </div>
           </div>
 
           <div className="mb-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Flexible (self-paced)</h3>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-2">Flexible (self-paced)</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="reg-fee-flexible-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-flexible-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
                 <input
@@ -131,11 +131,11 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={flexibleNgn}
                   onChange={(e) => setFlexibleNgn(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
               <div>
-                <label htmlFor="reg-fee-flexible-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-flexible-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
                 <input
@@ -146,21 +146,21 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={flexibleUsd}
                   onChange={(e) => setFlexibleUsd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
             </div>
           </div>
 
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">Intermediate</h3>
-            <p className="text-xs text-gray-500 mb-2">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">Intermediate</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
               For courses that don't cleanly fit Deep-Tech or Flexible — assign a course to this
               category from its Course Settings page.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="reg-fee-intermediate-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-intermediate-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
                 <input
@@ -171,11 +171,11 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={intermediateNgn}
                   onChange={(e) => setIntermediateNgn(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
               <div>
-                <label htmlFor="reg-fee-intermediate-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                <label htmlFor="reg-fee-intermediate-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
                 <input
@@ -186,21 +186,21 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={intermediateUsd}
                   onChange={(e) => setIntermediateUsd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mb-5 pt-1 border-t border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-800 mb-1 mt-4">Partial Scholarship Percentage</h3>
-            <p className="text-xs text-gray-500 mb-2">
+          <div className="mb-5 pt-1 border-t border-gray-100 dark:border-white/10">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1 mt-4">Partial Scholarship Percentage</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
               Awarded to anyone who applies but doesn't qualify for full tuition. Applied as a
               straight discount off the course's normal price at checkout — the normal payment
               flow (track selection, installments) still applies.
             </p>
             <div className="max-w-[160px]">
-              <label htmlFor="reg-fee-partial-pct" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+              <label htmlFor="reg-fee-partial-pct" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                 Percentage off
               </label>
               <div className="relative">
@@ -213,15 +213,15 @@ export default function RegistrationFeeSettings() {
                   inputMode="decimal"
                   value={partialScholarshipPercentage}
                   onChange={(e) => setPartialScholarshipPercentage(e.target.value)}
-                  className="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="w-full px-3 py-2 pr-8 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-sm font-medium">%</span>
               </div>
             </div>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 mb-3" role="alert">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-3" role="alert">{error}</p>
           )}
 
           <button

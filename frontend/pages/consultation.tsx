@@ -50,6 +50,7 @@ export default function ConsultationPage() {
   const [pricingLoading, setPricingLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [freeDays, setFreeDays] = useState<string[]>([]);
 
 useEffect(() => {
   const fetchPricing = async () => {
@@ -80,12 +81,26 @@ useEffect(() => {
   fetchCourses();
 }, []);
 
+useEffect(() => {
+  const fetchFreeDays = async () => {
+    try {
+      const res = await api.consultations.getFreeDays();
+      setFreeDays(res.free_days || []);
+    } catch {
+      setFreeDays([]);
+    }
+  };
+  fetchFreeDays();
+}, []);
+
 const formatPrice = () => {
   if (!pricing) return '';
   return pricing.currency === 'NGN'
     ? `₦${pricing.amount.toLocaleString()}`
     : `$${pricing.amount.toFixed(2)}`;
 };
+
+const isFreeDay = (date: string) => freeDays.includes(date);
 
   const [form, setForm] = useState({
     full_name: user?.name || '',
@@ -144,7 +159,13 @@ const formatPrice = () => {
         preferred_date: selectedDate,
         preferred_time: selectedTime,
       });
-      window.location.href = res.checkout_url; // off to Stripe/Paystack
+      if (res.is_free) {
+        // Free day — booking is already confirmed, no payment needed.
+        setLoading(false);
+        setStep(4);
+        return;
+      }
+      window.location.href = res.checkout_url!; // off to Stripe/Paystack
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to start payment. Please try again.');
       setLoading(false);
@@ -169,15 +190,17 @@ const formatPrice = () => {
       <Head>
         <title>Book a Free Consultation – Learnexity</title>
         <meta name="description" content="Book a free consultation with our team to get personalized guidance on your tech learning journey." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </Head>
       <AppLayout>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
           .consult-page { font-family: 'DM Sans', sans-serif; }
 
           .consult-hero {
-            background: linear-gradient(135deg, #0a0a0f 0%, #0f0d1f 50%, #0a0a0f 100%);
+            background: var(--page-bg);
             position: relative;
             overflow: hidden;
           }
@@ -197,8 +220,8 @@ const formatPrice = () => {
           }
 
           .card-glass {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
             backdrop-filter: blur(20px);
             border-radius: 2rem 0.75rem 2rem 0.75rem;
           }
@@ -215,67 +238,69 @@ const formatPrice = () => {
           }
           .step-dot.done { background: ${BRAND}; color: white; }
           .step-dot.active { background: ${BRAND}; color: white; box-shadow: 0 0 0 4px rgba(74,58,255,0.2); }
-          .step-dot.pending { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.1); }
-          .step-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+          .step-dot.pending { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+          .step-line { flex: 1; height: 1px; background: var(--border-subtle); }
           .step-line.done { background: ${BRAND}; }
 
           .field-label {
             font-size: 0.7rem; letter-spacing: 0.1em;
-            text-transform: uppercase; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; color: var(--text-muted);
             margin-bottom: 0.5rem; display: block;
             font-family: 'Syne', sans-serif;
           }
           .field-input {
             width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--surface-alt);
+            border: 1px solid var(--border-subtle);
             border-radius: 0.75rem;
             padding: 0.75rem 1rem;
-            color: white;
+            color: var(--text-primary);
             font-size: 0.9rem;
             font-family: 'DM Sans', sans-serif;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
           }
           .field-input:focus { border-color: ${BRAND}; box-shadow: 0 0 0 3px rgba(74,58,255,0.15); }
-          .field-input::placeholder { color: rgba(255,255,255,0.2); }
-          .field-input option { background: #1a1a2e; }
+          .field-input::placeholder { color: var(--text-muted); }
+          .field-input option { background: var(--surface); color: var(--text-primary); }
 
           .type-card {
-            border: 1px solid rgba(255,255,255,0.07);
+            border: 1px solid var(--border-subtle);
             border-radius: 1rem 0.5rem 1rem 0.5rem;
             padding: 1rem;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: rgba(255,255,255,0.02);
+            background: var(--surface-alt);
           }
           .type-card:hover { border-color: rgba(74,58,255,0.4); background: rgba(74,58,255,0.05); }
           .type-card.selected { border-color: ${BRAND}; background: rgba(74,58,255,0.1); box-shadow: 0 0 0 1px ${BRAND}; }
 
           .calendar-wrap { user-select: none; }
           .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-          .cal-nav { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+          .cal-nav { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
           .cal-nav:hover { background: rgba(74,58,255,0.2); border-color: ${BRAND}; color: white; }
           .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-          .cal-day-name { text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.3); padding: 4px 0; font-family: 'Syne', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+          .cal-day-name { text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 4px 0; font-family: 'Syne', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
           .cal-day {
             aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
             border-radius: 0.5rem; font-size: 0.875rem; cursor: pointer;
-            transition: all 0.15s ease; color: rgba(255,255,255,0.7);
+            transition: all 0.15s ease; color: var(--text-secondary);
           }
           .cal-day:hover:not(.disabled):not(.empty) { background: rgba(74,58,255,0.2); color: white; }
           .cal-day.selected { background: ${BRAND}; color: white; font-weight: 700; }
           .cal-day.today:not(.selected) { border: 1px solid rgba(74,58,255,0.4); color: ${BRAND}; }
           .cal-day.disabled { opacity: 0.25; cursor: not-allowed; }
           .cal-day.empty { cursor: default; }
+          .cal-day.free-day:not(.selected) { border: 1px solid rgba(34,197,94,0.5); color: #4ade80; }
+          .cal-day.free-day.selected { background: #16a34a; box-shadow: 0 0 0 4px rgba(34,197,94,0.2); }
 
           .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
           @media (min-width: 640px) { .time-grid { grid-template-columns: repeat(4, 1fr); } }
           .time-slot {
             padding: 0.5rem; border-radius: 0.5rem; text-align: center;
             font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
-            border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.6);
-            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-subtle); color: var(--text-secondary);
+            background: var(--surface-alt);
           }
           .time-slot:hover:not(.booked) { border-color: ${BRAND}; color: white; background: rgba(74,58,255,0.1); }
           .time-slot.selected { background: ${BRAND}; color: white; border-color: ${BRAND}; font-weight: 600; }
@@ -291,14 +316,14 @@ const formatPrice = () => {
           .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
           .ghost-btn {
-            color: rgba(255,255,255,0.5); font-weight: 500;
+            color: var(--text-secondary); font-weight: 500;
             padding: 0.85rem 1.5rem; border-radius: 0.75rem;
             transition: all 0.2s ease; font-size: 0.9rem;
-            border: 1px solid rgba(255,255,255,0.07);
+            border: 1px solid var(--border-subtle);
           }
-          .ghost-btn:hover { color: white; border-color: rgba(255,255,255,0.2); }
+          .ghost-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
 
-          .confirm-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.875rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+          .confirm-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.875rem 0; border-bottom: 1px solid var(--border-subtle); }
           .confirm-row:last-child { border-bottom: none; }
 
           .success-circle {
@@ -340,7 +365,7 @@ const formatPrice = () => {
         </div>
 
         {/* Form card */}
-        <div className="consult-page pb-20 px-4" style={{ background: '#0a0a0f' }}>
+        <div className="consult-page pb-20 px-4" style={{ background: 'var(--page-bg)' }}>
           <div className="max-w-6xl mx-auto -mt-6">
             <div className="card-glass p-8 md:p-10">
 
@@ -467,9 +492,11 @@ const formatPrice = () => {
                         const dateStr = formatDate(day);
                         const isToday = day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
                         const disabled = isDateDisabled(day);
+                        const free = isFreeDay(dateStr);
                         return (
                           <div key={day}
-                            className={`cal-day ${disabled ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''} ${isToday && selectedDate !== dateStr ? 'today' : ''}`}
+                            className={`cal-day ${disabled ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''} ${isToday && selectedDate !== dateStr ? 'today' : ''} ${free ? 'free-day' : ''}`}
+                            title={free ? 'Free consultation day — no payment required' : undefined}
                             onClick={() => { if (!disabled) { setSelectedDate(dateStr); setSelectedTime(''); } }}>
                             {day}
                           </div>
@@ -477,6 +504,13 @@ const formatPrice = () => {
                       })}
                     </div>
                   </div>
+
+                  {selectedDate && isFreeDay(selectedDate) && (
+                    <div className="mb-5 px-4 py-3 rounded-xl flex items-center gap-2" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                      <CheckCircle size={16} style={{ color: '#4ade80' }} />
+                      <span className="text-sm" style={{ color: '#4ade80' }}>This is a free consultation day — book any time slot, no payment required.</span>
+                    </div>
+                  )}
 
                   {selectedDate && (
                     <div className="mb-7">
@@ -517,24 +551,28 @@ const formatPrice = () => {
                       ['Type', CONSULTATION_TYPES.find(t => t.value === form.consultation_type)?.label || '—'],
                       ['Date', new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })],
                       ['Time', selectedTime],
-                      ['Consultation Fee', pricingLoading ? 'Loading…' : formatPrice()],
+                      ['Consultation Fee', isFreeDay(selectedDate) ? 'FREE' : (pricingLoading ? 'Loading…' : formatPrice())],
                       ...(form.message ? [['Message', form.message] as [string, string]] : []),
                     ].map(([key, val]) => (
                       <div className="confirm-row" key={key}>
                         <span className="text-xs uppercase tracking-wider text-gray-500" style={{ fontFamily: 'Syne, sans-serif' }}>{key}</span>
-                        <span className="text-sm text-white text-right max-w-xs">{val}</span>
+                        <span className="text-sm text-white text-right max-w-xs" style={key === 'Consultation Fee' && isFreeDay(selectedDate) ? { color: '#4ade80', fontWeight: 700 } : undefined}>{val}</span>
                       </div>
                     ))}
                   </div>
 
                   <p className="text-xs text-gray-600 mb-6 text-center">
-                    You'll be redirected to a secure payment page to pay {formatPrice()} before your booking is confirmed.
+                    {isFreeDay(selectedDate)
+                      ? "This is a free consultation day — your booking will be confirmed instantly, no payment required."
+                      : `You'll be redirected to a secure payment page to pay ${formatPrice()} before your booking is confirmed.`}
                   </p>
 
                   <div className="flex justify-between items-center">
                     <button onClick={() => setStep(2)} className="ghost-btn">← Back</button>
-                    <button onClick={handleSubmit} disabled={loading || pricingLoading} className="primary-btn">
-                      {loading ? 'Redirecting…' : `Pay ${formatPrice()} & Confirm`}
+                    <button onClick={handleSubmit} disabled={loading || (!isFreeDay(selectedDate) && pricingLoading)} className="primary-btn">
+                      {loading
+                        ? (isFreeDay(selectedDate) ? 'Confirming…' : 'Redirecting…')
+                        : (isFreeDay(selectedDate) ? 'Confirm Free Booking' : `Pay ${formatPrice()} & Confirm`)}
                     </button>
                   </div>
                 </div>

@@ -199,11 +199,11 @@ export default function Courses() {
           <FadeInCard>
             <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
               <div>
-                <h2 className="text-5xl font-semibold text-white mb-4 leading-tight">
+                <h2 className="text-5xl font-semibold text-gray-900 dark:text-white mb-4 leading-tight">
                   In-Demand Courses That <br className="block lg:hidden" />
                   Get Results
                 </h2>
-                <p className="text-gray-200 text-xl">
+                <p className="text-gray-600 dark:text-gray-200 text-xl">
                   Proven curriculum with measurable outcomes
                 </p>
               </div>
@@ -212,8 +212,8 @@ export default function Courses() {
 
           {loading && (
             <div className="text-center py-12">
-              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-white border-r-transparent" />
-              <p className="text-white mt-4">Loading courses...</p>
+              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-gray-900 dark:border-white border-r-transparent" />
+              <p className="text-gray-900 dark:text-white mt-4">Loading courses...</p>
             </div>
           )}
 
@@ -225,7 +225,7 @@ export default function Courses() {
 
           {!loading && !error && (
             <FadeInCard>
-              <p className="text-gray-400 text-sm mb-3 flex items-center gap-1">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-3 flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -257,12 +257,12 @@ export default function Courses() {
                           href={`/courses/${course.course_id}`}
                           className="block transition-transform hover:scale-105 flex-shrink-0 w-[19rem] sm:w-[18rem] md:w-[22rem] lg:w-[26rem] xl:w-[28rem]"
                         >
-                          <div className="bg-gray-900 rounded-3xl p-4 h-full flex flex-col cursor-pointer hover:bg-gray-800 transition-colors">
-                            <h3 className="text-2xl font-bold text-gray-300 mb-4">
+                          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-transparent rounded-3xl p-4 h-full flex flex-col cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-300 mb-4">
                               {course.title}
                             </h3>
 
-                            <p className="text-lg text-gray-300 mb-6 line-clamp-3 flex-grow">
+                            <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 line-clamp-3 flex-grow">
                               {course.description}
                             </p>
 
@@ -271,7 +271,7 @@ export default function Courses() {
                                 course.learnings.slice(0, 3).map((learning) => (
                                   <div
                                     key={learning.id}
-                                    className="bg-gray-700 rounded-full px-2 py-2 flex items-center gap-3"
+                                    className="bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-2 flex items-center gap-3"
                                   >
                                     <div className="w-5 h-5 bg-[#4A3AFF] rounded-full flex items-center justify-center flex-shrink-0">
                                       <svg
@@ -289,13 +289,13 @@ export default function Courses() {
                                       </svg>
                                     </div>
 
-                                    <span className="text-gray-300 text-lg">
+                                    <span className="text-gray-700 dark:text-gray-300 text-lg">
                                       {learning.learning_point}
                                     </span>
                                   </div>
                                 ))
                               ) : (
-                                <div className="text-gray-400 text-lg italic">
+                                <div className="text-gray-500 dark:text-gray-400 text-lg italic">
                                   Click to learn more about this course
                                 </div>
                               )}

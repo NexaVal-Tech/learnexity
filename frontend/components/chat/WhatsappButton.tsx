@@ -300,15 +300,15 @@ export default function WhatsAppButton() {
       {/* Label */}
       <div
         style={{
-          background: "#0f0f0f",
-          color: "#fff",
+          background: "var(--surface-elevated)",
+          color: "var(--text-primary)",
           fontSize: "13px",
           fontWeight: 500,
           padding: "8px 14px",
           borderRadius: "8px",
           whiteSpace: "nowrap",
           boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: "1px solid var(--border-subtle)",
           fontFamily:
             "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           lineHeight: 1.5,

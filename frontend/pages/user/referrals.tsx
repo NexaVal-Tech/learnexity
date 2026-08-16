@@ -102,19 +102,19 @@ export default function ReferralsPage() {
     return (
       <UserDashboardLayout>
         <div className="max-w-2xl mx-auto px-4 py-20 pt-25 ">
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Share2 className="w-10 h-10 text-purple-600" />
+          <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-8 text-center">
+            <div className="w-20 h-20 bg-purple-100 dark:bg-purple-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Share2 className="w-10 h-10 text-purple-600 dark:text-purple-400" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Start Earning Rewards
             </h1>
-            <p className="text-gray-600 mb-8 text-lg">
-              Apply for your unique referral link and start earning <span className="font-semibold text-purple-600">30% </span> for 
+            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
+              Apply for your unique referral link and start earning <span className="font-semibold text-purple-600 dark:text-purple-400">30% </span> for
               every friend who signs up and purchases a self paced course and 20% for deep tech courses.
             </p>
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 rounded-lg text-red-600 dark:text-red-300">
                 {error}
               </div>
             )}
@@ -135,17 +135,17 @@ export default function ReferralsPage() {
     <UserDashboardLayout>
       <div className="max-w-[1255px] mx-auto px-4 py-8 pt-28">
         {/* Referral Link Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <Share2 className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Your Referral Link</h2>
+            <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Your Referral Link</h2>
           </div>
-          <p className="text-gray-600 mb-4 text-sm">
+          <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
             Share this unique link with friends and earn rewards when they sign up
           </p>
           <div className="flex gap-3">
-            <div className="flex-1 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
-              <p className="text-gray-700 font-mono text-sm break-all">
+            <div className="flex-1 bg-gray-50 dark:bg-white/5 px-4 py-3 rounded-lg border border-gray-200 dark:border-white/10">
+              <p className="text-gray-700 dark:text-gray-300 font-mono text-sm break-all">
                 {referralData?.referral_code.referral_link}
               </p>
             </div>
@@ -159,14 +159,14 @@ export default function ReferralsPage() {
           </div>
 
           {/* Referral Rewards Info */}
-          <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="mt-6 bg-purple-50 border border-purple-200 dark:bg-purple-500/15 dark:border-purple-500/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <Gift className="w-5 h-5 text-purple-600 mt-0.5" />
+              <Gift className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1">Referral Rewards</h3>
-                <p className="text-sm text-gray-700">
-                  Earn <span className="font-semibold text-purple-600">30% </span> for each friend who 
-                  successfully signs up and purchases a self paced course and 20% for deep tech courses 
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Referral Rewards</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Earn <span className="font-semibold text-purple-600 dark:text-purple-400">30% </span> for each friend who
+                  successfully signs up and purchases a self paced course and 20% for deep tech courses
                 </p>
               </div>
             </div>
@@ -176,36 +176,36 @@ export default function ReferralsPage() {
         {/* Referral Statistics */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Referral Statistics</h2>
+            <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Referral Statistics</h2>
           </div>
-          <p className="text-gray-600 mb-4 text-sm">
+          <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
             Track your referral performance and earnings
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <StatCard
-              icon={<Users className="w-5 h-5 text-purple-600" />}
+              icon={<Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
               label="Total Referrals"
               value={referralData?.statistics.total_referrals || 0}
             />
             <StatCard
-              icon={<CheckCircle className="w-5 h-5 text-green-600" />}
+              icon={<CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />}
               label="Successful"
               value={referralData?.statistics.successful_referrals || 0}
             />
             <StatCard
-              icon={<Clock className="w-5 h-5 text-orange-600" />}
+              icon={<Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />}
               label="Pending"
               value={referralData?.statistics.pending_referrals || 0}
             />
             <StatCard
-              icon={<Gift className="w-5 h-5 text-purple-600" />}
+              icon={<Gift className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
               label="Rewards"
               value={`$${referralData?.statistics.total_rewards || 0}`}
             />
             <StatCard
-              icon={<Flame className="w-5 h-5 text-red-600" />}
+              icon={<Flame className="w-5 h-5 text-red-600 dark:text-red-400" />}
               label="Streak"
               value={`${referralData?.statistics.current_streak_months || 0} months`}
             />
@@ -213,48 +213,48 @@ export default function ReferralsPage() {
         </div>
 
         {/* Referral History */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Referral History</h2>
+            <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Referral History</h2>
           </div>
-          <p className="text-gray-600 mb-6 text-sm">
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
             View all your referrals and their current status
           </p>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Date</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Name</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Status</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Reward</th>
+                <tr className="border-b border-gray-200 dark:border-white/10">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 dark:text-gray-300">Date</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 dark:text-gray-300">Name</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 dark:text-gray-300">Status</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700 dark:text-gray-300">Reward</th>
                 </tr>
               </thead>
               <tbody>
                 {referralData?.history && referralData.history.length > 0 ? (
                   referralData.history.map((ref) => (
-                    <tr key={ref.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr key={ref.id} className="border-b border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         {new Date(ref.referred_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-900">{ref.referred_user_name}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">{ref.referred_user_name}</td>
                       <td className="py-3 px-4">
                         <StatusBadge status={ref.status} />
                       </td>
-                      <td className="py-3 px-4 text-sm text-right font-medium text-gray-900">
+                      <td className="py-3 px-4 text-sm text-right font-medium text-gray-900 dark:text-white">
                         {ref.status === 'completed' ? `$${ref.reward_amount}` : '-'}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-gray-500">
+                    <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-400">
                       No referrals yet. Start sharing your link!
                     </td>
                   </tr>
@@ -265,12 +265,12 @@ export default function ReferralsPage() {
         </div>
 
         {/* Share Your Link Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Share2 className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Share Your Link</h2>
+            <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Share Your Link</h2>
           </div>
-          <p className="text-gray-600 mb-6 text-sm">
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
             Share your referral link on social media platforms
           </p>
           
@@ -305,12 +305,12 @@ export default function ReferralsPage() {
 // Stat Card Component
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+    <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-5 border border-gray-100 dark:border-white/10">
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-sm text-gray-600">{label}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
     </div>
   );
 }
@@ -318,9 +318,9 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
   const styles = {
-    completed: 'bg-green-100 text-green-700 border-green-200',
-    pending: 'bg-orange-100 text-orange-700 border-orange-200',
-    failed: 'bg-red-100 text-red-700 border-red-200',
+    completed: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30',
+    pending: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
+    failed: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30',
   };
 
   return (
@@ -342,10 +342,10 @@ function SocialButton({ icon, label, onClick }: { icon: string; label: string; o
   return (
     <button
       onClick={onClick}
-      className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg py-3 px-4 transition-colors"
+      className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 rounded-lg py-3 px-4 transition-colors"
     >
       <span className="text-xl">{icons[icon]}</span>
-      <span className="text-sm font-medium text-gray-700">{label}</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
     </button>
   );
 }

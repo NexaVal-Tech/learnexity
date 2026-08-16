@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useInstructorAuth } from '@/contexts/InstructorAuthContext';
+import ThemeToggle from '@/components/theme/ThemeToggle';
 import {
   BookCopy, Home, LogOut, Menu, X, User, ChevronDown, FolderKanban,
 } from 'lucide-react';
@@ -28,36 +29,36 @@ export default function InstructorLayout({ children }: InstructorLayoutProps) {
   };
 
   const SidebarContent = () => (
-    <aside className="flex flex-col h-full bg-white border-r border-gray-100">
+    <aside className="flex flex-col h-full bg-white dark:bg-[#0f0f14] border-r border-gray-100 dark:border-white/10">
       {/* Logo */}
-      <div className="p-5 border-b border-gray-100">
+      <div className="p-5 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="w-8 h-8 flex items-center justify-center">
             <img src="/images/Logo.png" alt="Learnexity" className="h-8 w-8 object-contain" />
           </div>
           <div>
-            <span className="text-sm font-bold text-gray-900 leading-none block">Learnexity</span>
-            <span className="text-[11px] text-indigo-600 font-semibold mt-0.5 block">Instructor Portal</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white leading-none block">Learnexity</span>
+            <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5 block">Instructor Portal</span>
           </div>
         </div>
       </div>
 
       {/* Instructor info */}
-      <div className="px-5 py-4 border-b border-gray-100">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
+          <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm">
             {instructor?.name?.charAt(0).toUpperCase() ?? 'I'}
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900 leading-none">{instructor?.name}</p>
-            <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">{instructor?.email}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white leading-none">{instructor?.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[150px]">{instructor?.email}</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-1">
-        <p className="text-xs font-semibold text-gray-400 uppercase px-2 mb-3">Navigation</p>
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase px-2 mb-3">Navigation</p>
         {navItems.map((item) => {
           const isActive = router.pathname === item.href || router.pathname.startsWith(item.href + '/');
           return (
@@ -67,46 +68,53 @@ export default function InstructorLayout({ children }: InstructorLayoutProps) {
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <item.icon size={18} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />
+              <item.icon size={18} className={isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400 dark:text-gray-500'} />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="px-4 py-4 border-t border-gray-100">
+      {/* Logout + theme */}
+      <div className="px-4 py-4 border-t border-gray-100 dark:border-white/10 space-y-1">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
         >
-          <LogOut size={18} className="text-gray-400" />
+          <LogOut size={18} className="text-gray-400 dark:text-gray-500" />
           Sign Out
         </button>
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Theme</span>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#08080c]">
       {/* Desktop sidebar */}
       <div className="hidden md:fixed md:inset-y-0 md:left-0 md:w-64 md:block z-40">
         <SidebarContent />
       </div>
 
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-40 px-4 py-3 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white dark:bg-[#0f0f14] border-b border-gray-100 dark:border-white/10 z-40 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/images/Logo.png" alt="Learnexity" className="h-7" />
-          <span className="text-xs font-semibold text-indigo-600">Instructor</span>
+          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Instructor</span>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg">
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}

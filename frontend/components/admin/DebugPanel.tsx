@@ -76,8 +76,8 @@ const DebugPanel = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-red-300 p-6 mb-6">
-      <h2 className="text-lg font-bold text-red-600 mb-4">🔧 Debug Panel (Remove in Production)</h2>
+    <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-red-300 dark:border-red-500/30 p-6 mb-6">
+      <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">🔧 Debug Panel (Remove in Production)</h2>
       
       <div className="space-y-4">
         <div className="flex gap-2">
@@ -106,7 +106,7 @@ const DebugPanel = () => {
           </button>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded">
+        <div className="bg-gray-50 dark:bg-white/5 p-4 rounded text-gray-900 dark:text-white">
           <h3 className="font-semibold mb-2">Configuration:</h3>
           <div className="text-sm space-y-1">
             <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'Not set!'}</p>
@@ -116,17 +116,17 @@ const DebugPanel = () => {
         </div>
 
         {loading && (
-          <div className="text-blue-600 font-semibold">Loading...</div>
+          <div className="text-blue-600 dark:text-blue-400 font-semibold">Loading...</div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-300 text-red-700 p-4 rounded">
+          <div className="bg-red-50 dark:bg-red-500/15 border border-red-300 dark:border-red-500/30 text-red-700 dark:text-red-400 p-4 rounded">
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {debugInfo && (
-          <div className="bg-green-50 border border-green-300 p-4 rounded">
+          <div className="bg-green-50 dark:bg-green-500/15 border border-green-300 dark:border-green-500/30 p-4 rounded text-gray-900 dark:text-white">
             <h3 className="font-semibold mb-2">Response:</h3>
             <pre className="text-xs overflow-auto max-h-96">
               {JSON.stringify(debugInfo, null, 2)}

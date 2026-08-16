@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function RefundPolicy() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0f]">
       {/* Header Section */}
       <div className="max-w-4xl mx-auto rounded-2xl bg-gray-900 text-white py-6 px-6 mt-30">
         <div className=" mx-auto">
@@ -21,19 +21,19 @@ export default function RefundPolicy() {
         
         {/* 1. Introduction */}
         <section className="mb-12">
-          <h2 className="text-2xl text-gray-800 font-bold mb-4">1. Introduction</h2>
-          <p className="text-gray-700 leading-relaxed">
+          <h2 className="text-2xl text-gray-800 dark:text-white font-bold mb-4">1. Introduction</h2>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
             Learnexity wants you to be confident in your learning investment. This Refund Policy outlines eligibility requirements, timelines, and procedures for requesting refunds on course purchases and subscriptions. By purchasing any Learnexity product or service, you agree to the terms outlined in this policy.
           </p>
         </section>
 
         {/* 2. Refund Eligibility Period */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">2. Refund Eligibility Period</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">2. Refund Eligibility Period</h2>
+
           {/* 2.1 Standard Refund Window */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">2.1 Standard Refund Window</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">2.1 Standard Refund Window</h3>
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
               <div className="flex items-start">
                 <svg className="w-6 h-6 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,32 +50,32 @@ export default function RefundPolicy() {
 
           {/* 2.2 Eligibility Requirements */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">2.2 Eligibility Requirements</h3>
-            <p className="text-gray-700 mb-4">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">2.2 Eligibility Requirements</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               To qualify for a refund within the 4-week window, you must meet <strong>ALL</strong> of the following criteria:
             </p>
             <ul className="space-y-2 ml-6">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Refund request submitted no later than 28 days after payment date</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Course completion does not exceed 25% of total content</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>No course certificates, completion badges, or credentials have been downloaded or issued</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>All course materials (videos, downloadable resources, templates) remain undownloaded</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>No violations of our Terms of Service or Community Guidelines</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Account is in good standing with no outstanding payments or chargebacks</span>
               </li>
@@ -84,33 +84,33 @@ export default function RefundPolicy() {
 
           {/* 2.3 Extraordinary Circumstances */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">2.3 Extraordinary Circumstances</h3>
-            <p className="text-gray-700 mb-4">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">2.3 Extraordinary Circumstances</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Refund requests submitted after the 4-week window may be considered only in the following exceptional cases:
             </p>
-            
+
             <div className="space-y-4">
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-2">Platform-Initiated Course Cancellation</h4>
-                <ul className="text-gray-700 text-sm space-y-1 ml-4">
+              <div className="bg-white dark:bg-[#0a0a0f] border border-gray-200 dark:border-white/10 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Platform-Initiated Course Cancellation</h4>
+                <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-1 ml-4">
                   <li>• If Learnexity cancels or discontinues a course entirely</li>
                   <li>• Full automatic refund processed within 5 business days</li>
                   <li>• OR option to transfer enrollment to an equivalent course</li>
                 </ul>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-2">Documented Medical Emergency</h4>
-                <ul className="text-gray-700 text-sm space-y-1 ml-4">
+              <div className="bg-white dark:bg-[#0a0a0f] border border-gray-200 dark:border-white/10 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Documented Medical Emergency</h4>
+                <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-1 ml-4">
                   <li>• Requires official medical documentation from a licensed physician</li>
                   <li>• Must demonstrate inability to access the platform for an extended period at most one week</li>
                   <li>• Reviewed on case-by-case basis by our support team</li>
                 </ul>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-2">Verified Technical Failures</h4>
-                <ul className="text-gray-700 text-sm space-y-1 ml-4">
+              <div className="bg-white dark:bg-[#0a0a0f] border border-gray-200 dark:border-white/10 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Verified Technical Failures</h4>
+                <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-1 ml-4">
                   <li>• Platform-wide outages preventing course access for 14+ consecutive days</li>
                   <li>• Must be reported within 48 hours of occurrence</li>
                   <li>• Support team verification required</li>
@@ -118,9 +118,9 @@ export default function RefundPolicy() {
                 </ul>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-2">Death of Student</h4>
-                <ul className="text-gray-700 text-sm space-y-1 ml-4">
+              <div className="bg-white dark:bg-[#0a0a0f] border border-gray-200 dark:border-white/10 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Death of Student</h4>
+                <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-1 ml-4">
                   <li>• Requires official death certificate</li>
                   <li>• Request must come from legal next of kin or estate representative</li>
                   <li>• Proper identification and documentation required</li>
@@ -143,7 +143,7 @@ export default function RefundPolicy() {
 
         {/* 3. Refund Amounts and Deductions */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">3. Refund Amounts and Deductions</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">3. Refund Amounts and Deductions</h2>
           
           {/* 3.1 Full Refund */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
@@ -249,34 +249,34 @@ export default function RefundPolicy() {
 
           {/* 3.4 Non-Refundable Fees */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">3.4 Non-Refundable Fees and Charges</h3>
-            <p className="text-gray-700 mb-3">The following are <strong>never refundable</strong> under any circumstances:</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">3.4 Non-Refundable Fees and Charges</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">The following are <strong>never refundable</strong> under any circumstances:</p>
             <ul className="space-y-2 ml-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Payment processing fees (2.5% of transaction value)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Platform transaction fees</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Currency conversion fees for international payments</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Third-party payment gateway charges</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Bank transfer or wire fees</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Add-on services (career coaching packages, additional mentorship hours)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Community access fees (if purchased separately)</span>
               </li>
@@ -286,29 +286,29 @@ export default function RefundPolicy() {
 
         {/* 4. Payment Plans and Installments */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">4. Payment Plans and Installments</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">4. Payment Plans and Installments</h2>
+
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">4.1 Refund Eligibility for Payment Plans</h3>
-            <p className="text-gray-700 mb-3">Students enrolled in payment plan options may request refunds if:</p>
+            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">4.1 Refund Eligibility for Payment Plans</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">Students enrolled in payment plan options may request refunds if:</p>
             <ul className="space-y-2 ml-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Request submitted within 4 weeks of FIRST installment payment</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>All scheduled payments are current with no overdue amounts</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>No payment defaults, chargebacks, or failed transactions on record</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Course completion does not exceed 25% of total content</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>All eligibility criteria in Section 2.2 met</span>
               </li>
@@ -316,26 +316,26 @@ export default function RefundPolicy() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">4.2 Payment Plan Refund Calculation</h3>
-            <p className="text-gray-700 mb-3">Refund amount determined by:</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">4.2 Payment Plan Refund Calculation</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">Refund amount determined by:</p>
             <ul className="space-y-2 ml-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Total amount paid to date (sum of all completed installments)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Current course completion percentage</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Time elapsed since first payment</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Remaining scheduled payments are automatically canceled upon refund approval</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>No penalties assessed for early termination if refund approved</span>
               </li>
@@ -343,26 +343,26 @@ export default function RefundPolicy() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">4.3 Payment Plan Restrictions</h3>
-            <p className="text-gray-700 mb-3">Refunds NOT available if:</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">4.3 Payment Plan Restrictions</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">Refunds NOT available if:</p>
             <ul className="space-y-2 ml-4 mb-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Any payment is overdue by 7 or more days</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Payment plan has been defaulted or placed in collections</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Chargeback initiated through bank or credit card company</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Account suspended due to non-payment</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>More than 2 failed payment attempts recorded</span>
               </li>
@@ -378,48 +378,48 @@ export default function RefundPolicy() {
 
         {/* 5. Promotional, Discounted, and Sponsored Purchases */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">5. Promotional, Discounted, and Sponsored Purchases</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">5. Promotional, Discounted, and Sponsored Purchases</h2>
+
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">5.1 Promotional Period Purchases</h3>
-            <p className="text-gray-700 mb-3">
+            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">5.1 Promotional Period Purchases</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">
               Courses purchased during promotional periods (Black Friday, Cyber Monday, seasonal sales, flash discounts, early-bird pricing) ARE eligible for refunds within the standard 4-week window with the following conditions:
             </p>
             <ul className="space-y-2 ml-4 mb-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>All standard eligibility requirements in Section 2.2 apply</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Refund calculated based on actual discounted price paid, not original course price</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Same completion percentage limits apply (25% maximum)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Must meet all timeline requirements</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Promotional purchases eligible ONLY for cash refund (not course credits)</span>
               </li>
             </ul>
-            
-            <p className="font-semibold text-gray-800 mb-2">Special Exceptions:</p>
-            <p className="text-gray-700 mb-2">Promotional purchases may be refunded outside normal circumstances only if:</p>
+
+            <p className="font-semibold text-gray-800 dark:text-white mb-2">Special Exceptions:</p>
+            <p className="text-gray-700 dark:text-gray-300 mb-2">Promotional purchases may be refunded outside normal circumstances only if:</p>
             <ul className="space-y-2 ml-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Verified technical issues prevented course access from day of purchase</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Course content significantly and materially misrepresented in marketing materials</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Platform-wide outage prevented access for 7+ consecutive days from enrollment date</span>
               </li>
@@ -427,25 +427,25 @@ export default function RefundPolicy() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">5.2 Scholarship and Sponsored Students</h3>
-            
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">5.2 Scholarship and Sponsored Students</h3>
+
             <div className="space-y-4">
               <div className="border-l-4 border-purple-500 pl-4 py-2">
-                <p className="font-semibold text-gray-800 mb-2">Scholarship Recipients:</p>
+                <p className="font-semibold text-gray-800 dark:text-white mb-2">Scholarship Recipients:</p>
                 <ul className="space-y-1 ml-4 text-sm">
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>NOT eligible for cash refunds under any circumstances</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>May request course transfer to different program (subject to scholarship terms)</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Contact <a href="mailto:scholarships@learnexity.com" className="text-blue-600 hover:underline">scholarships@learnexity.com</a> for transfer inquiries</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Scholarship funds cannot be converted to cash or credits</span>
                   </li>
@@ -453,21 +453,21 @@ export default function RefundPolicy() {
               </div>
 
               <div className="border-l-4 border-green-500 pl-4 py-2">
-                <p className="font-semibold text-gray-800 mb-2">Corporate-Sponsored Enrollments:</p>
+                <p className="font-semibold text-gray-800 dark:text-white mb-2">Corporate-Sponsored Enrollments:</p>
                 <ul className="space-y-1 ml-4 text-sm">
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Must contact corporate sponsor directly for refund requests</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Refunds processed according to corporate partnership agreement terms</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Contact <a href="mailto:corporate@learnexity.com" className="text-blue-600 hover:underline">corporate@learnexity.com</a> with sponsor company name and details</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Individual students cannot request refunds for corporate-sponsored courses</span>
                   </li>
@@ -475,17 +475,17 @@ export default function RefundPolicy() {
               </div>
 
               <div className="border-l-4 border-blue-500 pl-4 py-2">
-                <p className="font-semibold text-gray-800 mb-2">Partner Program Enrollments:</p>
+                <p className="font-semibold text-gray-800 dark:text-white mb-2">Partner Program Enrollments:</p>
                 <ul className="space-y-1 ml-4 text-sm">
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Governed by specific partner agreement terms and conditions</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>May have different refund windows or requirements</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Contact <a href="mailto:partnerships@learnexity.com" className="text-blue-600 hover:underline">partnerships@learnexity.com</a> for partner-specific inquiries</span>
                   </li>
@@ -493,21 +493,21 @@ export default function RefundPolicy() {
               </div>
 
               <div className="border-l-4 border-orange-500 pl-4 py-2">
-                <p className="font-semibold text-gray-800 mb-2">Financial Aid Recipients:</p>
+                <p className="font-semibold text-gray-800 dark:text-white mb-2">Financial Aid Recipients:</p>
                 <ul className="space-y-1 ml-4 text-sm">
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Forfeit all financial aid assistance if refund request is approved</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>May be required to repay financial aid funds received</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Future financial aid eligibility may be affected</span>
                   </li>
-                  <li className="text-gray-700 flex items-start">
+                  <li className="text-gray-700 dark:text-gray-300 flex items-start">
                     <span className="mr-2">•</span>
                     <span>Review financial aid terms before requesting refund</span>
                   </li>
@@ -519,7 +519,7 @@ export default function RefundPolicy() {
 
         {/* 6. Refund Request Process */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">6. Refund Request Process</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">6. Refund Request Process</h2>
           
           <div className="mb-8">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -564,59 +564,59 @@ export default function RefundPolicy() {
           </div>
 
           <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">6.2 Method 2: Email Request</h3>
-            <p className="text-gray-700 mb-3">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">6.2 Method 2: Email Request</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">
               If unable to access your dashboard, send email refund request to: <a href="mailto:info@learnexity.com" className="text-blue-600 hover:underline font-semibold">info@learnexity.com</a>
             </p>
-            
-            <p className="font-semibold text-gray-800 mb-2">Required information in email:</p>
+
+            <p className="font-semibold text-gray-800 dark:text-white mb-2">Required information in email:</p>
             <ul className="space-y-2 ml-4 mb-4">
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span><strong>Subject Line:</strong> "Refund Request - [Your Full Name] - [Course Name]"</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Full legal name (as registered on account)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Email address associated with Learnexity account</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Course name and enrollment date</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Original payment date and transaction ID or receipt number</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Payment amount and payment method used</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Current course completion status (estimate percentage)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Detailed reason for refund request (minimum 100 words)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Any supporting documentation (attachments)</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Contact phone number</span>
               </li>
-              <li className="text-gray-700 flex items-start">
+              <li className="text-gray-700 dark:text-gray-300 flex items-start">
                 <span className="mr-2">•</span>
                 <span>Preferred refund method (if options available)</span>
               </li>
             </ul>
-            
+
             <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
               <p className="text-gray-700 text-sm">
                 <strong>Processing time:</strong> 5-14 business days for email requests (vs 2-3 days for dashboard)
@@ -628,39 +628,39 @@ export default function RefundPolicy() {
           </div>
 
           <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">6.3 Method 3: WhatsApp or Live Chat Support</h3>
-            
-            <p className="font-semibold text-gray-800 mb-2">Contact channels:</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">6.3 Method 3: WhatsApp or Live Chat Support</h3>
+
+            <p className="font-semibold text-gray-800 dark:text-white mb-2">Contact channels:</p>
             <ul className="space-y-1 ml-4 mb-4">
-              <li className="text-gray-700">
+              <li className="text-gray-700 dark:text-gray-300">
                 <strong>WhatsApp:</strong> <a href="https://wa.me/12762528415" className="text-blue-600 hover:underline">+1 (276) 252-8415</a>
               </li>
-              <li className="text-gray-700">
+              <li className="text-gray-700 dark:text-gray-300">
                 <strong>Live Chat:</strong> Available Monday-Friday, 9:00 AM - 8:00 PM WAT (GMT + 1)
               </li>
             </ul>
-            
-            <p className="font-semibold text-gray-800 mb-2">Process:</p>
+
+            <p className="font-semibold text-gray-800 dark:text-white mb-2">Process:</p>
             <ol className="space-y-2 ml-6 mb-4">
-              <li className="text-gray-700">1. Initiate contact via WhatsApp or live chat during business hours</li>
-              <li className="text-gray-700">2. Provide agent with all information listed in Section 6.2 (Email Request)</li>
-              <li className="text-gray-700">3. Agent will guide you through verification process</li>
-              <li className="text-gray-700">4. May be directed to complete formal submission via dashboard or email</li>
-              <li className="text-gray-700">5. Receive confirmation and reference number</li>
+              <li className="text-gray-700 dark:text-gray-300">1. Initiate contact via WhatsApp or live chat during business hours</li>
+              <li className="text-gray-700 dark:text-gray-300">2. Provide agent with all information listed in Section 6.2 (Email Request)</li>
+              <li className="text-gray-700 dark:text-gray-300">3. Agent will guide you through verification process</li>
+              <li className="text-gray-700 dark:text-gray-300">4. May be directed to complete formal submission via dashboard or email</li>
+              <li className="text-gray-700 dark:text-gray-300">5. Receive confirmation and reference number</li>
             </ol>
-            
-            <p className="text-gray-700 text-sm italic">
+
+            <p className="text-gray-700 dark:text-gray-300 text-sm italic">
               <strong>Note:</strong> While support agents can answer questions and guide you, formal refund requests must ultimately be submitted through dashboard or email for proper documentation and processing.
             </p>
           </div>
         </section>
 
         {/* Footer Note */}
-        <div className="border-t-2 border-gray-300 pt-6 mt-12">
-          <p className="text-gray-600 text-sm text-center italic">
+        <div className="border-t-2 border-gray-300 dark:border-white/10 pt-6 mt-12">
+          <p className="text-gray-600 dark:text-gray-400 text-sm text-center italic">
             By using Learnexity services, you acknowledge that you have read and understood this Refund Policy.
           </p>
-          <p className="text-gray-600 text-sm text-center mt-2">
+          <p className="text-gray-600 dark:text-gray-400 text-sm text-center mt-2">
             For questions or assistance, contact us at <a href="mailto:info@learnexity.com" className="text-blue-600 hover:underline">info@learnexity.com</a>
           </p>
         </div>

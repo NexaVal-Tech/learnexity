@@ -47,9 +47,15 @@ class RegistrationFeeSetting extends Model
      */
     public static function categoryForTrack(?string $learningTrack): string
     {
-        return in_array($learningTrack, ['one_on_one', 'group_mentorship'], true)
-            ? self::CATEGORY_DEEPTECH
-            : self::CATEGORY_FLEXIBLE;
+        if (in_array($learningTrack, ['one_on_one', 'group_mentorship'], true)) {
+            return self::CATEGORY_DEEPTECH;
+        }
+
+        if ($learningTrack === 'intermediate') {
+            return self::CATEGORY_INTERMEDIATE;
+        }
+
+        return self::CATEGORY_FLEXIBLE;
     }
 
     /**

@@ -85,9 +85,9 @@ function CourseModal({ course, onClose }: { course: ApiCourse; onClose: () => vo
     <div
       ref={overlayRef}
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backdropFilter: "blur(4px)" }}
+      style={{ position: "fixed", inset: 0, background: "var(--overlay)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backdropFilter: "blur(4px)" }}
     >
-      <div style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 540, maxHeight: "88vh", overflowY: "auto", position: "relative", animation: "modalSlideUp 0.22s ease" }}>
+      <div style={{ background: "var(--surface-elevated)", borderRadius: 20, width: "100%", maxWidth: 540, maxHeight: "88vh", overflowY: "auto", position: "relative", animation: "modalSlideUp 0.22s ease" }}>
         {/* Header */}
         <div style={{ background: "#000", borderRadius: "20px 20px 0 0", padding: "28px 24px 22px", position: "relative" }}>
           <button
@@ -104,21 +104,21 @@ function CourseModal({ course, onClose }: { course: ApiCourse; onClose: () => vo
 
         {/* Body */}
         <div style={{ padding: "24px" }}>
-          <p style={{ fontSize: "0.875rem", color: "#555", lineHeight: 1.75, marginBottom: 22 }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: 1.75, marginBottom: 22 }}>
             {course.description}
           </p>
 
           {topLearnings.length > 0 && (
             <div style={{ marginBottom: 26 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-                <BookOpen size={14} color="#999" />
-                <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>
+                <BookOpen size={14} color="var(--text-muted)" />
+                <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)" }}>
                   What you'll learn
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {topLearnings.map((l) => (
-                  <div key={l.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 10, background: "#f8f8f8", border: "1px solid #ebebeb", fontSize: "0.84rem", color: "#222", lineHeight: 1.5 }}>
+                  <div key={l.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 10, background: "var(--surface-alt)", border: "1px solid var(--border-subtle)", fontSize: "0.84rem", color: "var(--text-primary)", lineHeight: 1.5 }}>
                     <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                       <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </span>
@@ -172,7 +172,7 @@ function CourseListButton({ course, onClick }: { course: ApiCourse; onClick: () 
 }
 
 function CourseSkeleton() {
-  return <div style={{ background: "#e8e8e8", borderRadius: 12, height: 72, animation: "pulse 1.4s ease-in-out infinite" }} />;
+  return <div style={{ background: "var(--surface-alt)", borderRadius: 12, height: 72, animation: "pulse 1.4s ease-in-out infinite" }} />;
 }
 
 function BrandIcon({ size = 52 }: { size?: number }) {
@@ -241,7 +241,7 @@ export default function TenAlyticsLanding() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const card: React.CSSProperties = { background: "#fff", borderRadius: 20, padding: "28px 24px", width: "100%" };
+  const card: React.CSSProperties = { background: "var(--surface)", borderRadius: 20, padding: "28px 24px", width: "100%" };
 
   const pageDescription = "Learnexity Flex provides tailored self-paced tech training, AI-focused courses, and essential soft skills development for individuals, organizations, and corporate bodies.";
   const pageUrl = "https://learnexity.org/flex";
@@ -274,16 +274,22 @@ export default function TenAlyticsLanding() {
 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="utf-8" />
+
+        {/* Loaded as a <link>, not a render-blocking CSS @import — the
+            browser's preload scanner can fetch this in parallel instead of
+            waiting to parse this page's inline <style> block first. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background: #b1b1cb; min-height: 100vh; }
         .ten-social-btn:hover { background: #111 !important; }
         .ten-tag:hover { opacity: 0.7; }
-        .ten-dropdown-link:hover { background: #f9f9f9; }
+        .ten-dropdown-link:hover { background: var(--surface-alt); }
         @keyframes modalSlideUp {
           from { opacity: 0; transform: translateY(14px) scale(0.98); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -297,8 +303,8 @@ export default function TenAlyticsLanding() {
 
       {/* NAV */}
       <div style={{ position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 999, width: "95%", maxWidth: 980 }}>
-        <nav style={{ background: "#fff", borderRadius: 16, height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.18)" : "0 2px 12px rgba(0,0,0,0.12)", transition: "box-shadow 0.2s" }}>
-          <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "0.95rem", fontWeight: 700, color: "#1a1a1a", textDecoration: "none" }}>
+        <nav style={{ background: "var(--surface)", borderRadius: 16, height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.18)" : "0 2px 12px rgba(0,0,0,0.12)", transition: "box-shadow 0.2s" }}>
+          <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", textDecoration: "none" }}>
             <BrandIcon size={34} />
             Learnexity flex
           </a>
@@ -307,7 +313,7 @@ export default function TenAlyticsLanding() {
               {[0,1,2].map((i) => <span key={i} style={{ display: "block", width: 16, height: 2, background: "#fff", borderRadius: 2 }} />)}
             </button>
             {menuOpen && (
-              <div style={{ position: "absolute", top: 50, right: 0, background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.15)", minWidth: 200, overflow: "hidden", zIndex: 100 }}>
+              <div style={{ position: "absolute", top: 50, right: 0, background: "var(--surface-elevated)", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.15)", minWidth: 200, overflow: "hidden", zIndex: 100 }}>
                 {[
                   {
                     label: "Log in",
@@ -324,7 +330,7 @@ export default function TenAlyticsLanding() {
                     key={item.label}
                     href={item.href}
                     className="ten-dropdown-link"
-                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", fontSize: "0.9rem", color: "#1a1a1a", textDecoration: "none", borderBottom: idx < arr.length - 1 ? "1px solid #f0f0f0" : "none" }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", fontSize: "0.9rem", color: "var(--text-primary)", textDecoration: "none", borderBottom: idx < arr.length - 1 ? "1px solid var(--border-subtle)" : "none" }}
                   >
                     {item.icon}{item.label}
                   </a>
@@ -339,23 +345,23 @@ export default function TenAlyticsLanding() {
       <main style={{ width: "100%", maxWidth: 780, margin: "84px auto 0", display: "flex", flexDirection: "column", gap: 12, padding: "0 12px 60px" }}>
 
       {/* HERO */}
-      <div style={{background: "#fff", borderRadius: 20, overflow: "hidden", }} >
+      <div style={{background: "var(--surface)", borderRadius: 20, overflow: "hidden", }} >
         <div style={{padding: "28px 24px", textAlign: "center", }}>
           {/* Eyebrow - very big font */}
-          <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden",}}>
+          <div style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden",}}>
             <div style={{ padding: "28px 24px", textAlign: "center" }}>
               {/* Main Heading */}
-              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "#1a1a1a", lineHeight: 1.2, marginBottom: 12, letterSpacing: "-0.02em",}}>
+              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2, marginBottom: 12, letterSpacing: "-0.02em",}}>
                 Earn More. Without Quitting Your Job.
               </div>
 
               {/* Supporting Statement */}
-              <div style={{fontSize: "1.1rem", fontWeight: 700, color: "#1a1a1a", lineHeight: 1.45, marginBottom: 18,}}>
+              <div style={{fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.45, marginBottom: 18,}}>
                 Imagine earning $10,000+ per month through global tech opportunities.
               </div>
 
               {/* Description */}
-              <p style={{fontSize: "0.95rem", color: "#555", lineHeight: 1.8, marginBottom: 22, maxWidth: 520, marginLeft: "auto", marginRight: "auto",}} >
+              <p style={{fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: 22, maxWidth: 520, marginLeft: "auto", marginRight: "auto",}} >
                 At Learnexity, you'll learn in-demand tech skills, gain real-world
                 experience, and receive expert guidance designed to unlock new earning
                 opportunities.
@@ -367,15 +373,15 @@ export default function TenAlyticsLanding() {
                   Learn from industry experts
                 </div>
 
-                <div style={{ background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb", width: "100%", maxWidth: 520, }}>
+                <div style={{ background: "var(--surface-alt)", color: "var(--text-primary)", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border-subtle)", width: "100%", maxWidth: 520, }}>
                   Build hands-on projects
                 </div>
 
-                <div  style={{background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb", width: "100%", maxWidth: 520,}}>
+                <div  style={{background: "var(--surface-alt)", color: "var(--text-primary)", fontWeight: 700, fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border-subtle)", width: "100%", maxWidth: 520,}}>
                   Gain practical experience
                 </div>
 
-                <div style={{background: "#f7f7f7", color: "#1a1a1a", fontWeight: 700,fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid #ebebeb",  width: "100%", maxWidth: 520,}} >
+                <div style={{background: "var(--surface-alt)", color: "var(--text-primary)", fontWeight: 700,fontSize: "0.92rem", padding: "14px 16px", borderRadius: 12, border: "1px solid var(--border-subtle)",  width: "100%", maxWidth: 520,}} >
                   Access mentorship and support
                 </div>
               </div>
@@ -386,12 +392,12 @@ export default function TenAlyticsLanding() {
               </div>
 
               {/* CTA */}
-              <p style={{fontSize: "1rem", fontWeight: 800, color: "#1a1a1a", marginBottom: 10, }} >
+              <p style={{fontSize: "1rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 10, }} >
                 Join the Learnexity Community Today.
               </p>
 
               {/* Closing Tagline */}
-              <p style={{fontSize: "1.05rem", fontWeight: 800, color: "#000", margin: 0,}} >
+              <p style={{fontSize: "1.05rem", fontWeight: 800, color: "var(--text-primary)", margin: 0,}} >
                 From Learning to Earning.
               </p>
             </div>
@@ -429,8 +435,8 @@ export default function TenAlyticsLanding() {
 
         {/* CAREER HUB */}
         <div style={card}>
-          <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#1a1a1a", marginBottom: 6 }}>Join our Career Hub</div>
-          <p style={{ fontSize: "0.875rem", color: "#666", lineHeight: 1.6 }}>
+          <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>Join our Career Hub</div>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
             Are you interested in any of our trainings? Tap a course to learn more and join your preferred community.
           </p>
         </div>
@@ -443,13 +449,13 @@ export default function TenAlyticsLanding() {
             </div>
           )}
           {coursesError && !coursesLoading && (
-            <div style={{ padding: "20px", borderRadius: 12, background: "#fafafa", border: "1px solid #f0f0f0", textAlign: "center" }}>
-              <p style={{ fontSize: "0.875rem", color: "#888", marginBottom: 12 }}>Couldn't load courses right now.</p>
+            <div style={{ padding: "20px", borderRadius: 12, background: "var(--surface-alt)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+              <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: 12 }}>Couldn't load courses right now.</p>
               <button onClick={() => fetchCourses()} style={{ padding: "10px 20px", borderRadius: 10, background: "#000", color: "#fff", border: "none", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>Try again</button>
             </div>
           )}
           {!coursesLoading && !coursesError && flexCourses.length === 0 && (
-            <p style={{ fontSize: "0.875rem", color: "#888", textAlign: "center", padding: "20px 0" }}>No courses available at the moment.</p>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", textAlign: "center", padding: "20px 0" }}>No courses available at the moment.</p>
           )}
           {!coursesLoading && !coursesError && flexCourses.length > 0 && (
             <div className="course-grid">
@@ -463,15 +469,15 @@ export default function TenAlyticsLanding() {
         {/* TESTIMONIALS */}
         <div style={card}>
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#1a1a1a", marginBottom: 6 }}>Student Success Stories</div>
-            <p style={{ fontSize: "0.875rem", color: "#666", lineHeight: 1.6 }}>Hear directly from our students who transformed their careers through Learnexity.</p>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>Student Success Stories</div>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>Hear directly from our students who transformed their careers through Learnexity.</p>
           </div>
           <Testimonials />
         </div>
 
         {/* FOOTER */}
         <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.7)" }}>&copy; Learnexity flex. All rights reserved.</p>
+          <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>&copy; Learnexity flex. All rights reserved.</p>
         </div>
       </main>
     </>

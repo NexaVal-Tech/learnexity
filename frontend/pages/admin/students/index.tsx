@@ -48,7 +48,7 @@ const StudentsPage = () => {
     <AdminRouteGuard>
       <AdminLayout>
         <div className="p-6 space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900">Student Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>
           
           <StudentFilters
             onFilterChange={setFilters}

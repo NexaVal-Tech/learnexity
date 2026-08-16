@@ -99,15 +99,15 @@ function RichTextBlock({
   ];
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border-b border-gray-200 flex-wrap">
+    <div className="border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+      <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 flex-wrap">
         {toolbar.map(({ icon, cmd, val, title }) => (
           <button
             key={title}
             type="button"
             title={title}
             onMouseDown={e => { e.preventDefault(); exec(cmd, val); }}
-            className="p-1.5 rounded hover:bg-gray-200 text-gray-600 transition"
+            className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition"
           >
             {icon}
           </button>
@@ -140,7 +140,7 @@ function RichTextBlock({
         }}
         data-placeholder="Type or paste content here…"
         className={`
-          px-4 py-3 min-h-[120px] text-sm text-gray-800 outline-none
+          px-4 py-3 min-h-[120px] text-sm text-gray-800 dark:text-gray-200 outline-none
           [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2
           [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1
           [&_p]:mb-2 [&_p]:leading-relaxed
@@ -148,7 +148,7 @@ function RichTextBlock({
           [&_ol]:list-decimal [&_ol]:ml-5 [&_ol]:mb-2
           [&_li]:mb-0.5
           [&_strong]:font-semibold [&_em]:italic
-          empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400
+          empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-gray-500
         `}
       />
     </div>
@@ -190,22 +190,22 @@ function ContentBlockEditor({
       {blocks.map((block, index) => (
         <div key={block.id} className="relative group">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wide flex items-center gap-1">
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide flex items-center gap-1">
               {block.type === 'text' && <><Type size={11} /> Text</>}
               {block.type === 'image' && <><ImageIcon size={11} /> Image</>}
               {block.type === 'video' && <><Video size={11} /> Video</>}
             </span>
             <div className="flex items-center gap-1">
               <button type="button" onClick={() => move(index, 'up')} disabled={index === 0}
-                className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-20 transition">
+                className="p-1 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-20 transition">
                 <MoveUp size={12} />
               </button>
               <button type="button" onClick={() => move(index, 'down')} disabled={index === blocks.length - 1}
-                className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-20 transition">
+                className="p-1 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-20 transition">
                 <MoveDown size={12} />
               </button>
               <button type="button" onClick={() => remove(block.id)}
-                className="p-1 text-red-300 hover:text-red-600 transition">
+                className="p-1 text-red-300 dark:text-red-500/60 hover:text-red-600 dark:hover:text-red-400 transition">
                 <Trash size={12} />
               </button>
             </div>
@@ -224,14 +224,14 @@ function ContentBlockEditor({
                 type="url"
                 value={block.content}
                 onChange={e => update(block.id, { content: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="https://example.com/image.png"
               />
               {block.content && (
                 <img
                   src={block.content}
                   alt="Preview"
-                  className="max-h-48 rounded-lg border border-gray-100 object-contain"
+                  className="max-h-48 rounded-lg border border-gray-100 dark:border-white/10 object-contain"
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               )}
@@ -244,11 +244,11 @@ function ContentBlockEditor({
                 type="url"
                 value={block.content}
                 onChange={e => update(block.id, { content: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="https://drive.google.com/file/d/… or YouTube URL"
               />
               {block.content && (
-                <div className="text-xs text-gray-500 flex items-center gap-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                   <Video size={11} /> Video URL saved — will be embedded in preview
                 </div>
               )}
@@ -258,17 +258,17 @@ function ContentBlockEditor({
       ))}
 
       <div className="flex items-center gap-2 pt-1">
-        <span className="text-xs text-gray-400">Add block:</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">Add block:</span>
         <button type="button" onClick={() => addBlock('text')}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/25 transition">
           <Type size={12} /> Text
         </button>
         <button type="button" onClick={() => addBlock('image')}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition">
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/25 transition">
           <ImageIcon size={12} /> Image
         </button>
         <button type="button" onClick={() => addBlock('video')}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition">
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/25 transition">
           <Video size={12} /> Video
         </button>
       </div>
@@ -287,15 +287,15 @@ function TopicModeToggle({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-900 mb-2">Content Type</label>
-      <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
+      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">Content Type</label>
+      <div className="flex gap-2 p-1 bg-gray-100 dark:bg-white/5 rounded-lg w-fit">
         <button
           type="button"
           onClick={() => onChange('blocks')}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition ${
             mode === 'blocks'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-[#0f0f14] text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           <Type size={12} /> Rich Content
@@ -305,8 +305,8 @@ function TopicModeToggle({
           onClick={() => onChange('file')}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition ${
             mode === 'file'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-[#0f0f14] text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           <Upload size={12} /> Upload File
@@ -332,8 +332,8 @@ function FileUploadInput({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-900 mb-1.5">File</label>
-      <p className="text-xs text-gray-500 mb-3">Accepted: PDF, DOC, DOCX — max 50 MB</p>
+      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">File</label>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Accepted: PDF, DOC, DOCX — max 50 MB</p>
       <input
         ref={ref}
         type="file"
@@ -344,35 +344,35 @@ function FileUploadInput({
       />
       <label
         htmlFor="topic-file-upload"
-        className="w-full flex flex-col items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition"
+        className="w-full flex flex-col items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-200 dark:border-white/20 rounded-xl cursor-pointer hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-blue-50/30 dark:hover:bg-blue-500/10 transition"
       >
         {file ? (
           <>
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
               {file.name.endsWith('.pdf') ? (
-                <FileText size={20} className="text-red-500" />
+                <FileText size={20} className="text-red-500 dark:text-red-400" />
               ) : (
-                <File size={20} className="text-blue-500" />
+                <File size={20} className="text-blue-500 dark:text-blue-400" />
               )}
             </div>
-            <span className="text-sm font-medium text-gray-800 text-center break-all px-2">{file.name}</span>
-            <span className="text-xs text-blue-600">Click to change file</span>
+            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 text-center break-all px-2">{file.name}</span>
+            <span className="text-xs text-blue-600 dark:text-blue-400">Click to change file</span>
           </>
         ) : existingFileName ? (
           <>
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <File size={20} className="text-gray-400" />
+            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+              <File size={20} className="text-gray-400 dark:text-gray-500" />
             </div>
-            <span className="text-sm text-gray-600">Current: <span className="font-medium">{existingFileName}</span></span>
-            <span className="text-xs text-blue-600">Click to replace file</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Current: <span className="font-medium">{existingFileName}</span></span>
+            <span className="text-xs text-blue-600 dark:text-blue-400">Click to replace file</span>
           </>
         ) : (
           <>
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <Upload size={20} className="text-gray-400" />
+            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+              <Upload size={20} className="text-gray-400 dark:text-gray-500" />
             </div>
-            <span className="text-sm text-gray-600">Click to select file</span>
-            <span className="text-xs text-gray-400">PDF, DOC, DOCX — max 50 MB</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Click to select file</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">PDF, DOC, DOCX — max 50 MB</span>
           </>
         )}
       </label>
@@ -619,7 +619,7 @@ const CourseDetail = () => {
     return (
       <AdminRouteGuard><AdminLayout>
         <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </AdminLayout></AdminRouteGuard>
     );
@@ -629,8 +629,8 @@ const CourseDetail = () => {
     return (
       <AdminRouteGuard><AdminLayout>
         <div className="flex flex-col items-center justify-center h-96">
-          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-          <p className="text-red-500 mb-4">{error || 'Course not found'}</p>
+          <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400 mb-4" />
+          <p className="text-red-500 dark:text-red-400 mb-4">{error || 'Course not found'}</p>
           <button onClick={() => router.back()} className="px-4 py-2 bg-gray-900 text-white rounded-lg">Go Back</button>
         </div>
       </AdminLayout></AdminRouteGuard>
@@ -651,17 +651,17 @@ const CourseDetail = () => {
   return (
     <AdminRouteGuard>
       <AdminLayout>
-        <div className="min-h-screen bg-gray-50/50 p-6">
+        <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
 
           {/* Header */}
           <div className="mb-8">
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-4">
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4">
               <ArrowLeft size={16} /> Back
             </button>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">{course.name}</h1>
-                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{course.name}</h1>
+                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
                   <span>Instructor: {course.instructor}</span>
                   <span>•</span>
                   <span>{course.sprints_count} Sprints</span>
@@ -679,15 +679,15 @@ const CourseDetail = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-8 border-b border-gray-200 mb-8 overflow-x-auto">
+          <div className="flex items-center gap-8 border-b border-gray-200 dark:border-white/10 mb-8 overflow-x-auto">
             {['Sprints', 'Course Materials', 'External Resources', 'Course Details'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-4 text-sm font-medium whitespace-nowrap transition-colors relative ${activeTab === tab ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`pb-4 text-sm font-medium whitespace-nowrap transition-colors relative ${activeTab === tab ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
               >
                 {tab}
-                {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 rounded-full" />}
+                {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-full" />}
               </button>
             ))}
           </div>
@@ -696,41 +696,41 @@ const CourseDetail = () => {
           {activeTab === 'Sprints' && (
             <div className="space-y-6">
               {sprints.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">No sprints yet. Click "Add Sprint" to create one.</div>
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">No sprints yet. Click "Add Sprint" to create one.</div>
               ) : (
                 sprints.map(sprint => (
-                  <div key={sprint.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="p-4 flex items-center justify-between bg-white border-b border-gray-100">
+                  <div key={sprint.id} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                    <div className="p-4 flex items-center justify-between bg-white dark:bg-[#0f0f14] border-b border-gray-100 dark:border-white/10">
                       <div className="flex items-center gap-4">
-                        <div className="p-2 bg-gray-50 rounded-lg cursor-move"><GripVertical size={16} className="text-gray-400" /></div>
+                        <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg cursor-move"><GripVertical size={16} className="text-gray-400 dark:text-gray-500" /></div>
                         <div>
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">Sprint {sprint.number}</span>
-                            <span className="text-xs text-gray-500">Week {sprint.week}</span>
+                            <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">Sprint {sprint.number}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Week {sprint.week}</span>
                           </div>
-                          <h3 className="text-sm font-medium text-gray-900">{sprint.title}</h3>
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-white">{sprint.title}</h3>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => { setSelectedSprint(sprint); setFormData({ sprint_name: sprint.title, sprint_number: sprint.number }); setIsEditSprintModalOpen(true); }}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
+                          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg"
                         ><Edit size={16} /></button>
-                        <button onClick={() => handleDeleteSprint(sprint.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash size={16} /></button>
+                        <button onClick={() => handleDeleteSprint(sprint.id)} className="p-2 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg"><Trash size={16} /></button>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-gray-50/50 space-y-2">
+                    <div className="p-4 bg-gray-50/50 dark:bg-white/[0.02] space-y-2">
                      {[...sprint.topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id).map(topic => (
-                        <div key={topic.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 group hover:border-gray-200 transition-colors">
+                        <div key={topic.id} className="flex items-center justify-between p-3 bg-white dark:bg-[#14141c] rounded-lg border border-gray-100 dark:border-white/10 group hover:border-gray-200 dark:hover:border-white/20 transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="p-1.5 bg-gray-50 rounded text-gray-400"><GripVertical size={14} /></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                            <span className="text-sm text-gray-700">{topic.title}</span>
+                            <div className="p-1.5 bg-gray-50 dark:bg-white/5 rounded text-gray-400 dark:text-gray-500"><GripVertical size={14} /></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-white/20" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{topic.title}</span>
                             <span className={`text-xs px-2 py-0.5 rounded ${
-                              topic.type === 'pdf' ? 'bg-red-50 text-red-500' :
-                              topic.type === 'document' ? 'bg-orange-50 text-orange-500' :
-                              'bg-gray-50 text-gray-400'
+                              topic.type === 'pdf' ? 'bg-red-50 dark:bg-red-500/15 text-red-500 dark:text-red-400' :
+                              topic.type === 'document' ? 'bg-orange-50 dark:bg-orange-500/15 text-orange-500 dark:text-orange-400' :
+                              'bg-gray-50 dark:bg-white/5 text-gray-400 dark:text-gray-500'
                             }`}>
                               {getTopicTypeLabel(topic.type)}
                             </span>
@@ -751,9 +751,9 @@ const CourseDetail = () => {
                                 }
                                 setIsEditTopicModalOpen(true);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
+                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded"
                             ><Edit size={14} /></button>
-                            <button onClick={() => handleDeleteTopic(topic.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"><Trash size={14} /></button>
+                            <button onClick={() => handleDeleteTopic(topic.id)} className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded"><Trash size={14} /></button>
                           </div>
                         </div>
                       ))}
@@ -764,7 +764,7 @@ const CourseDetail = () => {
                           resetTopicForm();
                           setIsAddTopicModalOpen(true);
                         }}
-                        className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-dashed border-gray-300 hover:border-gray-400 mt-4"
+                        className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors border border-dashed border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/30 mt-4"
                       >
                         <Plus size={16} /> Add Topic
                       </button>
@@ -777,31 +777,31 @@ const CourseDetail = () => {
 
           {/* ─── COURSE MATERIALS TAB ──────────────────────────────────────────── */}
           {activeTab === 'Course Materials' && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden p-6">
+            <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden p-6">
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Course Materials Management</h2>
-                <p className="text-sm text-gray-500 mt-1">View and manage all uploaded materials</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Course Materials Management</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">View and manage all uploaded materials</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-100">
+                    <tr className="border-b border-gray-100 dark:border-white/10">
                       {['Material Name', 'Type', 'Sprint', 'Size', 'Access', 'Upload Date'].map(h => (
-                        <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 uppercase">{h}</th>
+                        <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {materials.length === 0 ? (
-                      <tr><td colSpan={6} className="py-8 text-center text-gray-500">No materials uploaded yet</td></tr>
+                      <tr><td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">No materials uploaded yet</td></tr>
                     ) : materials.map(material => (
-                      <tr key={material.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900">{material.name}</td>
-                        <td className="py-3 px-4"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">{material.type}</span></td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.sprint}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.size}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.access}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{material.upload_date}</td>
+                      <tr key={material.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{material.name}</td>
+                        <td className="py-3 px-4"><span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">{material.type}</span></td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.sprint}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.size}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.access}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.upload_date}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -812,11 +812,11 @@ const CourseDetail = () => {
 
           {/* ─── EXTERNAL RESOURCES TAB ───────────────────────────────────────── */}
           {activeTab === 'External Resources' && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden p-6">
+            <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden p-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">External Resources Management</h2>
-                  <p className="text-sm text-gray-500 mt-1">Add external learning resources</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">External Resources Management</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add external learning resources</p>
                 </div>
                 <button onClick={() => { setFormData({}); setIsAddResourceModalOpen(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
                   <Plus size={18} /> Add Resource
@@ -824,18 +824,18 @@ const CourseDetail = () => {
               </div>
               <div className="space-y-4">
                 {external_resources.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">No external resources added yet</div>
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">No external resources added yet</div>
                 ) : external_resources.map(resource => (
-                  <div key={resource.id} className="border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div key={resource.id} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="p-2 bg-gray-100 rounded-lg">{resource.type === 'video' ? '🎥' : '📄'}</div>
+                      <div className="p-2 bg-gray-100 dark:bg-white/10 rounded-lg">{resource.type === 'video' ? '🎥' : '📄'}</div>
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1">{resource.title}</h3>
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">🔗 {resource.url}</a>
-                        <p className="text-xs text-gray-500 mt-1">Added: {resource.date}</p>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{resource.title}</h3>
+                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">🔗 {resource.url}</a>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Added: {resource.date}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleDeleteExternalResource(resource.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded self-end md:self-start"><Trash size={16} /></button>
+                    <button onClick={() => handleDeleteExternalResource(resource.id)} className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded self-end md:self-start"><Trash size={16} /></button>
                   </div>
                 ))}
               </div>
@@ -852,16 +852,16 @@ const CourseDetail = () => {
                   { label: 'Avg. Progress', value: `${statistics.avg_progress}%` },
                   { label: 'Payment Rate', value: `${statistics.payment_rate}%` },
                 ].map(stat => (
-                  <div key={stat.label} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="text-sm text-gray-500 font-medium mb-4">{stat.label}</div>
-                    <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+                  <div key={stat.label} className="bg-white dark:bg-[#0f0f14] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-4">{stat.label}</div>
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
                   </div>
                 ))}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Sprint Completion Rates</h3>
+                <div className="bg-white dark:bg-[#0f0f14] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Sprint Completion Rates</h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chart_data.sprint_completion}>
@@ -874,8 +874,8 @@ const CourseDetail = () => {
                     </ResponsiveContainer>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Progress Distribution</h3>
+                <div className="bg-white dark:bg-[#0f0f14] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Progress Distribution</h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -890,40 +890,40 @@ const CourseDetail = () => {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden p-6">
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Enrolled Students ({students.length})</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Enrolled Students ({students.length})</h3>
                   <button onClick={() => setIsMessageModalOpen(true)} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800">Send Message</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-gray-100 dark:border-white/10">
                         {['Student Name', 'Email', 'Payment Status', 'Activity Status', 'Progress', 'Enrolled Date'].map(h => (
-                          <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 uppercase">{h}</th>
+                          <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{h}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                       {students.map(student => (
-                        <tr key={student.id} className="hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm font-medium text-gray-900">{student.name}</td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{student.email}</td>
+                        <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{student.name}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{student.email}</td>
                           <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${student.payment === 'Completed' ? 'bg-green-100 text-green-700' : student.payment === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{student.payment}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${student.payment === 'Completed' ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400' : student.payment === 'Pending' ? 'bg-yellow-100 dark:bg-yellow-500/15 text-yellow-700 dark:text-yellow-400' : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'}`}>{student.payment}</span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${student.activity === 'Active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{student.activity}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${student.activity === 'Active' ? 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'}`}>{student.activity}</span>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
-                              <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-gray-900 rounded-full" style={{ width: `${student.progress}%` }} />
+                              <div className="w-24 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                                <div className="h-full bg-gray-900 dark:bg-white rounded-full" style={{ width: `${student.progress}%` }} />
                               </div>
-                              <span className="text-xs text-gray-600">{student.progress}%</span>
+                              <span className="text-xs text-gray-600 dark:text-gray-300">{student.progress}%</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600 text-right">{student.date}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300 text-right">{student.date}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -940,22 +940,22 @@ const CourseDetail = () => {
           {/* Add Sprint */}
           {isAddSprintModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-md p-6 m-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Add New Sprint</h2>
-                  <button onClick={() => setIsAddSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Sprint</h2>
+                  <button onClick={() => setIsAddSprintModalOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleAddSprint} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
-                    <input type="text" required value={formData.sprint_name || ''} onChange={e => setFormData({ ...formData, sprint_name: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="e.g. Introduction to Product Management" />
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Sprint Title</label>
+                    <input type="text" required value={formData.sprint_name || ''} onChange={e => setFormData({ ...formData, sprint_name: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="e.g. Introduction to Product Management" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
-                    <input type="number" required min="1" value={formData.sprint_number || ''} onChange={e => setFormData({ ...formData, sprint_number: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="1" />
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Sprint Number</label>
+                    <input type="number" required min="1" value={formData.sprint_number || ''} onChange={e => setFormData({ ...formData, sprint_number: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="1" />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="button" onClick={() => setIsAddSprintModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="button" onClick={() => setIsAddSprintModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                       {submitting ? 'Creating…' : 'Create Sprint'}
@@ -969,22 +969,22 @@ const CourseDetail = () => {
           {/* Edit Sprint */}
           {isEditSprintModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-md p-6 m-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Edit Sprint</h2>
-                  <button onClick={() => setIsEditSprintModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Sprint</h2>
+                  <button onClick={() => setIsEditSprintModalOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleEditSprint} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Title</label>
-                    <input type="text" required value={formData.sprint_name || ''} onChange={e => setFormData({ ...formData, sprint_name: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Sprint Title</label>
+                    <input type="text" required value={formData.sprint_name || ''} onChange={e => setFormData({ ...formData, sprint_name: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Sprint Number</label>
-                    <input type="number" required min="1" value={formData.sprint_number || ''} onChange={e => setFormData({ ...formData, sprint_number: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Sprint Number</label>
+                    <input type="number" required min="1" value={formData.sprint_number || ''} onChange={e => setFormData({ ...formData, sprint_number: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="button" onClick={() => setIsEditSprintModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="button" onClick={() => setIsEditSprintModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
                       {submitting ? 'Saving…' : 'Save Changes'}
@@ -998,22 +998,22 @@ const CourseDetail = () => {
           {/* ── Add Topic Modal ─────────────────────────────────────────────────── */}
           {isAddTopicModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-                  <h2 className="text-xl font-semibold text-gray-900">Add Topic</h2>
-                  <button onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 flex-shrink-0">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add Topic</h2>
+                  <button onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleAddTopic} className="flex flex-col flex-1 min-h-0">
                   <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Topic Title</label>
                       <input
                         type="text"
                         required
                         value={formData.title || ''}
                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         placeholder="e.g. Introduction to User Research"
                       />
                     </div>
@@ -1024,8 +1024,8 @@ const CourseDetail = () => {
                     {/* Content area based on mode */}
                     {topicInputMode === 'blocks' ? (
                       <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
-                        <p className="text-xs text-gray-500 mb-3">Build your topic by adding text, images, and videos in any order.</p>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">Content Blocks</label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Build your topic by adding text, images, and videos in any order.</p>
                         <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
                       </div>
                     ) : (
@@ -1035,8 +1035,8 @@ const CourseDetail = () => {
                       />
                     )}
                   </div>
-                  <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 dark:border-white/10 flex-shrink-0">
+                    <button type="button" onClick={() => { setIsAddTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button
                       type="submit"
                       disabled={submitting || (topicInputMode === 'file' && !topicFile)}
@@ -1054,22 +1054,22 @@ const CourseDetail = () => {
           {/* ── Edit Topic Modal ────────────────────────────────────────────────── */}
           {isEditTopicModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-                  <h2 className="text-xl font-semibold text-gray-900">Edit Topic</h2>
-                  <button onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10 flex-shrink-0">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Topic</h2>
+                  <button onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleEditTopic} className="flex flex-col flex-1 min-h-0">
                   <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
                     {/* Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-1.5">Topic Title</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Topic Title</label>
                       <input
                         type="text"
                         required
                         value={formData.title || ''}
                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>
 
@@ -1085,8 +1085,8 @@ const CourseDetail = () => {
                     {/* Content area */}
                     {topicInputMode === 'blocks' ? (
                       <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">Content Blocks</label>
-                        <p className="text-xs text-gray-500 mb-3">Rearrange, edit, or add new blocks below.</p>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">Content Blocks</label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Rearrange, edit, or add new blocks below.</p>
                         <ContentBlockEditor blocks={contentBlocks} onChange={setContentBlocks} />
                       </div>
                     ) : (
@@ -1101,8 +1101,8 @@ const CourseDetail = () => {
                       />
                     )}
                   </div>
-                  <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 dark:border-white/10 flex-shrink-0">
+                    <button type="button" onClick={() => { setIsEditTopicModalOpen(false); resetTopicForm(); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button
                       type="submit"
                       disabled={submitting}
@@ -1120,24 +1120,24 @@ const CourseDetail = () => {
           {/* Upload Material */}
           {isUploadMaterialModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4">
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-md p-6 m-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Upload Material</h2>
-                  <button onClick={() => { setIsUploadMaterialModalOpen(false); setSelectedFile(null); setFormData({}); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Upload Material</h2>
+                  <button onClick={() => { setIsUploadMaterialModalOpen(false); setSelectedFile(null); setFormData({}); }} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleUploadMaterial} className="space-y-4">
                   <input type="file" id="file-upload" onChange={handleFileChange} className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx" />
-                  <label htmlFor="file-upload" className="w-full block px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50 min-h-[100px]">
+                  <label htmlFor="file-upload" className="w-full block px-3 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 rounded-lg cursor-pointer hover:border-gray-400 dark:hover:border-white/30 hover:bg-gray-50 dark:hover:bg-white/5 min-h-[100px]">
                     <div className="flex flex-col items-center justify-center gap-2 pt-4">
                       {selectedFile ? (
-                        <><Upload size={24} className="text-green-500" /><span className="text-gray-700 font-medium text-center break-all px-2">{selectedFile.name}</span><span className="text-xs text-blue-600">Click to change</span></>
+                        <><Upload size={24} className="text-green-500 dark:text-green-400" /><span className="text-gray-700 dark:text-gray-300 font-medium text-center break-all px-2">{selectedFile.name}</span><span className="text-xs text-blue-600 dark:text-blue-400">Click to change</span></>
                       ) : (
-                        <><Upload size={24} className="text-gray-400" /><span className="text-gray-600">Click to select file</span><span className="text-xs text-gray-500">PDF, DOC, DOCX, PPT, PPTX</span></>
+                        <><Upload size={24} className="text-gray-400 dark:text-gray-500" /><span className="text-gray-600 dark:text-gray-300">Click to select file</span><span className="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX, PPT, PPTX</span></>
                       )}
                     </div>
                   </label>
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="button" onClick={() => { setIsUploadMaterialModalOpen(false); setSelectedFile(null); setFormData({}); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="button" onClick={() => { setIsUploadMaterialModalOpen(false); setSelectedFile(null); setFormData({}); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button type="submit" disabled={submitting || !selectedFile} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                       {submitting ? 'Uploading…' : 'Upload'}
@@ -1151,10 +1151,10 @@ const CourseDetail = () => {
           {/* Add External Resource */}
           {isAddResourceModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-              <div className="bg-white rounded-xl w-full max-w-md p-6 m-4 my-8">
+              <div className="bg-white dark:bg-[#0f0f14] rounded-xl w-full max-w-md p-6 m-4 my-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Add External Resource</h2>
-                  <button onClick={() => setIsAddResourceModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add External Resource</h2>
+                  <button onClick={() => setIsAddResourceModalOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
                 </div>
                 <form onSubmit={handleAddExternalResource} className="space-y-4">
                   {[
@@ -1164,22 +1164,22 @@ const CourseDetail = () => {
                     { label: 'Source/Platform', name: 'source', type: 'text', required: true, placeholder: 'e.g. YouTube, Medium…' },
                   ].map(field => (
                     <div key={field.name}>
-                      <label className="block text-sm font-medium text-gray-900 mb-1.5">{field.label}</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">{field.label}</label>
                       {field.type === 'select' ? (
-                        <select value={formData[field.name] || field.options![0][0]} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                        <select value={formData[field.name] || field.options![0][0]} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                           {field.options!.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                         </select>
                       ) : (
-                        <input type={field.type} required={field.required} value={formData[field.name] || ''} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder={field.placeholder} />
+                        <input type={field.type} required={field.required} value={formData[field.name] || ''} onChange={e => setFormData({ ...formData, [field.name]: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder={field.placeholder} />
                       )}
                     </div>
                   ))}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1.5">Description (Optional)</label>
-                    <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" rows={3} placeholder="Brief description…" />
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Description (Optional)</label>
+                    <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" rows={3} placeholder="Brief description…" />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="button" onClick={() => setIsAddResourceModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="button" onClick={() => setIsAddResourceModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/10">Cancel</button>
                     <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-medium text-white bg-[#0F172A] rounded-lg hover:bg-gray-800 flex items-center gap-2 disabled:opacity-50">
                       {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                       {submitting ? 'Adding…' : 'Add Resource'}

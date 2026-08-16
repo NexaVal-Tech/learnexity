@@ -40,7 +40,7 @@ export default function PaymentSuccessPage() {
         <div className="text-center">
           <div className="text-5xl mb-4">✅</div>
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
-          <p className="text-gray-600 text-lg font-medium">Payment confirmed! Redirecting...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Payment confirmed! Redirecting...</p>
         </div>
       </div>
     </UserDashboardLayout>

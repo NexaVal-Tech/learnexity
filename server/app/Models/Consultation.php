@@ -22,6 +22,10 @@ class Consultation extends Model
         'payment_status',
         'notes',
         'user_id',
+        'amount',
+        'currency',
+        'transaction_id',
+        'payment_method',
     ];
 
     protected $casts = [

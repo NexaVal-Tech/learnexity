@@ -25,12 +25,14 @@ class Course extends Model
         'level',
         'price',
         'is_freemium',
+        'is_free',
         'is_premium',
         'is_active',
         // Learning tracks
         'offers_one_on_one',
         'offers_group_mentorship',
         'offers_self_paced',
+        'offers_intermediate',
         'one_on_one_price',
         'group_mentorship_price',
         'self_paced_price',
@@ -42,11 +44,13 @@ class Course extends Model
         'one_on_one_price_usd',
         'group_mentorship_price_usd',
         'self_paced_price_usd',
+        'intermediate_price_usd',
 
         // Track pricing (NGN)
         'one_on_one_price_ngn',
         'group_mentorship_price_ngn',
         'self_paced_price_ngn',
+        'intermediate_price_ngn',
 
         // One-time payment discounts
         'onetime_discount_usd',
@@ -56,10 +60,12 @@ class Course extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'is_freemium' => 'boolean',
+        'is_free' => 'boolean',
         'is_premium' => 'boolean',
         'offers_one_on_one' => 'boolean',
         'offers_group_mentorship' => 'boolean',
         'offers_self_paced' => 'boolean',
+        'offers_intermediate' => 'boolean',
         'one_on_one_price' => 'decimal:2',
         'group_mentorship_price' => 'decimal:2',
         'self_paced_price' => 'decimal:2',
@@ -69,10 +75,12 @@ class Course extends Model
         'one_on_one_price_usd' => 'decimal:2',
         'group_mentorship_price_usd' => 'decimal:2',
         'self_paced_price_usd' => 'decimal:2',
+        'intermediate_price_usd' => 'decimal:2',
 
         'one_on_one_price_ngn' => 'decimal:2',
         'group_mentorship_price_ngn' => 'decimal:2',
         'self_paced_price_ngn' => 'decimal:2',
+        'intermediate_price_ngn' => 'decimal:2',
 
         'onetime_discount_usd' => 'decimal:2',
         'onetime_discount_ngn' => 'decimal:2',
@@ -137,12 +145,15 @@ class Course extends Model
         if ($this->offers_self_paced) {
             $tracks[] = 'self_paced';
         }
-        
+        if ($this->offers_intermediate) {
+            $tracks[] = 'intermediate';
+        }
+
         // If no tracks are configured, default to self-paced
         if (empty($tracks)) {
             $tracks[] = 'self_paced';
         }
-        
+
         return $tracks;
     }
 
@@ -155,6 +166,7 @@ class Course extends Model
             'one_on_one' => $this->one_on_one_price ?? $this->price,
             'group_mentorship' => $this->group_mentorship_price ?? ($this->price * 0.7),
             'self_paced' => $this->self_paced_price ?? ($this->price * 0.5),
+            'intermediate' => $this->intermediate_price_usd ?? ($this->price * 0.6),
         ];
     }
 
@@ -170,6 +182,8 @@ class Course extends Model
                 return (float) ($this->group_mentorship_price ?? ($this->price * 0.7));
             case 'self_paced':
                 return (float) ($this->self_paced_price ?? ($this->price * 0.5));
+            case 'intermediate':
+                return (float) ($this->intermediate_price_usd ?? ($this->price * 0.6));
             default:
                 return (float) $this->price;
         }
@@ -181,6 +195,7 @@ class Course extends Model
             'one_on_one' => $currency === 'NGN' ? 'one_on_one_price_ngn' : 'one_on_one_price_usd',
             'group_mentorship' => $currency === 'NGN' ? 'group_mentorship_price_ngn' : 'group_mentorship_price_usd',
             'self_paced' => $currency === 'NGN' ? 'self_paced_price_ngn' : 'self_paced_price_usd',
+            'intermediate' => $currency === 'NGN' ? 'intermediate_price_ngn' : 'intermediate_price_usd',
             default => $currency === 'NGN' ? 'price_ngn' : 'price_usd',
         };
 

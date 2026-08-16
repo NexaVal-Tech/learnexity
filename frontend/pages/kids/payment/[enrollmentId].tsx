@@ -108,21 +108,29 @@ export default function KidsPaymentPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "#080808" }}>
-        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "var(--page-bg)" }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
+        </Head>
         <div className="relative w-16 h-16 mb-6">
           <div className="absolute inset-0 rounded-full border-4 border-transparent animate-spin" style={{ borderTopColor: BRAND, borderRightColor: `${BRAND}44` }} />
           <div className="absolute inset-2 rounded-full" style={{ background: `${BRAND}15` }} />
         </div>
-        <p className="text-sm font-semibold" style={{ color: "#9ca3af", fontFamily: "Outfit, sans-serif" }}>Loading your enrollment…</p>
+        <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "Outfit, sans-serif" }}>Loading your enrollment…</p>
       </div>
     );
   }
 
   if (error && !enrollment) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#080808" }}>
-        <style jsx global>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap');`}</style>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "var(--page-bg)" }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
+        </Head>
         <div className="text-6xl mb-4">😔</div>
         <h2 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "Poppins, sans-serif" }}>Enrollment Not Found</h2>
         <p className="text-gray-500 text-sm mb-8 max-w-sm text-center">{error}</p>
@@ -143,11 +151,15 @@ export default function KidsPaymentPage() {
 
   return (
     <>
-      <Head><title>Kids Payment — {enrollment.course?.name ?? "Learnexity"}</title></Head>
+      <Head>
+        <title>Kids Payment — {enrollment.course?.name ?? "Learnexity"}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet" />
+      </Head>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&family=Poppins:wght@700;900&display=swap');
         * { box-sizing: border-box; }
-        body { margin: 0; background: #080808; }
+        body { margin: 0; background: var(--page-bg); }
         @keyframes kidsFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         .fade-up { animation: fadeUp 0.5s ease forwards; }
@@ -155,19 +167,19 @@ export default function KidsPaymentPage() {
         .fade-up-delay-2 { animation: fadeUp 0.5s ease 0.3s forwards; opacity: 0; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: "#080808", fontFamily: "Outfit, sans-serif", color: "#fff" }}>
+      <div style={{ minHeight: "100vh", background: "var(--page-bg)", fontFamily: "Outfit, sans-serif", color: "var(--text-primary)" }}>
 
         {/* ── Top Bar ── */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 40 }}>
+        <div style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--page-bg)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 40 }}>
           <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
             <button onClick={() => router.push("/kids")}
               className="flex items-center gap-2 text-sm font-semibold transition-all hover:text-white"
-              style={{ color: "#6b7280" }}>
+              style={{ color: "var(--text-muted)" }}>
               ← Back to Kids
             </button>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" style={{ color: "#22c55e" }} />
-              <span className="text-xs font-bold" style={{ color: "#6b7280" }}>SSL Encrypted · Secure Payment</span>
+              <span className="text-xs font-bold" style={{ color: "var(--text-muted)" }}>SSL Encrypted · Secure Payment</span>
             </div>
           </div>
         </div>
@@ -187,7 +199,7 @@ export default function KidsPaymentPage() {
               <span className="text-xl">⚠️</span>
               <div>
                 <p className="font-bold text-sm" style={{ color: BRAND_ORANGE }}>Payment Cancelled</p>
-                <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>No worries — your enrollment is saved. You can try again whenever you're ready.</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>No worries — your enrollment is saved. You can try again whenever you're ready.</p>
               </div>
             </div>
           )}
@@ -199,7 +211,7 @@ export default function KidsPaymentPage() {
               <CheckCircle className="w-6 h-6 flex-shrink-0" style={{ color: "#22c55e" }} />
               <div>
                 <p className="font-bold text-sm" style={{ color: "#22c55e" }}>Enrollment Fully Paid!</p>
-                <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>Our team will reach out within 24 hours with session details for {enrollment.student_name}.</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>Our team will reach out within 24 hours with session details for {enrollment.student_name}.</p>
               </div>
             </div>
           )}
@@ -208,19 +220,19 @@ export default function KidsPaymentPage() {
 
             {/* ── Order Summary ── */}
             <div className="w-full max-w-md space-y-4">
-              <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", overflow: "hidden", backdropFilter: "blur(12px)", position: "sticky", top: "80px" }}>
-                <div className="px-6 py-5" style={{ background: `linear-gradient(135deg, ${color}12 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#4b5563" }}>Order Summary</p>
+              <div className="fade-up-delay" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", overflow: "hidden", backdropFilter: "blur(12px)", position: "sticky", top: "80px" }}>
+                <div className="px-6 py-5" style={{ background: `linear-gradient(135deg, ${color}12 0%, transparent 100%)`, borderBottom: "1px solid var(--border-subtle)" }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>Order Summary</p>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-bold" style={{ color, fontFamily: "Poppins, sans-serif" }}>
                       {fmt(enrollment.next_installment_amount, enrollment.currency)}
                     </span>
                     {enrollment.payment_type === "installment" && (
-                      <span className="text-xs" style={{ color: "#6b7280" }}>/ payment</span>
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>/ payment</span>
                     )}
                   </div>
                   {enrollment.payment_type === "installment" && (
-                    <p className="text-xs mt-1" style={{ color: "#6b7280" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                       Payment {enrollment.installments_paid + 1} of {enrollment.total_installments}
                     </p>
                   )}
@@ -234,11 +246,11 @@ export default function KidsPaymentPage() {
                       { label: enrollment.session_type === "one_on_one" ? "🎯 One-on-One" : "👥 Mini Group", val: "Session format" },
                     ].map((row) => (
                       <div key={row.label} className="flex justify-between">
-                        <span style={{ color: "#9ca3af" }}>{row.label}</span>
-                        <span className="font-semibold" style={{ color: "#d1d5db" }}>{row.val}</span>
+                        <span style={{ color: "var(--text-secondary)" }}>{row.label}</span>
+                        <span className="font-semibold" style={{ color: "var(--text-secondary)" }}>{row.val}</span>
                       </div>
                     ))}
-                    <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.06)" }} />
+                    <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)" }} />
                     <div className="flex justify-between font-bold">
                       <span className="text-white">Due Today</span>
                       <span style={{ color }}>{fmt(enrollment.next_installment_amount, enrollment.currency)}</span>
@@ -268,14 +280,14 @@ export default function KidsPaymentPage() {
                           </>
                         )}
                       </button>
-                      <p className="text-center text-xs" style={{ color: "#4b5563" }}>
+                      <p className="text-center text-xs" style={{ color: "var(--text-muted)" }}>
                         {enrollment.currency === "USD" ? "Powered by Stripe · Card payments" : "Powered by Paystack · Card & bank transfer"}
                       </p>
                     </>
                   ) : (
                     <button onClick={() => router.push("/kids")}
                       className="w-full py-4 font-bold text-sm text-white transition-all hover:opacity-90"
-                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" }}>
+                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>
                       ← Back to Kids Programme
                     </button>
                   )}
@@ -289,10 +301,10 @@ export default function KidsPaymentPage() {
                   { icon: "↩️", title: "Safe", desc: "Verified payments" },
                 ].map((b) => (
                   <div key={b.title} className="px-4 py-3 text-center"
-                    style={{ borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem", border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.03)" }}>
+                    style={{ borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>
                     <div className="text-xl mb-1">{b.icon}</div>
                     <p className="text-xs font-bold text-white">{b.title}</p>
-                    <p className="text-xs" style={{ color: "#6b7280" }}>{b.desc}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{b.desc}</p>
                   </div>
                 ))}
               </div>
@@ -305,7 +317,7 @@ export default function KidsPaymentPage() {
                     <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND_ORANGE }} />
                     <div>
                       <p className="text-xs font-bold" style={{ color: BRAND_ORANGE }}>Bookmark this page</p>
-                      <p className="text-xs mt-0.5" style={{ color: "#9ca3af" }}>Return here for your next payment. No account needed — your enrollment is always saved.</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>Return here for your next payment. No account needed — your enrollment is always saved.</p>
                     </div>
                   </div>
                 </div>

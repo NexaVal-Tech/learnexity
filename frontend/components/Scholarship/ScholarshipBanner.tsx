@@ -35,8 +35,8 @@ export default function ScholarshipBanner() {
           background: linear-gradient(
             135deg,
             rgba(74, 58, 255, 0.12) 0%,
-            rgba(6, 10, 30, 0.95) 40%,
-            rgba(6, 10, 30, 0.98) 100%
+            var(--surface-alt) 40%,
+            var(--surface-alt) 100%
           );
           border: 1px solid rgba(74, 58, 255, 0.2);
           display: flex;
@@ -99,7 +99,7 @@ export default function ScholarshipBanner() {
         .schb-headline {
           font-size: 2.25rem;
           font-weight: 600;
-          color: #ffffff;
+          color: var(--text-primary);
           line-height: 1.2;
           letter-spacing: -0.015em;
           margin-bottom: 1.5rem;
@@ -117,11 +117,11 @@ export default function ScholarshipBanner() {
         }
         .schb-body-line {
           font-size: 1.125rem;
-          color: #9ca3af;
+          color: var(--text-secondary);
           line-height: 1.625;
         }
-        .schb-body-line.accent { color: #ffffff; font-weight: 600; }
-        .schb-body-line.highlight { color: #c7d2fe; font-weight: 600; }
+        .schb-body-line.accent { color: var(--text-primary); font-weight: 600; }
+        .schb-body-line.highlight { color: #7a70ff; font-weight: 600; }
 
         /* ── Right: logo image (large screens only) ── */
         .schb-right {
@@ -135,7 +135,7 @@ export default function ScholarshipBanner() {
         }
 
         .schb-logo-wrap {
-          background: rgba(255, 255, 255, 0.06);
+          background: var(--surface);
           border: 1px solid rgba(74, 58, 255, 0.25);
           border-radius: 1.25rem;
           padding: 2rem 2.5rem;
@@ -152,9 +152,11 @@ export default function ScholarshipBanner() {
         .schb-logo-img {
           width: 220px;
           height: auto;
-          /* Invert dark logo to white so it reads on dark card */
-          filter: brightness(0) invert(1);
           display: block;
+        }
+        /* Invert dark logo to white so it reads on the dark-theme card */
+        [data-theme="dark"] .schb-logo-img {
+          filter: brightness(0) invert(1);
         }
 
         /* Show only on large screens */

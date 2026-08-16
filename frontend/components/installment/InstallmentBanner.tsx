@@ -53,7 +53,7 @@ export default function InstallmentBanner() {
 
           {/* Pill badge — matches card number style: text-sm font-mono */}
           <span
-            className="installment-badge inline-flex items-center gap-2 px-4 py-2 text-sm font-mono mb-4 border border-white/10 bg-[#0f0f0f]/90"
+            className="installment-badge inline-flex items-center gap-2 px-4 py-2 text-sm font-mono mb-4 border border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
             style={{ color: BRAND }}
           >
             <span className="relative flex h-2 w-2">
@@ -66,17 +66,17 @@ export default function InstallmentBanner() {
           {/* Header box */}
           <div
             className="installment-header-box max-w-7xl mx-auto px-10 py-6
-              border border-white/10
-              bg-[#0f0f0f]/90 backdrop-blur-sm
+              border border-[var(--border-subtle)]
+              bg-[var(--surface-elevated)] backdrop-blur-sm
               shadow-2xl shadow-black/80"
           >
             {/* Matches: text-4xl font-semibold text-white component-headers */}
-            <h2 className="text-4xl font-semibold text-white mb-4 component-headers">
+            <h2 className="text-4xl font-semibold text-[var(--text-primary)] mb-4 component-headers">
               Learn Now, Pay As You Go
             </h2>
 
             {/* Matches: text-xl text-gray-400 leading-relaxed */}
-            <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xl text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
               We believe cost should never be a barrier to education. Pay in flexible installments spread over your course duration — start learning immediately and settle the balance as you progress.
             </p>
 

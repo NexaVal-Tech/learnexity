@@ -11,7 +11,12 @@ interface CoursesProps {
 export default function HeaderCourse({ variant = "white" }: CoursesProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textColor = variant === "white" ? "text-white" : "text-black";
+  // Rendered directly inside AppLayout's main content (bg-white dark:bg-black),
+  // not on a dedicated dark hero — so hardcoded text-white/text-black would go
+  // invisible against the page background in the opposite theme. Map both
+  // variants to theme-adaptive colors that stay legible in light and dark.
+  const textColor =
+    variant === "white" ? "text-gray-900 dark:text-white" : "text-black dark:text-white";
 
   useEffect(() => {
     // Uses the shared cache — zero extra network request if courses.tsx

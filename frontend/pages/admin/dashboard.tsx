@@ -38,7 +38,7 @@ function Dashboard() {
       <AdminRouteGuard>
         <AdminLayout>
           <div className="flex items-center justify-center h-96">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
           </div>
         </AdminLayout>
       </AdminRouteGuard>
@@ -50,8 +50,8 @@ function Dashboard() {
       <AdminRouteGuard>
         <AdminLayout>
           <div className="flex flex-col items-center justify-center h-96">
-            <p className="text-red-500 mb-4">{error || 'Failed to load dashboard'}</p>
-            <button 
+            <p className="text-red-500 dark:text-red-400 mb-4">{error || 'Failed to load dashboard'}</p>
+            <button
               onClick={fetchDashboardData}
               className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
             >
@@ -71,7 +71,7 @@ function Dashboard() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Overview</h1>
           </div>
 
           {/* Stats Row */}

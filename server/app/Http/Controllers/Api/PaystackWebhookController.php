@@ -110,6 +110,8 @@ class PaystackWebhookController extends Controller
                                 $learningTrack = 'group_mentorship';
                             } elseif (str_contains($trackName, 'Self-Paced')) {
                                 $learningTrack = 'self_paced';
+                            } elseif (str_contains($trackName, 'Intermediate')) {
+                                $learningTrack = 'intermediate';
                             }
                         }
 
@@ -144,7 +146,7 @@ class PaystackWebhookController extends Controller
             // Last resort: parse from reference format ENR-{id}-{track}-{type}-{ts}
             if (!$learningTrack || !$paymentType) {
                 if (preg_match(
-                    '/ENR-(\d+)-(one_on_one|group_mentorship|self_paced)-(onetime|installment)-/',
+                    '/ENR-(\d+)-(one_on_one|group_mentorship|self_paced|intermediate)-(onetime|installment)-/',
                     $reference,
                     $matches
                 )) {
@@ -188,7 +190,7 @@ class PaystackWebhookController extends Controller
             $updateData = ['transaction_id' => $reference];
 
             // Update learning track if resolved
-            if ($learningTrack && in_array($learningTrack, ['one_on_one', 'group_mentorship', 'self_paced'], true)) {
+            if ($learningTrack && in_array($learningTrack, ['one_on_one', 'group_mentorship', 'self_paced', 'intermediate'], true)) {
                 $updateData['learning_track'] = $learningTrack;
                 Log::info('📚 Learning track set', ['learning_track' => $learningTrack]);
             }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationSetting;
+use App\Models\ConsultationFreeDay;
 use App\Services\LocationService;
 use App\Mail\ConsultationBookedAdmin;
 use App\Mail\ConsultationConfirmation;
@@ -109,16 +110,38 @@ class ConsultationController extends Controller
      * Already-booked time slots for a given date — greys out taken
      * slots on the frontend calendar. Only 'scheduled' (i.e. paid)
      * consultations block a slot — pending_payment ones don't.
+     *
+     * On an admin-marked free day, bookings are unlimited — many people can
+     * book the same (or different) time slots with no payment, so nothing
+     * is ever reported as "taken" for that date.
      */
     public function bookedSlots(Request $request)
     {
         $request->validate(['date' => 'required|date']);
+
+        if (ConsultationFreeDay::isFreeDay($request->date)) {
+            return response()->json(['booked_slots' => [], 'is_free_day' => true]);
+        }
 
         $slots = Consultation::where('preferred_date', $request->date)
             ->where('status', 'scheduled')
             ->pluck('preferred_time')
             ->values();
 
-        return response()->json(['booked_slots' => $slots]);
+        return response()->json(['booked_slots' => $slots, 'is_free_day' => false]);
+    }
+
+    /**
+     * Public list of admin-marked free consultation days (ISO date
+     * strings) — the booking wizard uses this to know when to skip
+     * payment and slot limits entirely.
+     */
+    public function freeDays()
+    {
+        // pluck() operates on the raw query builder (bypasses Eloquent casts),
+        // so these come back as plain "Y-m-d" strings already.
+        $dates = ConsultationFreeDay::orderBy('date')->pluck('date')->values();
+
+        return response()->json(['free_days' => $dates]);
     }
 }

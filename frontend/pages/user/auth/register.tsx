@@ -243,24 +243,24 @@ export default function RegisterPage() {
           .auth-card {
             animation: pageEnterReverse 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
             border-radius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(12, 12, 14, 0.92);
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-elevated);
             backdrop-filter: blur(20px);
             box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
             transform-origin: right center;
           }
           .auth-card.leaving { animation: pageLeaveReverse 0.48s cubic-bezier(0.22, 1, 0.36, 1) both; }
           .underline-input {
-            background: transparent; border: none; border-bottom: 3px solid rgba(255,255,255,0.65);
-            border-radius: 0; width: 100%; padding: 0.5rem 0; color: white; font-size: 0.95rem;
+            background: transparent; border: none; border-bottom: 3px solid var(--border-strong);
+            border-radius: 0; width: 100%; padding: 0.5rem 0; color: var(--text-primary); font-size: 0.95rem;
             outline: none; transition: border-color 0.25s ease; caret-color: ${BRAND};
           }
-          .underline-input::placeholder { color: rgba(255,255,255,0.25); font-size: 0.875rem; }
+          .underline-input::placeholder { color: var(--text-muted); font-size: 0.875rem; }
           .underline-input:focus { border-bottom-color: ${BRAND}; }
           .underline-input:disabled { opacity: 0.4; cursor: not-allowed; }
           .field-label {
             font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
-            color: rgba(255,255,255,0.4); margin-bottom: 0.35rem; display: block;
+            color: var(--text-secondary); margin-bottom: 0.35rem; display: block;
           }
           .auth-btn {
             width: 100%; margin-top: 20px; background-color: ${BRAND}; color: white; font-weight: 600;
@@ -272,23 +272,23 @@ export default function RegisterPage() {
           }
           .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
           .auth-btn-ghost {
-            width: 100%; margin-top: 12px; background: transparent; color: rgba(255,255,255,0.6);
+            width: 100%; margin-top: 12px; background: transparent; color: var(--text-secondary);
             font-weight: 500; padding: 0.6rem 1rem; border-radius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; transition: all 0.25s ease;
+            border: 1px solid var(--border-subtle); font-size: 0.85rem; transition: all 0.25s ease;
           }
-          .auth-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+          .auth-btn-ghost:hover:not(:disabled) { background: var(--border-subtle); }
           .auth-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
           .google-btn {
             width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-            padding: 0.75rem 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem 0.75rem 2rem 0.75rem;
-            color: rgba(255,255,255,0.75); font-weight: 500; font-size: 0.875rem; background: rgba(255,255,255,0.04);
+            padding: 0.75rem 1rem; border: 1px solid var(--border-subtle); border-radius: 2rem 0.75rem 2rem 0.75rem;
+            color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; background: var(--surface-alt);
             transition: all 0.25s ease;
           }
-          .google-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+          .google-btn:hover:not(:disabled) { background: var(--border-subtle); border-color: var(--border-strong); }
           .google-btn:disabled { opacity: 0.4; cursor: not-allowed; }
           .divider-line { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; }
-          .divider-line::before, .divider-line::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
-          .divider-line span { font-size: 0.75rem; color: rgba(255,255,255,0.3); letter-spacing: 0.05em; }
+          .divider-line::before, .divider-line::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+          .divider-line span { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.05em; }
           .page-switch-link { color: ${BRAND}; font-weight: 600; text-decoration: none; transition: opacity 0.2s; }
           .page-switch-link:hover { opacity: 0.75; }
           .toast-wrap {
@@ -299,17 +299,18 @@ export default function RegisterPage() {
           .otp-row { display: flex; gap: 0.6rem; justify-content: center; margin: 1.5rem 0 0.5rem; }
           .otp-box {
             width: 3rem; height: 3.25rem; text-align: center; font-size: 1.4rem; font-weight: 600;
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 0.75rem; color: white; outline: none; transition: border-color 0.2s ease;
+            background: var(--surface-alt); border: 1px solid var(--border-strong);
+            border-radius: 0.75rem; color: var(--text-primary); outline: none; transition: border-color 0.2s ease;
           }
           .otp-box:focus { border-color: ${BRAND}; box-shadow: 0 0 0 3px ${BRAND}33; }
-          .rule-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: rgba(255,255,255,0.4); }
-          .rule-item.met { color: #4ade80; }
+          .rule-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }
+          .rule-item.met { color: #16a34a; }
+          [data-theme="dark"] .rule-item.met { color: #4ade80; }
           .back-link {
             display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;
-            color: rgba(255,255,255,0.45); background: none; border: none; cursor: pointer; margin-bottom: 1rem;
+            color: var(--text-muted); background: none; border: none; cursor: pointer; margin-bottom: 1rem;
           }
-          .back-link:hover { color: rgba(255,255,255,0.75); }
+          .back-link:hover { color: var(--text-primary); }
           .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 70;
             display: flex; align-items: center; justify-content: center; padding: 1rem;
@@ -317,7 +318,7 @@ export default function RegisterPage() {
           }
           @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
           .modal-box {
-            background: #111113; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem;
+            background: var(--surface-elevated); border: 1px solid var(--border-subtle); border-radius: 1.5rem;
             padding: 2rem; max-width: 26rem; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.8);
           }
         `}</style>
@@ -335,21 +336,21 @@ export default function RegisterPage() {
           <div className={`auth-card w-full max-w-md p-6 lg:p-10 ${leaving ? 'leaving' : ''}`}>
 
             <div className="mb-7 text-center">
-              <p className="text-xs tracking-widest uppercase text-gray-500 mb-2">Create account</p>
-              <h1 className="text-3xl font-bold text-white leading-tight">Sign Up</h1>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs tracking-widest uppercase text-gray-500 dark:text-gray-400 mb-2">Create account</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">Sign Up</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 Already have an account?{' '}
                 <a href="/user/auth/login" onClick={handleGoToLogin} className="page-switch-link">Log in</a>
               </p>
             </div>
 
             {validatingReferral && (
-              <div className="mb-5 p-3 rounded-lg text-xs text-blue-300" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
+              <div className="mb-5 p-3 rounded-lg text-xs text-blue-700 dark:text-blue-300" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
                 ⏳ Validating referral code…
               </div>
             )}
             {referralCode && referralValidated && !validatingReferral && (
-              <div className="mb-5 p-3 rounded-lg text-xs text-green-300" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <div className="mb-5 p-3 rounded-lg text-xs text-green-700 dark:text-green-300" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
                 ✓ Referral code <strong>{referralCode}</strong> applied!
               </div>
             )}
@@ -388,8 +389,8 @@ export default function RegisterPage() {
                 <button type="button" className="back-link" onClick={handleChangeEmail}>
                   <ArrowLeft size={14} /> Change email
                 </button>
-                <p className="text-sm text-gray-400 text-center mb-2">
-                  Enter the 6-digit code sent to<br /><strong className="text-white">{email}</strong>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-2">
+                  Enter the 6-digit code sent to<br /><strong className="text-gray-900 dark:text-white">{email}</strong>
                 </p>
                 <div className="otp-row">
                   {otpDigits.map((digit, i) => (
@@ -437,7 +438,7 @@ export default function RegisterPage() {
                       onChange={(e) => setPassword(e.target.value)} placeholder="Min. 8 characters" required
                       disabled={loading} className="underline-input pr-10" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={loading}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40">
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-40">
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -450,7 +451,7 @@ export default function RegisterPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" required
                       disabled={loading} className="underline-input pr-10" />
                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={loading}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40">
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-40">
                       {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -475,8 +476,8 @@ export default function RegisterPage() {
         {showTerms && (
           <div className="modal-overlay" onClick={() => !loading && setShowTerms(false)}>
             <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-white mb-3">One last step</h3>
-              <p className="text-sm text-gray-400 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">One last step</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 By signing up, you agree to our{' '}
                 <a href="/terms-of-services" target="_blank" rel="noopener noreferrer" className="page-switch-link">Terms & Conditions</a>{' '}
                 and{' '}

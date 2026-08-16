@@ -119,7 +119,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
       style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
     >
       <div
-        className="relative overflow-hidden border border-white/10 bg-[#0f0f0f]"
+        className="relative overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
         style={{
           borderRadius: "2rem 0.75rem 2rem 0.75rem",
           aspectRatio: "9/10",
@@ -277,7 +277,7 @@ export default function Testimonials() {
               Real Stories
             </p>
 
-            <h2 className="text-4xl md:text-5xl font-bold text-white">
+            <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)]">
               Student Transformations
             </h2>
           </div>

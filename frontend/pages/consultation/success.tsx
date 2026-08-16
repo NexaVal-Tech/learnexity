@@ -39,7 +39,7 @@ export default function ConsultationSuccessPage() {
     <>
       <Head><title>Booking Confirmation – Learnexity</title></Head>
       <AppLayout>
-        <div className="min-h-[100vh] flex items-center justify-center px-4" style={{ background: '#0a0a0f' }}>
+        <div className="min-h-[100vh] flex items-center justify-center px-4" style={{ background: 'var(--page-bg)' }}>
           <div className="max-w-md w-full text-center py-10 ">
             {status === 'loading' && (
               <>

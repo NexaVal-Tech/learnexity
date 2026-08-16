@@ -1,6 +1,6 @@
 // lib/types.ts
 
-export type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced';
+export type LearningTrack = 'one_on_one' | 'group_mentorship' | 'self_paced' | 'intermediate';
 
 // ===============================
 // Auth Types
@@ -14,6 +14,7 @@ export interface CourseCreateInput {
   duration?: string;
   level?: string;
   is_freemium: boolean;
+  is_free: boolean;
   is_premium: boolean;
   hero_image?: string;
   secondary_image?: string;
@@ -22,12 +23,15 @@ export interface CourseCreateInput {
   offers_one_on_one: boolean;
   offers_group_mentorship: boolean;
   offers_self_paced: boolean;
+  offers_intermediate?: boolean;
   one_on_one_price_usd?: number;
   group_mentorship_price_usd?: number;
   self_paced_price_usd?: number;
+  intermediate_price_usd?: number;
   one_on_one_price_ngn?: number;
   group_mentorship_price_ngn?: number;
   self_paced_price_ngn?: number;
+  intermediate_price_ngn?: number;
   onetime_discount_usd?: number;
   onetime_discount_ngn?: number;
 }
@@ -126,11 +130,13 @@ export interface Course {
   level: string | null;
   price: number;
   is_freemium: boolean;
+  is_free: boolean;
   is_premium: boolean;
   // Learning tracks
   offers_one_on_one: boolean;
   offers_group_mentorship: boolean;
   offers_self_paced: boolean;
+  offers_intermediate?: boolean;
   offers_real_world_exposure: boolean;
   one_on_one_price: number | null;
   group_mentorship_price: number | null;
@@ -140,18 +146,21 @@ export interface Course {
     one_on_one: number;
     group_mentorship: number;
     self_paced: number;
+    intermediate?: number;
   };
     // USD Pricing
   price_usd?: number;
   one_on_one_price_usd?: number;
   group_mentorship_price_usd?: number;
   self_paced_price_usd?: number;
+  intermediate_price_usd?: number;
   onetime_discount_usd?: number;
     // NGN Pricing
   price_ngn?: number;
   one_on_one_price_ngn?: number;
   group_mentorship_price_ngn?: number;
   self_paced_price_ngn?: number;
+  intermediate_price_ngn?: number;
   onetime_discount_ngn?: number;
 
   created_at: string;
@@ -175,7 +184,7 @@ export interface CourseEnrollment {
   course_slug: string
   course_name: string;
   course_price?: number;
-  learning_track: 'one_on_one' | 'group_mentorship' | 'self_paced';
+  learning_track: 'one_on_one' | 'group_mentorship' | 'self_paced' | 'intermediate';
   deep_tech_screening_passed?: boolean | null;
 
   // Payment fields

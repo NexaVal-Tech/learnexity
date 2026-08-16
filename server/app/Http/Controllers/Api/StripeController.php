@@ -30,7 +30,7 @@ class StripeController extends Controller
     {
         $validated = $request->validate([
             'enrollment_id' => 'required|integer',
-            'learning_track' => 'required|in:one_on_one,group_mentorship,self_paced',
+            'learning_track' => 'required|in:one_on_one,group_mentorship,self_paced,intermediate',
             'payment_type'   => 'required|in:onetime,installment',
             'currency'       => 'required|in:usd',
             'scholarship_id' => 'nullable|integer', 
@@ -88,6 +88,7 @@ class StripeController extends Controller
                 'one_on_one'       => 'One-on-One Coaching',
                 'group_mentorship' => 'Live Classes',
                 'self_paced'       => 'Self-Paced Learning',
+                'intermediate'     => 'Intermediate',
             ];
 
             $session = Session::create([
@@ -208,7 +209,7 @@ class StripeController extends Controller
                     'transaction_id' => $session->payment_intent,
                 ];
 
-                if ($learningTrack && in_array($learningTrack, ['one_on_one', 'group_mentorship', 'self_paced'])) {
+                if ($learningTrack && in_array($learningTrack, ['one_on_one', 'group_mentorship', 'self_paced', 'intermediate'])) {
                     $updateData['learning_track'] = $learningTrack;
                 }
 

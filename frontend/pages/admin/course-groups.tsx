@@ -58,40 +58,40 @@ function GroupFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">{initial ? 'Edit Course Group' : 'New Course Group'}</h2>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+      <div className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/10">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{initial ? 'Edit Course Group' : 'New Course Group'}</h2>
+          <button onClick={onClose} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
             <X size={18} />
           </button>
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs font-medium text-gray-700 block mb-1.5">Name</label>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Data Analysis"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-700 block mb-1.5">Description (optional)</label>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">Description (optional)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="What kind of courses belong in this group?"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
           {error && (
-            <p className="text-sm text-red-600 flex items-center gap-1.5"><AlertCircle size={14} /> {error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1.5"><AlertCircle size={14} /> {error}</p>
           )}
         </div>
-        <div className="p-5 border-t border-gray-100 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+        <div className="p-5 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg">
             Cancel
           </button>
           <button
@@ -149,37 +149,37 @@ function AssignCoursesModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+      <div className="bg-white dark:bg-[#0f0f14] rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/10">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Add Courses to "{group.name}"</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Pick as many as you want. Courses already in another group will be moved here.</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add Courses to "{group.name}"</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pick as many as you want. Courses already in another group will be moved here.</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
             <X size={18} />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-100 dark:border-white/10">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search courses..."
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
         <div className="overflow-y-auto flex-1 p-4 space-y-1">
           {filtered.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No courses found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">No courses found</p>
           ) : filtered.map(c => {
             const alreadyInThisGroup = memberIds.has(c.course_id);
             const checked = selected.has(c.course_id) || alreadyInThisGroup;
             return (
               <label
                 key={c.course_id}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer ${alreadyInThisGroup ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer ${alreadyInThisGroup ? 'bg-purple-50 dark:bg-indigo-500/15' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
               >
                 <input
                   type="checkbox"
@@ -189,11 +189,11 @@ function AssignCoursesModal({
                   className="w-4 h-4 text-purple-600 rounded"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{c.title}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{c.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {c.course_id}
-                    {alreadyInThisGroup && <span className="text-purple-600 font-medium"> · already in this group</span>}
-                    {!alreadyInThisGroup && c.course_group_id && <span className="text-amber-600 font-medium"> · in another group</span>}
+                    {alreadyInThisGroup && <span className="text-purple-600 dark:text-purple-400 font-medium"> · already in this group</span>}
+                    {!alreadyInThisGroup && c.course_group_id && <span className="text-amber-600 dark:text-amber-400 font-medium"> · in another group</span>}
                   </p>
                 </div>
               </label>
@@ -201,8 +201,8 @@ function AssignCoursesModal({
           })}
         </div>
 
-        <div className="p-5 border-t border-gray-100 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+        <div className="p-5 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg">
             Cancel
           </button>
           <button
@@ -294,14 +294,14 @@ export default function CourseGroupsPage() {
   return (
     <AdminRouteGuard>
       <AdminLayout>
-        <div className="min-h-screen bg-gray-50/50 p-6">
+        <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                <FolderTree className="w-6 h-6 text-purple-600" />
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <FolderTree className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 Course Groups
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Organize related courses under one group — e.g. "Data Analysis" holding several
                 related courses. A course can also stand alone with no group. Admin-only for now.
               </p>
@@ -315,28 +315,28 @@ export default function CourseGroupsPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
             </div>
           ) : (
             <>
-              <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{ungroupedCount}</span> course{ungroupedCount === 1 ? '' : 's'} currently stand alone (no group)
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-4 mb-6 flex items-center justify-between">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold text-gray-900 dark:text-white">{ungroupedCount}</span> course{ungroupedCount === 1 ? '' : 's'} currently stand alone (no group)
                 </p>
               </div>
 
               {groups.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-                  <FolderTree className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 mb-4">No course groups yet</p>
+                <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
+                  <FolderTree className="w-10 h-10 text-gray-200 dark:text-white/10 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">No course groups yet</p>
                   <button
                     onClick={() => { setEditingGroup(null); setShowForm(true); }}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
@@ -347,30 +347,30 @@ export default function CourseGroupsPage() {
               ) : (
                 <div className="space-y-4">
                   {groups.map(group => (
-                    <div key={group.id} className="bg-white border border-gray-200 rounded-xl p-5">
+                    <div key={group.id} className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-5">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="text-base font-semibold text-gray-900">{group.name}</h3>
-                          {group.description && <p className="text-sm text-gray-500 mt-0.5">{group.description}</p>}
-                          <p className="text-xs text-gray-400 mt-1">{group.courses_count} course{group.courses_count === 1 ? '' : 's'}</p>
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{group.name}</h3>
+                          {group.description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{group.description}</p>}
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{group.courses_count} course{group.courses_count === 1 ? '' : 's'}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setAssigningGroup(group)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-indigo-500/15 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-medium hover:bg-purple-100 dark:hover:bg-indigo-500/25"
                           >
                             <Plus size={12} /> Add Courses
                           </button>
                           <button
                             onClick={() => { setEditingGroup({ id: group.id, name: group.name, description: group.description }); setShowForm(true); }}
-                            className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
                             title="Edit group"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
                             onClick={() => handleDelete(group)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/15"
                             title="Delete group"
                           >
                             <Trash2 size={14} />
@@ -379,19 +379,19 @@ export default function CourseGroupsPage() {
                       </div>
 
                       {group.courses.length === 0 ? (
-                        <p className="text-xs text-gray-400 italic">No courses added yet</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 italic">No courses added yet</p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           {group.courses.map(c => (
                             <span
                               key={c.course_id}
-                              className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                              className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium"
                             >
                               {c.title}
                               <button
                                 onClick={() => handleRemoveCourse(group, c.course_id)}
                                 disabled={removingCourse === c.course_id}
-                                className="p-0.5 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                                className="p-0.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-500/15"
                                 title="Remove from group"
                               >
                                 {removingCourse === c.course_id ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}

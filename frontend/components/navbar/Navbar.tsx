@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/lib/api";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -92,7 +93,7 @@ interface DropdownItem {
   label: string;
   description: string;
   // hasSubMenu now carries which sub-panel to show
-  subMenu?: "deeptech" | "flex";
+  subMenu?: "deeptech" | "flex" | "free" | "intermediate";
 }
 
 interface NavGroup {
@@ -128,6 +129,19 @@ const NAV: NavEntry[] = [
         description: "Self-paced programmes",
         subMenu: "flex",
       },
+      {
+        href: "/free-courses",
+        label: "Free Courses",
+        description: "Enroll and get full access, no payment",
+        subMenu: "free",
+      },
+      // Uncomment to bring back the Intermediate track in the nav:
+      // {
+      //   href: "/intermediate",
+      //   label: "Intermediate Courses",
+      //   description: "For learners past the basics",
+      //   subMenu: "intermediate",
+      // },
     ],
   },
   {
@@ -163,7 +177,7 @@ function CoursesSubPanel({
     <div
       className={`
         absolute left-full top-0 ml-1.5 w-56 z-50
-        bg-white border border-gray-100 rounded-xl shadow-xl
+        bg-white dark:bg-[#14141c] border border-gray-100 dark:border-white/10 rounded-xl shadow-xl
         transition-all duration-200 ease-out origin-top-left
         ${isOpen
           ? "opacity-100 scale-100 translate-x-0 pointer-events-auto"
@@ -172,8 +186,8 @@ function CoursesSubPanel({
       `}
     >
       {/* Header */}
-      <div className="px-3 pt-3 pb-2 border-b border-gray-50">
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+      <div className="px-3 pt-3 pb-2 border-b border-gray-50 dark:border-white/10">
+        <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
           {browseLabel}
         </p>
       </div>
@@ -194,13 +208,13 @@ function CoursesSubPanel({
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-8 rounded-lg bg-gray-100 animate-pulse"
+                  className="h-8 rounded-lg bg-gray-100 dark:bg-white/10 animate-pulse"
                   style={{ animationDelay: `${i * 80}ms` }}
                 />
               ))}
             </>
           ) : courses.length === 0 ? (
-            <p className="text-xs text-gray-400 px-3 py-3 text-center">No courses available</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 px-3 py-3 text-center">No courses available</p>
           ) : (
             courses.map((course, i) => (
               <Link
@@ -209,14 +223,14 @@ function CoursesSubPanel({
                 style={{ transitionDelay: isOpen ? `${i * 30}ms` : "0ms" }}
                 className={`
                   group/course flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs
-                  text-gray-700 hover:text-[#6C63FF] hover:bg-indigo-50/60
+                  text-gray-700 dark:text-gray-300 hover:text-[#6C63FF] hover:bg-indigo-50/60 dark:hover:bg-white/5
                   transition-all duration-150
                   ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-1"}
                 `}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover/course:bg-[#6C63FF] flex-shrink-0 transition-colors duration-150" />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-white/20 group-hover/course:bg-[#6C63FF] flex-shrink-0 transition-colors duration-150" />
                 <span className="truncate font-medium leading-snug">{course.title}</span>
-                <ChevronRight className="ml-auto flex-shrink-0 text-gray-300 group-hover/course:text-[#6C63FF] opacity-0 group-hover/course:opacity-100 transition-all duration-150" />
+                <ChevronRight className="ml-auto flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover/course:text-[#6C63FF] opacity-0 group-hover/course:opacity-100 transition-all duration-150" />
               </Link>
             ))
           )}
@@ -224,10 +238,10 @@ function CoursesSubPanel({
       </div>
 
       {/* Footer CTA */}
-      <div className="px-2 pb-2 pt-1.5 border-t border-gray-50">
+      <div className="px-2 pb-2 pt-1.5 border-t border-gray-50 dark:border-white/10">
         <Link
           href={browseHref}
-          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold text-[#6C63FF] bg-indigo-50 hover:bg-indigo-100 transition-colors duration-150"
+          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors duration-150"
         >
           Browse all
           <ChevronRight className="text-[#6C63FF]" />
@@ -247,6 +261,10 @@ function DropdownMenu({
   deepTechLoading,
   flexCourses,
   flexLoading,
+  freeCourses,
+  freeLoading,
+  intermediateCourses,
+  intermediateLoading,
 }: {
   group: NavGroup;
   isOpen: boolean;
@@ -255,6 +273,10 @@ function DropdownMenu({
   deepTechLoading: boolean;
   flexCourses: Course[];
   flexLoading: boolean;
+  freeCourses: Course[];
+  freeLoading: boolean;
+  intermediateCourses: Course[];
+  intermediateLoading: boolean;
 }) {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
 
@@ -266,7 +288,7 @@ function DropdownMenu({
     <div
       className={`
         absolute top-[calc(100%+12px)] left-0 z-50 w-60
-        bg-white border border-gray-100 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.10)]
+        bg-white dark:bg-[#14141c] border border-gray-100 dark:border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.10)]
         transition-all duration-200 ease-out origin-top-left overflow-visible
         ${isOpen
           ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
@@ -284,11 +306,20 @@ function DropdownMenu({
 
           // Decide which courses to pass to the sub-panel
           const subCourses =
-            item.subMenu === "deeptech" ? deepTechCourses : flexCourses;
+            item.subMenu === "deeptech" ? deepTechCourses :
+            item.subMenu === "free"     ? freeCourses :
+            item.subMenu === "intermediate" ? intermediateCourses :
+            flexCourses;
           const subLoading =
-            item.subMenu === "deeptech" ? deepTechLoading : flexLoading;
+            item.subMenu === "deeptech" ? deepTechLoading :
+            item.subMenu === "free"     ? freeLoading :
+            item.subMenu === "intermediate" ? intermediateLoading :
+            flexLoading;
           const browseLabel =
-            item.subMenu === "deeptech" ? "Mentorship Courses" : "Self-Paced Courses";
+            item.subMenu === "deeptech" ? "Mentorship Courses" :
+            item.subMenu === "free"     ? "Free Courses" :
+            item.subMenu === "intermediate" ? "Intermediate Courses" :
+            "Self-Paced Courses";
 
           return (
             <div key={item.href} className="relative">
@@ -298,18 +329,18 @@ function DropdownMenu({
                   style={{ transitionDelay: isOpen ? `${i * 40}ms` : "0ms" }}
                   className={`
                     w-full flex items-center justify-between px-3 py-3 rounded-xl
-                    hover:bg-gray-50 transition-all duration-200 group/item cursor-pointer
+                    hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 group/item cursor-pointer
                     ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}
-                    ${isSubOpen ? "bg-indigo-50" : ""}
+                    ${isSubOpen ? "bg-indigo-50 dark:bg-indigo-500/15" : ""}
                   `}
                 >
                   <div className="flex flex-col gap-0.5 text-left">
-                    <span className={`text-[13px] font-semibold ${isSubOpen ? "text-[#6C63FF]" : "text-gray-800"}`}>
+                    <span className={`text-[13px] font-semibold ${isSubOpen ? "text-[#6C63FF]" : "text-gray-800 dark:text-gray-200"}`}>
                       {item.label}
                     </span>
                   </div>
                   <ChevronRight
-                    className={`flex-shrink-0 transition-all duration-200 ${isSubOpen ? "text-[#6C63FF] rotate-90" : "text-gray-300 group-hover/item:text-gray-500"}`}
+                    className={`flex-shrink-0 transition-all duration-200 ${isSubOpen ? "text-[#6C63FF] rotate-90" : "text-gray-300 dark:text-gray-600 group-hover/item:text-gray-500 dark:group-hover/item:text-gray-400"}`}
                   />
                 </button>
               ) : (
@@ -319,14 +350,14 @@ function DropdownMenu({
                   style={{ transitionDelay: isOpen ? `${i * 40}ms` : "0ms" }}
                   className={`
                     flex items-center justify-between px-3 py-3 rounded-xl
-                    hover:bg-gray-50 transition-all duration-200 group/item
+                    hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200 group/item
                     ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}
                   `}
                 >
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[13px] font-semibold text-gray-800">{item.label}</span>
+                    <span className="text-[13px] font-semibold text-gray-800 dark:text-gray-200">{item.label}</span>
                   </div>
-                  <ChevronRight className="flex-shrink-0 text-gray-300 group-hover/item:text-gray-500 transition-colors" />
+                  <ChevronRight className="flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover/item:text-gray-500 dark:group-hover/item:text-gray-400 transition-colors" />
                 </Link>
               )}
 
@@ -376,11 +407,11 @@ function MobileCoursesAccordion({
         {isLoading ? (
           <>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-8 rounded-lg bg-gray-100 animate-pulse my-0.5" />
+              <div key={i} className="h-8 rounded-lg bg-gray-100 dark:bg-white/10 animate-pulse my-0.5" />
             ))}
           </>
         ) : courses.length === 0 ? (
-          <p className="text-xs text-gray-400 py-2 px-2">No courses found</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 py-2 px-2">No courses found</p>
         ) : (
           courses.map((course, i) => (
             <Link
@@ -390,12 +421,12 @@ function MobileCoursesAccordion({
               style={{ transitionDelay: isOpen ? `${i * 35}ms` : "0ms" }}
               className={`
                 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px]
-                font-medium text-gray-600 hover:text-[#6C63FF] hover:bg-indigo-50
+                font-medium text-gray-600 dark:text-gray-300 hover:text-[#6C63FF] hover:bg-indigo-50 dark:hover:bg-white/5
                 transition-all duration-200
                 ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
               `}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-200 flex-shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-200 dark:bg-indigo-500/40 flex-shrink-0" />
               <span className="truncate">{course.title}</span>
             </Link>
           ))
@@ -405,7 +436,7 @@ function MobileCoursesAccordion({
         <Link
           href={browseHref}
           onClick={onLinkClick}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#6C63FF] hover:bg-indigo-50 transition-colors mt-1"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#6C63FF] hover:bg-indigo-50 dark:hover:bg-white/5 transition-colors mt-1"
         >
           Browse all
         </Link>
@@ -423,11 +454,17 @@ export default function Navbar() {
   // Track which mobile sub-accordion is open: "deeptech" | "flex" | null
   const [expandedMobileSub, setExpandedMobileSub] = useState<string | null>(null);
 
-  // Separate state for the two course lists
+  // Separate state for each course list shown in the Courses submenu
   const [deepTechCourses, setDeepTechCourses] = useState<Course[]>([]);
   const [deepTechLoading, setDeepTechLoading] = useState(false);
   const [flexCourses, setFlexCourses] = useState<Course[]>([]);
   const [flexLoading, setFlexLoading] = useState(false);
+  const [freeCourses, setFreeCourses] = useState<Course[]>([]);
+  const [freeLoading, setFreeLoading] = useState(false);
+  // Fetched even while the Intermediate nav entry is commented out, so
+  // uncommenting it in NAV above is a one-line change with no further wiring.
+  const [intermediateCourses, setIntermediateCourses] = useState<Course[]>([]);
+  const [intermediateLoading, setIntermediateLoading] = useState(false);
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -463,6 +500,37 @@ export default function Navbar() {
       })
       .catch(() => setFlexCourses([]))
       .finally(() => setFlexLoading(false));
+  }, []);
+
+  // Fetch free courses
+  useEffect(() => {
+    setFreeLoading(true);
+    fetch(
+      `${API_URL}/api/courses/free`,
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        setFreeCourses(Array.isArray(data) ? data : data?.data ?? []);
+      })
+      .catch(() => setFreeCourses([]))
+      .finally(() => setFreeLoading(false));
+  }, []);
+
+  // Fetch intermediate-track courses (kept fetched even while the nav entry
+  // is commented out — see NAV config above)
+  useEffect(() => {
+    setIntermediateLoading(true);
+    fetch(
+      `${API_URL}/api/courses/by-track?track[]=intermediate`,
+      { headers: { Accept: "application/json" } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        setIntermediateCourses(Array.isArray(data) ? data : data?.data ?? []);
+      })
+      .catch(() => setIntermediateCourses([]))
+      .finally(() => setIntermediateLoading(false));
   }, []);
 
   // Navbar shadow on scroll
@@ -504,11 +572,11 @@ export default function Navbar() {
       <nav
         ref={navRef}
         className={`
-          bg-white fixed w-full z-50
+          bg-white dark:bg-[#0a0a0f] fixed w-full z-50
           transition-all duration-300
           ${scrolled
-            ? "border-b border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.06)]"
-            : "border-b border-gray-100"
+            ? "border-b border-gray-100 dark:border-white/10 shadow-[0_2px_20px_rgba(0,0,0,0.06)]"
+            : "border-b border-gray-100 dark:border-white/10"
           }
         `}
         aria-label="Main navigation"
@@ -536,8 +604,8 @@ export default function Navbar() {
                         relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl
                         text-[13.5px] font-medium transition-all duration-150
                         ${active || isThisOpen
-                          ? "text-[#6C63FF] bg-indigo-50"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/80"
+                          ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15"
+                          : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50/80 dark:hover:bg-white/5"
                         }
                       `}
                     >
@@ -557,6 +625,10 @@ export default function Navbar() {
                       deepTechLoading={deepTechLoading}
                       flexCourses={flexCourses}
                       flexLoading={flexLoading}
+                      freeCourses={freeCourses}
+                      freeLoading={freeLoading}
+                      intermediateCourses={intermediateCourses}
+                      intermediateLoading={intermediateLoading}
                     />
                   </div>
                 );
@@ -571,8 +643,8 @@ export default function Navbar() {
                     flex items-center gap-1.5 px-3.5 py-2 rounded-xl
                     text-[13.5px] font-medium transition-all duration-150
                     ${isActive
-                      ? "text-[#6C63FF] bg-indigo-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/80"
+                      ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50/80 dark:hover:bg-white/5"
                     }
                   `}
                 >
@@ -587,6 +659,7 @@ export default function Navbar() {
 
           {/* Desktop right side */}
           <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             {user && (
               <Link
                 href="/user/dashboard"
@@ -594,8 +667,8 @@ export default function Navbar() {
                   flex items-center gap-1.5 px-3.5 py-2 rounded-xl
                   text-[13px] font-medium border transition-all duration-150
                   ${pathname === "/user/dashboard"
-                    ? "border-[#6C63FF] text-[#6C63FF] bg-indigo-50"
-                    : "border-gray-200 text-gray-600 hover:border-[#6C63FF] hover:text-[#6C63FF] hover:bg-indigo-50/60"
+                    ? "border-[#6C63FF] text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15"
+                    : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-[#6C63FF] hover:text-[#6C63FF] hover:bg-indigo-50/60 dark:hover:bg-white/5"
                   }
                 `}
               >
@@ -606,7 +679,7 @@ export default function Navbar() {
             {!user ? (
               <Link
                 href="/user/auth/login"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all duration-150"
               >
                 <UserIcon />
                 Log in
@@ -633,14 +706,14 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsMobileOpen((v) => !v)}
-            className="md:hidden p-2.5 rounded-xl hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
             aria-label={isMobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMobileOpen}
           >
             <div className="w-[18px] h-[14px] flex flex-col justify-between">
-              <span className={`block h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${isMobileOpen ? "rotate-45 translate-y-[6px]" : ""}`} />
-              <span className={`block h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${isMobileOpen ? "opacity-0 scale-x-0" : ""}`} />
-              <span className={`block h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${isMobileOpen ? "-rotate-45 -translate-y-[6px]" : ""}`} />
+              <span className={`block h-0.5 bg-gray-800 dark:bg-white rounded-full transition-all duration-300 ${isMobileOpen ? "rotate-45 translate-y-[6px]" : ""}`} />
+              <span className={`block h-0.5 bg-gray-800 dark:bg-white rounded-full transition-all duration-300 ${isMobileOpen ? "opacity-0 scale-x-0" : ""}`} />
+              <span className={`block h-0.5 bg-gray-800 dark:bg-white rounded-full transition-all duration-300 ${isMobileOpen ? "-rotate-45 -translate-y-[6px]" : ""}`} />
             </div>
           </button>
         </div>
@@ -658,7 +731,7 @@ export default function Navbar() {
       {/* ── Mobile slide-down panel ── */}
       <div
         className={`
-          fixed top-0 left-0 w-full bg-white z-50 md:hidden
+          fixed top-0 left-0 w-full bg-white dark:bg-[#0a0a0f] z-50 md:hidden
           transition-all duration-300 ease-in-out
           ${isMobileOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}
         `}
@@ -667,17 +740,20 @@ export default function Navbar() {
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#6C63FF] via-purple-400 to-pink-400" />
 
         {/* Mobile header */}
-        <div className="flex items-center justify-between px-5 h-[62px] border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 h-[62px] border-b border-gray-100 dark:border-white/10">
           <Link href="/" onClick={() => setIsMobileOpen(false)}>
             <img src="/images/Logo.png" alt="Learnexity" width={116} height={34} className="object-contain" />
           </Link>
-          <button
-            onClick={() => setIsMobileOpen(false)}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500"
-            aria-label="Close menu"
-          >
-            <CloseIcon />
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
+              aria-label="Close menu"
+            >
+              <CloseIcon />
+            </button>
+          </div>
         </div>
 
         {/* Mobile nav items */}
@@ -694,17 +770,17 @@ export default function Navbar() {
                     className={`
                       w-full flex items-center justify-between px-4 py-3.5 rounded-xl
                       text-[14px] font-semibold transition-all duration-150
-                      ${active ? "text-[#6C63FF] bg-indigo-50" : "text-gray-700 hover:bg-gray-50"}
+                      ${active ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"}
                     `}
                   >
                     {entry.label}
                     <ChevronDown
-                      className={`transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#6C63FF]" : "text-gray-400"}`}
+                      className={`transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#6C63FF]" : "text-gray-400 dark:text-gray-500"}`}
                     />
                   </button>
 
                   <AnimatedAccordion isOpen={isExpanded}>
-                    <div className="ml-1 mt-1 mb-2 pl-1 border-gray-100 flex flex-col gap-0.5">
+                    <div className="ml-1 mt-1 mb-2 pl-1 border-gray-100 dark:border-white/10 flex flex-col gap-0.5">
                       {entry.items.map((item, i) => {
                         const hasSubMenu = !!item.subMenu;
                         const subKey = item.subMenu ?? item.label;
@@ -712,9 +788,15 @@ export default function Navbar() {
 
                         // Pick the right courses for this sub-menu
                         const subCourses =
-                          item.subMenu === "deeptech" ? deepTechCourses : flexCourses;
+                          item.subMenu === "deeptech" ? deepTechCourses :
+                          item.subMenu === "free"     ? freeCourses :
+                          item.subMenu === "intermediate" ? intermediateCourses :
+                          flexCourses;
                         const subLoading =
-                          item.subMenu === "deeptech" ? deepTechLoading : flexLoading;
+                          item.subMenu === "deeptech" ? deepTechLoading :
+                          item.subMenu === "free"     ? freeLoading :
+                          item.subMenu === "intermediate" ? intermediateLoading :
+                          flexLoading;
 
                         if (hasSubMenu) {
                           return (
@@ -731,8 +813,8 @@ export default function Navbar() {
                                   transition-all duration-200
                                   ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
                                   ${isSubExpanded
-                                    ? "text-[#6C63FF] bg-indigo-50 font-semibold"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
+                                    ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15 font-semibold"
+                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white font-medium"
                                   }
                                 `}
                               >
@@ -742,7 +824,7 @@ export default function Navbar() {
                                   </p>
                                 </div>
                                 <ChevronDown
-                                  className={`transition-transform duration-300 flex-shrink-0 ${isSubExpanded ? "rotate-180 text-[#6C63FF]" : "text-gray-300"}`}
+                                  className={`transition-transform duration-300 flex-shrink-0 ${isSubExpanded ? "rotate-180 text-[#6C63FF]" : "text-gray-300 dark:text-gray-600"}`}
                                 />
                               </button>
 
@@ -768,15 +850,15 @@ export default function Navbar() {
                               transition-all duration-200
                               ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
                               ${pathname === item.href
-                                ? "text-[#6C63FF] bg-indigo-50"
-                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15"
+                                : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
                               }
                             `}
                           >
                             <div>
                               <p className="font-semibold text-[13px] leading-none mb-0.5">{item.label}</p>
                             </div>
-                            <ChevronRight className="flex-shrink-0 text-gray-300" />
+                            <ChevronRight className="flex-shrink-0 text-gray-300 dark:text-gray-600" />
                           </Link>
                         );
                       })}
@@ -796,8 +878,8 @@ export default function Navbar() {
                   flex items-center gap-2 px-4 py-3.5 rounded-xl
                   text-[14px] font-semibold transition-all duration-150
                   ${isActive
-                    ? "text-[#6C63FF] bg-indigo-50"
-                    : "text-gray-700 hover:bg-gray-50"
+                    ? "text-[#6C63FF] bg-indigo-50 dark:bg-indigo-500/15"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                   }
                 `}
               >
@@ -813,7 +895,7 @@ export default function Navbar() {
             <Link
               href="/user/dashboard"
               onClick={() => setIsMobileOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold text-[#6C63FF] border border-indigo-200 bg-indigo-50/50 mt-1 hover:bg-indigo-100 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold text-[#6C63FF] border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/15 mt-1 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 transition-colors"
             >
               <DashboardIcon />
               Dashboard
@@ -823,11 +905,11 @@ export default function Navbar() {
 
         {/* Mobile bottom actions */}
         <div className="px-4 pb-6 flex flex-col gap-2.5">
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-100 dark:border-white/10 pt-4">
             {!user ? (
               <Link
                 href="/user/auth/login"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-white/20 transition-all duration-150"
               >
                 <UserIcon />
                 Log in

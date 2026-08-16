@@ -195,7 +195,7 @@ const CTAButton: React.FC<{ onClick: () => void; label?: string; secondary?: boo
       borderRadius: "2rem 0.75rem 2rem 0.75rem",
       background: secondary ? "transparent" : BRAND,
       border: secondary ? `2px solid ${BRAND}55` : "none",
-      color: secondary ? BRAND : "#fff",
+      color: secondary ? BRAND : "var(--text-primary)",
       boxShadow: secondary ? "none" : `0 10px 32px ${BRAND}44`,
     }}
   >
@@ -297,7 +297,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
   if (!isOpen) return null;
 
   const inputCls   = "w-full px-4 py-3 rounded-xl text-white text-sm outline-none transition-all placeholder-gray-600";
-  const inputStyle = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" };
+  const inputStyle = { background: "var(--surface-alt)", border: "1px solid var(--border-subtle)" };
 
   // Step 2 session options — badge color per tier
   const sessionOptions: {
@@ -315,18 +315,18 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
   return (
     <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(4,4,12,0.88)", backdropFilter: "blur(12px)" }}>
+      style={{ background: "var(--overlay)", backdropFilter: "blur(12px)" }}>
       <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl"
-        style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.1)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
-        <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "rgba(255,255,255,0.06)" }}>✕</button>
+        style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "var(--surface)", border: "1px solid var(--border-subtle)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "var(--surface-alt)" }}>✕</button>
 
         <div className="px-8 pt-8 pb-0">
           <div className="flex items-center gap-2 mb-6">
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0"
-                  style={{ background: step >= s ? BRAND : "rgba(255,255,255,0.08)", color: step >= s ? "#fff" : "#666" }}>{s}</div>
-                {s < 3 && <div className="flex-1 h-0.5 rounded" style={{ background: step > s ? BRAND : "rgba(255,255,255,0.08)" }} />}
+                  style={{ background: step >= s ? BRAND : "var(--surface-alt)", color: step >= s ? "var(--text-primary)" : "var(--text-muted)" }}>{s}</div>
+                {s < 3 && <div className="flex-1 h-0.5 rounded" style={{ background: step > s ? BRAND : "var(--surface-alt)" }} />}
               </React.Fragment>
             ))}
           </div>
@@ -359,7 +359,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                   <div className="md:col-span-2"><label className="block text-xs font-semibold text-gray-400 mb-1.5">Phone Number</label><input value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} placeholder="+234 800 000 0000" type="tel" className={inputCls} style={inputStyle} /></div>
                 </div>
               </div>
-              <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.07)" }} />
+              <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)" }} />
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: BRAND }}>B</span>
@@ -369,7 +369,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                   <div><label className="block text-xs font-semibold text-gray-400 mb-1.5">Student's Name *</label><input value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="Alex" type="text" className={inputCls} style={inputStyle} /></div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-400 mb-1.5">Student's Age *</label>
-                    <select value={studentAge} onChange={(e) => setStudentAge(e.target.value)} className={inputCls} style={{ ...inputStyle, background: "rgba(255,255,255,0.06)" }}>
+                    <select value={studentAge} onChange={(e) => setStudentAge(e.target.value)} className={inputCls} style={{ ...inputStyle, background: "var(--surface-alt)" }}>
                       <option value="">Select Age</option>
                       {[10,11,12,13,14,15,16,17].map((a) => <option key={a} value={a}>{a}</option>)}
                     </select>
@@ -402,12 +402,12 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                       className="p-3 text-center transition-all hover:scale-105"
                       style={{
                         borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem",
-                        border: selectedTrack === t.value ? `2px solid ${BRAND}` : "1px solid rgba(255,255,255,0.1)",
-                        background: selectedTrack === t.value ? `${BRAND}15` : "rgba(255,255,255,0.04)",
+                        border: selectedTrack === t.value ? `2px solid ${BRAND}` : "1px solid var(--border-subtle)",
+                        background: selectedTrack === t.value ? `${BRAND}15` : "var(--surface-alt)",
                         boxShadow: selectedTrack === t.value ? `0 0 20px ${BRAND}22` : "none",
                       }}>
                       <div className="text-xl mb-1">{t.emoji}</div>
-                      <div className="text-[11px] font-bold leading-tight" style={{ color: selectedTrack === t.value ? BRAND : "#9ca3af" }}>{t.value}</div>
+                      <div className="text-[11px] font-bold leading-tight" style={{ color: selectedTrack === t.value ? BRAND : "var(--text-secondary)" }}>{t.value}</div>
                     </button>
                   ))}
                 </div>
@@ -425,17 +425,17 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                         className="p-3 text-center transition-all hover:scale-105"
                         style={{
                           borderRadius: "1.25rem 0.5rem 1.25rem 0.5rem",
-                          border: isSelected ? `2px solid ${s.badgeColor}` : "1px solid rgba(255,255,255,0.1)",
-                          background: isSelected ? `${s.badgeColor}15` : "rgba(255,255,255,0.04)",
+                          border: isSelected ? `2px solid ${s.badgeColor}` : "1px solid var(--border-subtle)",
+                          background: isSelected ? `${s.badgeColor}15` : "var(--surface-alt)",
                           boxShadow: isSelected ? `0 0 20px ${s.badgeColor}22` : "none",
                         }}>
                         <div className="text-xl mb-1">{meta.icon}</div>
                         <div className="text-[11px] font-bold leading-tight mb-0.5"
-                          style={{ color: isSelected ? s.badgeColor : "#9ca3af" }}>
+                          style={{ color: isSelected ? s.badgeColor : "var(--text-secondary)" }}>
                           {meta.label}
                         </div>
                         <div className="text-[10px] text-gray-600 mb-1 leading-tight">{meta.sublabel}</div>
-                        <div className="text-[10px] font-bold" style={{ color: isSelected ? s.badgeColor : "#6b7280" }}>
+                        <div className="text-[10px] font-bold" style={{ color: isSelected ? s.badgeColor : "var(--text-muted)" }}>
                           {s.priceNote} · 3 mo
                         </div>
                       </button>
@@ -445,7 +445,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep(1)} className="flex-1 py-4 font-bold text-sm text-gray-400 transition-all hover:text-white" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>← Back</button>
+                <button onClick={() => setStep(1)} className="flex-1 py-4 font-bold text-sm text-gray-400 transition-all hover:text-white" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>← Back</button>
                 <button onClick={() => { setError(""); setStep(3); }} className="flex-[2] py-4 font-bold text-base text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
                   style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 8px 24px ${BRAND}44` }}>
                   Continue <ArrowRight className="w-4 h-4" />
@@ -468,8 +468,8 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                       className="p-4 text-left relative transition-all"
                       style={{
                         borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem",
-                        border: paymentType === pt.value ? `2px solid ${pt.highlight ? "#16a34a" : BRAND}` : "1px solid rgba(255,255,255,0.1)",
-                        background: paymentType === pt.value ? (pt.highlight ? "rgba(22,163,74,0.1)" : `${BRAND}10`) : "rgba(255,255,255,0.04)",
+                        border: paymentType === pt.value ? `2px solid ${pt.highlight ? "#16a34a" : BRAND}` : "1px solid var(--border-subtle)",
+                        background: paymentType === pt.value ? (pt.highlight ? "rgba(22,163,74,0.1)" : `${BRAND}10`) : "var(--surface-alt)",
                         boxShadow: paymentType === pt.value ? `0 0 20px ${pt.highlight ? "rgba(22,163,74,0.3)" : BRAND + "22"}` : "none",
                       }}>
                       {pt.highlight && <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-900/40 text-green-400">Save {ONETIME_DISCOUNT}%</span>}
@@ -482,8 +482,8 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
               </div>
 
               {/* Price summary — session label from SESSION_LABELS */}
-              <div style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid var(--border-subtle)", overflow: "hidden" }}>
+                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "var(--surface-alt)", borderBottom: "1px solid var(--border-subtle)" }}>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Price Summary</p>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: `${BRAND}20`, color: BRAND }}>3 months total</span>
                 </div>
@@ -493,7 +493,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                     <span>{tracks.find(t => t.courseSlug === trackSlug)?.emoji} {tracks.find(t => t.name === selectedTrack)?.name} (Months 2 & 3)</span>
                     <span className="text-gray-600 text-xs italic">included</span>
                   </div>
-                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.07)" }} />
+                  <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)" }} />
                   {coursesLoaded ? (
                     <>
                       <div className="flex justify-between">
@@ -510,7 +510,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
                           <span className="font-bold">−{fmt(saved, currency)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                      <div className="flex justify-between font-bold pt-2" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                         <span className="text-white">{paymentType === "onetime" ? "Total due today" : "Due today (1 of 3)"}</span>
                         <span style={{ color: BRAND }} className="text-base">{fmt(todayAmount, currency)}</span>
                       </div>
@@ -525,7 +525,7 @@ const RegistrationModal: React.FC<RegModalProps> = ({ isOpen, onClose, preselect
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep(2)} className="flex-1 py-4 font-bold text-sm text-gray-400 transition-all hover:text-white" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>← Back</button>
+                <button onClick={() => setStep(2)} className="flex-1 py-4 font-bold text-sm text-gray-400 transition-all hover:text-white" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>← Back</button>
                 <button onClick={handleSubmit} disabled={loading || !coursesLoaded} className="flex-[2] py-4 font-bold text-base text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND, boxShadow: `0 8px 24px ${BRAND}44` }}>
                   {loading ? "Processing…" : <><span>Proceed to Payment</span><ArrowRight className="w-4 h-4" /></>}
@@ -569,19 +569,19 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
   return (
     <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(4,4,12,0.88)", backdropFilter: "blur(12px)" }}>
+      style={{ background: "var(--overlay)", backdropFilter: "blur(12px)" }}>
       <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl"
-        style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.1)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
-        <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "rgba(255,255,255,0.06)" }}>✕</button>
+        style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "var(--surface)", border: "1px solid var(--border-subtle)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={onClose} className="absolute top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "var(--surface-alt)" }}>✕</button>
 
-        <div className="px-8 pt-10 pb-8" style={{ background: `linear-gradient(135deg, ${BRAND}12 0%, transparent 100%)`, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="px-8 pt-10 pb-8" style={{ background: `linear-gradient(135deg, ${BRAND}12 0%, transparent 100%)`, borderBottom: "1px solid var(--border-subtle)" }}>
           <div className="text-5xl mb-3">{track.emoji}</div>
           <h2 className="text-2xl font-bold text-white mb-1">{track.name}</h2>
           <p className="text-gray-400 text-sm leading-relaxed">{track.description}</p>
         </div>
 
         <div className="px-8 py-6 space-y-6">
-          <div className="w-full overflow-hidden" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="w-full overflow-hidden" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid var(--border-subtle)" }}>
             <Image src={track.image} alt={track.name} width={500} height={200} className="w-full object-cover" />
           </div>
 
@@ -599,7 +599,7 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
                   const meta = SESSION_LABELS[row.key];
                   return (
                     <div key={row.key} className="p-3"
-                      style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "var(--surface-alt)", border: "1px solid var(--border-subtle)" }}>
                       <p className="text-lg mb-1">{meta.icon}</p>
                       <p className="text-xs font-bold text-white leading-tight">{meta.label}</p>
                       <p className="text-[10px] text-gray-500 mb-2 leading-tight">{meta.sublabel}</p>
@@ -642,7 +642,7 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
             <p className="text-gray-400">{track.why_it_matters}</p>
           </div>
 
-          <p className="text-sm font-semibold text-gray-400 italic" style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "1rem" }}>{track.decision_line}</p>
+          <p className="text-sm font-semibold text-gray-400 italic" style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "1rem" }}>{track.decision_line}</p>
 
           <button onClick={() => { onClose(); onEnroll(track.name); }}
             className="w-full py-4 font-bold text-base text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
@@ -660,14 +660,14 @@ const TrackModal: React.FC<{ track: Track | null; onClose: () => void; onEnroll:
 const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; onEnroll: (trackName: string) => void; }> = ({ track, onLearnMore, onEnroll }) => (
   <div
     className="flex flex-col h-full cursor-pointer group"
-    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.92)", backdropFilter: "blur(12px)", boxShadow: "0 25px 50px rgba(0,0,0,0.7)", transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s" }}
+    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", backdropFilter: "blur(12px)", boxShadow: "0 25px 50px rgba(0,0,0,0.7)", transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s" }}
     onMouseEnter={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = `${BRAND}55`; el.style.boxShadow = `0 20px 60px rgba(0,0,0,0.6), 0 0 30px ${BRAND}22`; el.style.transform = "translateY(-6px)"; }}
-    onMouseLeave={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.boxShadow = "0 25px 50px rgba(0,0,0,0.7)"; el.style.transform = ""; }}
+    onMouseLeave={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = "var(--border-subtle)"; el.style.boxShadow = "0 25px 50px rgba(0,0,0,0.7)"; el.style.transform = ""; }}
   >
     <div className="relative w-full h-48 overflow-hidden" style={{ borderRadius: "2rem 0.75rem 0 0" }}>
       <Image src={track.image} alt={track.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 50%, rgba(15,15,15,0.8) 100%)" }} />
-      <div className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(15,15,15,0.85)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.1)" }}>3 months</div>
+      <div className="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "var(--surface-elevated)", color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}>3 months</div>
     </div>
 
     <div className="flex flex-col flex-1 p-8 gap-4">
@@ -705,7 +705,7 @@ const TrackCard: React.FC<{ track: Track; onLearnMore: (track: Track) => void; o
 
 // ─── Resume Banner ─────────────────────────────────────────────────────────────
 const ResumeBanner: React.FC<{ onResume: () => void }> = ({ onResume }) => (
-  <div className="flex items-center gap-4 px-6 py-4" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "rgba(15,15,15,0.9)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
+  <div className="flex items-center gap-4 px-6 py-4" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "var(--surface-elevated)", border: "1px solid var(--border-subtle)", backdropFilter: "blur(8px)" }}>
     <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ background: `${BRAND_ORANGE}20` }}>📋</div>
     <div className="flex-1">
       <p className="font-bold text-white text-sm">Have an incomplete enrollment?</p>
@@ -737,12 +737,12 @@ const ResumeModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
     finally { setLoading(false); }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(4,4,12,0.88)", backdropFilter: "blur(12px)" }}>
-      <div className="relative w-full max-w-md p-8 shadow-2xl" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.1)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
-        <button onClick={onClose} className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "rgba(255,255,255,0.06)" }}>✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "var(--overlay)", backdropFilter: "blur(12px)" }}>
+      <div className="relative w-full max-w-md p-8 shadow-2xl" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: "var(--surface)", border: "1px solid var(--border-subtle)", animation: "kidsModalIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards" }}>
+        <button onClick={onClose} className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all" style={{ background: "var(--surface-alt)" }}>✕</button>
         <h3 className="text-xl font-bold text-white mb-1">Resume Your Enrollment</h3>
         <p className="text-gray-500 text-sm mb-6">Enter the parent email used during registration.</p>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="parent@email.com" className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none placeholder-gray-600 mb-3" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }} />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="parent@email.com" className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none placeholder-gray-600 mb-3" style={{ background: "var(--surface-alt)", border: "1px solid var(--border-subtle)" }} />
         {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
         {found.length === 0 ? (
           <button onClick={lookup} disabled={loading} className="w-full py-3 font-bold text-white transition-all hover:opacity-90 disabled:opacity-50" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", background: BRAND }}>
@@ -751,7 +751,7 @@ const ResumeModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpe
         ) : (
           <div className="space-y-3">
             {found.map((enr: any) => (
-              <button key={enr.id} onClick={() => router.push(`/kids/payment/${enr.id}`)} className="w-full p-4 text-left transition-all hover:border-indigo-500" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>
+              <button key={enr.id} onClick={() => router.push(`/kids/payment/${enr.id}`)} className="w-full p-4 text-left transition-all hover:border-indigo-500" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)" }}>
                 <p className="font-bold text-white text-sm">{enr.course?.name} — {enr.student_name}</p>
                 <p className="text-xs text-gray-500 mt-0.5 capitalize">{enr.enrollment_type?.replace("_", " ")} · Paid {enr.currency} {enr.amount_paid?.toLocaleString()} of {enr.total_price?.toLocaleString()} · {enr.installments_remaining} payment{enr.installments_remaining !== 1 ? "s" : ""} remaining</p>
               </button>
@@ -825,10 +825,10 @@ export default function Kids() {
           @keyframes kidsFloat { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-20px) rotate(5deg); } }
           @keyframes kidsBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
           @keyframes kidsModalIn { from { opacity:0; transform:translateY(32px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
-          .dc-divider { border:none; border-top:1px solid rgba(255,255,255,0.07); }
+          .dc-divider { border:none; border-top:1px solid var(--border-subtle); }
         `}</style>
 
-        <div style={{ color: "#fff", minHeight: "100vh" }}>
+        <div style={{ color: "var(--text-primary)", minHeight: "100vh" }}>
 
           {/* ── Hero ──────────────────────────────────────────────────────── */}
           <section className="relative pt-32 pb-24 px-6 overflow-hidden">
@@ -853,8 +853,8 @@ export default function Kids() {
                   <CTAButton onClick={() => openEnroll()} />
                   <div className="flex items-center gap-3 px-2">
                     <div className="flex -space-x-2">
-                      {[BRAND, BRAND_ORANGE, "#080808"].map((c, i) => (
-                        <div key={i} className="w-8 h-8 rounded-full border-2" style={{ background: c, borderColor: "#080808" }} />
+                      {[BRAND, BRAND_ORANGE, "var(--page-bg)"].map((c, i) => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2" style={{ background: c, borderColor: "var(--page-bg)" }} />
                       ))}
                     </div>
                     <span className="text-sm text-gray-400">Join 500+ young creators</span>
@@ -867,10 +867,10 @@ export default function Kids() {
               </div>
 
               <div className="relative">
-                <div className="relative w-full aspect-[4/3] md:aspect-[14/10] overflow-hidden group" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.1)", boxShadow: `0 40px 80px rgba(0,0,0,0.8), 0 0 60px ${BRAND}18` }}>
+                <div className="relative w-full aspect-[4/3] md:aspect-[14/10] overflow-hidden group" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", boxShadow: `0 40px 80px rgba(0,0,0,0.8), 0 0 60px ${BRAND}18` }}>
                   <Image src="images/photo-1593642532842-98d0fd5ebc1a.avif" alt="Student coding" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, transparent 50%, rgba(8,8,8,0.6) 100%)" }} />
-                  <div className="absolute bottom-5 left-5 px-4 py-3 flex items-center gap-3" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "rgba(15,15,15,0.9)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", animation: "kidsBounce 3s ease-in-out infinite" }}>
+                  <div className="absolute bottom-5 left-5 px-4 py-3 flex items-center gap-3" style={{ borderRadius: "1.5rem 0.5rem 1.5rem 0.5rem", background: "var(--surface-elevated)", border: "1px solid var(--border-subtle)", backdropFilter: "blur(8px)", animation: "kidsBounce 3s ease-in-out infinite" }}>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#6C63FF" }}>✓</div>
                     <div><p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live Mentorship</p><p className="text-sm font-bold text-white">Expert-led Sessions</p></div>
                   </div>
@@ -896,14 +896,14 @@ export default function Kids() {
           </section>
 
           {/* ── Resume Banner ─────────────────────────────────────────────── */}
-          <section className="py-4 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <section className="py-4 px-6" style={{ borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
             <div className="max-w-[1230px] mx-auto">
               <ResumeBanner onResume={() => setResumeOpen(true)} />
             </div>
           </section>
 
           {/* ── What Your Child Will Gain ──────────────────────────────────── */}
-          <section className="py-20 px-6" style={{ background: "linear-gradient(135deg, #080808 0%, #0a0818 100%)" }}>
+          <section className="py-20 px-6" style={{ background: "var(--page-bg-alt)" }}>
             <div className="max-w-[1230px] mx-auto text-center">
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Program Outcomes</p>
               <h2 className="text-3xl font-bold text-white mb-12">What Your Child Will Gain</h2>
@@ -915,9 +915,9 @@ export default function Kids() {
                   { icon: "📂", title: "Real Portfolio",     desc: "A collection of projects they built from scratch." },
                 ].map((item, i) => (
                   <div key={i} className="p-6 transition-all duration-300 hover:-translate-y-1"
-                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(8px)" }}
+                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-alt)", backdropFilter: "blur(8px)" }}
                     onMouseEnter={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = `${BRAND}44`; el.style.boxShadow = `0 0 30px ${BRAND}15`; }}
-                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.boxShadow = "none"; }}>
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = "var(--border-subtle)"; el.style.boxShadow = "none"; }}>
                     <div className="text-4xl mb-4">{item.icon}</div>
                     <h3 className="font-bold text-xl text-white mb-2">{item.title}</h3>
                     <p className="text-gray-500 text-sm">{item.desc}</p>
@@ -940,7 +940,7 @@ export default function Kids() {
           {/* ── The Problem ───────────────────────────────────────────────── */}
           <section className="py-20 px-6">
             <div className="max-w-[1230px] mx-auto grid md:grid-cols-2 gap-16 items-center">
-              <div className="relative w-full aspect-video overflow-hidden" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 40px 80px rgba(0,0,0,0.7)" }}>
+              <div className="relative w-full aspect-video overflow-hidden" style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", boxShadow: "0 40px 80px rgba(0,0,0,0.7)" }}>
                 <Image src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80" alt="Passive tech use" fill className="object-cover opacity-70 hover:scale-105 transition-transform duration-700 hover:opacity-90" />
               </div>
               <div>
@@ -956,7 +956,7 @@ export default function Kids() {
           </section>
 
           {/* ── How It Works ─────────────────────────────────────────────── */}
-          <section className="py-20 px-6" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #0f0a1e 100%)", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <section className="py-20 px-6" style={{ background: "var(--page-bg-alt)", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
             <div className="max-w-[1230px] mx-auto text-center">
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Program Structure</p>
               <h2 className="text-4xl font-bold text-white mb-4">What Your Child Will Learn.</h2>
@@ -975,7 +975,7 @@ export default function Kids() {
                   },
                 ].map((stage) => (
                   <div key={stage.num} className="p-10 text-left transition-all duration-300 hover:-translate-y-2"
-                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(15,15,15,0.9)", borderTop: `4px solid ${stage.color}`, backdropFilter: "blur(8px)" }}>
+                    style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", borderTop: `4px solid ${stage.color}`, backdropFilter: "blur(8px)" }}>
                     <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold mb-4" style={{ background: `${stage.color}20`, color: stage.color }}>{stage.num}</div>
                     <h3 className="text-2xl font-bold text-white mb-4">{stage.title}</h3>
                     <p className="text-gray-400 mb-6 leading-relaxed">{stage.desc}</p>
@@ -989,7 +989,7 @@ export default function Kids() {
           </section>
 
           {/* ── Session Format Explainer ───────────────────────────────────── */}
-          <section className="py-20 px-6" style={{ background: "linear-gradient(135deg, #080808 0%, #0a0818 100%)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <section className="py-20 px-6" style={{ background: "var(--page-bg-alt)", borderTop: "1px solid var(--border-subtle)" }}>
             <div className="max-w-[1230px] mx-auto">
               <div className="text-center mb-12">
                 <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Session Format</p>
@@ -1001,7 +1001,7 @@ export default function Kids() {
                   const meta = SESSION_LABELS[s.key];
                   return (
                     <div key={s.key} className="p-8 transition-all duration-300 hover:-translate-y-2"
-                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: `1px solid ${s.color}30`, background: "rgba(15,15,15,0.9)", backdropFilter: "blur(8px)" }}>
+                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem", border: `1px solid ${s.color}30`, background: "var(--surface-elevated)", backdropFilter: "blur(8px)" }}>
                       <div className="flex items-start justify-between mb-4">
                         <span className="text-4xl">{meta.icon}</span>
                         <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: `${s.color}20`, color: s.color }}>{meta.badge}</span>
@@ -1016,7 +1016,7 @@ export default function Kids() {
                           </li>
                         ))}
                       </ul>
-                      <div className="p-4" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <div className="p-4" style={{ borderRadius: "1rem 0.5rem 1rem 0.5rem", background: "var(--surface-alt)", border: "1px solid var(--border-subtle)" }}>
                         {coursesLoaded ? (
                           <>
                             <div className="flex items-baseline gap-1">
@@ -1044,7 +1044,7 @@ export default function Kids() {
           </section>
 
           {/* ── A Personalised Experience ──────────────────────────────────── */}
-          <section className="py-20 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <section className="py-20 px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
             <div className="max-w-[1230px] mx-auto text-center">
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: BRAND }}>Experience</p>
               <h2 className="text-4xl font-bold text-white mb-4">A Personalised Experience</h2>

@@ -40,7 +40,7 @@ function StepBar({ current, total }: { current: number; total: number }) {
         <div key={i} className="flex items-center gap-2 flex-1">
           <div
             className="flex-1 h-1 rounded-full transition-all duration-500"
-            style={{ background: i < current ? BRAND : 'rgba(255,255,255,0.1)' }}
+            style={{ background: i < current ? BRAND : 'var(--border-subtle)' }}
           />
         </div>
       ))}
@@ -100,8 +100,8 @@ function ResultCard({
       <div
         className="mx-auto mt-2 mb-8 max-w-sm p-4 rounded-xl text-sm text-left"
         style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border-subtle)',
         }}
       >
         <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">Review notes</p>
@@ -152,7 +152,7 @@ function RadioOption({
       <div
         className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
         style={{
-          borderColor: selected ? BRAND : 'rgba(255,255,255,0.2)',
+          borderColor: selected ? BRAND : 'var(--border-strong)',
           background: selected ? BRAND : 'transparent',
         }}
       >
@@ -269,7 +269,7 @@ export default function ScholarshipPage() {
   if (authLoading || eligibilityLoading) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: '#090909' }}>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
           <div className="text-center">
             <div
               className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto mb-4 animate-spin"
@@ -293,10 +293,10 @@ export default function ScholarshipPage() {
 
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#090909' }}>
+        <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--page-bg)' }}>
           <div
             className="max-w-md w-full text-center p-8 rounded-3xl"
-            style={{ background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border-subtle)' }}
           >
             <div className="text-5xl mb-4">🔒</div>
             <h2 className="text-2xl font-bold text-white mb-3">Not Eligible</h2>
@@ -320,20 +320,20 @@ export default function ScholarshipPage() {
   return (
     <AppLayout>
       <style>{`
-        .scholarship-root { background: #090909; min-height: 100vh; }
+        .scholarship-root { background: var(--page-bg); min-height: 100vh; }
 
         .s-card {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(12,12,12,0.95);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface);
           backdrop-filter: blur(20px);
           box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 60px ${BRAND}0a;
         }
 
         .s-option {
           border-radius: 1.25rem 0.5rem 1.25rem 0.5rem;
-          border: 2px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.03);
+          border: 2px solid var(--border-subtle);
+          background: var(--surface-alt);
           cursor: pointer;
           transition: all 0.25s;
         }
@@ -349,10 +349,10 @@ export default function ScholarshipPage() {
         }
 
         .s-input {
-          background: rgba(255,255,255,0.04);
-          border: 2px solid rgba(255,255,255,0.08);
+          background: var(--surface-alt);
+          border: 2px solid var(--border-subtle);
           border-radius: 1rem 0.5rem 1rem 0.5rem;
-          color: #e5e7eb;
+          color: var(--text-secondary);
           transition: border-color 0.25s, box-shadow 0.25s;
           width: 100%;
           padding: 0.875rem 1rem;
@@ -360,7 +360,7 @@ export default function ScholarshipPage() {
           outline: none;
           font-family: inherit;
         }
-        .s-input::placeholder { color: rgba(255,255,255,0.2); }
+        .s-input::placeholder { color: var(--text-muted); }
         .s-input:focus {
           border-color: ${BRAND}88;
           box-shadow: 0 0 0 3px ${BRAND}15;
@@ -387,14 +387,14 @@ export default function ScholarshipPage() {
 
         .s-btn-ghost {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: rgba(255,255,255,0.5);
+          border: 1px solid var(--border-subtle);
+          color: var(--text-secondary);
           font-weight: 500;
           padding: 0.875rem 1.5rem;
           transition: border-color 0.2s, color 0.2s;
           cursor: pointer;
         }
-        .s-btn-ghost:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
+        .s-btn-ghost:hover { border-color: var(--border-strong); color: var(--text-primary); }
 
         .slide-in {
           animation: slideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -447,7 +447,7 @@ export default function ScholarshipPage() {
                   <div
                     key={item.text}
                     className="flex items-start gap-3 p-3 rounded-xl"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ background: 'var(--surface-alt)', border: '1px solid var(--border-subtle)' }}
                   >
                     <span className="text-green-400 text-sm font-bold flex-shrink-0">✓</span>
                     <p className="text-gray-300 text-sm leading-relaxed">{item.text}</p>
@@ -461,11 +461,11 @@ export default function ScholarshipPage() {
               >
                 <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                  <div className="text-center p-3 rounded-lg" style={{ background: 'var(--overlay)' }}>
                     <p className="text-xl font-black text-white">100%</p>
                     <p className="text-xs text-gray-400 mt-1">full tuition — pay only the registration fee</p>
                   </div>
-                  <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                  <div className="text-center p-3 rounded-lg" style={{ background: 'var(--overlay)' }}>
                     <p className="text-xl font-black text-white">{partialPct}%</p>
                     <p className="text-xs text-gray-400 mt-1">off the normal course price</p>
                   </div>

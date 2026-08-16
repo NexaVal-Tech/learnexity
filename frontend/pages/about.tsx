@@ -40,8 +40,8 @@ export default function About() {
       <style>{`
         .about-card {
           border-radius: 1rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background-color: rgba(15,15,15,0.9);
+          border: 1px solid var(--border-subtle);
+          background-color: var(--surface-elevated);
           backdrop-filter: blur(8px);
           box-shadow: 0 20px 60px rgba(0,0,0,0.6);
           transition: all 0.3s;
@@ -52,8 +52,8 @@ export default function About() {
         }
         .about-card-rounded {
           border-radius: 1.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background-color: rgba(15,15,15,0.9);
+          border: 1px solid var(--border-subtle);
+          background-color: var(--surface-elevated);
           backdrop-blur: blur(8px);
           box-shadow: 0 20px 60px rgba(0,0,0,0.6);
           overflow: hidden;
@@ -66,9 +66,9 @@ export default function About() {
           background-color: ${BRAND}22;
         }
         .program-pill {
-          background-color: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #d1d5db;
+          background-color: var(--surface-alt);
+          border: 1px solid var(--border-subtle);
+          color: var(--text-secondary);
           border-radius: 0.75rem;
           padding: 0.25rem 0.75rem;
           font-weight: 500;
@@ -82,8 +82,8 @@ export default function About() {
         }
         .hero-box {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background-color: rgba(15,15,15,0.85);
+          border: 1px solid var(--border-subtle);
+          background-color: var(--surface-elevated);
           backdrop-filter: blur(8px);
           box-shadow: 0 20px 60px rgba(0,0,0,0.8);
         }
@@ -101,8 +101,8 @@ export default function About() {
         }
         .highlight-box {
           border-radius: 1rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background-color: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-subtle);
+          background-color: var(--surface-alt);
           backdrop-filter: blur(8px);
         }
       `}</style>
@@ -111,10 +111,10 @@ export default function About() {
       <section className="max-w-[1230px] mx-auto mt-19 py-10 px-6">
         <div className="hero-box py-10 px-6">
           <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-6">
               Learn in-demand tech skills, Gain practical experience, and Stay relevant in the world of Artificial Intelligence..
             </h1>
-            <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto">
+            <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-3xl mx-auto">
               Learnexity helps you go from learning to doing, through hands-on training, internships, real-life experience, and pathways into jobs, freelancing, and entrepreneurship.
             </p>
             <Link href="/user/auth/register">
@@ -127,8 +127,8 @@ export default function About() {
       {/* Who We Are — no section bg */}
       <section className="py-20 px-6">
         <div className="max-w-[1230px] mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">Who We Are</h2>
-          <p className="text-center font-semibold text-gray-400 mb-16 max-w-5xl mx-auto text-lg">
+          <h2 className="text-4xl font-bold text-center mb-4 text-[var(--text-primary)]">Who We Are</h2>
+          <p className="text-center font-semibold text-[var(--text-secondary)] mb-16 max-w-5xl mx-auto text-lg">
             Learnexity is a tech career launch platform built to bridge the gap between learning and real opportunity. We empower learners with skills, experience, and pathways into jobs, freelancing, or entrepreneurship.
           </p>
 
@@ -137,8 +137,8 @@ export default function About() {
               <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Target className="w-8 h-8" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Our Mission</h3>
-              <p className="text-gray-400">
+              <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Mission</h3>
+              <p className="text-[var(--text-secondary)]">
                 Our promise is that every decision we make from curriculum to mentorship to projects is designed to maximize your readiness for the modern technology workforce. 
                 Our success is measured by the long-term success of our learners. 
               </p>
@@ -148,8 +148,8 @@ export default function About() {
               <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Eye className="w-8 h-8" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Our Mision</h3>
-              <p className="text-gray-400">
+              <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Mision</h3>
+              <p className="text-[var(--text-secondary)]">
                Our mission is to identify high-potential professionals, help them develop future-relevant skills, provide practical experience, and connect qualified individuals with global opportunity networks. We are building professionals who are ready to contribute to the technologies shaping the future. 
               </p>
             </div>
@@ -158,8 +158,8 @@ export default function About() {
               <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Heart className="w-8 h-8" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Our Guiding Belief</h3>
-              <p className="text-gray-400">
+              <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Guiding Belief</h3>
+              <p className="text-[var(--text-secondary)]">
                 Learning alone is no longer enough. Knowledge becomes valuable when it can be applied to real problems, demonstrated through practical work, and continuously adapted as technology evolves. That belief shapes everything we build. 
               </p>
             </div>
@@ -170,13 +170,13 @@ export default function About() {
       {/* What Makes Us Different — no section bg */}
       <section className="py-20 px-6">
         <div className="max-w-[1230px] mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">What Makes Us Different</h2>
-          <p className="text-center text-gray-400 mb-8 text-lg">
+          <h2 className="text-4xl font-bold text-center mb-4 text-[var(--text-primary)]">What Makes Us Different</h2>
+          <p className="text-center text-[var(--text-secondary)] mb-8 text-lg">
             We do not chase every trend. We focus on areas that form the foundation of the modern AI economy. Every program is selected because it supports how organizations build, deploy, secure, and scale intelligent systems. We would rather build deep capability than offer dozens of disconnected courses. 
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="about-card-rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(15,15,15,0.9)' }}>
+            <div className="about-card-rounded" style={{ border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-elevated)' }}>
               <div className="h-60">
                 <img src="/images/about-1.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
@@ -184,14 +184,14 @@ export default function About() {
                 <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
                   <Users className="w-6 h-6" style={{ color: BRAND }} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Team-based real projects</h3>
-                <p className="text-gray-400">
+                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Team-based real projects</h3>
+                <p className="text-[var(--text-secondary)]">
                   Collaborate with peers on real-world projects that build both technical and teamwork skills.
                 </p>
               </div>
             </div>
 
-            <div className="about-card-rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(15,15,15,0.9)' }}>
+            <div className="about-card-rounded" style={{ border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-elevated)' }}>
               <div className="h-60">
                 <img src="/images/about-2.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
@@ -199,14 +199,14 @@ export default function About() {
                 <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
                   <Briefcase className="w-6 h-6" style={{ color: BRAND }} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Portfolio-building challenges</h3>
-                <p className="text-gray-400">
+                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Portfolio-building challenges</h3>
+                <p className="text-[var(--text-secondary)]">
                   Complete projects that showcase your skills and add real value to your portfolio.
                 </p>
               </div>
             </div>
 
-            <div className="about-card-rounded" style={{ border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(15,15,15,0.9)' }}>
+            <div className="about-card-rounded" style={{ border: '1px solid var(--border-subtle)', backgroundColor: 'var(--surface-elevated)' }}>
               <div className="h-60">
                 <img src="/images/about-3.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
@@ -214,8 +214,8 @@ export default function About() {
                 <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
                   <GraduationCap className="w-6 h-6" style={{ color: BRAND }} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Industry mentorship</h3>
-                <p className="text-gray-400">
+                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Industry mentorship</h3>
+                <p className="text-[var(--text-secondary)]">
                   Learn from tech professionals who provide guidance, feedback, and industry insights.
                 </p>
               </div>
@@ -227,8 +227,8 @@ export default function About() {
       {/* Who We Help — no section bg */}
       <section className="py-20 px-3">
         <div className="max-w-[1230px] mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">Who We Help</h2>
-          <p className="text-center text-gray-400 mb-10 max-w-2xl mx-auto text-xl">
+          <h2 className="text-4xl font-bold text-center mb-4 text-[var(--text-primary)]">Who We Help</h2>
+          <p className="text-center text-[var(--text-secondary)] mb-10 max-w-2xl mx-auto text-xl">
             Our platform is designed to support diverse learners at every stage of their tech journey.
           </p>
 
@@ -245,8 +245,8 @@ export default function About() {
                 <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mx-auto mb-4">
                   <Icon className="w-8 h-8" style={{ color: BRAND }} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">{title}</h3>
-                <p className="text-gray-400">{desc}</p>
+                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">{title}</h3>
+                <p className="text-[var(--text-secondary)]">{desc}</p>
               </div>
             ))}
           </div>
@@ -256,7 +256,7 @@ export default function About() {
       {/* Why Learnexity — no section bg */}
       <section className="py-4 px-6">
         <div className="max-w-[1230px] mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">Why Learnexity</h2>
+          <h2 className="text-4xl font-bold text-center mb-4 text-[var(--text-primary)]">Why Learnexity</h2>
           <div className="flex justify-center mb-8">
             <Link href="/user/auth/login">
               <button className="cta-btn">Watch How It Works - Discover Why Learnexity Is For You</button>
@@ -268,8 +268,8 @@ export default function About() {
               <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Lightbulb className="w-6 h-6" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-white">Hands-on Project Experience</h3>
-              <p className="text-gray-400 text-lg">
+              <h3 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Hands-on Project Experience</h3>
+              <p className="text-[var(--text-secondary)] text-lg">
                 Work on real projects that teach both technical skills and professional practices like version control and collaboration.
               </p>
             </div>
@@ -278,8 +278,8 @@ export default function About() {
               <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-6">
                 <Rocket className="w-6 h-6" style={{ color: BRAND }} />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-white">Career Launch Programs</h3>
-              <p className="text-gray-400 text-lg">
+              <h3 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Career Launch Programs</h3>
+              <p className="text-[var(--text-secondary)] text-lg">
                 Training by the Global Community for Jobs and Digital Marketing. We don't just prepare you, we connect you to opportunities.
               </p>
             </div>
@@ -290,8 +290,8 @@ export default function About() {
       {/* Explore Programs — no section bg */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">Explore Our Programs</h2>
-          <p className="text-center text-gray-400 mb-6">
+          <h2 className="text-4xl font-bold text-center mb-4 text-[var(--text-primary)]">Explore Our Programs</h2>
+          <p className="text-center text-[var(--text-secondary)] mb-6">
             Comprehensive hands-on training programs designed to launch your tech career.
           </p>
 

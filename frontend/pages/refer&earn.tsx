@@ -161,8 +161,8 @@ function GlobalStyles() {
       .re-enter { animation: reEnter 0.5s cubic-bezier(0.22,1,0.36,1) both; }
       .re-card {
         border-radius: 2rem 0.75rem 2rem 0.75rem;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(12,12,14,0.92);
+        border: 1px solid var(--border-subtle);
+        background: var(--surface);
         backdrop-filter: blur(20px);
         box-shadow: 0 32px 80px rgba(0,0,0,0.7);
       }
@@ -189,8 +189,8 @@ function GlobalStyles() {
       .re-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
       .re-btn-outline {
         background: transparent;
-        border: 1.5px solid rgba(255,255,255,0.15);
-        color: rgba(255,255,255,0.7);
+        border: 1.5px solid var(--border-subtle);
+        color: var(--text-secondary);
         font-weight: 600;
         padding: 0.75rem 1.5rem;
         border-radius: 2rem 0.5rem 2rem 0.5rem;
@@ -202,37 +202,37 @@ function GlobalStyles() {
         gap: 0.5rem;
       }
       .re-btn-outline:hover {
-        border-color: rgba(255,255,255,0.35);
-        color: white;
-        background: rgba(255,255,255,0.05);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+        background: var(--surface-alt);
       }
       .re-input {
         background: transparent;
         border: none;
-        border-bottom: 1.5px solid rgba(255,255,255,0.18);
+        border-bottom: 1.5px solid var(--border-strong);
         width: 100%;
         padding: 0.5rem 0;
-        color: white;
+        color: var(--text-primary);
         font-size: 0.95rem;
         outline: none;
         transition: border-color 0.25s;
         caret-color: ${BRAND};
       }
-      .re-input::placeholder { color: rgba(255,255,255,0.25); font-size: 0.875rem; }
+      .re-input::placeholder { color: var(--text-muted); font-size: 0.875rem; }
       .re-input:focus { border-bottom-color: ${BRAND}; }
       .re-input:disabled { opacity: 0.4; }
       .re-label {
         font-size: 0.68rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: rgba(255,255,255,0.38);
+        color: var(--text-muted);
         display: block;
         margin-bottom: 0.3rem;
       }
       .re-stat-card {
         border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-        border: 1px solid rgba(255,255,255,0.07);
-        background: rgba(15,15,18,0.9);
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-elevated);
         padding: 1.5rem;
         backdrop-filter: blur(12px);
       }
@@ -246,7 +246,7 @@ function GlobalStyles() {
         gap: 0.75rem;
         font-family: monospace;
         font-size: 0.85rem;
-        color: rgba(255,255,255,0.85);
+        color: var(--text-secondary);
         word-break: break-all;
       }
       .re-copy-btn {
@@ -271,17 +271,17 @@ function GlobalStyles() {
         justify-content: center;
         gap: 0.5rem;
         padding: 0.65rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--border-subtle);
         border-radius: 1rem 0.35rem 1rem 0.35rem;
-        background: rgba(255,255,255,0.04);
-        color: rgba(255,255,255,0.7);
+        background: var(--surface-alt);
+        color: var(--text-secondary);
         font-size: 0.8rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
         border: none;
       }
-      .re-social-btn:hover { background: rgba(255,255,255,0.09); color: white; }
+      .re-social-btn:hover { background: var(--surface-alt); color: var(--text-primary); }
       .re-divider {
         display: flex;
         align-items: center;
@@ -292,9 +292,9 @@ function GlobalStyles() {
         content: '';
         flex: 1;
         height: 1px;
-        background: rgba(255,255,255,0.07);
+        background: var(--border-subtle);
       }
-      .re-divider span { font-size: 0.72rem; color: rgba(255,255,255,0.25); letter-spacing: 0.08em; }
+      .re-divider span { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; }
       .re-badge {
         display: inline-flex;
         align-items: center;
@@ -337,11 +337,11 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
             </span>
           </div>
 
-          <h1 style={{ fontSize: "clamp(2.2rem,5vw,3.8rem)", fontWeight: 900, color: "white", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem" }}>
+          <h1 style={{ fontSize: "clamp(2.2rem,5vw,3.8rem)", fontWeight: 900, color: "var(--text-primary)", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem" }}>
             Share Learnexity.<br />
             <span className="re-accent">Earn 10%</span> per referral.
           </h1>
-          <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.55)", maxWidth: 520, margin: "0 auto 2.5rem" }}>
+          <p style={{ fontSize: "1.05rem", color: "var(--text-secondary)", maxWidth: 520, margin: "0 auto 2.5rem" }}>
             No course enrollment needed. Get your unique link, share it, and earn for every person who signs up through it.
           </p>
           <button className="re-btn" onClick={onGetStarted} style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
@@ -358,8 +358,8 @@ function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
           ].map((s) => (
             <div key={s.n} className="re-card" style={{ padding: "1.75rem" }}>
               <div style={{ fontSize: "0.65rem", letterSpacing: "0.14em", color: BRAND, fontWeight: 700, marginBottom: "0.75rem" }}>{s.n}</div>
-              <h3 style={{ color: "white", fontWeight: 700, fontSize: "1.05rem", marginBottom: "0.5rem" }}>{s.title}</h3>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
+              <h3 style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "1.05rem", marginBottom: "0.5rem" }}>{s.title}</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
             </div>
           ))}
         </div>
@@ -447,26 +447,26 @@ function AuthView({ onSuccess, onBack }: { onSuccess: (s: ReferrerSession) => vo
           ← Back
         </button>
 
-        <p style={{ fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "0.4rem" }}>
+        <p style={{ fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.4rem" }}>
           Referral Program
         </p>
-        <h2 style={{ color: "white", fontWeight: 800, fontSize: "1.8rem", marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>
+        <h2 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1.8rem", marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>
           {mode === "signup" ? "Create Account" : "Welcome Back"}
         </h2>
-        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginBottom: "1.75rem" }}>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "1.75rem" }}>
           {mode === "signup"
             ? "Sign up to get your referral link instantly."
             : "Log in to access your referral dashboard."}
         </p>
 
         {/* Mode toggle */}
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.75rem", background: "rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "0.3rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.75rem", background: "var(--surface-alt)", borderRadius: "0.75rem", padding: "0.3rem" }}>
           {(["signup", "login"] as const).map((m) => (
             <button key={m} onClick={() => { setMode(m); setError(""); }}
               style={{
                 flex: 1, padding: "0.5rem", borderRadius: "0.55rem", border: "none",
                 background: mode === m ? BRAND : "transparent",
-                color: mode === m ? "white" : "rgba(255,255,255,0.45)",
+                color: mode === m ? "white" : "var(--text-muted)",
                 fontWeight: 600, fontSize: "0.82rem", cursor: "pointer", transition: "all 0.2s"
               }}>
               {m === "signup" ? "Sign Up" : "Log In"}
@@ -481,7 +481,7 @@ function AuthView({ onSuccess, onBack }: { onSuccess: (s: ReferrerSession) => vo
             borderRadius: "0.75rem", padding: "1rem 1.1rem", marginBottom: "1.25rem"
           }}>
             <p style={{ color: "#a5b4fc", fontSize: "0.85rem", lineHeight: 1.6 }}>
-              <strong style={{ color: "white" }}>You're already a Learnexity student.</strong><br />
+              <strong style={{ color: "var(--text-primary)" }}>You're already a Learnexity student.</strong><br />
               Student referrals are managed from your{" "}
               <a href="/user/dashboard" style={{ color: BRAND, fontWeight: 600, textDecoration: "none" }}>
                 student dashboard 
@@ -514,7 +514,7 @@ function AuthView({ onSuccess, onBack }: { onSuccess: (s: ReferrerSession) => vo
                 placeholder={mode === "signup" ? "Min. 6 characters" : "Your password"}
                 disabled={loading} className="re-input" style={{ paddingRight: "2.5rem" }} />
               <button type="button" onClick={() => setShowPw(!showPw)} disabled={loading}
-                style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 0 }}>
+                style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 0 }}>
                 {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
@@ -568,8 +568,8 @@ function DashboardView({
       {/* Header bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <p style={{ fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "0.25rem" }}>Referral Dashboard</p>
-          <h1 style={{ color: "white", fontWeight: 800, fontSize: "clamp(1.4rem,3vw,2rem)", letterSpacing: "-0.02em" }}>
+          <p style={{ fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.25rem" }}>Referral Dashboard</p>
+          <h1 style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(1.4rem,3vw,2rem)", letterSpacing: "-0.02em" }}>
             Welcome back, <span className="re-accent">{session.email.split("@")[0]}</span>
           </h1>
         </div>
@@ -582,9 +582,9 @@ function DashboardView({
       <div className="re-card" style={{ padding: "1.75rem 2rem", marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
           <Share2 size={16} style={{ color: BRAND }} />
-          <span style={{ color: "white", fontWeight: 700, fontSize: "1rem" }}>Your Referral Link</span>
+          <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "1rem" }}>Your Referral Link</span>
         </div>
-        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", marginBottom: "1rem" }}>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>
           Share this link — every signup earns you <strong style={{ color: "#4ade80" }}>₦5,000</strong>
         </p>
         <div className="re-link-box">
@@ -604,7 +604,7 @@ function DashboardView({
             { id: "linkedin", label: "LinkedIn", emoji: "💼" },
           ].map(s => (
             <button key={s.id} className="re-social-btn" onClick={() => share(s.id)}
-              style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem 0.25rem 0.75rem 0.25rem" }}>
+              style={{ border: "1px solid var(--border-subtle)", borderRadius: "0.75rem 0.25rem 0.75rem 0.25rem" }}>
               <span>{s.emoji}</span> {s.label}
             </button>
           ))}
@@ -629,7 +629,7 @@ function DashboardView({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <TrendingUp size={16} style={{ color: BRAND }} />
-            <span style={{ color: "white", fontWeight: 700 }}>Referral History</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>Referral History</span>
           </div>
           <button onClick={onRefresh} className="re-btn-outline" style={{ padding: "0.35rem 0.9rem", fontSize: "0.75rem" }}>
             Refresh
@@ -638,12 +638,12 @@ function DashboardView({
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "2.5rem 0" }}>
-            <div className="re-pulse" style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>Loading…</div>
+            <div className="re-pulse" style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading…</div>
           </div>
         ) : history.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.9rem" }}>No referrals yet.</p>
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.8rem", marginTop: "0.35rem" }}>Share your link to start earning!</p>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>No referrals yet.</p>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.35rem" }}>Share your link to start earning!</p>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -651,17 +651,17 @@ function DashboardView({
               <thead>
                 <tr>
                   {["Date", "Name", "Status", "Reward"].map(h => (
-                    <th key={h} style={{ textAlign: h === "Reward" ? "right" : "left", padding: "0.6rem 0.75rem", fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ textAlign: h === "Reward" ? "right" : "left", padding: "0.6rem 0.75rem", fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", borderBottom: "1px solid var(--border-subtle)", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {history.map(r => (
-                  <tr key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <td style={{ padding: "0.8rem 0.75rem", fontSize: "0.82rem", color: "rgba(255,255,255,0.5)" }}>
+                  <tr key={r.id} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                    <td style={{ padding: "0.8rem 0.75rem", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
                       {new Date(r.referred_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </td>
-                    <td style={{ padding: "0.8rem 0.75rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.85)" }}>
+                    <td style={{ padding: "0.8rem 0.75rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                       {r.referred_user_name}
                     </td>
                     <td style={{ padding: "0.8rem 0.75rem" }}>
@@ -669,7 +669,7 @@ function DashboardView({
                         {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
                       </span>
                     </td>
-                    <td style={{ padding: "0.8rem 0.75rem", textAlign: "right", fontSize: "0.85rem", fontWeight: 600, color: r.status === "completed" ? "#4ade80" : "rgba(255,255,255,0.25)" }}>
+                    <td style={{ padding: "0.8rem 0.75rem", textAlign: "right", fontSize: "0.85rem", fontWeight: 600, color: r.status === "completed" ? "#4ade80" : "var(--text-muted)" }}>
                       {r.status === "completed" ? `₦${Number(r.reward_amount).toLocaleString()}` : "—"}
                     </td>
                   </tr>
@@ -689,9 +689,9 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
     <div className="re-stat-card">
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
         {icon}
-        <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.04em" }}>{label}</span>
+        <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", letterSpacing: "0.04em" }}>{label}</span>
       </div>
-      <p style={{ fontSize: "1.75rem", fontWeight: 800, color: accent ? "#a5b4fc" : "white", letterSpacing: "-0.02em" }}>{value}</p>
+      <p style={{ fontSize: "1.75rem", fontWeight: 800, color: accent ? "#a5b4fc" : "var(--text-primary)", letterSpacing: "-0.02em" }}>{value}</p>
     </div>
   );
 }

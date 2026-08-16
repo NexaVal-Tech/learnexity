@@ -1,7 +1,7 @@
 // pages/user/resource.tsx
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown, ChevronUp, Trophy, Award, BookOpen, Check, CheckCircle, Clock, FileText, File, Lock } from 'lucide-react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
@@ -21,6 +21,7 @@ interface CourseResourceItem {
   download_url?: string | null;
   is_completed?: boolean;
   text_content?: string | null;
+  locked?: boolean;
 }
 
 interface Sprint {
@@ -31,6 +32,7 @@ interface Sprint {
   completed_items?: number;
   total_items?: number;
   items: CourseResourceItem[];
+  locked?: boolean;
 }
 
 interface LeaderboardParticipant {
@@ -56,6 +58,8 @@ interface ExternalResource {
 
 interface CourseResourcesData {
   materials: Sprint[];
+  is_freemium_preview?: boolean;
+  has_paid_access?: boolean;
   statistics: { overall_progress: number };
   course_average: number;
   leaderboard: { participants: LeaderboardParticipant[] };
@@ -158,24 +162,32 @@ export default function ResourcesPage() {
     loadData();
   }, [courseId, currentEnrollment]);
 
-  // Initial load — shows spinner, sets first expanded sprint
+  // Initial load — shows spinner, sets first expanded sprint. Always
+  // attempts the fetch: freemium courses return a sprint-1/2 preview even
+  // without paid access, non-freemium courses reject with 403 (handled
+  // below) — the AccessBlockedBanner already communicates that separately.
   const loadData = async () => {
     try {
       setLoading(true);
-      if (currentEnrollment && !currentEnrollment.has_access) {
-        setData(null); setError(null); setLoading(false); return;
-      }
       const response = await api.courseResources.getAll(courseId!);
       const fresh = response as CourseResourcesData;
       setData(fresh);
       setError(null);
 
       if (fresh.materials.length > 0) {
-        const firstUncompleted = fresh.materials.find(s => s.progress_percentage < 100);
-        setExpandedSprints([firstUncompleted?.id ?? fresh.materials[0].id]);
+        const firstUncompleted = fresh.materials.find(s => !s.locked && s.progress_percentage < 100);
+        const firstUnlocked = fresh.materials.find(s => !s.locked);
+        setExpandedSprints([(firstUncompleted ?? firstUnlocked ?? fresh.materials[0]).id]);
       }
-    } catch {
-      setError('Failed to load course resources. Please try again.');
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        // Payment required — the AccessBlockedBanner (driven by
+        // currentEnrollment) already communicates this; just clear data.
+        setData(null);
+        setError(null);
+      } else {
+        setError('Failed to load course resources. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -184,7 +196,10 @@ export default function ResourcesPage() {
   // Silent refresh — no spinner, no expanded-sprint reset, preserves completion state
   // Automatically expands any brand-new sprints that didn't exist before.
   const silentRefresh = useCallback(async () => {
-    if (!courseId || !currentEnrollment?.has_access) return;
+    // Freemium-preview users (has_access=false but course is freemium) still
+    // need polling for their sprint 1/2 progress — the API call itself
+    // handles the access check (403s silently for genuinely blocked users).
+    if (!courseId) return;
     try {
       const response = await api.courseResources.getAll(courseId);
       const fresh = response as CourseResourcesData;
@@ -225,7 +240,7 @@ export default function ResourcesPage() {
 
   // Poll every 30 seconds while the page is visible
   useEffect(() => {
-    if (!courseId || !currentEnrollment?.has_access) return;
+    if (!courseId) return;
 
     const interval = setInterval(() => {
       // Only poll when the tab is in the foreground
@@ -329,12 +344,12 @@ export default function ResourcesPage() {
   // Get item type badge colors
   const getItemColors = (type: string) => {
     const map: Record<string, { bg: string; text: string; label: string }> = {
-      pdf:      { bg: 'bg-red-100',    text: 'text-red-600',    label: 'PDF' },
-      document: { bg: 'bg-orange-100', text: 'text-orange-600', label: 'DOC' },
-      video:    { bg: 'bg-purple-100', text: 'text-purple-600', label: 'VID' },
-      text:     { bg: 'bg-blue-100',   text: 'text-blue-600',   label: 'TXT' },
+      pdf:      { bg: 'bg-red-100 dark:bg-red-500/15',       text: 'text-red-600 dark:text-red-400',       label: 'PDF' },
+      document: { bg: 'bg-orange-100 dark:bg-orange-500/15', text: 'text-orange-600 dark:text-orange-400', label: 'DOC' },
+      video:    { bg: 'bg-purple-100 dark:bg-purple-500/15', text: 'text-purple-600 dark:text-purple-400', label: 'VID' },
+      text:     { bg: 'bg-blue-100 dark:bg-blue-500/15',     text: 'text-blue-600 dark:text-blue-400',     label: 'TXT' },
     };
-    return map[type] ?? { bg: 'bg-gray-100', text: 'text-gray-600', label: type.slice(0, 3).toUpperCase() };
+    return map[type] ?? { bg: 'bg-gray-100 dark:bg-white/10', text: 'text-gray-600 dark:text-gray-300', label: type.slice(0, 3).toUpperCase() };
   };
 
   const isMaterialsEmpty = !data?.materials || data.materials.length === 0;
@@ -345,7 +360,7 @@ export default function ResourcesPage() {
     return (
       <UserDashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg text-gray-600">Loading resources…</div>
+          <div className="text-lg text-gray-600 dark:text-gray-300">Loading resources…</div>
         </div>
       </UserDashboardLayout>
     );
@@ -356,8 +371,8 @@ export default function ResourcesPage() {
       <UserDashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="text-red-600 text-xl mb-2">{error}</div>
-            <button onClick={loadData} className="text-purple-600 hover:underline">Try Again</button>
+            <div className="text-red-600 dark:text-red-400 text-xl mb-2">{error}</div>
+            <button onClick={loadData} className="text-purple-600 dark:text-purple-400 hover:underline">Try Again</button>
           </div>
         </div>
       </UserDashboardLayout>
@@ -368,7 +383,11 @@ export default function ResourcesPage() {
 
   return (
     <UserDashboardLayout>
-      {currentEnrollment && !currentEnrollment.has_access && (
+      {/* The full-screen "overdue installment" modal is for paid students
+          who fell behind — it doesn't apply to a freemium preview (no
+          payment has ever been made, there's nothing "overdue"), and being
+          full-screen it would otherwise hide the free sprint 1/2 content. */}
+      {currentEnrollment && !currentEnrollment.has_access && !data?.is_freemium_preview && (
         <AccessBlockedBanner
           enrollment={currentEnrollment}
           onPayNow={() => router.push(`/user/payment/${currentEnrollment.id}`)}
@@ -380,15 +399,37 @@ export default function ResourcesPage() {
           <PaymentWarningBanner enrollment={currentEnrollment} />
         )}
 
+        {data?.is_freemium_preview && (
+          <div className="bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/15 dark:border-indigo-500/30 rounded-lg p-4 mb-6 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3">
+              <Lock className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">You're on the free preview</p>
+                <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+                  Sprint 1 and 2 are free. Enroll and pay to unlock the rest of this course.
+                </p>
+              </div>
+            </div>
+            {currentEnrollment && (
+              <button
+                onClick={() => router.push(`/user/payment/${currentEnrollment.id}`)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex-shrink-0"
+              >
+                Unlock Full Course
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Tab Navigation */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6 inline-block">
-          <div className="inline-flex border-b border-gray-200">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6 inline-block">
+          <div className="inline-flex border-b border-gray-200 dark:border-white/10">
             {['all-resources', 'progress-ranking', 'certificates'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 text-sm font-medium transition capitalize ${
-                  activeTab === tab ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
+                  activeTab === tab ? 'text-gray-900 border-b-2 border-gray-900 dark:text-white dark:border-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 {tab.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
@@ -401,15 +442,15 @@ export default function ResourcesPage() {
         {enrolledCourses.length > 1 && (
           <div className="block mb-6">
             <div className="w-full overflow-x-auto">
-              <div className="flex border-b-2 border-gray-400 min-w-max">
+              <div className="flex border-b-2 border-gray-400 dark:border-white/20 min-w-max">
                 {enrolledCourses.map(course => (
                   <button
                     key={course.course_id}
                     onClick={() => handleCourseSwitch(course.course_id)}
                     className={`px-6 py-4 text-sm font-medium transition whitespace-nowrap ${
                       courseId === course.course_id.toString()
-                        ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:text-purple-400 dark:border-purple-400 dark:bg-purple-500/15'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
                     }`}
                   >
                     {course.course_title}
@@ -424,11 +465,11 @@ export default function ResourcesPage() {
         {activeTab === 'all-resources' && data && (
           <div>
             {/* Course Materials */}
-            <div className="bg-white rounded-lg border border-gray-200 mb-6">
-              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6">
+              <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Course Materials</h2>
-                  <p className="text-sm text-gray-500 mt-1">Click any item to view or download</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Course Materials</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Click any item to view or download</p>
                 </div>
                 {/* FIX: Learning View button opens modal at top with no specific target */}
                 <button
@@ -442,91 +483,104 @@ export default function ResourcesPage() {
               {isMaterialsEmpty ? (
                 <div className="p-12">
                   <div className="text-center max-w-md mx-auto">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BookOpen className="w-10 h-10 text-gray-400" />
+                    <div className="w-20 h-20 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Materials Yet</h3>
-                    <p className="text-gray-600">Your course materials will appear here when the class starts</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Materials Yet</h3>
+                    <p className="text-gray-600 dark:text-gray-300">Your course materials will appear here when the class starts</p>
                   </div>
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
                   {data.materials.map(sprint => (
-                    <div key={sprint.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div key={sprint.id} className={`border rounded-lg overflow-hidden ${sprint.locked ? 'border-gray-200 dark:border-white/10 opacity-75' : 'border-gray-200 dark:border-white/10'}`}>
                       {/* Sprint header */}
                       <button
                         onClick={() => toggleSprint(sprint.id)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
-                            sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                            sprint.locked ? 'bg-gray-300 text-gray-500 dark:bg-white/10 dark:text-gray-400' : sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-gray-300'
                           }`}>
-                            {sprint.progress_percentage === 100 ? <Check className="w-6 h-6" /> : `S${sprint.sprint_number}`}
+                            {sprint.locked ? <Lock className="w-4 h-4" /> : sprint.progress_percentage === 100 ? <Check className="w-6 h-6" /> : `S${sprint.sprint_number}`}
                           </div>
                           <div className="text-left">
-                            <div className="font-medium text-gray-900">{sprint.sprint_name}</div>
-                            <div className="text-xs text-gray-500">
-                              {sprint.completed_items ?? 0} of {sprint.total_items ?? sprint.items.length} completed ({sprint.progress_percentage}%)
+                            <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                              {sprint.sprint_name}
+                              {sprint.locked && (
+                                <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Locked</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {sprint.locked
+                                ? 'Enroll and pay to unlock this sprint'
+                                : `${sprint.completed_items ?? 0} of ${sprint.total_items ?? sprint.items.length} completed (${sprint.progress_percentage}%)`}
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
-                              style={{ width: `${sprint.progress_percentage}%` }}
-                            />
-                          </div>
+                          {!sprint.locked && (
+                            <div className="w-32 bg-gray-200 dark:bg-white/10 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
+                                style={{ width: `${sprint.progress_percentage}%` }}
+                              />
+                            </div>
+                          )}
                           {expandedSprints.includes(sprint.id)
-                            ? <ChevronUp className="w-5 h-5 text-gray-400" />
-                            : <ChevronDown className="w-5 h-5 text-gray-400" />
+                            ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                            : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                           }
                         </div>
                       </button>
 
                       {/* Sprint items — FIX: sorted by order before render */}
                       {expandedSprints.includes(sprint.id) && sprint.items.length > 0 && (
-                        <div className="bg-white divide-y divide-gray-100">
+                        <div className="bg-white dark:bg-[#0f0f14] divide-y divide-gray-100 dark:divide-white/10">
                           {sortItems(sprint.items).map(item => {
                             const colors = getItemColors(item.type);
                             const isPdf = item.type === 'pdf' && !!item.download_url;
                             const isDoc = item.type === 'document' && !!item.download_url;
                             const hasText = !!item.text_content;
-                            const isClickable = isPdf || isDoc || hasText;
+                            const isClickable = !item.locked && (isPdf || isDoc || hasText);
 
                             return (
                               <div
                                 key={item.id}
                                 className={`flex items-center justify-between p-4 transition ${
-                                  item.is_completed ? 'bg-green-50/30' : ''
-                                } ${isClickable ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
+                                  item.is_completed ? 'bg-green-50/30 dark:bg-green-500/10' : ''
+                                } ${item.locked ? 'opacity-60' : ''} ${isClickable ? 'hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer' : ''}`}
                                 // FIX: open modal targeting this specific item
                                 onClick={() => isClickable && openModalAtItem(item.id)}
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   {/* Type badge */}
                                   <div className={`w-8 h-8 rounded flex items-center justify-center ${colors.bg}`}>
-                                    <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>
+                                    {item.locked ? <Lock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" /> : <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>}
                                   </div>
 
                                   {/* Title */}
                                   <div className="flex-1">
-                                    <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700' : 'text-gray-800'}`}>
+                                    <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700 dark:text-gray-200 dark:hover:text-purple-400' : 'text-gray-800 dark:text-gray-200'}`}>
                                       {item.title}
                                     </p>
-                                    {item.file_size && <div className="text-xs text-gray-500">{item.file_size}</div>}
+                                    {item.file_size && <div className="text-xs text-gray-500 dark:text-gray-400">{item.file_size}</div>}
                                   </div>
                                 </div>
 
                                 {/* Status */}
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  {item.is_completed ? (
-                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                  {item.locked ? (
+                                    <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 px-2 py-1 rounded-full">
+                                      <Lock size={11} /> Pay to unlock
+                                    </span>
+                                  ) : item.is_completed ? (
+                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-500/15 px-2 py-1 rounded-full">
                                       <CheckCircle size={11} /> Completed
                                     </span>
                                   ) : (
-                                    <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                    <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 dark:text-gray-500 dark:bg-white/5 px-2 py-1 rounded-full">
                                       <Clock size={11} /> Auto-tracks
                                     </span>
                                   )}
@@ -544,56 +598,56 @@ export default function ResourcesPage() {
 
             {/* Leaderboard */}
             {data.leaderboard && (
-              <div className="bg-white rounded-lg border border-gray-200 mb-6">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-purple-600" />
+              <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6">
+                <div className="p-6 border-b border-gray-200 dark:border-white/10">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     Evaluation & Leaderboard
                   </h2>
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-3 gap-6 mb-6">
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">Your Average Score</div>
-                      <div className="text-3xl font-bold text-gray-900">{data.statistics.overall_progress}%</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Your Average Score</div>
+                      <div className="text-3xl font-bold text-gray-900 dark:text-white">{data.statistics.overall_progress}%</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">Cohort Average</div>
-                      <div className="text-3xl font-bold text-gray-900">{data.course_average}%</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Cohort Average</div>
+                      <div className="text-3xl font-bold text-gray-900 dark:text-white">{data.course_average}%</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500 mb-1">Difference</div>
-                      <div className="text-3xl font-bold text-green-600">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Difference</div>
+                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                         +{(data.statistics.overall_progress - data.course_average).toFixed(1)}%
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+                  <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2 mb-6">
                     <div className="bg-green-500 h-2 rounded-full" style={{ width: `${data.statistics.overall_progress}%` }} />
                   </div>
-                  <div className="overflow-x-auto border-t border-gray-200 pt-6">
+                  <div className="overflow-x-auto border-t border-gray-200 dark:border-white/10 pt-6">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200">
+                        <tr className="border-b border-gray-200 dark:border-white/10">
                           {['Rank', 'Student Name', 'Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Overall'].map(h => (
-                            <th key={h} className="text-left text-xs font-medium text-gray-500 py-3 px-2">{h}</th>
+                            <th key={h} className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 py-3 px-2">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {data.leaderboard.participants.map((p, idx) => (
-                          <tr key={p.user_id} className={`border-b border-gray-100 ${p.is_current_user ? 'bg-green-50' : ''}`}>
+                          <tr key={p.user_id} className={`border-b border-gray-100 dark:border-white/10 ${p.is_current_user ? 'bg-green-50 dark:bg-green-500/10' : ''}`}>
                             <td className="py-3 px-2">
                               {idx === 0
-                                ? <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600" /></div>
-                                : <div className="text-sm text-gray-600 pl-2">#{p.rank}</div>}
+                                ? <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-500/15 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></div>
+                                : <div className="text-sm text-gray-600 dark:text-gray-400 pl-2">#{p.rank}</div>}
                             </td>
-                            <td className="py-3 px-2 text-sm font-medium text-gray-900">{p.user_name}</td>
-                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint1_score}%</td>
-                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint2_score}%</td>
-                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint3_score}%</td>
-                            <td className="py-3 px-2 text-center text-sm text-gray-600">{p.sprint4_score}%</td>
-                            <td className="py-3 px-2 text-center text-sm font-semibold text-gray-900">{p.overall_score}%</td>
+                            <td className="py-3 px-2 text-sm font-medium text-gray-900 dark:text-white">{p.user_name}</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600 dark:text-gray-400">{p.sprint1_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600 dark:text-gray-400">{p.sprint2_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600 dark:text-gray-400">{p.sprint3_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm text-gray-600 dark:text-gray-400">{p.sprint4_score}%</td>
+                            <td className="py-3 px-2 text-center text-sm font-semibold text-gray-900 dark:text-white">{p.overall_score}%</td>
                           </tr>
                         ))}
                       </tbody>
@@ -604,10 +658,10 @@ export default function ResourcesPage() {
             )}
 
             {/* External Resources */}
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <ExternalLink className="w-5 h-5 text-purple-600" />
+            <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10">
+              <div className="p-6 border-b border-gray-200 dark:border-white/10">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   External Learning Resources
                 </h2>
               </div>
@@ -618,18 +672,18 @@ export default function ResourcesPage() {
                     { label: 'Industry Articles', items: sortExternal(data.external_resources.industry_articles) },
                   ].map(({ label, items }) => (
                     <div key={label}>
-                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-600 rounded-full" /> {label}
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full" /> {label}
                       </h3>
                       <div className="space-y-3">
                         {items.map(r => (
-                          <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
+                          <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600">{r.title}</div>
-                                <div className="text-xs text-gray-500 mt-1">{r.source}{r.duration ? ` · ${r.duration}` : ''}</div>
+                                <div className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400">{r.title}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{r.source}{r.duration ? ` · ${r.duration}` : ''}</div>
                               </div>
-                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
+                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400 ml-2 flex-shrink-0" />
                             </div>
                           </a>
                         ))}
@@ -637,32 +691,32 @@ export default function ResourcesPage() {
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full" /> Tool Guides
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full" /> Tool Guides
                     </h3>
                     <div className="space-y-3">
                       {sortExternal(data.external_resources.recommended_reading).slice(0, 3).map(r => (
-                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group">
                           <div className="flex items-start justify-between">
-                            <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
-                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
+                            <div className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 flex-1">{r.title}</div>
+                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400 ml-2 flex-shrink-0" />
                           </div>
                         </a>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full" /> Recommended Reading
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full" /> Recommended Reading
                     </h3>
                     <div className="space-y-3">
                       {sortExternal(data.external_resources.recommended_reading).slice(3).map(r => (
-                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 transition group">
+                        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group">
                           <div className="flex items-start justify-between">
-                            <div className="font-medium text-gray-900 text-sm group-hover:text-purple-600 flex-1">{r.title}</div>
-                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 ml-2 flex-shrink-0" />
+                            <div className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 flex-1">{r.title}</div>
+                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400 ml-2 flex-shrink-0" />
                           </div>
                         </a>
                       ))}
@@ -676,24 +730,24 @@ export default function ResourcesPage() {
 
         {/* ─── PROGRESS RANKING TAB ───────────────────────────────────────── */}
         {activeTab === 'progress-ranking' && (
-          <div className="text-center py-12 text-gray-600">Progress Ranking coming soon…</div>
+          <div className="text-center py-12 text-gray-600 dark:text-gray-300">Progress Ranking coming soon…</div>
         )}
 
         {/* ─── CERTIFICATES TAB ───────────────────────────────────────────── */}
         {activeTab === 'certificates' && (
           <div>
             {data?.badges?.filter(b => b.is_unlocked).length ? (
-              <div className="text-center py-12 text-gray-600">
+              <div className="text-center py-12 text-gray-600 dark:text-gray-300">
                 You have {data.badges.filter(b => b.is_unlocked).length} badge(s)!
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 p-12">
+              <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 p-12">
                 <div className="text-center max-w-md mx-auto">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="w-10 h-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Certificates Yet</h3>
-                  <p className="text-gray-600 mb-6">Complete your first sprint to unlock your achievement badge.</p>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Certificates Yet</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">Complete your first sprint to unlock your achievement badge.</p>
                   <button onClick={() => setActiveTab('all-resources')} className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition">
                     Start Learning
                   </button>

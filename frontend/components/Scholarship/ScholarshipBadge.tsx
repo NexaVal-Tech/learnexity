@@ -91,10 +91,10 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
   if (scholarship?.is_used) {
     return (
       <div
-        className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gray-500"
+        className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
         style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '1rem 0.5rem 1rem 0.5rem',
         }}
       >
@@ -107,10 +107,10 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
   if (scholarship?.status === 'rejected') {
     return (
       <div
-        className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gray-500"
+        className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
         style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '1rem 0.5rem 1rem 0.5rem',
         }}
       >
@@ -128,9 +128,9 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
         style={{
           width: "100%",
           borderRadius: "0.7rem",
-          border: "1px solid rgb(255, 255, 255)", // white border
-          background: '#0a0a0a',
-          color: "#ffffff",
+          border: "1px solid var(--border-strong)",
+          background: 'var(--surface-elevated)',
+          color: "var(--text-primary)",
         }}
       >
         <div className="w-full text-center">
@@ -154,8 +154,8 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           style={{
             borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
             border: `1px dashed ${BRAND}44`,
-            background: `${BRAND}06`,
-            color: '#ffffff',
+            background: `${BRAND}0f`,
+            color: 'var(--text-primary)',
           }}
       >
         <span>Need financial support? Apply for a scholarship</span>

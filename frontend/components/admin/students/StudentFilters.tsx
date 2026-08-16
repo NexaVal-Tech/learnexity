@@ -152,14 +152,14 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  select
             placeholder="Search for a student"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm"
+            className="w-full px-4 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-white/20 text-sm"
           />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium text-gray-700 md:hidden">
+        <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-sm font-medium text-gray-700 dark:text-gray-300 md:hidden">
           <Filter size={16} />
           Filters
         </button>
-        <button className="p-2 border border-gray-200 rounded-lg bg-white text-gray-700">
+        <button className="p-2 border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300">
           <ExternalLink size={20} />
         </button>
       </div>
@@ -167,13 +167,13 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  select
       {/* Desktop Search Bar */}
       <div className="hidden md:block">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             type="text"
             placeholder="Search for a student"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-white/20 text-sm"
           />
         </div>
       </div>
@@ -185,26 +185,26 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  select
             <button 
               onClick={() => toggleFilter(filter)}
               className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                activeFilter === filter 
-                  ? 'bg-gray-50 border-gray-300 text-gray-900' 
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                activeFilter === filter
+                  ? 'bg-gray-50 dark:bg-white/10 border-gray-300 dark:border-white/20 text-gray-900 dark:text-white'
+                  : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10'
               }`}
             >
               {filter}
               {selectedFilters[filter.replace(/\s+/g, '').replace(/^./, str => str.toLowerCase()) as keyof typeof selectedFilters] && (
-                <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">1</span>
+                <span className="ml-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded text-xs">1</span>
               )}
-              <ChevronDown size={14} className={`text-gray-400 transition-transform ${activeFilter === filter ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`text-gray-400 dark:text-gray-500 transition-transform ${activeFilter === filter ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {/* Dropdown Menu */}
             {activeFilter === filter && filters[filter].length > 0 && (
-              <div className="fixed md:absolute top-auto left-4 right-4 md:left-0 md:right-auto mt-2 w-auto md:w-48 bg-white rounded-lg shadow-xl border border-gray-300 md:border-gray-200 py-2 z-50 md:z-10 px-4 md:px-0">
+              <div className="fixed md:absolute top-auto left-4 right-4 md:left-0 md:right-auto mt-2 w-auto md:w-48 bg-white dark:bg-[#14141c] rounded-lg shadow-xl border border-gray-300 dark:border-white/10 md:border-gray-200 dark:md:border-white/10 py-2 z-50 md:z-10 px-4 md:px-0">
                 {filters[filter].map((option) => (
                   <button
                     key={option}
                     onClick={() => handleFilterSelect(filter, option)}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                   >
                     {option}
                   </button>
@@ -219,9 +219,9 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  select
         >
           Apply filters
         </button>
-        <button 
+        <button
           onClick={clearFilters}
-          className="hidden md:block px-4 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50"
+          className="hidden md:block px-4 py-2 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
         >
           Clear
         </button>
@@ -230,19 +230,19 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({ onFilterChange,  select
       {/* Selection Bar (Desktop) */}
       <div className="hidden md:flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
-          <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
-          <span className="text-sm text-gray-600">Select all <span className="font-medium text-gray-900">{selectedCount} students selected</span></span>
+          <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-gray-900 focus:ring-gray-900" />
+          <span className="text-sm text-gray-600 dark:text-gray-400">Select all <span className="font-medium text-gray-900 dark:text-white">{selectedCount} students selected</span></span>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={onMessageClick}
             disabled={selectedCount === 0}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MessageSquare size={16} />
             Message Selected ({selectedCount})
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5">
             <Download size={16} />
             Export
           </button>

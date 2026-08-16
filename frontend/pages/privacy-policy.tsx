@@ -7,7 +7,7 @@ import Footer from "@/components/footer/Footer";
 export default function PrivacyPolicy() {
     return (
         <AppLayout>
-            <div className="min-h-screen bg-white">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f]">
                 {/* Privacy Policy Header Banner */}
                 <div className="bg-slate-900 max-w-[1000px] rounded-2xl mx-auto text-white py-8 px-4 sm:px-6 mt-30">
                     <div className="max-w-4xl mx-auto">
@@ -32,43 +32,43 @@ export default function PrivacyPolicy() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
                     {/* Introduction */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Introduction</h2>
-                        <p className="text-sm text-gray-700 leading-relaxed">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Introduction</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                             Learnings respects your privacy. This Privacy Policy explains what personal information we collect, how we use it, with whom we share it, and your choices. This Policy applies to data collected through our website, courses, apps, community features, and related services and locations.
                         </p>
                     </section>
 
                     {/* Controller & Contact */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Controller & Contact</h2>
-                        <div className="bg-gray-50 p-4 rounded space-y-1 text-sm">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Controller & Contact</h2>
+                        <div className="bg-gray-50 dark:bg-white/5 p-4 rounded space-y-1 text-sm">
                             <div>
-                                <span className="font-semibold text-gray-900">Data Controller:</span>
-                                <span className="text-gray-700"> Learnings</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Data Controller:</span>
+                                <span className="text-gray-700 dark:text-gray-300"> Learnings</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Email:</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Email:</span>
                                 <a href="mailto:info@learnexiyt.org" className="text-blue-600 hover:underline"> info@learnexity.org</a>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Phone:</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Phone:</span>
                                 <a href="tel:+1 (276) 252-8415" className="text-blue-600 hover:underline"> +1 (276) 252-8415</a>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Address:</span>
-                                <span className="text-gray-700"> Chesapeake, Virginia</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Address:</span>
+                                <span className="text-gray-700 dark:text-gray-300"> Chesapeake, Virginia</span>
                             </div>
                         </div>
                     </section>
 
                     {/* What We Collect */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">What We Collect</h2>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">What We Collect</h2>
                         
                         <div className="space-y-4 text-sm">
                             <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">1) Information We Provide</h3>
-                                <ul className="space-y-1 text-gray-700">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">1) Information We Provide</h3>
+                                <ul className="space-y-1 text-gray-700 dark:text-gray-300">
                                     <li>• <span className="font-medium">Account Information:</span> name, email, phone number, password</li>
                                     <li>• <span className="font-medium">Profile and biography:</span> education, work history, profile photo, bio</li>
                                     <li>• <span className="font-medium">Payment Information:</span> billing address, tax identifiers; we receive limited payment transaction data</li>
@@ -77,16 +77,16 @@ export default function PrivacyPolicy() {
                             </div>
 
                             <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">2) Automatically Collected Information</h3>
-                                <ul className="space-y-1 text-gray-700">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">2) Automatically Collected Information</h3>
+                                <ul className="space-y-1 text-gray-700 dark:text-gray-300">
                                     <li>• <span className="font-medium">Usage data:</span> page visited, course progress, session duration, IP address, device and browser type, cookies, analytics</li>
                                     <li>• <span className="font-medium">Technical data:</span> device information, operating system, referer URLs</li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">3) Third-Party Sources</h3>
-                                <p className="text-gray-700">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">3) Third-Party Sources</h3>
+                                <p className="text-gray-700 dark:text-gray-300">
                                     We may receive info via social sign (Google, Facebook, etc.), or when shared by partners (employers, accrediting providers).
                                 </p>
                             </div>
@@ -95,7 +95,7 @@ export default function PrivacyPolicy() {
 
                     {/* Sensitive Data */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">3.4 Sensitive Data</h2>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">3.4 Sensitive Data</h2>
                         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                             <p className="text-sm text-gray-800">
                                 We do not intentionally collect sensitive personal data (race, religion, health status, sex, citizenship, poverty). If you do not provide it or you wish selected content or as required by law.
@@ -105,9 +105,9 @@ export default function PrivacyPolicy() {
 
                     {/* How We Use Your Information */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">How We Use Your Information</h2>
-                        <p className="text-sm text-gray-700 mb-2">We use data to:</p>
-                        <ul className="space-y-1 text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">How We Use Your Information</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">We use data to:</p>
+                        <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                             <li>• Create your account, provide courses and learning activities, recommendations, dashboards</li>
                             <li>• Process payments and handle billing</li>
                             <li>• Communicate updates, support, and marketing (with opt-out)</li>
@@ -120,111 +120,111 @@ export default function PrivacyPolicy() {
 
                     {/* Legal Bases for Processing */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Legal Bases for Processing (EEA/UK)</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Legal Bases for Processing (EEA/UK)</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             If you are in the EEA/UK, our legal bases include: performance of a contract, consent, legitimate interests (i.e., security, product improvement), and compliance with legal obligations.
                         </p>
                     </section>
 
                     {/* Sharing and Disclosure */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Sharing and Disclosure</h2>
-                        <p className="text-sm text-gray-700 mb-3">We may share information with:</p>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Sharing and Disclosure</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">We may share information with:</p>
                         
                         <div className="space-y-3">
                             <div className="border-l-4 border-blue-500 bg-blue-50 pl-4 py-2">
-                                <h3 className="text-sm font-semibold text-gray-900">Service Providers</h3>
-                                <p className="text-sm text-gray-700">Payment processors, hosting providers, analytics, email delivery, and support platforms</p>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Service Providers</h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">Payment processors, hosting providers, analytics, email delivery, and support platforms</p>
                             </div>
 
                             <div className="border-l-4 border-green-500 bg-green-50 pl-4 py-2">
-                                <h3 className="text-sm font-semibold text-gray-900">Partners and Employers</h3>
-                                <p className="text-sm text-gray-700">Only with your explicit consent (e.g., for placements or scholarship applications)</p>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Partners and Employers</h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">Only with your explicit consent (e.g., for placements or scholarship applications)</p>
                             </div>
 
                             <div className="border-l-4 border-red-500 bg-red-50 pl-4 py-2">
-                                <h3 className="text-sm font-semibold text-gray-900">Legal and Safety</h3>
-                                <p className="text-sm text-gray-700">To comply with a subpoena, rights, safety or property</p>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Legal and Safety</h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">To comply with a subpoena, rights, safety or property</p>
                             </div>
 
                             <div className="border-l-4 border-purple-500 bg-purple-50 pl-4 py-2">
-                                <h3 className="text-sm font-semibold text-gray-900">Business Transfers</h3>
-                                <p className="text-sm text-gray-700">In connection with mergers, acquisitions, or asset sales, with notice to users</p>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Business Transfers</h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">In connection with mergers, acquisitions, or asset sales, with notice to users</p>
                             </div>
                         </div>
                     </section>
 
                     {/* Cookies & Tracking */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Cookies & Tracking Technologies</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Cookies & Tracking Technologies</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             We use cookies and similar technologies for operation, analytics, personalization, and advertising. You can control cookies via your browser settings (see work). Rejecting may limit functionality and cookies.
                         </p>
                     </section>
 
                     {/* Data Retention */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Data Retention</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Data Retention</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             We retain personal data for as long as necessary to provide Services, comply with legal obligations, resolve disputes, and enforce our agreements. Retention periods vary for data type.
                         </p>
                     </section>
 
                     {/* Security */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Security</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Security</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             We implement administrative, technical, and physical safeguards designed to protect personal data. While we use reasonable measures, no system is completely secure; report suspected breaches to <a href="mailto:info@thefinlawyers.com" className="text-blue-600 hover:underline">info@thefinlawyers.com</a>
                         </p>
                     </section>
 
                     {/* International Transfers */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">International Transfers</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">International Transfers</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             Learnings may transfer data to countries outside your jurisdiction (including the U.S.). When required, we use safeguards (e.g., data protection clauses or rely on adequacy decisions). Contact us for details.
                         </p>
                     </section>
 
                     {/* Your Rights */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Your Rights</h2>
-                        <p className="text-sm text-gray-700 mb-3">Depending on your jurisdiction, you may have rights including:</p>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Your Rights</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">Depending on your jurisdiction, you may have rights including:</p>
                         
-                        <div className="space-y-2 text-sm bg-gray-50 p-4 rounded">
+                        <div className="space-y-2 text-sm bg-gray-50 dark:bg-white/5 p-4 rounded">
                             <div>
-                                <span className="font-semibold text-gray-900">Access and portability</span>
-                                <span className="text-gray-700"> — Request a copy of personal data</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Access and portability</span>
+                                <span className="text-gray-700 dark:text-gray-300"> — Request a copy of personal data</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Correction</span>
-                                <span className="text-gray-700"> — Request correction of inaccurate data</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Correction</span>
+                                <span className="text-gray-700 dark:text-gray-300"> — Request correction of inaccurate data</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Deletion</span>
-                                <span className="text-gray-700"> — Request erasure of data (subject to exceptions)</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Deletion</span>
+                                <span className="text-gray-700 dark:text-gray-300"> — Request erasure of data (subject to exceptions)</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Restriction or objection to processing</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Restriction or objection to processing</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Withdraw consent</span>
-                                <span className="text-gray-700"> — where processing is based on consent</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Withdraw consent</span>
+                                <span className="text-gray-700 dark:text-gray-300"> — where processing is based on consent</span>
                             </div>
                             <div>
-                                <span className="font-semibold text-gray-900">Lodge a complaint</span>
-                                <span className="text-gray-700"> with your local data protection authority</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">Lodge a complaint</span>
+                                <span className="text-gray-700 dark:text-gray-300"> with your local data protection authority</span>
                             </div>
                         </div>
 
-                        <div className="mt-3 text-sm text-gray-700">
+                        <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
                             We may require verification and will respond within applicable legal timeframes. To exercise rights, contact <a href="mailto:info@thefinlawyers.com" className="text-blue-600 hover:underline">info@thefinlawyers.com</a>
                         </div>
                     </section>
 
                     {/* Children's Privacy */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Children's Privacy</h2>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Children's Privacy</h2>
                         <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
                             <p className="text-sm text-gray-800">
                                 The Services are not directed to children under 16 or higher minimum age where required. If we learn we collected personal data from a child without parental consent, we will delete it. Parents/guardians may contact us to request a learning opportunity.
@@ -234,32 +234,32 @@ export default function PrivacyPolicy() {
 
                     {/* Marketing Communications */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Marketing Communications</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Marketing Communications</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             We may send promotional emails if you opt-in. You can unsubscribe via links in emails or by contacting <a href="mailto:info@thefinlawyers.com" className="text-blue-600 hover:underline">info@thefinlawyers.com</a>
                         </p>
                     </section>
 
                     {/* Third-Party Links & Integrations */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Third-Party Links & Integrations</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Third-Party Links & Integrations</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             Our Services may link to third-party sites and integrate third-party tools. This Privacy Policy does not apply to third-party practices, so see their own respective policies as they are varying term.
                         </p>
                     </section>
 
                     {/* Changes to this Policy */}
                     <section className="mb-6">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Changes to this Policy</h2>
-                        <p className="text-sm text-gray-700">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Changes to this Policy</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                             We may update this Privacy Policy. We will post the revised policy with the "Last updated" date. Significant changes will be communicated by email or prominent site notice.
                         </p>
                     </section>
 
                     {/* Contact */}
                     <section className="mb-8">
-                        <h2 className="text-base font-bold text-gray-900 mb-3">Contact</h2>
-                        <p className="text-sm text-gray-700 mb-4">For questions, requests, or concerns regarding this Privacy Policy or your data:</p>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">Contact</h2>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">For questions, requests, or concerns regarding this Privacy Policy or your data:</p>
                         
                         <div className="bg-slate-900 text-white rounded-2xl p-5 space-y-1 text-sm">
                             <div>
@@ -280,8 +280,8 @@ export default function PrivacyPolicy() {
                     </section>
 
                     {/* Footer Note */}
-                    <div className="text-center py-4 border-t">
-                        <p className="text-xs text-gray-500">
+                    <div className="text-center py-4 border-t dark:border-white/10">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                             By using Learnings, you acknowledge that you have read and understand this Privacy Policy.
                         </p>
                     </div>

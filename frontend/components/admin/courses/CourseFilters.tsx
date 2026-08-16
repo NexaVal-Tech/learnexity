@@ -30,13 +30,13 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ onFilterChange }) => {
       {/* Search Bar */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
           <input
             type="text"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search courses by name or ID..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm text-gray-900"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-white/10 dark:bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-white/20 text-sm text-gray-900 dark:text-white"
           />
         </div>
 
@@ -44,7 +44,7 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ onFilterChange }) => {
         <select
           value={status}
           onChange={(e) => handleStatusChange(e.target.value as any)}
-          className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm bg-white"
+          className="px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-white/20 text-sm bg-white dark:bg-[#0f0f14] text-gray-900 dark:text-white"
         >
           <option value="">All Courses</option>
           <option value="active">Active Courses</option>
@@ -54,7 +54,7 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ onFilterChange }) => {
         {(search || status) && (
           <button
             onClick={clearFilters}
-            className="px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-white/5"
           >
             Clear Filters
           </button>

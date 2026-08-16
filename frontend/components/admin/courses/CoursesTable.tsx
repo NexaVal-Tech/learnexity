@@ -128,41 +128,41 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
       <div
         ref={dropdownRef}
         style={{ position: 'fixed', top: dropdownPos.top, right: dropdownPos.right }}
-        className="w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-[200]"
+        className="w-52 bg-white dark:bg-[#14141c] rounded-xl shadow-lg border border-gray-100 dark:border-white/10 py-2 z-[200]"
         onClick={(e) => e.stopPropagation()}
       >
         <Link
           href={`/admin/courses/${course.course_id}`}
-          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2.5"
         >
-          <FileText size={16} className="text-gray-500" />
+          <FileText size={16} className="text-gray-500 dark:text-gray-400" />
           Manage Content
         </Link>
         <button
           onClick={() => { onEditCourse(course); setActiveDropdown(null); setDropdownPos(null); }}
-          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2.5"
         >
-          <Edit size={16} className="text-gray-500" />
+          <Edit size={16} className="text-gray-500 dark:text-gray-400" />
           Edit Course
         </button>
         <Link
           href={`/admin/courses/${course.course_id}?tab=students`}
-          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5"
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2.5"
         >
-          <Users size={16} className="text-gray-500" />
+          <Users size={16} className="text-gray-500 dark:text-gray-400" />
           View Students
         </Link>
 
         {/* Divider */}
-        <div className="my-1 border-t border-gray-100" />
+        <div className="my-1 border-t border-gray-100 dark:border-white/10" />
 
         {/* Toggle status */}
         <button
           onClick={(e) => handleToggleStatus(course, e)}
           className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2.5 ${
             isActive
-              ? 'text-amber-600 hover:bg-amber-50'
-              : 'text-emerald-600 hover:bg-emerald-50'
+              ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10'
+              : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
           }`}
         >
           {isActive
@@ -173,7 +173,7 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
 
         <button
           onClick={() => { handleDeleteCourse(course.course_id); setDropdownPos(null); }}
-          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5"
+          className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2.5"
         >
           <Trash size={16} />
           Delete Course
@@ -185,21 +185,21 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden min-h-[400px]">
+    <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden min-h-[400px]">
 
       {/* Mobile Accordion View */}
       <div className="md:hidden">
         {courses.map((course) => {
           const isActive = course.stats?.is_active ?? course.is_active;
           return (
-            <div key={course.id} className="border-b border-gray-100 last:border-0 relative">
+            <div key={course.id} className="border-b border-gray-100 dark:border-white/10 last:border-0 relative">
               <div
                 className="p-4 flex items-center justify-between cursor-pointer"
                 onClick={() => toggleExpand(course.id)}
@@ -207,14 +207,14 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/admin/courses/${course.course_id}`}
-                    className="font-medium text-gray-900 text-sm hover:underline"
+                    className="font-medium text-gray-900 dark:text-white text-sm hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {course.title}
                   </Link>
                   {/* Inline status badge */}
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    isActive ? 'bg-[#0F172A] text-white' : 'bg-gray-100 text-gray-500'
+                    isActive ? 'bg-[#0F172A] dark:bg-white/20 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                   }`}>
                     {isActive ? 'active' : 'inactive'}
                   </span>
@@ -222,7 +222,7 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <button
-                      className="text-gray-400 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="text-gray-400 dark:text-gray-500 p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
                       onClick={(e) => toggleDropdown(course.id, e)}
                     >
                       {togglingId === course.course_id
@@ -233,8 +233,8 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                     {activeDropdown === course.id && <ActionDropdown course={course} />}
                   </div>
                   {expandedId === course.id
-                    ? <ChevronUp size={20} className="text-gray-400" />
-                    : <ChevronDown size={20} className="text-gray-400" />
+                    ? <ChevronUp size={20} className="text-gray-400 dark:text-gray-500" />
+                    : <ChevronDown size={20} className="text-gray-400 dark:text-gray-500" />
                   }
                 </div>
               </div>
@@ -242,28 +242,28 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
               {expandedId === course.id && (
                 <div className="px-4 pb-4 space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Total Students</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Total Students</span>
                     <div className="flex items-center gap-1">
-                      <Users size={14} className="text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">{course.stats.total_enrollments}</span>
+                      <Users size={14} className="text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{course.stats.total_enrollments}</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Active Students</span>
-                    <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Active Students</span>
+                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">
                       {course.stats.active_students}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Completion Rate</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Completion Rate</span>
                     <div className="flex items-center gap-3 w-32">
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-600 rounded-full"
                           style={{ width: `${course.stats.completion_rate}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">{course.stats.completion_rate}%</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{course.stats.completion_rate}%</span>
                     </div>
                   </div>
                 </div>
@@ -277,28 +277,28 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Students</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Active Students</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Sprints</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Rate</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <tr className="border-b border-gray-200 dark:border-white/10">
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Course Name</th>
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Students</th>
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Students</th>
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sprints</th>
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Completion Rate</th>
+              <th className="py-4 px-6 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
               <th className="py-4 px-6 w-10"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
             {courses.map((course) => {
               const isActive = course.stats?.is_active ?? course.is_active;
               return (
-                <tr key={course.id} className={`hover:bg-gray-50 transition-colors relative ${!isActive ? 'opacity-60' : ''}`}>
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap">
+                <tr key={course.id} className={`hover:bg-gray-50 dark:hover:bg-white/5 transition-colors relative ${!isActive ? 'opacity-60' : ''}`}>
+                  <td className="py-4 px-6 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <Link href={`/admin/courses/${course.course_id}`} className="text-blue-600 hover:underline">
+                      <Link href={`/admin/courses/${course.course_id}`} className="text-blue-600 dark:text-blue-400 hover:underline">
                         {course.title}
                       </Link>
                       {!isActive && (
-                        <span className="text-[10px] font-medium bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-medium bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 px-1.5 py-0.5 rounded">
                           hidden from students
                         </span>
                       )}
@@ -306,29 +306,29 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
-                      <Users size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-900">{course.stats.total_enrollments}</span>
+                      <Users size={16} className="text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm text-gray-900 dark:text-white">{course.stats.total_enrollments}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="px-2.5 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                    <span className="px-2.5 py-1 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">
                       {course.stats.active_students}
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       {course.stats.sprint_count} sprints
                     </span>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3 w-32">
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-600 rounded-full"
                           style={{ width: `${course.stats.completion_rate}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500 w-8">{course.stats.completion_rate}%</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8">{course.stats.completion_rate}%</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
@@ -339,8 +339,8 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                       title={isActive ? 'Click to set inactive' : 'Click to set active'}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                         isActive
-                          ? 'bg-[#0F172A] text-white hover:bg-red-600'
-                          : 'bg-gray-100 text-gray-500 hover:bg-emerald-100 hover:text-emerald-700'
+                          ? 'bg-[#0F172A] dark:bg-white/20 text-white hover:bg-red-600 dark:hover:bg-red-600'
+                          : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       {togglingId === course.course_id
@@ -352,7 +352,7 @@ const CoursesTable: React.FC<CoursesTableProps> = ({ filters, onEditCourse }) =>
                   <td className="py-4 px-6">
                     <div className="relative">
                       <button
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                         onClick={(e) => toggleDropdown(course.id, e)}
                       >
                         <MoreHorizontal size={20} />

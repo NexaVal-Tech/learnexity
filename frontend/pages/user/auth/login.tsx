@@ -103,8 +103,8 @@ export default function LoginPage() {
         .auth-card {
           animation: pageEnter 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(12, 12, 14, 0.92);
+          border: 1px solid var(--border-subtle);
+          background: var(--surface-elevated);
           backdrop-filter: blur(20px);
           box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
           transform-origin: left center;
@@ -115,18 +115,18 @@ export default function LoginPage() {
         .underline-input {
           background: transparent;
           border: none;
-          border-bottom: 3px solid rgba(255, 255, 255, 0.51);
+          border-bottom: 3px solid var(--border-strong);
           border-radius: 0;
           width: 100%;
           padding: 0.5rem 0 0.5rem 0;
-          color: white;
+          color: var(--text-primary);
           font-size: 0.95rem;
           outline: none;
           transition: border-color 0.25s ease;
           caret-color: ${BRAND};
         }
         .underline-input::placeholder {
-          color: rgba(255,255,255,0.25);
+          color: var(--text-muted);
           font-size: 0.875rem;
           letter-spacing: 0.01em;
         }
@@ -141,7 +141,7 @@ export default function LoginPage() {
           font-size: 0.7rem;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.72);
+          color: var(--text-secondary);
           margin-bottom: 0.35rem;
           display: block;
         }
@@ -172,17 +172,17 @@ export default function LoginPage() {
           justify-content: center;
           gap: 0.75rem;
           padding: 0.75rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--border-subtle);
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          color: rgba(255,255,255,0.75);
+          color: var(--text-secondary);
           font-weight: 500;
           font-size: 0.875rem;
-          background: rgba(255,255,255,0.04);
+          background: var(--surface-alt);
           transition: all 0.25s ease;
         }
         .google-btn:hover:not(:disabled) {
-          background: rgba(255,255,255,0.08);
-          border-color: rgba(255,255,255,0.2);
+          background: var(--border-subtle);
+          border-color: var(--border-strong);
         }
         .google-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .divider-line {
@@ -196,11 +196,11 @@ export default function LoginPage() {
           content: '';
           flex: 1;
           height: 1px;
-          background: rgba(255,255,255,0.08);
+          background: var(--border-subtle);
         }
         .divider-line span {
           font-size: 0.75rem;
-          color: rgba(255,255,255,0.3);
+          color: var(--text-muted);
           letter-spacing: 0.05em;
         }
         .page-switch-link {
@@ -225,9 +225,9 @@ export default function LoginPage() {
 
           {/* Header */}
           <div className="mb-8 text-center">
-            <p className="text-xs tracking-widest uppercase text-gray-500 mb-2">Welcome back</p>
-            <h1 className="text-3xl font-bold text-white leading-tight">Log In</h1>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-xs tracking-widest uppercase text-gray-500 dark:text-gray-400 mb-2">Welcome back</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">Log In</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Don&apos;t have an account?{' '}
               <a href="/user/auth/register" onClick={handleGoToRegister} className="page-switch-link">
                 Sign up
@@ -277,7 +277,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-40"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-40"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -295,7 +295,7 @@ export default function LoginPage() {
                   disabled={loading}
                   className="checkbox-custom"
                 />
-                <span className="text-sm text-gray-500">Remember me</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Remember me</span>
               </label>
               <a href="/user/auth/forgot-password" className="text-sm font-medium" style={{ color: BRAND }}>
                 Forgot password?

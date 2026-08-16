@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationSetting;
+use App\Models\ConsultationFreeDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -146,5 +147,48 @@ class AdminConsultationController extends Controller
         $settings->update($request->only(['price_usd', 'price_ngn']));
 
         return response()->json(['message' => 'Pricing updated.', 'settings' => $settings->fresh()]);
+    }
+
+    /**
+     * Free consultation days — on these dates, anyone can book a
+     * consultation with no payment and no per-slot limit (see
+     * ConsultationPaymentController::initiate() and
+     * ConsultationController::bookedSlots()).
+     */
+    public function getFreeDays()
+    {
+        return response()->json([
+            'free_days' => ConsultationFreeDay::orderBy('date')->get(['id', 'date', 'note']),
+        ]);
+    }
+
+    public function addFreeDay(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $validator->errors()], 422);
+        }
+
+        $freeDay = ConsultationFreeDay::firstOrCreate(
+            ['date' => $request->date],
+            ['note' => $request->note]
+        );
+
+        return response()->json([
+            'message'  => 'Free day added.',
+            'free_day' => $freeDay,
+        ], 201);
+    }
+
+    public function removeFreeDay($id)
+    {
+        $freeDay = ConsultationFreeDay::findOrFail($id);
+        $freeDay->delete();
+
+        return response()->json(['message' => 'Free day removed.']);
     }
 }
