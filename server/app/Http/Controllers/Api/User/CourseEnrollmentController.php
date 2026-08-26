@@ -244,39 +244,56 @@ class CourseEnrollmentController extends Controller
                 ], 409);
             }
 
-            $needsUpdate = $existingEnrollment->learning_track !== $learningTrack
-                || $existingEnrollment->payment_type !== $paymentType
-                || (bool) $existingEnrollment->is_registration_fee !== $isRegistrationFee;
+            // Always resync pricing against PricingService (the single source
+            // of truth) on every call — not just when track/payment-type/the
+            // 100%-scholarship flag visibly changed.
+            //
+            // Why: a PARTIAL scholarship award (e.g. the 50% tier) never
+            // flips is_registration_fee — that flag only turns true at
+            // >=100%. So the old "did something obviously change" gate below
+            // this comment used to silently skip the price refresh for any
+            // student who applied for and was awarded a scholarship AFTER
+            // their initial (pre-scholarship) enrollment and then returned
+            // to pay with the same track/payment type — which is the normal
+            // flow. Result: they were charged, and the confirmation email
+            // reported, the original undiscounted course price instead of
+            // their scholarship price. Recomputing on every sync call is
+            // cheap and idempotent (PricingService does a couple of indexed
+            // lookups), so there's no upside to gating it — always write the
+            // fresh numbers.
+            $oldTotalAmount = (float) $existingEnrollment->total_amount;
 
-            // Screening answers can arrive on a retry even when nothing else
-            // changed (e.g. user closed the payment page and came back
-            // through the screening modal again) — always refresh them when
-            // present so admins see the latest attestation.
-            if ($screeningAnswers !== null) {
-                $needsUpdate = true;
-            }
+            $existingEnrollment->update([
+                'learning_track'      => $learningTrack,
+                'payment_type'        => $paymentType,
+                'total_amount'        => $pricing['amount'],
+                'installment_amount'  => $pricing['installment_amount'],
+                'total_installments'  => $pricing['total_installments'],
+                'currency'            => $currency,
+                'scholarship_id'      => $scholarship?->id,
+                'is_registration_fee' => $isRegistrationFee,
+                // Screening answers can arrive on a retry even when nothing
+                // else changed (e.g. user closed the payment page and came
+                // back through the screening modal again) — always refresh
+                // them when present so admins see the latest attestation.
+                ...($screeningAnswers !== null ? [
+                    'deep_tech_screening_passed'  => $screeningPassed,
+                    'deep_tech_screening_answers' => $screeningAnswers,
+                ] : []),
+            ]);
 
-            if ($needsUpdate) {
-                $existingEnrollment->update([
-                    'learning_track'      => $learningTrack,
-                    'payment_type'        => $paymentType,
-                    'total_amount'        => $pricing['amount'],
-                    'installment_amount'  => $pricing['installment_amount'],
-                    'total_installments'  => $pricing['total_installments'],
-                    'currency'            => $currency,
-                    'scholarship_id'      => $scholarship?->id,
-                    'is_registration_fee' => $isRegistrationFee,
-                    ...($screeningAnswers !== null ? [
-                        'deep_tech_screening_passed'  => $screeningPassed,
-                        'deep_tech_screening_answers' => $screeningAnswers,
-                    ] : []),
-                ]);
-
-                Log::info('🔄 Updated pending enrollment pricing', [
+            if (round($oldTotalAmount, 2) !== round((float) $pricing['amount'], 2)) {
+                Log::info('🔄 Pending enrollment price resynced — amount changed', [
                     'enrollment_id'        => $existingEnrollment->id,
-                    'new_track'            => $learningTrack,
-                    'new_price'            => $pricing['amount'],
+                    'old_total_amount'     => $oldTotalAmount,
+                    'new_total_amount'     => $pricing['amount'],
+                    'scholarship_id'       => $scholarship?->id,
                     'is_registration_fee'  => $isRegistrationFee,
+                ]);
+            } else {
+                Log::info('🔄 Pending enrollment pricing resynced (no change)', [
+                    'enrollment_id' => $existingEnrollment->id,
+                    'total_amount'  => $pricing['amount'],
                 ]);
             }
 
