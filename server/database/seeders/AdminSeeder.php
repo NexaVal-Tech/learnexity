@@ -17,6 +17,7 @@ class AdminSeeder extends Seeder
             'name' => 'Super Admin',
             'email' => 'nexavaluable@gmail.com',
             'password' => Hash::make('#password123'), // Change this in production!
+            'is_super_admin' => true,
         ]);
     }
 }

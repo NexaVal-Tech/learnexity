@@ -40,6 +40,11 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         return $this->hasMany(CourseEnrollment::class);
     }
 
+    public function courseStatistics()
+    {
+        return $this->hasMany(UserCourseStatistic::class);
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $frontendUrl = config('app.frontend_url');

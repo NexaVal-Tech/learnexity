@@ -18,6 +18,9 @@ interface Scholarship {
   is_used: boolean;
   course_id: string;
   review_notes: string;
+  /** Cosmetic 30-day countdown — display only, doesn't affect redeemability. */
+  days_remaining?: number | null;
+  countdown_ends_at?: string | null;
 }
 
 interface Props {
@@ -82,6 +85,13 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
           <p className="text-green-600 text-xs">
             {isFullTuition ? 'Pay only the registration fee at checkout' : 'Discount applied automatically at checkout'}
           </p>
+          {typeof scholarship.days_remaining === 'number' && (
+            <p className={`text-xs font-semibold mt-2 ${scholarship.days_remaining <= 7 ? 'text-red-500' : 'text-green-600'}`}>
+              {scholarship.days_remaining > 0
+                ? `${scholarship.days_remaining} day${scholarship.days_remaining === 1 ? '' : 's'} left to use your scholarship`
+                : 'Your scholarship window has ended — enroll now to keep your spot'}
+            </p>
+          )}
         </div>
       </div>
     );

@@ -655,7 +655,8 @@ public function previewMaterial(Request $request, int $itemId): mixed
             if ($badge) {
                 $alreadyUnlocked = UserBadge::where('user_id', $userId)->where('achievement_badge_id', $badge->id)->exists();
                 if (!$alreadyUnlocked) {
-                    UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $badge->id, 'unlocked_at' => now()]);
+                    $userBadge = UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $badge->id, 'unlocked_at' => now()]);
+                    app(\App\Services\DynamicTemplateRenderService::class)->issueBadgeArtifact($userBadge);
                     $this->logBadgeUnlocked($userId, $courseId, $badge);
                 }
             }
@@ -674,7 +675,8 @@ public function previewMaterial(Request $request, int $itemId): mixed
             if ($completionBadge) {
                 $alreadyUnlocked = UserBadge::where('user_id', $userId)->where('achievement_badge_id', $completionBadge->id)->exists();
                 if (!$alreadyUnlocked) {
-                    UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $completionBadge->id, 'unlocked_at' => now()]);
+                    $userBadge = UserBadge::create(['user_id' => $userId, 'achievement_badge_id' => $completionBadge->id, 'unlocked_at' => now()]);
+                    app(\App\Services\DynamicTemplateRenderService::class)->issueBadgeArtifact($userBadge);
                     $this->logBadgeUnlocked($userId, $courseId, $completionBadge);
                 }
             }

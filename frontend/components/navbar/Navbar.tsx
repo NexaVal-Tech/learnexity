@@ -135,10 +135,10 @@ const NAV: NavEntry[] = [
         description: "Enroll and get full access, no payment",
         subMenu: "free",
       },
-      // Uncomment to bring back the Intermediate track in the nav:
+      // Uncomment to bring back the Career Accelerator track in the nav:
       // {
       //   href: "/intermediate",
-      //   label: "Intermediate Courses",
+      //   label: "Career Accelerator Courses",
       //   description: "For learners past the basics",
       //   subMenu: "intermediate",
       // },
@@ -318,7 +318,7 @@ function DropdownMenu({
           const browseLabel =
             item.subMenu === "deeptech" ? "Mentorship Courses" :
             item.subMenu === "free"     ? "Free Courses" :
-            item.subMenu === "intermediate" ? "Intermediate Courses" :
+            item.subMenu === "intermediate" ? "Career Accelerator Courses" :
             "Self-Paced Courses";
 
           return (
@@ -447,7 +447,14 @@ function MobileCoursesAccordion({
 
 // ─── Main Navbar ──────────────────────────────────────────────────────────────
 
-export default function Navbar() {
+interface NavbarProps {
+  /** Pixels to push the fixed navbar (and its mobile drawer) down by —
+   * used when a fixed banner (e.g. the scholarship countdown) is showing
+   * above it. Defaults to 0, matching prior behavior exactly. */
+  topOffsetPx?: number;
+}
+
+export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
@@ -571,6 +578,7 @@ export default function Navbar() {
       {/* ── Desktop Navbar ── */}
       <nav
         ref={navRef}
+        style={{ top: topOffsetPx }}
         className={`
           bg-white dark:bg-[#0a0a0f] fixed w-full z-50
           transition-all duration-300
@@ -730,8 +738,9 @@ export default function Navbar() {
 
       {/* ── Mobile slide-down panel ── */}
       <div
+        style={{ top: topOffsetPx }}
         className={`
-          fixed top-0 left-0 w-full bg-white dark:bg-[#0a0a0f] z-50 md:hidden
+          fixed left-0 w-full bg-white dark:bg-[#0a0a0f] z-50 md:hidden
           transition-all duration-300 ease-in-out
           ${isMobileOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}
         `}

@@ -45,7 +45,7 @@ const StudentsPage = () => {
     };
     
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="students">
       <AdminLayout>
         <div className="p-6 space-y-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>

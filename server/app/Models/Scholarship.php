@@ -23,13 +23,25 @@ class Scholarship extends Model
         'review_notes',
         'applicant_country',
         'applicant_ip',
+        'approved_at',
+        'reminders_sent',
     ];
 
     protected $casts = [
-        'answers'   => 'array',
-        'is_used'   => 'boolean',
-        'used_at'   => 'datetime',
+        'answers'        => 'array',
+        'is_used'        => 'boolean',
+        'used_at'        => 'datetime',
+        'approved_at'    => 'datetime',
+        'reminders_sent' => 'array',
     ];
+
+    /**
+     * Computed, display-only countdown fields — automatically included on
+     * every JSON response of this model (scholarship application result,
+     * course-scoped lookup, "my applications" list, admin listing) with no
+     * per-controller wiring needed.
+     */
+    protected $appends = ['days_remaining', 'countdown_ends_at'];
 
     public function user(): BelongsTo
     {
@@ -60,5 +72,31 @@ class Scholarship extends Model
     public function isRedeemable(): bool
     {
         return $this->status === 'approved' && ! $this->is_used;
+    }
+
+    /**
+     * Cosmetic 30-day countdown window — purely a UI nudge, does NOT cause
+     * the scholarship to actually expire or stop being redeemable. Null
+     * when there's nothing to count down (not approved, no award
+     * timestamp, or already used).
+     */
+    public function getDaysRemainingAttribute(): ?int
+    {
+        if ($this->status !== 'approved' || $this->approved_at === null || $this->is_used) {
+            return null;
+        }
+
+        $daysElapsed = (int) $this->approved_at->diffInDays(now());
+
+        return max(0, 30 - $daysElapsed);
+    }
+
+    public function getCountdownEndsAtAttribute(): ?string
+    {
+        if ($this->status !== 'approved' || $this->approved_at === null || $this->is_used) {
+            return null;
+        }
+
+        return $this->approved_at->copy()->addDays(30)->toIso8601String();
     }
 }

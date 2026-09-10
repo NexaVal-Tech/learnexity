@@ -3,9 +3,9 @@ import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
 import {
   Loader2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  CheckCircle, XCircle, Clock, Eye, X, ChevronDown, ChevronUp, Award
+  CheckCircle, XCircle, Clock, Eye, X, ChevronDown, ChevronUp, Award, Ban
 } from 'lucide-react';
-import { adminApi } from '@/lib/adminApi';
+import { adminApi, handleAdminApiError } from '@/lib/adminApi';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ScholarshipApplication {
@@ -13,7 +13,7 @@ interface ScholarshipApplication {
   user_id: number;
   course_id: string;
   course_name: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'revoked';
   score: number;
   location_bonus: number;
   total_score: number;
@@ -37,6 +37,7 @@ interface ScholarshipStats {
   pending: number;
   approved: number;
   rejected: number;
+  revoked: number;
   used: number;
 }
 
@@ -45,10 +46,11 @@ const DetailModal: React.FC<{
   application: ScholarshipApplication | null;
   onClose: () => void;
   onUpdateStatus: (id: number, discountPercentage: number, notes: string) => Promise<void>;
-}> = ({ application, onClose, onUpdateStatus }) => {
+  onRevoke: (id: number) => Promise<void>;
+}> = ({ application, onClose, onUpdateStatus, onRevoke }) => {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const [action, setAction] = useState<'full' | 'partial' | null>(null);
+  const [action, setAction] = useState<'full' | 'partial' | 'revoke' | null>(null);
 
   useEffect(() => {
     if (application) {
@@ -63,6 +65,18 @@ const DetailModal: React.FC<{
     setSaving(true);
     try {
       await onUpdateStatus(application.id, discountPercentage, notes);
+      onClose();
+    } finally {
+      setSaving(false);
+      setAction(null);
+    }
+  };
+
+  const handleRevoke = async () => {
+    setAction('revoke');
+    setSaving(true);
+    try {
+      await onRevoke(application.id);
       onClose();
     } finally {
       setSaving(false);
@@ -189,6 +203,22 @@ const DetailModal: React.FC<{
             </button>
           </div>
         )}
+
+        {application.status === 'approved' && !application.is_used && (
+          <div className="p-6 border-t border-gray-100 dark:border-white/10 flex items-center justify-between gap-3">
+            <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs">
+              Revoking clears the award — future payment emails show the real course price, and the student can reapply.
+            </p>
+            <button
+              onClick={handleRevoke}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-60"
+            >
+              {saving && action === 'revoke' ? <Loader2 size={14} className="animate-spin" /> : <Ban size={14} />}
+              Revoke Scholarship
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -250,10 +280,23 @@ function ScholarshipApplicationsPage() {
     fetchStats();
   };
 
+  const handleRevoke = async (id: number) => {
+    if (!confirm('Revoke this scholarship? The student will see the real course price in future emails, and can reapply if they want.')) return;
+    try {
+      await adminApi.patch(`/api/admin/scholarships/${id}/revoke`, {});
+      fetchApplications();
+      fetchStats();
+    } catch (err) {
+      alert(handleAdminApiError(err));
+      throw err;
+    }
+  };
+
   const statusConfig: Record<string, { label: string; style: string; icon: React.ReactNode }> = {
     pending: { label: 'Pending', style: 'bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-500/30', icon: <Clock size={12} /> },
     approved: { label: 'Approved', style: 'bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400 border-green-100 dark:border-green-500/30', icon: <CheckCircle size={12} /> },
     rejected: { label: 'Rejected', style: 'bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/30', icon: <XCircle size={12} /> },
+    revoked: { label: 'Revoked', style: 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10', icon: <Ban size={12} /> },
   };
 
   const statsDisplay = stats ? [
@@ -261,11 +304,12 @@ function ScholarshipApplicationsPage() {
     { label: 'Pending Review', value: stats.pending, color: 'text-orange-600 dark:text-orange-400' },
     { label: 'Approved', value: stats.approved, color: 'text-green-600 dark:text-green-400' },
     { label: 'Rejected', value: stats.rejected, color: 'text-red-600 dark:text-red-400' },
+    { label: 'Revoked', value: stats.revoked, color: 'text-gray-500 dark:text-gray-400' },
     { label: 'Used', value: stats.used, color: 'text-purple-600 dark:text-purple-400' },
   ] : [];
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="scholarships">
       <AdminLayout>
         <div className="p-6 space-y-6">
           <div>
@@ -275,7 +319,7 @@ function ScholarshipApplicationsPage() {
 
           {/* Stats */}
           {stats && (
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               {statsDisplay.map(s => (
                 <div key={s.label} className="bg-white dark:bg-[#0f0f14] rounded-xl border border-gray-200 dark:border-white/10 p-4 text-center">
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -298,7 +342,7 @@ function ScholarshipApplicationsPage() {
               />
             </div>
             <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
-              {['', 'pending', 'approved', 'rejected'].map(s => (
+              {['', 'pending', 'approved', 'rejected', 'revoked'].map(s => (
                 <button
                   key={s}
                   onClick={() => { setStatusFilter(s); setPage(1); }}
@@ -374,13 +418,24 @@ function ScholarshipApplicationsPage() {
                             {new Date(app.created_at).toLocaleDateString()}
                           </td>
                           <td className="py-3 px-4">
-                            <button
-                              onClick={() => setSelectedApp(app)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/5"
-                            >
-                              <Eye size={12} />
-                              {app.status === 'pending' ? 'Review' : 'View'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setSelectedApp(app)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/5"
+                              >
+                                <Eye size={12} />
+                                {app.status === 'pending' ? 'Review' : 'View'}
+                              </button>
+                              {app.status === 'approved' && !app.is_used && (
+                                <button
+                                  onClick={() => handleRevoke(app.id)}
+                                  title="Revoke scholarship"
+                                  className="p-1.5 border border-red-200 dark:border-red-500/30 text-red-500 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10"
+                                >
+                                  <Ban size={12} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -409,6 +464,7 @@ function ScholarshipApplicationsPage() {
           application={selectedApp}
           onClose={() => setSelectedApp(null)}
           onUpdateStatus={handleUpdateStatus}
+          onRevoke={handleRevoke}
         />
       </AdminLayout>
     </AdminRouteGuard>

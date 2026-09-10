@@ -38,7 +38,7 @@ const CoursesPage = () => {
   };
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="courses">
       <AdminLayout>
         <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

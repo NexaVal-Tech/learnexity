@@ -73,7 +73,7 @@
                                 'one_on_one' => 'One-on-One Coaching',
                                 'group_mentorship' => 'Live Classes',
                                 'self_paced' => 'Self-Paced + Community',
-                                'intermediate' => 'Intermediate',
+                                'intermediate' => 'Career Accelerator',
                             ];
                         @endphp
                         {{ $trackNames[$enrollment->learning_track] ?? ucwords(str_replace('_', ' ', $enrollment->learning_track)) }}

@@ -8,6 +8,7 @@ import { Search, Loader2, AlertCircle, Settings, DollarSign } from 'lucide-react
 import { api, handleApiError } from '@/lib/api';
 import CourseSettings from '@/components/admin/settings/CourseSettings';
 import RegistrationFeeSettings from '@/components/admin/settings/RegistrationFeeSettings';
+import ScholarshipCountdownSettings from '@/components/admin/settings/ScholarshipCountdownSettings';
 
 interface Course {
   id: number;
@@ -49,7 +50,7 @@ const CourseSettingsPage = () => {
 
   if (loading) {
     return (
-      <AdminRouteGuard>
+      <AdminRouteGuard requiredPermission="courses">
         <AdminLayout>
           <div className="flex items-center justify-center h-96">
             <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
@@ -60,7 +61,7 @@ const CourseSettingsPage = () => {
   }
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="courses">
       <AdminLayout>
         <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           {/* Header */}
@@ -71,6 +72,9 @@ const CourseSettingsPage = () => {
 
           {/* Platform-wide scholarship registration fee — not per-course */}
           <RegistrationFeeSettings />
+
+          {/* Homepage scholarship countdown banner deadline */}
+          <ScholarshipCountdownSettings />
 
           <div className="grid lg:grid-cols-12 gap-6">
             {/* Left Sidebar - Course List */}

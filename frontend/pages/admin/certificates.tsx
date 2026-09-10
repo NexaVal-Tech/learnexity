@@ -167,7 +167,7 @@ export default function AdminCertificatesPage() {
   };
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="certificates">
       <AdminLayout>
         <div className="p-6">
           {toast && (

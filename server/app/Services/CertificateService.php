@@ -75,6 +75,9 @@ class CertificateService
             'issued_at'          => now(),
         ]);
 
+        $certificate->reference_number = 'LX-CERT-' . str_pad((string) $certificate->id, 6, '0', STR_PAD_LEFT);
+        $certificate->save();
+
         $this->generatePdf($certificate);
 
         Log::info('🎓 Certificate issued', [
@@ -102,6 +105,19 @@ class CertificateService
         }
 
         try {
+            // Prefer the admin-configured visual template (uploaded design
+            // + positioned fields, incl. reference number + signer) if one
+            // exists; fall back to the plain built-in layout otherwise so
+            // certificates keep working before an admin sets a template up.
+            $dynamicPdf = app(\App\Services\DynamicTemplateRenderService::class)->renderCertificatePdf($certificate);
+            if ($dynamicPdf !== null) {
+                $path = "certificates/{$certificate->certificate_uid}.pdf";
+                Storage::disk('local')->put($path, $dynamicPdf);
+                $certificate->update(['pdf_path' => $path]);
+
+                return $path;
+            }
+
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.template', [
                 'recipientName' => $certificate->recipient_name,
                 'courseTitle'   => $certificate->course_title,

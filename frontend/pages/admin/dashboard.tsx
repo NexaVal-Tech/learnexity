@@ -76,53 +76,59 @@ function Dashboard() {
 
           {/* Stats Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard 
-              title="Total Students Enrolled" 
-              value={stats.total_students.value} 
-              trend={stats.total_students.trend} 
-              percentage={stats.total_students.percentage} 
+            <StatsCard
+              title="Total Students Enrolled"
+              value={stats.total_students.value}
+              trend={stats.total_students.trend}
+              percentage={stats.total_students.percentage}
               trendLabel={stats.total_students.label}
               description="Total enrolled students"
+              href="/admin/students"
             />
-            <StatsCard 
-              title="Active Courses" 
-              value={stats.active_courses.value} 
-              trend={stats.active_courses.trend} 
-              percentage={stats.active_courses.percentage} 
+            <StatsCard
+              title="Active Courses"
+              value={stats.active_courses.value}
+              trend={stats.active_courses.trend}
+              percentage={stats.active_courses.percentage}
               trendLabel={stats.active_courses.label}
               description="Courses with active students"
+              href="/admin/courses"
             />
-            <StatsCard 
-              title="Pending Consultations" 
-              value={stats.pending_consultations.value} 
-              trend={stats.pending_consultations.trend} 
-              percentage={stats.pending_consultations.percentage} 
+            <StatsCard
+              title="Pending Consultations"
+              value={stats.pending_consultations.value}
+              trend={stats.pending_consultations.trend}
+              percentage={stats.pending_consultations.percentage}
               trendLabel={stats.pending_consultations.label}
               description="Scheduled consultations"
+              href="/admin/consultation"
             />
-            <StatsCard 
-              title="Course Completion Rate" 
-              value={stats.completion_rate.value} 
-              trend={stats.completion_rate.trend} 
-              percentage={stats.completion_rate.percentage} 
+            <StatsCard
+              title="Course Completion Rate"
+              value={stats.completion_rate.value}
+              trend={stats.completion_rate.trend}
+              percentage={stats.completion_rate.percentage}
               trendLabel={stats.completion_rate.label}
               description="Average completion rate"
+              href="/admin/analytics"
             />
-            <StatsCard 
-              title="Paid Users" 
-              value={stats.paid_users.value} 
-              trend={stats.paid_users.trend} 
-              percentage={stats.paid_users.percentage} 
+            <StatsCard
+              title="Paid Users"
+              value={stats.paid_users.value}
+              trend={stats.paid_users.trend}
+              percentage={stats.paid_users.percentage}
               trendLabel={stats.paid_users.label}
               description="Students with completed payments"
+              href="/admin/students"
             />
-            <StatsCard 
-              title="Unpaid Users" 
-              value={stats.unpaid_users.value} 
-              trend={stats.unpaid_users.trend} 
-              percentage={stats.unpaid_users.percentage} 
+            <StatsCard
+              title="Unpaid Users"
+              value={stats.unpaid_users.value}
+              trend={stats.unpaid_users.trend}
+              percentage={stats.unpaid_users.percentage}
               trendLabel={stats.unpaid_users.label}
               description="Students pending payment"
+              href="/admin/students"
             />
           </div>
 

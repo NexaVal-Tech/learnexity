@@ -6,15 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Auth\Events\Verified;
 use App\Listeners\SendWelcomeEmail;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
-use App\Models\CourseEnrollment;
-use App\Jobs\SendDailyCheckinEmailsJob;
-use App\Jobs\SendInactiveUserEmailsJob;
-use App\Jobs\SendUnenrolledUserNudgeJob;
-use App\Jobs\SendPendingPaymentNudgeJob;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,49 +29,12 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         // ── Scheduled Tasks ──────────────────────────────────────────────
-         if ($this->app->runningInConsole()) {
-            $this->app->booted(function () {
-                $schedule = $this->app->make(Schedule::class);
-
-                $schedule->command('payments:send-reminders')
-                        ->dailyAt('09:00')
-                        ->withoutOverlapping();
-
-                $schedule->command('payments:check-overdue')
-                        ->dailyAt('02:00')
-                        ->withoutOverlapping();
-
-                $schedule->call(function () {
-                    CourseEnrollment::where('payment_type', 'installment')
-                        ->where('payment_status', '!=', 'completed')
-                        ->each(fn ($enrollment) => $enrollment->updateAccessStatus());
-                })
-                ->name('update-access-status')
-                ->everySixHours()
-                ->withoutOverlapping();
-
-                // ── Newly registered email jobs ─────────────────────────────────
-                $schedule->call(fn () => (new SendDailyCheckinEmailsJob())->handle())
-                        ->name('daily-checkin-emails')
-                        ->dailyAt('08:00')
-                        ->withoutOverlapping();
-
-                $schedule->call(fn () => (new SendInactiveUserEmailsJob())->handle())
-                        ->name('inactive-user-emails')
-                        ->dailyAt('08:15')
-                        ->withoutOverlapping();
-
-                $schedule->call(fn () => (new SendUnenrolledUserNudgeJob())->handle())
-                        ->name('unenrolled-user-nudge')
-                        ->dailyAt('08:30')
-                        ->withoutOverlapping();
-
-                $schedule->call(fn () => (new SendPendingPaymentNudgeJob())->handle())
-                        ->name('pending-payment-nudge')
-                        ->dailyAt('08:45')
-                        ->withoutOverlapping();
-            });
-        }
+        // All scheduled commands/jobs live in routes/console.php (Laravel 12
+        // convention) — they used to ALSO be registered here, which meant
+        // payments:send-reminders, payments:check-overdue, and
+        // update-access-status were each running (and emailing/blocking
+        // access) twice per scheduled tick. Consolidated to routes/console.php
+        // only; see that file for the current schedule.
     }
 
     protected function configureRateLimiting(): void

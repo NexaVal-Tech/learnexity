@@ -208,7 +208,7 @@ class CourseEnrollmentController extends Controller
 
         $isRegistrationFee     = $pricing['is_registration_fee'];
         $scholarship           = $pricing['scholarship'];
-        $paymentType           = $pricing['payment_type']; // forced to 'onetime' when registration-fee
+        $paymentType           = $pricing['payment_type']; // forced to 'onetime' for registration-fee, except Deep-Tech/Intermediate which may split into 2 (see PricingService)
         $registrationFeeAmount = $isRegistrationFee ? $pricing['amount'] : null;
 
         if ($isRegistrationFee && $registrationFeeAmount <= 0) {
@@ -306,6 +306,7 @@ class CourseEnrollmentController extends Controller
                 'currency'            => $existingEnrollment->currency,
                 'payment_type'        => $existingEnrollment->payment_type,
                 'is_registration_fee' => $existingEnrollment->fresh()->is_registration_fee,
+                'registration_fee_split_allowed' => $pricing['registration_fee_split_allowed'] ?? false,
             ], 200);
         }
 
@@ -368,6 +369,7 @@ class CourseEnrollmentController extends Controller
             'currency'            => $currency,
             'payment_type'        => $paymentType,
             'is_registration_fee' => $isRegistrationFee,
+            'registration_fee_split_allowed' => $pricing['registration_fee_split_allowed'] ?? false,
             'deep_tech_screening_passed' => $screeningPassed,
         ], 201);
     }

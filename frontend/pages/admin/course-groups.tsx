@@ -292,7 +292,7 @@ export default function CourseGroupsPage() {
   };
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="course_groups">
       <AdminLayout>
         <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
           <div className="flex items-center justify-between mb-8">

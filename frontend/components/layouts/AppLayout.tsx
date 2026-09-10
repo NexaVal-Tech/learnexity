@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { useCallback, useState } from "react";
 import Navbar from "@/components/navbar/Navbar";
 
 // Code-split the particle background: @tsparticles/* is a sizeable engine
@@ -10,16 +11,30 @@ const ParticleBg = dynamic(() => import("@/components/particles/ParticleBg"), {
   ssr: false,
 });
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: React.ReactNode;
+  /** Optional fixed element rendered above the navbar (e.g. the homepage
+   * scholarship countdown banner). Its rendered height is measured and
+   * used to push the navbar + page content down by exactly that amount,
+   * so pages that don't pass one see zero layout change. */
+  topBanner?: (props: { onHeightChange: (height: number) => void }) => React.ReactNode;
+}
+
+export default function AppLayout({ children, topBanner }: AppLayoutProps) {
+  const [bannerHeight, setBannerHeight] = useState(0);
+  const handleBannerHeightChange = useCallback((height: number) => setBannerHeight(height), []);
+
   return (
     <div className="bg-white dark:bg-black">
+      {topBanner?.({ onHeightChange: handleBannerHeightChange })}
+
       {/* Header/Navbar */}
-      <header className="fixed top-0 w-full z-50">
-        <Navbar />
+      <header className="fixed w-full z-50" style={{ top: bannerHeight }}>
+        <Navbar topOffsetPx={bannerHeight} />
       </header>
 
       {/* Main content */}
-      <main className="relative">
+      <main className="relative" style={{ paddingTop: bannerHeight || undefined }}>
         <ParticleBg />
         <div className="z-10">
           {children}

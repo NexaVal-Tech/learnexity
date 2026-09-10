@@ -35,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.auth.re' => \App\Http\Middleware\JwtMiddlewareRe::class,
         'admin.auth' => \App\Http\Middleware\AdminAuthMiddleware::class,
+        'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+        'admin.super' => \App\Http\Middleware\EnsureSuperAdmin::class,
         'oauth.csrf.disable' => \App\Http\Middleware\DisableCsrfForOAuth::class,
     ]);
 })

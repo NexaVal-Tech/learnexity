@@ -45,6 +45,9 @@ class CourseEnrollment extends Model
         // Access
         'has_access',
         'next_payment_due',
+        'access_manually_granted',
+        'access_granted_by_admin_id',
+        'access_granted_at',
 
         // Meta
         'transaction_id',
@@ -60,6 +63,8 @@ class CourseEnrollment extends Model
         'amount_paid' => 'decimal:2',
         'installment_amount' => 'decimal:2',
         'has_access' => 'boolean',
+        'access_manually_granted' => 'boolean',
+        'access_granted_at' => 'datetime',
         'is_registration_fee' => 'boolean',
         'deep_tech_screening_passed' => 'boolean',
         'deep_tech_screening_answers' => 'array',
@@ -103,7 +108,7 @@ class CourseEnrollment extends Model
             'one_on_one' => 'One-on-One Coaching',
             'group_mentorship' => 'Live Classes',
             'self_paced' => 'Self-Paced Learning + Community Support',
-            'intermediate' => 'Intermediate',
+            'intermediate' => 'Career Accelerator',
             default => 'Self-Paced Learning',
         };
     }
@@ -117,12 +122,41 @@ class CourseEnrollment extends Model
      */
     public function canAccess(): bool
     {
+        // Admin manual override — takes precedence over payment status
+        // entirely, regardless of payment type. See grantAccess()/
+        // revokeAccess() on AdminStudentController.
+        if ($this->access_manually_granted) {
+            return true;
+        }
+
         if ($this->payment_type === 'onetime') {
             return $this->payment_status === 'completed';
         }
 
         // Installment logic
         return $this->has_access && $this->next_payment_due?->isFuture();
+    }
+
+    public function adminGrantAccess(?int $adminId): void
+    {
+        $this->has_access = true;
+        $this->access_manually_granted = true;
+        $this->access_granted_by_admin_id = $adminId;
+        $this->access_granted_at = now();
+        $this->save();
+    }
+
+    public function adminRevokeAccess(): void
+    {
+        $this->access_manually_granted = false;
+        $this->access_granted_by_admin_id = null;
+        $this->access_granted_at = null;
+        // Re-derive has_access from the normal payment-driven rules rather
+        // than blindly setting false — e.g. a fully-paid one-time
+        // enrollment should stay accessible even after an unrelated manual
+        // grant is revoked.
+        $this->has_access = $this->shouldHaveAccess();
+        $this->save();
     }
 
     /**
@@ -203,6 +237,12 @@ class CourseEnrollment extends Model
      */
     public function updateAccessStatus()
     {
+        // An admin's manual grant is sticky — don't let the normal
+        // payment-driven logic below silently revoke it.
+        if ($this->access_manually_granted) {
+            return;
+        }
+
         // Skip if not installment payment
         if ($this->payment_type !== 'installment') {
             return;

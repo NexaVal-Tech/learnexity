@@ -1,24 +1,45 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { adminHasPermission } from '@/lib/adminApi';
 
 interface AdminRouteGuardProps {
   children: React.ReactNode;
+  /**
+   * If set, the page also requires this capability (see Admin::PERMISSIONS
+   * on the backend). Super admins always pass. Omit for pages every admin
+   * may see (e.g. the dashboard).
+   */
+  requiredPermission?: string;
+  /** If set, the page is restricted to super admins only (e.g. Team management). */
+  requireSuperAdmin?: boolean;
 }
 
-export default function AdminRouteGuard({ children }: AdminRouteGuardProps) {
+export default function AdminRouteGuard({ children, requiredPermission, requireSuperAdmin }: AdminRouteGuardProps) {
   const { admin, loading } = useAdminAuth();
   const router = useRouter();
 
+  const forbidden =
+    !!admin &&
+    ((requireSuperAdmin && !admin.is_super_admin) ||
+      (requiredPermission && !adminHasPermission(admin, requiredPermission)));
+
   useEffect(() => {
-    if (!loading && !admin) {
+    if (loading) return;
+
+    if (!admin) {
       const currentPath = router.asPath;
       sessionStorage.setItem('admin_intended_route', currentPath);
 
       // ✅ IMPORTANT: replace, not push
       router.replace('/admin/auth/login');
+      return;
     }
-  }, [admin, loading, router]);
+
+    if (forbidden) {
+      router.replace('/admin/dashboard');
+    }
+  }, [admin, loading, forbidden, router]);
 
   if (loading) {
     return (
@@ -31,7 +52,7 @@ export default function AdminRouteGuard({ children }: AdminRouteGuardProps) {
     );
   }
 
-  if (!admin) return null;
+  if (!admin || forbidden) return null;
 
   return <>{children}</>;
 }

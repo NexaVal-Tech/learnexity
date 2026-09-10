@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MoreVertical, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from 'lucide-react';
+import { MoreVertical, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, BookOpen } from 'lucide-react';
 import { api } from '@/lib/api';
+
+interface StudentCourse {
+  course_name: string;
+  payment_status: string;
+}
 
 interface Student {
   id: number;
@@ -9,10 +14,62 @@ interface Student {
   email: string;
   phone?: string;
   courses_count: number;
+  courses?: StudentCourse[];
   activity_status: 'active' | 'inactive';
   has_paid: boolean;
   created_at: string;
 }
+
+/** Small hover card listing a student's enrolled courses — lets an admin
+ * see who's in what without opening the detail page. */
+const CoursesAtAGlance = ({ courses }: { courses?: StudentCourse[] }) => {
+  const [open, setOpen] = useState(false);
+
+  if (!courses || courses.length === 0) {
+    return (
+      <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-xs font-medium text-gray-400 dark:text-gray-500">
+        0
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((v) => !v); }}
+        className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20"
+      >
+        <BookOpen size={11} />
+        {courses.length}
+      </button>
+
+      {open && (
+        <div className="absolute z-20 top-full left-0 mt-1 w-64 bg-white dark:bg-[#181820] border border-gray-200 dark:border-white/10 rounded-lg shadow-lg p-2 text-left">
+          <p className="text-[10px] font-semibold uppercase text-gray-400 dark:text-gray-500 px-1.5 pb-1">Enrolled courses</p>
+          <ul className="space-y-1 max-h-48 overflow-y-auto">
+            {courses.map((c, i) => (
+              <li key={i} className="flex items-center justify-between gap-2 px-1.5 py-1 rounded hover:bg-gray-50 dark:hover:bg-white/5">
+                <span className="text-xs text-gray-800 dark:text-gray-200 truncate">{c.course_name}</span>
+                <span className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                  c.payment_status === 'completed'
+                    ? 'bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400'
+                    : 'bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400'
+                }`}>
+                  {c.payment_status === 'completed' ? 'Paid' : 'Pending'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </span>
+  );
+};
 
 const getPaymentStatusStyle = (hasPaid: boolean) => {
   return hasPaid
@@ -146,11 +203,26 @@ const StudentsTable: React.FC<StudentsTableProps> = ({
                   <span className="text-sm text-gray-500 dark:text-gray-500">Phone Number</span>
                   <span className="text-sm text-gray-900 dark:text-white font-medium">{student.phone || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500 dark:text-gray-500">Courses Enrolled</span>
-                  <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-xs font-medium text-gray-600 dark:text-gray-300">
-                    {student.courses_count}
-                  </span>
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-500">Courses Enrolled ({student.courses_count})</span>
+                  {student.courses && student.courses.length > 0 ? (
+                    <ul className="mt-1.5 space-y-1">
+                      {student.courses.map((c, i) => (
+                        <li key={i} className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-gray-50 dark:bg-white/5">
+                          <span className="text-xs text-gray-800 dark:text-gray-200 truncate">{c.course_name}</span>
+                          <span className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                            c.payment_status === 'completed'
+                              ? 'bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400'
+                              : 'bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400'
+                          }`}>
+                            {c.payment_status === 'completed' ? 'Paid' : 'Pending'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">No courses yet</p>
+                  )}
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500 dark:text-gray-500">Payment Status</span>
@@ -218,9 +290,7 @@ const StudentsTable: React.FC<StudentsTableProps> = ({
                 <td className="py-3 px-4 text-sm text-gray-900 dark:text-white whitespace-nowrap">{student.email}</td>
                 <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{student.phone || 'N/A'}</td>
                 <td className="py-3 px-4">
-                  <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-xs font-medium text-gray-600 dark:text-gray-300">
-                    {student.courses_count}
-                  </span>
+                  <CoursesAtAGlance courses={student.courses} />
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                   {new Date(student.created_at).toLocaleDateString()}

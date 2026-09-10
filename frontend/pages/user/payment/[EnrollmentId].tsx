@@ -80,7 +80,7 @@ const TRACK_OPTIONS: TrackOption[] = [
   },
   {
     id: 'intermediate',
-    name: 'Intermediate',
+    name: 'Career Accelerator',
     title: 'For learners ready to move beyond the basics',
     description: "A step up track for students who already have foundational knowledge and want a faster, more advanced path through the material.",
     features: ['Advanced curriculum pacing', 'Full course material access', 'Weekly group review sessions'],
@@ -238,6 +238,7 @@ export default function PaymentPage() {
         currency: res.currency ?? prev.currency,
         payment_type: res.payment_type ?? prev.payment_type,
         is_registration_fee: res.is_registration_fee ?? prev.is_registration_fee,
+        registration_fee_split_allowed: res.registration_fee_split_allowed ?? prev.registration_fee_split_allowed,
       } : prev));
     } catch {
       // non-critical — keep last known price; re-synced again on the next
@@ -467,13 +468,20 @@ export default function PaymentPage() {
     fetchEnrollmentDetails();
   }, [router.isReady, router.query.enrollmentId, user, authLoading, currencyDetected]);
 
-  // Full-tuition scholarship: one flat registration fee, always paid in
-  // full, no installments, no other discount — this is the single flag
-  // the whole page branches on. Sourced from the synced enrollment record
-  // (server truth) once available, falling back to the scholarship lookup
-  // before the first sync completes so the UI doesn't flash the wrong state.
+  // Full-tuition scholarship: one flat registration fee — no other discount
+  // ever applies to it. Sourced from the synced enrollment record (server
+  // truth) once available, falling back to the scholarship lookup before
+  // the first sync completes so the UI doesn't flash the wrong state.
   const isRegistrationFee = enrollment?.is_registration_fee ??
     (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) >= 100);
+
+  // Deep-Tech (Live Classes / One-on-One) and Intermediate registration-fee
+  // payers may split the flat fee into 2 payments instead of paying it all
+  // at once — Flexible (self-paced) always pays it in one go. This is
+  // computed server-side (PricingService) and comes back on the synced
+  // enrollment; before the first sync we conservatively assume "no split"
+  // so the UI doesn't briefly offer an option that turns out unavailable.
+  const canSplitRegistrationFee = isRegistrationFee && !!enrollment?.registration_fee_split_allowed;
 
   // Partial scholarship (e.g. 50% off) — normal payment flow still applies
   // (track selection, installments), just at a discounted price. Sourced the
@@ -483,10 +491,12 @@ export default function PaymentPage() {
     ? (!enrollment.is_registration_fee && !!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100)
     : (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100);
 
-  // Force one-time when a scholarship applies — installments aren't offered.
+  // Force one-time when a scholarship applies, UNLESS this is a
+  // registration fee that's eligible to be split into 2 payments (Deep-Tech
+  // / Intermediate) — that case is allowed to stay on 'installment'.
   useEffect(() => {
-    if (isRegistrationFee) setPaymentType('onetime');
-  }, [isRegistrationFee]);
+    if (isRegistrationFee && !canSplitRegistrationFee) setPaymentType('onetime');
+  }, [isRegistrationFee, canSplitRegistrationFee]);
 
   // ── Price helpers ─────────────────────────────────────────────────────────
   // The amount actually charged always comes from the enrollment record,
@@ -508,7 +518,12 @@ export default function PaymentPage() {
     if (!selectedTrack || !enrollment) return 0;
 
     if (isRegistrationFee) {
-      // Flat fee regardless of track or hour count.
+      // Flat fee regardless of track or hour count — unless this is a
+      // Deep-Tech/Intermediate fee split into 2 payments, in which case
+      // "Pay Now" is just the first half.
+      if (canSplitRegistrationFee && paymentType === 'installment') {
+        return enrollment.installment_amount ?? 0;
+      }
       return enrollment.total_amount ?? 0;
     }
 
@@ -524,7 +539,8 @@ export default function PaymentPage() {
   };
 
   const getInstallmentMonthlyPrice = (): number => {
-    if (!selectedTrack || selectedTrack === 'one_on_one' || isRegistrationFee) return 0;
+    if (!selectedTrack || selectedTrack === 'one_on_one') return 0;
+    if (isRegistrationFee && !canSplitRegistrationFee) return 0;
     return enrollment?.installment_amount ?? 0;
   };
 
@@ -734,15 +750,50 @@ export default function PaymentPage() {
           {isRegistrationFee && (
             <div className="space-y-2 border-b border-gray-200 dark:border-white/10 pb-3">
               <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-800 dark:text-green-300 leading-snug">
-                You've been awarded a full-tuition scholarship — you only pay the registration fee below, in one payment. Installments and course pricing don't apply.
+                {canSplitRegistrationFee
+                  ? "You've been awarded a full-tuition scholarship — you only pay the registration fee below. No other discounts apply, but you can split it into 2 payments if you'd rather not pay it all at once."
+                  : "You've been awarded a full-tuition scholarship — you only pay the registration fee below, in one payment. Installments and course pricing don't apply."}
               </div>
               <div className="border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/15 rounded-lg px-3 py-2">
                 <p className="text-xs font-bold text-black dark:text-white">Registration Fee Payment</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">One payment secures your spot — no discounts or installments apply.</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                  {canSplitRegistrationFee
+                    ? 'One payment secures your spot — or split it into 2. No other discounts apply.'
+                    : 'One payment secures your spot — no discounts or installments apply.'}
+                </p>
                 <p className="text-base font-bold text-green-700 dark:text-green-400">
                   {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
+                  {canSplitRegistrationFee && paymentType === 'installment' && (
+                    <span className="ml-1.5 text-xs font-semibold text-green-600 dark:text-green-400/80">
+                      (pay {currency === 'NGN' ? '₦' : '$'}{(enrollment?.installment_amount ?? 0).toLocaleString()} now, rest in 4 weeks)
+                    </span>
+                  )}
                 </p>
               </div>
+
+              {canSplitRegistrationFee && (
+                <div className="flex justify-between items-center text-sm pt-1">
+                  <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
+                  <div className="flex bg-gray-200 dark:bg-white/10 rounded-full p-0.5">
+                    <button
+                      onClick={() => setPaymentType('onetime')}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        paymentType === 'onetime' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      One-Time
+                    </button>
+                    <button
+                      onClick={() => setPaymentType('installment')}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        paymentType === 'installment' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      Split in 2
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

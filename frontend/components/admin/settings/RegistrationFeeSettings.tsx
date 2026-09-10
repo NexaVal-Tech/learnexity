@@ -153,7 +153,7 @@ export default function RegistrationFeeSettings() {
           </div>
 
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">Intermediate</h3>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">Career Accelerator</h3>
             <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
               For courses that don't cleanly fit Deep-Tech or Flexible — assign a course to this
               category from its Course Settings page.

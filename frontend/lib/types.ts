@@ -197,6 +197,7 @@ export interface CourseEnrollment {
   installment_amount: number;
   payment_status: 'pending' | 'completed' | 'failed';
   is_registration_fee?: boolean;
+  registration_fee_split_allowed?: boolean;
   scholarship_id?: number | null;
 
   // Access fields
@@ -228,6 +229,7 @@ export interface EnrollmentResponse {
   currency?: 'USD' | 'NGN';
   payment_type?: 'onetime' | 'installment';
   is_registration_fee?: boolean;
+  registration_fee_split_allowed?: boolean;
 }
 
 export interface UserEnrollmentsResponse {
@@ -290,6 +292,7 @@ export interface AchievementBadge {
 export interface Certificate {
   id: number;
   certificate_uid: string;
+  reference_number?: string | null;
   user_id: number;
   course_id: string;
   course_title: string;
@@ -464,6 +467,7 @@ export interface StudentListItem {
   name: string;
   email: string;
   courses_count: number;
+  courses?: Array<{ course_name: string; payment_status: string }>;
   activity_status: 'active' | 'inactive';
   has_paid: boolean;
   created_at: string;
@@ -494,6 +498,11 @@ export interface StudentDetail {
     topics: { completed: number; total: number };
     sprint_progress: number;
     topic_progress: number;
+    enrollment_id: number;
+    has_access: boolean;
+    payment_status: string;
+    access_blocked_reason: string | null;
+    access_manually_granted: boolean;
   }>;
   performance: {
     last_active: string;
@@ -682,6 +691,115 @@ export interface ScholarshipApplication {
   review_notes?: string;
   applicant_country?: string;
   created_at: string;
+  approved_at?: string | null;
+  /** Cosmetic 30-day countdown — display only, doesn't affect redeemability. */
+  days_remaining?: number | null;
+  countdown_ends_at?: string | null;
+}
+
+// ── Certificate/Badge Generator (reusable admin template system) ───────────
+
+export interface CertificateBadgeField {
+  key: string;
+  label: string;
+  text: string;
+  /** 'admin' means fixed text (the `text` field). Anything else is an
+   * auto-fill variable name resolved server-side at render time — e.g.
+   * 'visitor_name' (generator/attending-flyer), or 'recipient_name' /
+   * 'course_title' / 'reference_number' / 'signer_name' / 'badge_name'
+   * (course-completion certificate/badge templates). */
+  source: string;
+  x_pct: number;
+  y_pct: number;
+  font: string;
+  font_size: number;
+  color: string;
+  align: 'left' | 'center' | 'right';
+  max_width_pct: number;
+  line_height: number;
+}
+
+export interface CertificateBadgeGenerator {
+  id: number;
+  title: string;
+  slug: string;
+  is_active: boolean;
+  badge_template_path: string | null;
+  certificate_template_path: string | null;
+  certificate_signature_path: string | null;
+  badge_template_url: string | null;
+  certificate_template_url: string | null;
+  certificate_signature_url: string | null;
+  badge_fields: CertificateBadgeField[];
+  certificate_fields: CertificateBadgeField[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ── "I Will Be Attending" flyer (standalone one-off feature) ───────────────
+
+export interface AttendingFlyerSetting {
+  id: number;
+  slug: string;
+  is_active: boolean;
+  page_heading: string;
+  background_template_path: string | null;
+  foreground_template_path: string | null;
+  background_template_url: string | null;
+  foreground_template_url: string | null;
+  photo_x_pct: number;
+  photo_y_pct: number;
+  photo_width_pct: number;
+  photo_height_pct: number;
+  fields: CertificateBadgeField[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Course-completion certificate/badge templates + signer (global singletons) ──
+
+export interface CertificateSignerSetting {
+  id: number;
+  signer_name: string;
+  signer_title: string | null;
+  signature_path: string | null;
+  signature_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseCertificateTemplate {
+  id: number;
+  template_image_path: string | null;
+  template_image_url: string | null;
+  signature_x_pct: number;
+  signature_y_pct: number;
+  signature_width_pct: number;
+  fields: CertificateBadgeField[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseBadgeTemplate {
+  id: number;
+  template_image_path: string | null;
+  template_image_url: string | null;
+  fields: CertificateBadgeField[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LearnerBadgeSummary {
+  id: number;
+  user_badge_id: number;
+  name: string;
+  description: string;
+  badge_icon: string | null;
+  badge_color: string;
+  course_id: string;
+  unlocked_at: string;
+  reference_number: string | null;
+  download_url: string | null;
 }
 
 // END OF FILE - NOTHING BELOW THIS

@@ -373,7 +373,7 @@ function KidsAdminPage() {
   ];
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="kids">
       <AdminLayout>
         <div className="p-6 space-y-6">
           <div>

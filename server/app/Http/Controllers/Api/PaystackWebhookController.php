@@ -110,7 +110,7 @@ class PaystackWebhookController extends Controller
                                 $learningTrack = 'group_mentorship';
                             } elseif (str_contains($trackName, 'Self-Paced')) {
                                 $learningTrack = 'self_paced';
-                            } elseif (str_contains($trackName, 'Intermediate')) {
+                            } elseif (str_contains($trackName, 'Career Accelerator') || str_contains($trackName, 'Intermediate')) {
                                 $learningTrack = 'intermediate';
                             }
                         }

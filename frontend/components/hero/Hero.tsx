@@ -20,19 +20,15 @@ export default function Hero() {
         <div className="max-w-4xl">
           {/* Heading */}
           <h1 className="text-left text-2xl sm:text-3xl md:text-5xl lg:text-5xl font-bold leading-tight text-white">
-            Learn in-demand tech skills,
+            The digital economy is changing.
             <br className="hidden sm:block" />
             <span className="sm:hidden"> </span>
-            Gain practical experience, and
-            <br className="hidden sm:block" />
-            <span className="sm:hidden"> </span>
-            Stay relevant in the world of Artificial Intelligence.
+            Are your skills still valuable?
           </h1>
 
           {/* Subheading */}
           <p className="mt-4 max-w-2xl text-lg sm:text-xl md:text-2xl leading-relaxed text-gray-200">
-            Learn to work with AI, Lead with AI, and
-            Build the systems that power Artificial Intelligence.
+            Build specialised skills that increase your chances of landing a high paying remote role.
           </p>
 
           {/* Buttons */}

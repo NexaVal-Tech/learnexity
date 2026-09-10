@@ -586,7 +586,7 @@ function ConsultationsPageInner() {
 // ─── Default export — wrapped in guard + layout ───────────────────────────────
 export default function AdminConsultationsPage() {
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="consultations">
       <AdminLayout>
         <ConsultationsPageInner />
       </AdminLayout>

@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api } from '@/lib/api';
-import type { AchievementBadge, Certificate } from '@/lib/types';
+import type { LearnerBadgeSummary, Certificate } from '@/lib/types';
 import { Award, Download, Eye, Loader2, Lock, CreditCard } from 'lucide-react';
 import CertificatePreviewModal from '@/components/achievements/CertificatePreviewModal';
 import BadgePreviewModal from '@/components/achievements/BadgePreviewModal';
 
 export default function AchievementsPage() {
   const router = useRouter();
-  const [badges, setBadges] = useState<AchievementBadge[]>([]);
+  const [badges, setBadges] = useState<LearnerBadgeSummary[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   // course_id -> { payment_status, enrollment_id } — used to gate certificate
   // downloads on completed payment (installment payers must finish all
@@ -17,7 +17,7 @@ export default function AchievementsPage() {
   const [enrollmentByCourse, setEnrollmentByCourse] = useState<Record<string, { paymentStatus: string; enrollmentId: number }>>({});
   const [loading, setLoading] = useState(true);
   const [previewCert, setPreviewCert] = useState<Certificate | null>(null);
-  const [previewBadge, setPreviewBadge] = useState<AchievementBadge | null>(null);
+  const [previewBadge, setPreviewBadge] = useState<LearnerBadgeSummary | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -203,6 +203,8 @@ export default function AchievementsPage() {
         description={previewBadge?.description || ''}
         badgeColor={previewBadge?.badge_color || '#4A3AFF'}
         unlockedAt={previewBadge?.unlocked_at}
+        userBadgeId={previewBadge?.download_url ? previewBadge.user_badge_id : null}
+        referenceNumber={previewBadge?.reference_number}
       />
     </UserDashboardLayout>
   );

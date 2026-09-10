@@ -507,7 +507,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                       onChange={handlePricingChange}
                       className="w-5 h-5 text-gray-700 dark:text-gray-300 rounded border-gray-300 dark:border-white/20 dark:bg-white/5 text-[#0F172A]"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Intermediate</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Career Accelerator</span>
                   </label>
                 </div>
               </div>
@@ -578,7 +578,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Intermediate
+                      Career Accelerator
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
@@ -664,7 +664,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Intermediate
+                      Career Accelerator
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>

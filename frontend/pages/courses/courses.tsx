@@ -291,7 +291,7 @@ export default function CoursesPage() {
             padding: 0.5rem 0.875rem;
             border-radius: 2rem;
             border: 1.5px solid var(--border-strong);
-            color: var(--text-secondary);
+            color: var(--text-muted);
             background: transparent;
             font-size: 0.8rem;
             font-weight: 500;
@@ -303,29 +303,6 @@ export default function CoursesPage() {
             border-color: ${BRAND}88;
             color: ${BRAND};
             background: ${BRAND}12;
-          }
-          .course-icon-wrap {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            flex-shrink: 0;
-            background: ${BRAND}22;
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.3s, box-shadow 0.3s;
-          }
-          .course-card:hover .course-icon-wrap {
-            transform: scale(1.18) rotate(-6deg);
-            background: ${BRAND}44;
-            box-shadow: 0 0 22px ${BRAND}55;
-          }
-          .course-icon-wrap svg {
-            transition: stroke 0.3s;
-          }
-          .course-card:hover .course-icon-wrap svg {
-            stroke: #fff;
           }
           .learning-pill {
             background: var(--surface-alt);
@@ -383,13 +360,13 @@ export default function CoursesPage() {
             background: var(--surface-elevated);
             backdrop-filter: blur(8px);
             border-radius: 2rem 0.75rem 2rem 0.75rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
             transition: all 0.3s ease;
           }
           .flex-card:hover {
-            border-color: ${BRAND}44;
-            background: rgba(74,58,255,0.05);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${BRAND}22;
+            border-color: ${BRAND}66;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px ${BRAND}33;
+            transform: translateY(-4px);
           }
           .flex-card:hover .flex-icon-wrap {
             transform: scale(1.15) rotate(-5deg);
@@ -413,7 +390,7 @@ export default function CoursesPage() {
             padding: 0.75rem 1.5rem;
             border-radius: 2rem 0.75rem 2rem 0.75rem;
             border: 1.5px solid ${BRAND}66;
-            color: #a89fff;
+            color: ${BRAND}cc;
             background: ${BRAND}10;
             font-size: 0.9rem;
             font-weight: 600;
@@ -421,9 +398,9 @@ export default function CoursesPage() {
             white-space: nowrap;
           }
           .flex-view-all-btn:hover {
-            background: ${BRAND}22;
+            background: ${BRAND}18;
             border-color: ${BRAND};
-            color: #fff;
+            color: ${BRAND};
             gap: 0.75rem;
             box-shadow: 0 0 20px ${BRAND}44;
           }
@@ -536,24 +513,6 @@ export default function CoursesPage() {
                               transition: "all 0.3s ease",
                             }}
                           >
-                            {/* Icon */}
-                            <div className="course-icon-wrap">
-                              <svg
-                                className="w-6 h-6"
-                                style={{ color: BRAND }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                            </div>
-
                             {/* Title */}
                             <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
                               {course.title}
@@ -693,7 +652,7 @@ export default function CoursesPage() {
                           <div key={course.id} className="flex">
                             <Link
                               href={`/courses/${course.course_id}`}
-                              className="flex-card p-7 flex flex-col h-full w-full"
+                              className="flex-card p-8 flex flex-col h-full w-full"
                             >
 
                               {/* Title */}
@@ -723,17 +682,17 @@ export default function CoursesPage() {
                                 {course.description}
                               </p>
 
-                              {/* Learning points — up to 3 */}
+                              {/* Learning points */}
                               {course.learnings && course.learnings.length > 0 && (
-                                <div className="space-y-1.5 mb-5">
-                                  {course.learnings.slice(0, 3).map((learning) => (
-                                    <div key={learning.id} className="flex items-center gap-2">
+                                <div className="space-y-2 mb-5">
+                                  {course.learnings.slice(0, 4).map((learning) => (
+                                    <div key={learning.id} className="learning-pill">
                                       <div
-                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                                        style={{ backgroundColor: `${BRAND}22` }}
+                                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${BRAND}33` }}
                                       >
                                         <svg
-                                          className="w-2.5 h-2.5"
+                                          className="w-3 h-3"
                                           style={{ color: BRAND }}
                                           fill="none"
                                           stroke="currentColor"
@@ -756,45 +715,13 @@ export default function CoursesPage() {
                               )}
 
                               {/* CTA */}
-                              <div
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
-                                style={{ color: `${BRAND}cc` }}
-                              >
+                              <div className="details-btn mt-auto">
                                 View course
+                                <ArrowRight size={14} strokeWidth={2.5} />
                               </div>
                             </Link>
                           </div>
                         ))}
-
-                        {/* "See all" card — only when there are courses */}
-                        <div className="flex">
-                          <Link
-                            href="/flex"
-                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
-                            style={{ minHeight: "220px" }}
-                          >
-                            <div
-                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                              style={{
-                                background: `${BRAND}18`,
-                                border: `1.5px solid ${BRAND}44`,
-                                transition: "all 0.3s",
-                              }}
-                            >
-                              <ArrowRight
-                                size={20}
-                                strokeWidth={2.5}
-                                style={{ color: BRAND }}
-                              />
-                            </div>
-                            <p className="text-[var(--text-primary)] font-semibold text-base mb-1">
-                              See all flexible courses
-                            </p>
-                            <p className="text-[var(--text-muted)] text-xs">
-                              Browse the full self-paced catalogue
-                            </p>
-                          </Link>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -808,10 +735,10 @@ export default function CoursesPage() {
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                       <div>
                         <h2 className="text-[var(--text-primary)] font-bold" style={{ fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}>
-                          Explore Intermediate courses
+                          Explore Career Accelerator courses
                         </h2>
                         <p className="text-[var(--text-muted)] text-sm mt-1">
-                          Already have foundational knowledge? Move faster with our Intermediate track.
+                          Already have foundational knowledge? Move faster with our Career Accelerator track.
                         </p>
                       </div>
 
@@ -835,7 +762,7 @@ export default function CoursesPage() {
                           <div key={course.id} className="flex">
                             <Link
                               href={`/courses/${course.course_id}`}
-                              className="flex-card p-7 flex flex-col h-full w-full"
+                              className="flex-card p-8 flex flex-col h-full w-full"
                             >
 
                               {/* Title */}
@@ -865,17 +792,17 @@ export default function CoursesPage() {
                                 {course.description}
                               </p>
 
-                              {/* Learning points — up to 3 */}
+                              {/* Learning points */}
                               {course.learnings && course.learnings.length > 0 && (
-                                <div className="space-y-1.5 mb-5">
-                                  {course.learnings.slice(0, 3).map((learning) => (
-                                    <div key={learning.id} className="flex items-center gap-2">
+                                <div className="space-y-2 mb-5">
+                                  {course.learnings.slice(0, 4).map((learning) => (
+                                    <div key={learning.id} className="learning-pill">
                                       <div
-                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                                        style={{ backgroundColor: `${BRAND}22` }}
+                                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${BRAND}33` }}
                                       >
                                         <svg
-                                          className="w-2.5 h-2.5"
+                                          className="w-3 h-3"
                                           style={{ color: BRAND }}
                                           fill="none"
                                           stroke="currentColor"
@@ -898,45 +825,13 @@ export default function CoursesPage() {
                               )}
 
                               {/* CTA */}
-                              <div
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
-                                style={{ color: `${BRAND}cc` }}
-                              >
+                              <div className="details-btn mt-auto">
                                 View course
+                                <ArrowRight size={14} strokeWidth={2.5} />
                               </div>
                             </Link>
                           </div>
                         ))}
-
-                        {/* "See all" card — only when there are courses */}
-                        <div className="flex">
-                          <Link
-                            href="/intermediate"
-                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
-                            style={{ minHeight: "220px" }}
-                          >
-                            <div
-                              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                              style={{
-                                background: `${BRAND}18`,
-                                border: `1.5px solid ${BRAND}44`,
-                                transition: "all 0.3s",
-                              }}
-                            >
-                              <ArrowRight
-                                size={20}
-                                strokeWidth={2.5}
-                                style={{ color: BRAND }}
-                              />
-                            </div>
-                            <p className="text-[var(--text-primary)] font-semibold text-base mb-1">
-                              See all Intermediate courses
-                            </p>
-                            <p className="text-[var(--text-muted)] text-xs">
-                              Browse the full Intermediate catalogue
-                            </p>
-                          </Link>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -977,7 +872,7 @@ export default function CoursesPage() {
                           <div key={course.id} className="flex">
                             <Link
                               href={`/courses/${course.course_id}`}
-                              className="flex-card p-7 flex flex-col h-full w-full"
+                              className="flex-card p-8 flex flex-col h-full w-full"
                             >
 
                               {/* Title */}
@@ -1005,17 +900,17 @@ export default function CoursesPage() {
                                 {course.description}
                               </p>
 
-                              {/* Learning points — up to 3 */}
+                              {/* Learning points */}
                               {course.learnings && course.learnings.length > 0 && (
-                                <div className="space-y-1.5 mb-5">
-                                  {course.learnings.slice(0, 3).map((learning) => (
-                                    <div key={learning.id} className="flex items-center gap-2">
+                                <div className="space-y-2 mb-5">
+                                  {course.learnings.slice(0, 4).map((learning) => (
+                                    <div key={learning.id} className="learning-pill">
                                       <div
-                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                                         style={{ backgroundColor: `${BRAND}33` }}
                                       >
                                         <svg
-                                          className="w-2.5 h-2.5"
+                                          className="w-3 h-3"
                                           style={{ color: BRAND }}
                                           fill="none"
                                           stroke="currentColor"
@@ -1038,11 +933,9 @@ export default function CoursesPage() {
                               )}
 
                               {/* CTA */}
-                              <div
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold mt-auto"
-                                style={{ color: `${BRAND}cc` }}
-                              >
+                              <div className="details-btn mt-auto">
                                 View course
+                                <ArrowRight size={14} strokeWidth={2.5} />
                               </div>
                             </Link>
                           </div>
@@ -1052,7 +945,7 @@ export default function CoursesPage() {
                         <div className="flex">
                           <Link
                             href="/free-courses"
-                            className="flex-card p-7 flex flex-col items-center justify-center h-full w-full text-center group"
+                            className="flex-card p-8 flex flex-col items-center justify-center h-full w-full text-center group"
                             style={{ minHeight: "220px" }}
                           >
                             <div

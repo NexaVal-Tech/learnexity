@@ -324,7 +324,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
               className="w-5 h-5 text-purple-600 rounded"
             />
             <div className="flex-1">
-              <div className="font-medium text-gray-900 dark:text-white">Intermediate</div>
+              <div className="font-medium text-gray-900 dark:text-white">Career Accelerator</div>
               <div className="text-sm text-gray-500 dark:text-gray-500">For learners ready to move beyond the basics</div>
             </div>
           </label>
@@ -340,7 +340,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
           automatically from the learning track a student picks — Deep-Tech for one-on-one / live
           classes, Flexible for self-paced. Choosing a category here overrides that and always
           applies, regardless of track — use this for courses that don't cleanly fit Deep-Tech or
-          Flexible, or to move an existing course into Intermediate.
+          Flexible, or to move an existing course into Career Accelerator.
         </p>
         <select
           value={settings.fee_category}
@@ -350,7 +350,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
           <option value="">Auto (derive from learning track)</option>
           <option value="deeptech">Deep-Tech</option>
           <option value="flexible">Flexible</option>
-          <option value="intermediate">Intermediate</option>
+          <option value="intermediate">Career Accelerator</option>
         </select>
       </div>
 
@@ -444,7 +444,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
             {settings.offers_intermediate && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Intermediate
+                  Career Accelerator
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">$</span>
@@ -583,7 +583,7 @@ export default function CourseSettings({ courseId }: CourseSettingsProps) {
             {settings.offers_intermediate && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Intermediate
+                  Career Accelerator
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-base">₦</span>

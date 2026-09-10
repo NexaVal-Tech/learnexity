@@ -150,7 +150,7 @@ const ReferralHistoryPage: React.FC = () => {
   const pendingCount   = history.filter(h => h.status === 'pending').length;
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="referrals">
       <AdminLayout>
         <div className="p-6 space-y-6">
           {/* Header */}

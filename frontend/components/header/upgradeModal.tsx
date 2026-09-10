@@ -37,7 +37,7 @@ const TRACK_LABELS: Record<string, string> = {
   self_paced: "Self-Paced",
   group_mentorship: "Live Classes",
   one_on_one: "One-on-One",
-  intermediate: "Intermediate",
+  intermediate: "Career Accelerator",
 };
 
 const TRACK_ICONS: Record<string, React.ReactNode> = {

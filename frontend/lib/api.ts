@@ -56,9 +56,16 @@ import type {
   PublicReferrer,
   ScholarshipApplication,
   ScholarshipStats,
+  CertificateBadgeGenerator,
+  AttendingFlyerSetting,
+  CertificateSignerSetting,
+  CourseCertificateTemplate,
+  CourseBadgeTemplate,
+  LearnerBadgeSummary,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export { API_URL };
 
 export type { LearningTrack };
 
@@ -240,14 +247,21 @@ export const api = {
 
   // ── ACHIEVEMENTS (the learner's own badges & certificates) ────────────────────
   achievements: {
-    myBadges: async (): Promise<AchievementBadge[]> => {
-      const response = await apiClient.get<{ badges: AchievementBadge[] }>('/api/badges');
+    myBadges: async (): Promise<LearnerBadgeSummary[]> => {
+      const response = await apiClient.get<{ badges: LearnerBadgeSummary[] }>('/api/badges');
       return response.data.badges;
     },
 
     myCertificates: async (): Promise<Certificate[]> => {
       const response = await apiClient.get<{ certificates: Certificate[] }>('/api/certificates');
       return response.data.certificates;
+    },
+
+    /** Fetches the learner's own rendered badge PDF (auth required) and
+     * returns a blob object URL ready for an <a href download> or iframe. */
+    downloadBadge: async (userBadgeId: number): Promise<string> => {
+      const response = await apiClient.get(`/api/badges/${userBadgeId}/download`, { responseType: 'blob' });
+      return URL.createObjectURL(response.data as Blob);
     },
   },
 
@@ -256,6 +270,50 @@ export const api = {
     getPublic: async (): Promise<{ currency: string; amount: number }> => {
       const response = await apiClient.get('/api/registration-fee');
       return response.data;
+    },
+  },
+
+  // ── SCHOLARSHIP COUNTDOWN (public read) ─────────────────────────────────────
+  scholarshipCountdown: {
+    getPublic: async (): Promise<{ deadline: string | null }> => {
+      const response = await apiClient.get('/api/scholarship-countdown');
+      return response.data;
+    },
+  },
+
+  // ── CERTIFICATE/BADGE GENERATOR (public, self-serve) ────────────────────────
+  certificateBadgeGenerator: {
+    getMeta: async (slug: string): Promise<{
+      generator: { title: string; slug: string; has_badge: boolean; has_certificate: boolean; needs_name: boolean };
+    }> => {
+      const response = await apiClient.get(`/api/generator/${slug}`);
+      return response.data;
+    },
+    badgeImageUrl: (slug: string, name: string): string =>
+      `${API_URL}/api/generator/${slug}/badge?name=${encodeURIComponent(name)}`,
+    certificateImageUrl: (slug: string, name: string): string =>
+      `${API_URL}/api/generator/${slug}/certificate?name=${encodeURIComponent(name)}`,
+  },
+
+  // ── "I WILL BE ATTENDING" FLYER (public, self-serve, one-off) ──────────────
+  attendingFlyer: {
+    getMeta: async (slug: string): Promise<{
+      setting: { slug: string; page_heading: string; ready: boolean };
+    }> => {
+      const response = await apiClient.get(`/api/attending-flyer/${slug}`);
+      return response.data;
+    },
+    /** Visitor uploads a photo + types their name — returns a blob object
+     * URL ready for an <img src> (this can't be a plain GET URL like the
+     * badge/certificate ones since it needs to send a file). */
+    generate: async (slug: string, photo: File, name: string): Promise<string> => {
+      const formData = new FormData();
+      formData.append('photo', photo);
+      formData.append('name', name);
+      const response = await apiClient.post(`/api/attending-flyer/${slug}/generate`, formData, {
+        responseType: 'blob',
+      });
+      return URL.createObjectURL(response.data as Blob);
     },
   },
 
@@ -795,12 +853,141 @@ settings: {
       },
     },
 
+    // ── Single platform-wide scholarship application deadline, driving
+    // the homepage countdown banner. ──
+    scholarshipCountdown: {
+      getSettings: async (): Promise<{ deadline: string | null; is_active: boolean }> => {
+        return await adminApi.get('/api/admin/scholarship-countdown/settings');
+      },
+      updateSettings: async (data: { deadline: string | null; is_active: boolean }) => {
+        return await adminApi.put('/api/admin/scholarship-countdown/settings', data);
+      },
+    },
+
+    // ── Reusable certificate/badge generators ──────────────────────────────
+    certificateBadgeGenerators: {
+      getAll: async (): Promise<{ generators: CertificateBadgeGenerator[]; font_options: string[] }> => {
+        return await adminApi.get('/api/admin/certificate-badge-generators');
+      },
+      get: async (id: number): Promise<{ generator: CertificateBadgeGenerator; font_options: string[] }> => {
+        return await adminApi.get(`/api/admin/certificate-badge-generators/${id}`);
+      },
+      create: async (formData: FormData): Promise<{ message: string; generator: CertificateBadgeGenerator }> => {
+        return await adminApi.post('/api/admin/certificate-badge-generators', formData);
+      },
+      update: async (id: number, formData: FormData): Promise<{ message: string; generator: CertificateBadgeGenerator }> => {
+        return await adminApi.post(`/api/admin/certificate-badge-generators/${id}`, formData);
+      },
+      delete: async (id: number): Promise<{ message: string }> => {
+        return await adminApi.delete(`/api/admin/certificate-badge-generators/${id}`);
+      },
+      /** Renders straight from in-progress (unsaved) field edits, not what's
+       * persisted yet — returns a blob object URL ready for an <img src>. */
+      previewBadge: async (id: number, fields: unknown[], previewName?: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append('badge_fields', JSON.stringify(fields));
+        if (previewName) formData.append('preview_name', previewName);
+        const blob = await adminApi.post<Blob>(
+          `/api/admin/certificate-badge-generators/${id}/preview-badge`,
+          formData,
+          { responseType: 'blob' }
+        );
+        return URL.createObjectURL(blob);
+      },
+      previewCertificate: async (id: number, fields: unknown[], previewName?: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append('certificate_fields', JSON.stringify(fields));
+        if (previewName) formData.append('preview_name', previewName);
+        const blob = await adminApi.post<Blob>(
+          `/api/admin/certificate-badge-generators/${id}/preview-certificate`,
+          formData,
+          { responseType: 'blob' }
+        );
+        return URL.createObjectURL(blob);
+      },
+    },
+
+    // ── Standalone "I will be attending" flyer (singleton settings) ────────
+    attendingFlyer: {
+      getSettings: async (): Promise<{ setting: AttendingFlyerSetting; font_options: string[] }> => {
+        return await adminApi.get('/api/admin/attending-flyer/settings');
+      },
+      updateSettings: async (formData: FormData): Promise<{ message: string; setting: AttendingFlyerSetting }> => {
+        return await adminApi.post('/api/admin/attending-flyer/settings', formData);
+      },
+      /** Sample photo upload + field overrides, rendered from in-progress
+       * (unsaved) edits — returns a blob object URL for an <img src>. */
+      preview: async (photo: File, fields: unknown[], previewName: string, photoRect?: {
+        photo_x_pct?: number; photo_y_pct?: number; photo_width_pct?: number; photo_height_pct?: number;
+      }): Promise<string> => {
+        const formData = new FormData();
+        formData.append('photo', photo);
+        formData.append('fields', JSON.stringify(fields));
+        formData.append('preview_name', previewName);
+        if (photoRect) {
+          Object.entries(photoRect).forEach(([k, v]) => {
+            if (v !== undefined) formData.append(k, String(v));
+          });
+        }
+        const blob = await adminApi.post<Blob>('/api/admin/attending-flyer/preview', formData, { responseType: 'blob' });
+        return URL.createObjectURL(blob);
+      },
+    },
+
+    // ── Global certificate signer (director name + signature) ──────────────
+    certificateSigner: {
+      getSettings: async (): Promise<{ setting: CertificateSignerSetting }> => {
+        return await adminApi.get('/api/admin/certificate-signer');
+      },
+      updateSettings: async (formData: FormData): Promise<{ message: string; setting: CertificateSignerSetting }> => {
+        return await adminApi.post('/api/admin/certificate-signer', formData);
+      },
+    },
+
+    // ── Course-completion certificate design (singleton) ────────────────────
+    courseCertificateTemplate: {
+      getSettings: async (): Promise<{ template: CourseCertificateTemplate; signer: CertificateSignerSetting; font_options: string[] }> => {
+        return await adminApi.get('/api/admin/course-certificate-template');
+      },
+      updateSettings: async (formData: FormData): Promise<{ message: string; template: CourseCertificateTemplate }> => {
+        return await adminApi.post('/api/admin/course-certificate-template', formData);
+      },
+      preview: async (fields: unknown[], previewName?: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append('fields', JSON.stringify(fields));
+        if (previewName) formData.append('preview_name', previewName);
+        const blob = await adminApi.post<Blob>('/api/admin/course-certificate-template/preview', formData, { responseType: 'blob' });
+        return URL.createObjectURL(blob);
+      },
+    },
+
+    // ── Sprint/course-completion badge design (singleton) ───────────────────
+    courseBadgeTemplate: {
+      getSettings: async (): Promise<{ template: CourseBadgeTemplate; font_options: string[] }> => {
+        return await adminApi.get('/api/admin/course-badge-template');
+      },
+      updateSettings: async (formData: FormData): Promise<{ message: string; template: CourseBadgeTemplate }> => {
+        return await adminApi.post('/api/admin/course-badge-template', formData);
+      },
+      preview: async (fields: unknown[], previewName?: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append('fields', JSON.stringify(fields));
+        if (previewName) formData.append('preview_name', previewName);
+        const blob = await adminApi.post<Blob>('/api/admin/course-badge-template/preview', formData, { responseType: 'blob' });
+        return URL.createObjectURL(blob);
+      },
+    },
+
     students: {
       getAll: async (params?: {
         search?: string;
         activity_status?: 'active' | 'inactive';
-        payment_status?: 'completed' | 'pending' | 'failed';
+        payment_status?: 'completed' | 'pending' | 'failed' | 'unpaid';
         course_id?: string;
+        country?: string;
+        enrollment_period?: '1_month' | '3_months' | '6_months' | '12_plus_months';
+        course_progress?: 'active' | 'completed' | 'inactive';
+        multi_course?: boolean;
         per_page?: number;
         page?: number;
       }): Promise<{ data: StudentListItem[]; meta: any }> => {
@@ -809,6 +996,13 @@ settings: {
 
       getById: async (id: number): Promise<StudentDetail> => {
         return await adminApi.get<StudentDetail>(`/api/admin/students/${id}`);
+      },
+
+      getFilterOptions: async (): Promise<{
+        courses: { course_id: string; title: string }[];
+        countries: string[];
+      }> => {
+        return await adminApi.get('/api/admin/students/filter-options');
       },
 
       getStatistics: async (): Promise<{
@@ -833,6 +1027,20 @@ settings: {
         formData.append('message', data.message);
         if (data.attachment) formData.append('attachment', data.attachment);
         return await adminApi.post('/api/admin/students/send-message', formData);
+      },
+
+      grantAccess: async (enrollmentId: number): Promise<{
+        message: string;
+        enrollment: { enrollment_id: number; has_access: boolean; access_manually_granted: boolean; access_blocked_reason: string | null };
+      }> => {
+        return await adminApi.post(`/api/admin/students/enrollments/${enrollmentId}/grant-access`);
+      },
+
+      revokeAccess: async (enrollmentId: number): Promise<{
+        message: string;
+        enrollment: { enrollment_id: number; has_access: boolean; access_manually_granted: boolean; access_blocked_reason: string | null };
+      }> => {
+        return await adminApi.post(`/api/admin/students/enrollments/${enrollmentId}/revoke-access`);
       },
     },
 

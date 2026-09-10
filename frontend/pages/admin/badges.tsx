@@ -195,7 +195,7 @@ export default function AdminBadgesPage() {
   };
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="badges">
       <AdminLayout>
         <div className="p-6">
           {toast && (

@@ -209,29 +209,6 @@ export default function FreeCoursesPage() {
             color: ${BRAND};
             background: ${BRAND}12;
           }
-          .course-icon-wrap {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            flex-shrink: 0;
-            background: ${BRAND}22;
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.3s, box-shadow 0.3s;
-          }
-          .course-card:hover .course-icon-wrap {
-            transform: scale(1.18) rotate(-6deg);
-            background: ${BRAND}44;
-            box-shadow: 0 0 22px ${BRAND}55;
-          }
-          .course-icon-wrap svg {
-            transition: stroke 0.3s;
-          }
-          .course-card:hover .course-icon-wrap svg {
-            stroke: #fff;
-          }
           .learning-pill {
             background: var(--surface-alt);
             border: 1px solid var(--border-subtle);
@@ -373,24 +350,6 @@ export default function FreeCoursesPage() {
                               transition: "all 0.3s ease",
                             }}
                           >
-                            {/* Icon */}
-                            <div className="course-icon-wrap">
-                              <svg
-                                className="w-6 h-6"
-                                style={{ color: BRAND }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                            </div>
-
                             {/* Title */}
                             <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
                               {course.title}

@@ -9,6 +9,7 @@ class Certificate extends Model
 {
     protected $fillable = [
         'certificate_uid',
+        'reference_number',
         'user_id',
         'course_id',
         'course_title',

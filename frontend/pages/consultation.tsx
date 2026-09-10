@@ -263,6 +263,17 @@ const isFreeDay = (date: string) => freeDays.includes(date);
           .field-input:focus { border-color: ${BRAND}; box-shadow: 0 0 0 3px rgba(74,58,255,0.15); }
           .field-input::placeholder { color: var(--text-muted); }
           .field-input option { background: var(--surface); color: var(--text-primary); }
+          /*
+            Fields with a leading icon (name/email/phone/course/message) need
+            extra left padding so typed text and placeholders clear the icon
+            instead of running under it. This is a dedicated class (rather
+            than Tailwind's pl-9 utility) so it always wins the cascade over
+            .field-input's own "padding: 0.75rem 1rem" shorthand, regardless
+            of style injection order — same specificity + later utility
+            classes were being silently overridden on some loads, which is
+            what caused the overlap.
+          */
+          .field-input.has-icon { padding-left: 2.5rem; }
 
           .type-card {
             border: 1px solid var(--border-subtle);
@@ -393,17 +404,17 @@ const isFreeDay = (date: string) => freeDays.includes(date);
                     <div>
                       <label className="field-label">Full Name *</label>
                       <div className="relative">
-                        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                         <input name="full_name" value={form.full_name} onChange={handleChange}
-                          placeholder="John Doe" className="field-input pl-9" />
+                          placeholder="John Doe" className="field-input has-icon" />
                       </div>
                     </div>
                     <div>
                       <label className="field-label">Email Address *</label>
                       <div className="relative">
-                        <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                         <input name="email" type="email" value={form.email} onChange={handleChange}
-                          placeholder="you@example.com" className="field-input pl-9" />
+                          placeholder="you@example.com" className="field-input has-icon" />
                       </div>
                     </div>
                   </div>
@@ -412,16 +423,16 @@ const isFreeDay = (date: string) => freeDays.includes(date);
                     <div>
                       <label className="field-label">Phone (optional)</label>
                       <div className="relative">
-                        <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                         <input name="phone" value={form.phone} onChange={handleChange}
-                          placeholder="+234 801 234 5678" className="field-input pl-9" />
+                          placeholder="+234 801 234 5678" className="field-input has-icon" />
                       </div>
                     </div>
                     <div>
                       <label className="field-label">Course (if any)</label>
                       <div className="relative">
-                        <BookOpen size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                        <select name="course" value={form.course} onChange={handleChange} className="field-input pl-9 appearance-none">
+                        <BookOpen size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                        <select name="course" value={form.course} onChange={handleChange} className="field-input has-icon appearance-none">
                           <option value="">Select a course…</option>
                           {coursesLoading && <option disabled>Loading courses…</option>}
                           {courses.map(c => (
@@ -451,10 +462,10 @@ const isFreeDay = (date: string) => freeDays.includes(date);
                   <div className="mb-7">
                     <label className="field-label">Message (optional)</label>
                     <div className="relative">
-                      <MessageSquare size={14} className="absolute left-3 top-3.5 text-gray-500" />
+                      <MessageSquare size={14} className="absolute left-3.5 top-3.5 text-gray-500 pointer-events-none" />
                       <textarea name="message" value={form.message} onChange={handleChange}
                         placeholder="Tell us more about what you'd like to discuss…"
-                        rows={3} className="field-input pl-9 resize-none" />
+                        rows={3} className="field-input has-icon resize-none" />
                     </div>
                   </div>
 

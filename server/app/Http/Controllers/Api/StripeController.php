@@ -88,7 +88,7 @@ class StripeController extends Controller
                 'one_on_one'       => 'One-on-One Coaching',
                 'group_mentorship' => 'Live Classes',
                 'self_paced'       => 'Self-Paced Learning',
-                'intermediate'     => 'Intermediate',
+                'intermediate'     => 'Career Accelerator',
             ];
 
             $session = Session::create([
@@ -99,7 +99,7 @@ class StripeController extends Controller
                         'product_data' => [
                             'name'        => $course->title,
                             'description' => $trackNames[$track] .
-                                ($type === 'installment' ? ' (Installment 1 of 4)' : ''),
+                                ($type === 'installment' ? ' (Installment 1 of ' . $pricing['total_installments'] . ')' : ''),
                         ],
                         'unit_amount' => $amountInCents,
                     ],

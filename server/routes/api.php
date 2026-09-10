@@ -36,6 +36,10 @@ use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\AdminBadgeController;
 use App\Http\Controllers\Api\AdminCertificateController;
 use App\Http\Controllers\Api\AdminActivityLogController;
+use App\Http\Controllers\Api\AdminCertificateBadgeGeneratorController;
+use App\Http\Controllers\Api\CertificateBadgeGeneratorPublicController;
+use App\Http\Controllers\Api\AdminAttendingFlyerController;
+use App\Http\Controllers\Api\AttendingFlyerPublicController;
 
 // ── NEW: Instructor + Student Project imports ──────────────────────────────
 use App\Http\Controllers\Api\Instructor\InstructorAuthController;
@@ -67,6 +71,30 @@ Route::get('/detect-currency', function () {
 // =================== REGISTRATION FEE (public read) =================== //
 
 Route::get('/registration-fee', [AdminRegistrationFeeController::class, 'publicPricing']);
+
+// =================== SCHOLARSHIP COUNTDOWN (public read) =================== //
+
+Route::get('/scholarship-countdown', [App\Http\Controllers\Api\AdminScholarshipSettingController::class, 'publicDeadline']);
+
+// =================== CERTIFICATE/BADGE GENERATOR (public) =================== //
+// Self-serve, no login/payment gate — a visitor types their name and gets a
+// personalized badge/certificate image rendered from an admin-configured
+// template. Not tied to real course enrollment/completion.
+
+Route::prefix('generator/{slug}')->group(function () {
+    Route::get('/', [CertificateBadgeGeneratorPublicController::class, 'show']);
+    Route::get('/badge', [CertificateBadgeGeneratorPublicController::class, 'badge']);
+    Route::get('/certificate', [CertificateBadgeGeneratorPublicController::class, 'certificate']);
+});
+
+// =================== "I WILL BE ATTENDING" FLYER (public, one-off) =========== //
+// No nav link — reachable only via its direct shareable URL. Rate-limited
+// since /generate accepts an unauthenticated photo upload.
+
+Route::prefix('attending-flyer/{slug}')->group(function () {
+    Route::get('/', [AttendingFlyerPublicController::class, 'show']);
+    Route::post('/generate', [AttendingFlyerPublicController::class, 'generate'])->middleware('throttle:20,1');
+});
 
 // =================== EMAIL VERIFICATION =================== //
 
@@ -176,6 +204,7 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
 
     // ── Badges & certificates (the learner's own) ───────────────────────────
     Route::get('/badges',       [BadgeController::class, 'mine']);
+    Route::get('/badges/{userBadgeId}/download', [BadgeController::class, 'download']);
     Route::get('/certificates', [CertificateController::class, 'mine']);
 
     Route::prefix('user')->group(function () {
@@ -326,43 +355,107 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
-    // Students
+    // Team (super-admin-only management of other admin accounts + their permissions)
+    Route::middleware('admin.super')->prefix('team')->group(function () {
+        Route::get('/',        [App\Http\Controllers\Api\AdminManagementController::class, 'index']);
+        Route::post('/',       [App\Http\Controllers\Api\AdminManagementController::class, 'store']);
+        Route::put('/{id}',    [App\Http\Controllers\Api\AdminManagementController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Api\AdminManagementController::class, 'destroy']);
+    });
+
+    // Students — fine-grained: viewing, granting access, and emailing are
+    // independently gated (an admin might have one without the others).
     Route::prefix('students')->group(function () {
-        Route::get('/',              [AdminStudentController::class, 'index']);
-        Route::get('/statistics',    [AdminStudentController::class, 'getStatistics']);
-        Route::get('/{id}',          [AdminStudentController::class, 'show']);
-        Route::post('/send-message', [AdminStudentController::class, 'sendMessage']);
+        Route::middleware('admin.permission:students')->group(function () {
+            Route::get('/',              [AdminStudentController::class, 'index']);
+            Route::get('/statistics',    [AdminStudentController::class, 'getStatistics']);
+            Route::get('/filter-options', [AdminStudentController::class, 'filterOptions']);
+            Route::get('/{id}',          [AdminStudentController::class, 'show']);
+        });
+        Route::post('/send-message', [AdminStudentController::class, 'sendMessage'])
+            ->middleware('admin.permission:send_emails');
+        Route::post('/enrollments/{enrollmentId}/grant-access', [AdminStudentController::class, 'grantAccess'])
+            ->middleware('admin.permission:grant_course_access');
+        Route::post('/enrollments/{enrollmentId}/revoke-access', [AdminStudentController::class, 'revokeAccess'])
+            ->middleware('admin.permission:grant_course_access');
     });
 
     // Kids
-    Route::prefix('kids')->group(function () {
+    Route::prefix('kids')->middleware('admin.permission:kids')->group(function () {
         Route::get('/courses',             [AdminKidsController::class, 'courses']);
         Route::put('/courses/{id}/prices', [AdminKidsController::class, 'updatePrices']);
         Route::get('/enrollments',         [AdminKidsController::class, 'enrollments']);
     });
 
     // Referrals
-    Route::prefix('referrals')->group(function () {
+    Route::prefix('referrals')->middleware('admin.permission:referrals')->group(function () {
         Route::get('/stats',            [AdminReferralController::class, 'stats']);
         Route::get('/history',          [AdminReferralController::class, 'history']);
         Route::get('/public-referrers', [AdminReferralController::class, 'publicReferrers']);
     });
 
     // Scholarships
-    Route::prefix('scholarships')->group(function () {
+    Route::prefix('scholarships')->middleware('admin.permission:scholarships')->group(function () {
         Route::get('/',              [AdminScholarshipController::class, 'index']);
         Route::get('/stats',         [AdminScholarshipController::class, 'stats']);
         Route::patch('/{id}/review', [AdminScholarshipController::class, 'review']);
+        Route::patch('/{id}/revoke', [AdminScholarshipController::class, 'revoke']);
     });
 
     // Registration fee (single platform-wide setting, applies across all courses)
-    Route::prefix('registration-fee')->group(function () {
+    Route::prefix('registration-fee')->middleware('admin.permission:registration_fee')->group(function () {
         Route::get('/settings', [AdminRegistrationFeeController::class, 'getSettings']);
         Route::put('/settings', [AdminRegistrationFeeController::class, 'updateSettings']);
     });
 
+    // Scholarship countdown (single platform-wide deadline, homepage banner)
+    Route::prefix('scholarship-countdown')->middleware('admin.permission:scholarship_countdown')->group(function () {
+        Route::get('/settings', [App\Http\Controllers\Api\AdminScholarshipSettingController::class, 'getSettings']);
+        Route::put('/settings', [App\Http\Controllers\Api\AdminScholarshipSettingController::class, 'updateSettings']);
+    });
+
+    // Certificate/Badge generators — reusable admin-managed template pairings
+    Route::prefix('certificate-badge-generators')->middleware('admin.permission:certificate_badge_generators')->group(function () {
+        Route::get('/',                       [AdminCertificateBadgeGeneratorController::class, 'index']);
+        Route::post('/',                      [AdminCertificateBadgeGeneratorController::class, 'store']);
+        Route::get('/{id}',                   [AdminCertificateBadgeGeneratorController::class, 'show']);
+        // POST (not PUT) — this accepts multipart/form-data file uploads,
+        // which PHP doesn't populate $_FILES for on a real PUT request.
+        Route::post('/{id}',                  [AdminCertificateBadgeGeneratorController::class, 'update']);
+        Route::delete('/{id}',                [AdminCertificateBadgeGeneratorController::class, 'destroy']);
+        Route::post('/{id}/preview-badge',       [AdminCertificateBadgeGeneratorController::class, 'previewBadge']);
+        Route::post('/{id}/preview-certificate', [AdminCertificateBadgeGeneratorController::class, 'previewCertificate']);
+    });
+
+    // Certificate signer (global director name + signature)
+    Route::prefix('certificate-signer')->middleware('admin.permission:certificate_signer')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\AdminCertificateSignerController::class, 'getSettings']);
+        Route::post('/', [App\Http\Controllers\Api\AdminCertificateSignerController::class, 'updateSettings']);
+    });
+
+    // Course-completion certificate design (single platform-wide template)
+    Route::prefix('course-certificate-template')->middleware('admin.permission:course_certificate_template')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\AdminCourseCertificateTemplateController::class, 'getSettings']);
+        Route::post('/', [App\Http\Controllers\Api\AdminCourseCertificateTemplateController::class, 'updateSettings']);
+        Route::post('/preview', [App\Http\Controllers\Api\AdminCourseCertificateTemplateController::class, 'previewCertificate']);
+    });
+
+    // Sprint/course-completion badge design (single platform-wide template)
+    Route::prefix('course-badge-template')->middleware('admin.permission:course_badge_template')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\AdminCourseBadgeTemplateController::class, 'getSettings']);
+        Route::post('/', [App\Http\Controllers\Api\AdminCourseBadgeTemplateController::class, 'updateSettings']);
+        Route::post('/preview', [App\Http\Controllers\Api\AdminCourseBadgeTemplateController::class, 'previewBadge']);
+    });
+
+    // "I will be attending" flyer — standalone singleton settings, one-off feature
+    Route::prefix('attending-flyer')->middleware('admin.permission:attending_flyer')->group(function () {
+        Route::get('/settings',  [AdminAttendingFlyerController::class, 'getSettings']);
+        Route::post('/settings', [AdminAttendingFlyerController::class, 'updateSettings']);
+        Route::post('/preview',  [AdminAttendingFlyerController::class, 'previewFlyer']);
+    });
+
     // Instructors
-    Route::prefix('instructors')->group(function () {
+    Route::prefix('instructors')->middleware('admin.permission:instructors')->group(function () {
         Route::get('/',                     [AdminInstructorController::class, 'index']);
         Route::post('/',                    [AdminInstructorController::class, 'store']);
         Route::get('/{id}',                 [AdminInstructorController::class, 'show']);
@@ -373,7 +466,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
 
     // consultation
 
-    Route::prefix('consultations')->group(function () {
+    Route::prefix('consultations')->middleware('admin.permission:consultations')->group(function () {
         Route::get('/settings',           [AdminConsultationController::class, 'getSettings']);
         Route::put('/settings',           [AdminConsultationController::class, 'updateSettings']);
         Route::get('/free-days',          [AdminConsultationController::class, 'getFreeDays']);
@@ -389,7 +482,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     // Course groups (admin-only organization — e.g. "Data Analysis" holding
     // several related courses). A group can hold many courses; a course can
     // also stand alone with no group.
-    Route::prefix('course-groups')->group(function () {
+    Route::prefix('course-groups')->middleware('admin.permission:course_groups')->group(function () {
         Route::get('/',                          [AdminCourseGroupController::class, 'index']);
         Route::post('/',                         [AdminCourseGroupController::class, 'store']);
         Route::put('/{id}',                      [AdminCourseGroupController::class, 'update']);
@@ -399,7 +492,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     });
 
     // Courses
-    Route::prefix('courses')->group(function () {
+    Route::prefix('courses')->middleware('admin.permission:courses')->group(function () {
         Route::get('/',              [AdminCourseController::class, 'index']);
         Route::get('/statistics',    [AdminCourseController::class, 'getStatistics']);
         Route::post('/',             [AdminCourseController::class, 'store']);
@@ -456,7 +549,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     });
 
     // Badges (global admin view — create/edit/delete + manual award)
-    Route::prefix('badges')->group(function () {
+    Route::prefix('badges')->middleware('admin.permission:badges')->group(function () {
         Route::get('/',                      [AdminBadgeController::class, 'index']);
         Route::post('/',                     [AdminBadgeController::class, 'store']);
         Route::get('/users/search',          [AdminBadgeController::class, 'searchUsers']);
@@ -465,10 +558,11 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::get('/{badgeId}/holders',     [AdminBadgeController::class, 'holders']);
         Route::post('/{badgeId}/award',      [AdminBadgeController::class, 'award']);
         Route::delete('/{badgeId}/award/{userId}', [AdminBadgeController::class, 'revokeAward']);
+        Route::get('/unlocked/{userBadgeId}/download', [AdminBadgeController::class, 'downloadArtifact']);
     });
 
     // Certificates
-    Route::prefix('certificates')->group(function () {
+    Route::prefix('certificates')->middleware('admin.permission:certificates')->group(function () {
         Route::get('/',                  [AdminCertificateController::class, 'index']);
         Route::get('/statistics',        [AdminCertificateController::class, 'statistics']);
         Route::post('/issue',            [AdminCertificateController::class, 'issue']);
@@ -479,7 +573,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     });
 
     // Activity log / analytics (see AdminActivityLogController)
-    Route::prefix('activity')->group(function () {
+    Route::prefix('activity')->middleware('admin.permission:activity')->group(function () {
         Route::get('/',        [AdminActivityLogController::class, 'index']);
         Route::get('/summary', [AdminActivityLogController::class, 'summary']);
     });

@@ -617,7 +617,7 @@ const CourseDetail = () => {
 
   if (loading) {
     return (
-      <AdminRouteGuard><AdminLayout>
+      <AdminRouteGuard requiredPermission="courses"><AdminLayout>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
@@ -627,7 +627,7 @@ const CourseDetail = () => {
 
   if (error || !courseData) {
     return (
-      <AdminRouteGuard><AdminLayout>
+      <AdminRouteGuard requiredPermission="courses"><AdminLayout>
         <div className="flex flex-col items-center justify-center h-96">
           <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400 mb-4" />
           <p className="text-red-500 dark:text-red-400 mb-4">{error || 'Course not found'}</p>
@@ -649,7 +649,7 @@ const CourseDetail = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="courses">
       <AdminLayout>
         <div className="min-h-screen bg-gray-50/50 dark:bg-[#08080c] p-6">
 

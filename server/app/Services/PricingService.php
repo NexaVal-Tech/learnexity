@@ -18,8 +18,11 @@ use App\Models\User;
  * Business rule (two-tier scholarship model — no more 0%/rejected outcome):
  *  - An approved, unused scholarship with discount_percentage >= 100 for
  *    THIS exact course means the person pays only the flat, admin-configured
- *    registration fee. No one-time discount, no installments — one payment,
- *    in full, always.
+ *    registration fee. No one-time discount ever applies to it. For the
+ *    Deep-Tech (one_on_one/group_mentorship) and Intermediate fee
+ *    categories, they may choose to split that flat fee into 2 payments
+ *    instead of paying it all at once — Flexible (self-paced) registration-
+ *    fee payers always pay it in one go, no installment option.
  *  - An approved, unused scholarship with a lower discount_percentage (the
  *    admin-configured "partial scholarship" tier, default 50%) means the
  *    person pays that percentage off the course's normal track price,
@@ -55,15 +58,33 @@ class PricingService
             $category      = RegistrationFeeSetting::categoryForCourseAndTrack($course, $learningTrack);
             $amount        = $regFeeSetting->priceForCategory($category, $currency);
 
+            // Deep-Tech and Intermediate registration-fee payers may split
+            // the flat fee into 2 payments instead of paying it all at
+            // once. Flexible (self-paced) — and one_on_one, which is
+            // inherently hourly/one-time regardless of pricing tier —
+            // always pay the fee in one go. Only actually splits it when
+            // the caller asked for 'installment'; anyone who wants to pay
+            // it all now still can.
+            $splitAllowedForCategory = in_array($category, [
+                RegistrationFeeSetting::CATEGORY_DEEPTECH,
+                RegistrationFeeSetting::CATEGORY_INTERMEDIATE,
+            ], true);
+            $canSplit = $splitAllowedForCategory && $learningTrack !== 'one_on_one';
+
+            $effectivePaymentType = ($canSplit && $paymentType === 'installment') ? 'installment' : 'onetime';
+            $totalInstallments    = $effectivePaymentType === 'installment' ? 2 : 1;
+            $installmentAmount    = $effectivePaymentType === 'installment' ? round($amount / 2, 2) : $amount;
+
             return [
                 'amount'                       => $amount,
                 'is_registration_fee'          => true,
                 'scholarship'                  => $scholarship,
                 'scholarship_discount_percent' => 100,
-                'payment_type'                 => 'onetime', // registration fee is always paid in full
-                'installment_amount'           => $amount,
-                'total_installments'           => 1,
+                'payment_type'                 => $effectivePaymentType,
+                'installment_amount'           => $installmentAmount,
+                'total_installments'           => $totalInstallments,
                 'fee_category'                 => $category,
+                'registration_fee_split_allowed' => $canSplit,
             ];
         }
 
@@ -91,6 +112,7 @@ class PricingService
             'installment_amount'           => $installmentAmount,
             'total_installments'           => $paymentType === 'installment' ? 4 : 1,
             'fee_category'                 => null,
+            'registration_fee_split_allowed' => false,
         ];
     }
 }

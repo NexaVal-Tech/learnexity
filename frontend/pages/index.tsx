@@ -18,10 +18,13 @@ import Footer from "@/components/footer/Footer";
 // import InstallmentBanner from "@/components/installment/InstallmentBanner";
 import ProbStatement from "@/components/probstatement/ProbStatement";
 import ScholarshipBanner from "@/components/Scholarship/ScholarshipBanner";
+import ScholarshipCountdownBanner from "@/components/ScholarshipCountdownBanner";
 
 export default function Home() {
   return (
-    <AppLayout>
+    <AppLayout
+      topBanner={({ onHeightChange }) => <ScholarshipCountdownBanner onHeightChange={onHeightChange} />}
+    >
       <Head>
         <title>Learnexity — Learn In-Demand Tech Skills & Launch Your Career</title>
         <meta

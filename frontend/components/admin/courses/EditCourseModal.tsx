@@ -587,7 +587,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                             onChange={e => setPricing(p => ({ ...p, [key]: e.target.checked }))}
                             className="w-4 h-4 rounded dark:border-white/20 dark:bg-white/5" />
                           <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                            {key.replace('offers_', '').replace(/_/g, ' ')}
+                            {key === 'offers_intermediate' ? 'career accelerator' : key.replace('offers_', '').replace(/_/g, ' ')}
                           </span>
                         </label>
                       ))}
@@ -601,7 +601,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                           { label: 'One-on-One',  key: 'one_on_one_price_usd', flag: 'offers_one_on_one' },
                           { label: 'Group',        key: 'group_mentorship_price_usd', flag: 'offers_group_mentorship' },
                           { label: 'Self-Paced',   key: 'self_paced_price_usd', flag: 'offers_self_paced' },
-                          { label: 'Intermediate', key: 'intermediate_price_usd', flag: 'offers_intermediate' },
+                          { label: 'Career Accelerator', key: 'intermediate_price_usd', flag: 'offers_intermediate' },
                         ].map(({ label, key, flag }) => (
                           <div key={key}>
                             <label className={LABEL}>{label}</label>
@@ -622,7 +622,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                           { label: 'One-on-One',  key: 'one_on_one_price_ngn', flag: 'offers_one_on_one' },
                           { label: 'Group',        key: 'group_mentorship_price_ngn', flag: 'offers_group_mentorship' },
                           { label: 'Self-Paced',   key: 'self_paced_price_ngn', flag: 'offers_self_paced' },
-                          { label: 'Intermediate', key: 'intermediate_price_ngn', flag: 'offers_intermediate' },
+                          { label: 'Career Accelerator', key: 'intermediate_price_ngn', flag: 'offers_intermediate' },
                         ].map(({ label, key, flag }) => (
                           <div key={key}>
                             <label className={LABEL}>{label}</label>

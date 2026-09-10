@@ -135,10 +135,10 @@ export default function IntermediatePage() {
   return (
     <>
       <Head>
-        <title>Intermediate Courses - Learnexity</title>
+        <title>Career Accelerator Courses - Learnexity</title>
         <meta
           name="description"
-          content="Already have foundational knowledge? Move faster with our Intermediate track."
+          content="Already have foundational knowledge? Move faster with our Career Accelerator track."
         />
         <link rel="canonical" href="https://learnexity.org/intermediate" />
       </Head>
@@ -207,29 +207,6 @@ export default function IntermediatePage() {
             color: ${BRAND};
             background: ${BRAND}12;
           }
-          .course-icon-wrap {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            flex-shrink: 0;
-            background: ${BRAND}22;
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.3s, box-shadow 0.3s;
-          }
-          .course-card:hover .course-icon-wrap {
-            transform: scale(1.18) rotate(-6deg);
-            background: ${BRAND}44;
-            box-shadow: 0 0 22px ${BRAND}55;
-          }
-          .course-icon-wrap svg {
-            transition: stroke 0.3s;
-          }
-          .course-card:hover .course-icon-wrap svg {
-            stroke: #fff;
-          }
           .learning-pill {
             background: var(--surface-alt);
             border: 1px solid var(--border-subtle);
@@ -264,7 +241,7 @@ export default function IntermediatePage() {
             <div className="relative w-full" style={{ height: "clamp(380px, 58vw, 640px)" }}>
               <Image
                 src="/images/coures.jpg"
-                alt="Intermediate courses hero"
+                alt="Career Accelerator courses hero"
                 fill
                 className="object-cover object-center"
                 priority
@@ -280,12 +257,12 @@ export default function IntermediatePage() {
 
               <div className="absolute top-28 md:top-38 left-0 right-0 px-6 md:px-10 lg:px-16">
                 <div className="max-w-screen-xl mx-auto">
-                  {/* Intermediate badge */}
+                  {/* Career Accelerator badge */}
                   <div className="intermediate-badge mb-4">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                     </svg>
-                    Intermediate
+                    Career Accelerator
                   </div>
 
                   <h1
@@ -296,7 +273,7 @@ export default function IntermediatePage() {
                       textShadow: "0 2px 24px rgba(0,0,0,0.7)",
                     }}
                   >
-                    Already have the basics? Move faster with our Intermediate track.
+                    Already have the basics? Move faster with our Career Accelerator track.
                   </h1>
                 </div>
               </div>
@@ -312,7 +289,7 @@ export default function IntermediatePage() {
                   className="font-semibold mb-6"
                   style={{ color: BRAND, fontSize: "clamp(0.9rem, 1.4vw, 1.05rem)" }}
                 >
-                  Intermediate Programmes
+                  Career Accelerator Programmes
                 </p>
 
                 {/* ── Error state ── */}
@@ -339,7 +316,7 @@ export default function IntermediatePage() {
                 {/* ── Empty state ── */}
                 {!loading && !error && courses.length === 0 && (
                   <div className="text-center text-[var(--text-secondary)] py-20">
-                    <p className="text-xl mb-2">No intermediate courses available yet.</p>
+                    <p className="text-xl mb-2">No Career Accelerator courses available yet.</p>
                     <p className="text-sm text-[var(--text-muted)]">
                       Check our{" "}
                       <Link href="/courses/courses" className="underline" style={{ color: BRAND }}>
@@ -371,24 +348,6 @@ export default function IntermediatePage() {
                               transition: "all 0.3s ease",
                             }}
                           >
-                            {/* Icon */}
-                            <div className="course-icon-wrap">
-                              <svg
-                                className="w-6 h-6"
-                                style={{ color: BRAND }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-                                />
-                              </svg>
-                            </div>
-
                             {/* Title */}
                             <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">
                               {course.title}

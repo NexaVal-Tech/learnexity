@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\User;
 use App\Models\CourseEnrollment;
+use App\Models\Course;
+use App\Models\UserCourseStatistic;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\ActivityLogger;
 
 class AdminStudentController extends Controller
 {
@@ -48,12 +51,23 @@ class AdminStudentController extends Controller
                 }
             }
 
-            // Payment status filter
+            // Payment status filter. 'unpaid' is a distinct concept from
+            // 'pending': unpaid means the student has never completed a
+            // payment at all (across any course), while 'pending' means
+            // they currently have an enrollment awaiting payment — a
+            // student can have a completed payment on one course and a
+            // pending one on another, so these are not interchangeable.
             if ($request->has('payment_status') && !empty($request->payment_status)) {
                 $paymentStatus = $request->payment_status;
-                $query->whereHas('enrollments', function($q) use ($paymentStatus) {
-                    $q->where('payment_status', $paymentStatus);
-                });
+                if ($paymentStatus === 'unpaid') {
+                    $query->whereDoesntHave('enrollments', function ($q) {
+                        $q->where('payment_status', 'completed');
+                    });
+                } elseif (in_array($paymentStatus, ['completed', 'pending', 'failed'], true)) {
+                    $query->whereHas('enrollments', function ($q) use ($paymentStatus) {
+                        $q->where('payment_status', $paymentStatus);
+                    });
+                }
             }
 
             // Course filter
@@ -61,6 +75,67 @@ class AdminStudentController extends Controller
                 $query->whereHas('enrollments', function($q) use ($request) {
                     $q->where('course_id', $request->course_id);
                 });
+            }
+
+            // Country filter — exact match against the free-text
+            // users.location field populated at signup/profile edit.
+            if ($request->has('country') && !empty($request->country)) {
+                $query->where('location', $request->country);
+            }
+
+            // Enrollment date / tenure filter. Buckets describe "how long
+            // ago did they enroll" rather than a specific range, matching
+            // the "Months Enrolled" UI options.
+            if ($request->has('enrollment_period') && !empty($request->enrollment_period)) {
+                $period = $request->enrollment_period;
+                $bucketStarts = [
+                    '1_month'  => now()->subMonth(),
+                    '3_months' => now()->subMonths(3),
+                    '6_months' => now()->subMonths(6),
+                ];
+
+                if (isset($bucketStarts[$period])) {
+                    $since = $bucketStarts[$period];
+                    $query->whereHas('enrollments', function ($q) use ($since) {
+                        $q->where('enrollment_date', '>=', $since);
+                    });
+                } elseif ($period === '12_plus_months') {
+                    $cutoff = now()->subMonths(12);
+                    $query->whereHas('enrollments', function ($q) use ($cutoff) {
+                        $q->where('enrollment_date', '<=', $cutoff);
+                    });
+                }
+            }
+
+            // Course progress filter (repurposes the "Enrolment Status"
+            // dropdown to reflect real course progress data rather than
+            // the previous unwired Active/Completed/Inactive labels with
+            // no backend meaning).
+            if ($request->has('course_progress') && !empty($request->course_progress)) {
+                $progress = $request->course_progress;
+                if ($progress === 'completed') {
+                    $query->whereHas('courseStatistics', function ($q) {
+                        $q->where('overall_progress', '>=', 100);
+                    });
+                } elseif ($progress === 'active') {
+                    $query->whereHas('courseStatistics', function ($q) {
+                        $q->where('overall_progress', '>', 0)
+                          ->where('overall_progress', '<', 100);
+                    });
+                } elseif ($progress === 'inactive') {
+                    $query->whereHas('enrollments')
+                        ->whereDoesntHave('courseStatistics', function ($q) {
+                            $q->where('overall_progress', '>', 0);
+                        });
+                }
+            }
+
+            // Multiple-course filter (repurposes the "Multiple Course"
+            // dropdown, which previously had two unrelated hardcoded
+            // topic options with no backend wiring, to its literal
+            // meaning: students enrolled in 2 or more courses).
+            if ($request->has('multi_course') && $request->multi_course) {
+                $query->has('enrollments', '>=', 2);
             }
 
             $perPage = $request->per_page ?? 10;
@@ -77,13 +152,21 @@ class AdminStudentController extends Controller
                 $student->courses_count = $student->enrollments->count();
                 $student->activity_status = $student->updated_at->diffInDays(now()) <= 7 ? 'active' : 'inactive';
                 $student->has_paid = $student->enrollments->where('payment_status', 'completed')->count() > 0;
-                
+
+                // At-a-glance course list for the students table — name +
+                // payment status per enrollment, so an admin can see who's
+                // enrolled in what without opening the detail page.
+                $student->courses = $student->enrollments->map(fn ($enrollment) => [
+                    'course_name' => $enrollment->course_name,
+                    'payment_status' => $enrollment->payment_status,
+                ])->values();
+
                 if (!Schema::hasColumn('users', 'phone')) {
                     $student->phone = null;
                 }
-                
+
                 unset($student->enrollments);
-                
+
                 return $student;
             });
 
@@ -113,6 +196,46 @@ class AdminStudentController extends Controller
                     'per_page' => 10,
                     'total' => 0
                 ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Real filter option lists for the admin student filters UI — replaces
+     * the previously hardcoded fake course names and static country list.
+     */
+    public function filterOptions(): JsonResponse
+    {
+        try {
+            $courses = Course::query()
+                ->orderBy('title')
+                ->get(['course_id', 'title'])
+                ->map(fn ($course) => [
+                    'course_id' => $course->course_id,
+                    'title' => $course->title,
+                ])
+                ->values();
+
+            $countries = User::query()
+                ->whereNotNull('location')
+                ->where('location', '!=', '')
+                ->distinct()
+                ->orderBy('location')
+                ->pluck('location')
+                ->values();
+
+            return response()->json([
+                'courses' => $courses,
+                'countries' => $countries,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching student filter options: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to fetch filter options',
+                'message' => $e->getMessage(),
+                'courses' => [],
+                'countries' => [],
             ], 500);
         }
     }
@@ -184,6 +307,11 @@ class AdminStudentController extends Controller
                     ],
                     'sprint_progress' => $progress,
                     'topic_progress' => $progress,
+                    'enrollment_id' => $enrollment->id,
+                    'has_access' => (bool) $enrollment->has_access,
+                    'payment_status' => $enrollment->payment_status,
+                    'access_blocked_reason' => $enrollment->access_blocked_reason,
+                    'access_manually_granted' => (bool) $enrollment->access_manually_granted,
                 ];
             }
 
@@ -198,7 +326,7 @@ class AdminStudentController extends Controller
                     'name' => $student->name,
                     'email' => $student->email,
                     'phone' => $phone ?? 'N/A',
-                    'location' => 'Nigeria',
+                    'location' => $student->location ?? 'N/A',
                     'initials' => $this->getInitials($student->name),
                     'registration_date' => date('d/m/Y', strtotime($student->created_at)),
                     'payment_status' => $enrollments->where('payment_status', 'completed')->count() > 0 ? 'Paid' : 'Pending',
@@ -468,6 +596,107 @@ class AdminStudentController extends Controller
             return response()->json([
                 'error' => 'Failed to send message',
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Grant a student manual access to a course they're enrolled in,
+     * regardless of payment status. Sticky — see
+     * CourseEnrollment::adminGrantAccess()/updateAccessStatus().
+     */
+    public function grantAccess(Request $request, int $enrollmentId): JsonResponse
+    {
+        try {
+            $enrollment = CourseEnrollment::findOrFail($enrollmentId);
+            $admin = $request->user('admin');
+
+            $enrollment->adminGrantAccess($admin?->id);
+
+            ActivityLogger::log(
+                'course_access_granted',
+                "Granted access to \"{$enrollment->course_name}\" for student #{$enrollment->user_id}",
+                'admin',
+                $admin?->id,
+                $admin?->name,
+                [
+                    'enrollment_id' => $enrollment->id,
+                    'user_id' => $enrollment->user_id,
+                    'course_name' => $enrollment->course_name,
+                ],
+                (string) ($enrollment->course_id ?? ''),
+                $request
+            );
+
+            return response()->json([
+                'message' => 'Access granted successfully.',
+                'enrollment' => [
+                    'enrollment_id' => $enrollment->id,
+                    'has_access' => (bool) $enrollment->has_access,
+                    'access_manually_granted' => (bool) $enrollment->access_manually_granted,
+                    'access_blocked_reason' => $enrollment->access_blocked_reason,
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Enrollment not found'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error granting course access: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to grant access',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Revoke a previously-granted manual access override, reverting the
+     * enrollment to normal payment-driven access rules.
+     */
+    public function revokeAccess(Request $request, int $enrollmentId): JsonResponse
+    {
+        try {
+            $enrollment = CourseEnrollment::findOrFail($enrollmentId);
+            $admin = $request->user('admin');
+
+            $enrollment->adminRevokeAccess();
+
+            ActivityLogger::log(
+                'course_access_revoked',
+                "Revoked manual access to \"{$enrollment->course_name}\" for student #{$enrollment->user_id}",
+                'admin',
+                $admin?->id,
+                $admin?->name,
+                [
+                    'enrollment_id' => $enrollment->id,
+                    'user_id' => $enrollment->user_id,
+                    'course_name' => $enrollment->course_name,
+                ],
+                (string) ($enrollment->course_id ?? ''),
+                $request
+            );
+
+            return response()->json([
+                'message' => 'Access revoked successfully.',
+                'enrollment' => [
+                    'enrollment_id' => $enrollment->id,
+                    'has_access' => (bool) $enrollment->has_access,
+                    'access_manually_granted' => (bool) $enrollment->access_manually_granted,
+                    'access_blocked_reason' => $enrollment->access_blocked_reason,
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Enrollment not found'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error revoking course access: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to revoke access',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

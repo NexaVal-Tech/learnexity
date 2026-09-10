@@ -26,7 +26,7 @@ const TEAM: TeamMember[] = [
     name: "Mary Eze",
     role: "Founder | AI & Digital Transformation Strategist | Innovation, Governance & Human Development",
     bio: [
-      "I’m Mary, the founder of Learnexity. I’m an Informatics Specialist (MSN), MBA candidate, AI Engineer, AI Governance Advocate, AWS Certified Cloud Practitioner, Career Coach, Mentor, and Author, with over 12 years of experience at the intersection of healthcare, technology, and digital transformation.",
+      "I’m Mary, the founder of Learnexity. I’m an AI Governance Advocate, AI Governance Certified professional (Harvard Business School), Generative & Agentic AI Certified professional, AI & Analytics Lead, Informatics Specialist (MSN), MBA, AWS Certified Cloud Practitioner, Career Coach, Mentor, Author, and member of the International Association of Privacy Professionals (IAPP), with over 12 years of experience at the intersection of healthcare, technology, and digital transformation.",
       "I’m passionate about human transformation and using AI and emerging technologies responsibly to create opportunities. Over the years, I’ve witnessed how rapidly technology is reshaping the future of work while creating a growing gap between learning and real-world opportunities. That realization inspired us to build Learnexity.",
       "Our mission is to discover and develop high-potential talent by helping professionals build future-relevant skills, gain practical experience, and access mentorship and global career pathways.",
       "We are building professionals who are prepared to contribute to the technologies shaping the future and thrive in the digital economy.",

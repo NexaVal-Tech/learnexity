@@ -121,6 +121,10 @@ class AdminBadgeController extends Controller
             ['unlocked_at' => now()]
         );
 
+        if (! $userBadge->rendered_at) {
+            app(\App\Services\DynamicTemplateRenderService::class)->issueBadgeArtifact($userBadge);
+        }
+
         $user = User::find($validated['user_id']);
         if ($user) {
             \App\Services\ActivityLogger::log(
@@ -135,6 +139,21 @@ class AdminBadgeController extends Controller
         }
 
         return response()->json(['message' => 'Badge awarded', 'user_badge' => $userBadge], 201);
+    }
+
+    /** Admin download of a rendered badge PDF — no ownership check. */
+    public function downloadArtifact(int $userBadgeId)
+    {
+        $userBadge = UserBadge::findOrFail($userBadgeId);
+
+        if (! $userBadge->pdf_path || ! \Illuminate\Support\Facades\Storage::disk('local')->exists($userBadge->pdf_path)) {
+            return response()->json(['message' => 'This badge has not been rendered yet.'], 404);
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->response(
+            $userBadge->pdf_path,
+            "badge-{$userBadge->reference_number}.pdf"
+        );
     }
 
     public function revokeAward(int $badgeId, int $userId): JsonResponse

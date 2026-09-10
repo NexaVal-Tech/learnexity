@@ -46,8 +46,12 @@ class ScholarshipController extends Controller
     {
         $user = auth()->user();
 
-        // CHANGE 5: one scholarship per user across ALL courses
-        $anyExisting = Scholarship::where('user_id', $user->id)->first();
+        // CHANGE 5: one scholarship per user across ALL courses.
+        // A revoked scholarship doesn't count — an admin revoking it is
+        // meant to free the student up to reapply, so it's excluded here.
+        $anyExisting = Scholarship::where('user_id', $user->id)
+            ->where('status', '!=', 'revoked')
+            ->first();
 
         if ($anyExisting) {
             // If it's for this exact course, return the existing application so the UI can show it
@@ -94,8 +98,11 @@ class ScholarshipController extends Controller
     {
         $user = auth()->user();
 
-        // CHANGE 5: one scholarship per user ever
-        $anyExisting = Scholarship::where('user_id', $user->id)->first();
+        // CHANGE 5: one scholarship per user ever (revoked ones excluded —
+        // see checkEligibility for the same rule).
+        $anyExisting = Scholarship::where('user_id', $user->id)
+            ->where('status', '!=', 'revoked')
+            ->first();
         if ($anyExisting) {
             return response()->json([
                 'message'     => 'You have already submitted a scholarship application. Each user may only apply once across all courses.',
@@ -161,6 +168,9 @@ class ScholarshipController extends Controller
             'review_notes'        => $reviewNote,
             'applicant_country'   => $country,
             'applicant_ip'        => $request->ip(),
+            // Every applicant is auto-approved (two-tier model, no reject
+            // outcome) — this is the moment the 30-day countdown starts.
+            'approved_at'         => $status === 'approved' ? now() : null,
         ]);
 
         // Keep the onboarding state in sync — screening is now tied to this

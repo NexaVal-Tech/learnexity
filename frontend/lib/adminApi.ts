@@ -114,8 +114,44 @@ export interface Admin {
   id: number;
   name: string;
   email: string;
+  is_super_admin?: boolean;
+  permissions?: string[] | null;
+  created_by_admin_id?: number | null;
   created_at: string;
   updated_at: string;
+}
+
+// Mirrors Admin::PERMISSIONS on the backend — single source of truth for
+// which capability keys exist and their human-readable labels. Keep this in
+// sync with server/app/Models/Admin.php.
+export const ADMIN_PERMISSIONS: Record<string, string> = {
+  students: 'View & search students',
+  grant_course_access: "Grant/revoke a student's course access",
+  send_emails: 'Send emails/messages to students',
+  kids: 'Kids courses & enrollments',
+  referrals: 'Referral history & stats',
+  scholarships: 'Review scholarship applications',
+  registration_fee: 'Registration fee settings',
+  scholarship_countdown: 'Scholarship countdown banner settings',
+  instructors: 'Manage instructors',
+  consultations: 'Manage consultations',
+  course_groups: 'Manage course groups',
+  courses: 'Manage courses & course content',
+  badges: 'Manage badges',
+  certificates: 'Issue/revoke certificates',
+  certificate_badge_generators: 'Certificate/badge generators (ad-hoc)',
+  certificate_signer: 'Certificate signer settings',
+  course_certificate_template: 'Course certificate design',
+  course_badge_template: 'Course badge design',
+  attending_flyer: '"I Will Be Attending" flyer',
+  activity: 'Activity log & analytics',
+};
+
+/** True if this admin can access the given permission key (super admins always can). */
+export function adminHasPermission(admin: Admin | null | undefined, key: string): boolean {
+  if (!admin) return false;
+  if (admin.is_super_admin) return true;
+  return Array.isArray(admin.permissions) && admin.permissions.includes(key);
 }
 
 export interface AdminLoginData {

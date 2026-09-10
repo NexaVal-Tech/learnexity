@@ -160,7 +160,7 @@ export default function AdminInstructorsPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="instructors">
       <AdminLayout>
         <div className="space-y-6">
 

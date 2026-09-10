@@ -4,20 +4,59 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
-import { 
-  Mail, Phone, MapPin, Calendar, BookOpen, 
-  CheckCircle, Clock, Video, TrendingUp, Circle, Award, CreditCard, Loader2, ArrowLeft
+import {
+  Mail, Phone, MapPin, Calendar, BookOpen,
+  CheckCircle, Clock, Video, TrendingUp, Circle, Award, CreditCard, Loader2, ArrowLeft,
+  Lock, Unlock, XCircle
 } from 'lucide-react';
 import ComposeMessageModal from '@/components/admin/students/ComposeMessageModal';
 import { api, StudentDetail as StudentDetailType } from '@/lib/api';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { adminHasPermission, handleAdminApiError } from '@/lib/adminApi';
 
 const StudentDetail = () => {
   const router = useRouter();
   const { id } = router.query;
+  const { admin } = useAdminAuth();
+  const canGrantAccess = adminHasPermission(admin, 'grant_course_access');
   const [activeTab, setActiveTab] = useState('Course Enrollment');
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [studentData, setStudentData] = useState<StudentDetailType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessActionId, setAccessActionId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleGrantAccess = async (enrollmentId: number) => {
+    try {
+      setAccessActionId(enrollmentId);
+      await api.admin.students.grantAccess(enrollmentId);
+      showToast('Access granted.');
+      await fetchStudentDetails();
+    } catch (error) {
+      showToast(handleAdminApiError(error), 'error');
+    } finally {
+      setAccessActionId(null);
+    }
+  };
+
+  const handleRevokeAccess = async (enrollmentId: number) => {
+    if (!confirm('Revoke manually-granted access? The student will fall back to their normal payment-based access.')) return;
+    try {
+      setAccessActionId(enrollmentId);
+      await api.admin.students.revokeAccess(enrollmentId);
+      showToast('Access revoked.');
+      await fetchStudentDetails();
+    } catch (error) {
+      showToast(handleAdminApiError(error), 'error');
+    } finally {
+      setAccessActionId(null);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -39,7 +78,7 @@ const StudentDetail = () => {
 
   if (loading) {
     return (
-      <AdminRouteGuard>
+      <AdminRouteGuard requiredPermission="students">
         <AdminLayout>
           <div className="flex items-center justify-center h-96">
             <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
@@ -51,7 +90,7 @@ const StudentDetail = () => {
 
   if (!studentData) {
     return (
-      <AdminRouteGuard>
+      <AdminRouteGuard requiredPermission="students">
         <AdminLayout>
           <div className="flex flex-col items-center justify-center h-96">
             <p className="text-red-500 dark:text-red-400 mb-4">Student not found</p>
@@ -71,7 +110,7 @@ const StudentDetail = () => {
   const tabs = ['Course Enrollment', 'Progress Report', 'Activity Timeline'];
 
   return (
-    <AdminRouteGuard>
+    <AdminRouteGuard requiredPermission="students">
       <AdminLayout>
         <div className="space-y-6">
           {/* Back Button */}
@@ -203,6 +242,48 @@ const StudentDetail = () => {
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Course access status + admin override */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+                      <div className="flex items-center gap-2 text-sm">
+                        {course.has_access ? (
+                          <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400 font-medium">
+                            <Unlock size={14} /> Has access
+                            {course.access_manually_granted && (
+                              <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(manually granted)</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-medium">
+                            <Lock size={14} /> No access
+                            {course.access_blocked_reason && (
+                              <span className="text-xs font-normal text-gray-500 dark:text-gray-400">— {course.access_blocked_reason}</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      {canGrantAccess && (
+                        course.access_manually_granted ? (
+                          <button
+                            onClick={() => handleRevokeAccess(course.enrollment_id)}
+                            disabled={accessActionId === course.enrollment_id}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-400 bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
+                          >
+                            {accessActionId === course.enrollment_id ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
+                            Revoke Access
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleGrantAccess(course.enrollment_id)}
+                            disabled={accessActionId === course.enrollment_id}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                          >
+                            {accessActionId === course.enrollment_id ? <Loader2 size={13} className="animate-spin" /> : <Unlock size={13} />}
+                            Grant Access
+                          </button>
+                        )
+                      )}
                     </div>
 
                     <div className="space-y-6">
@@ -399,6 +480,13 @@ const StudentDetail = () => {
             }
           }}
         />
+
+        {toast && (
+          <div className={`fixed bottom-5 right-5 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+            {toast.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+            {toast.msg}
+          </div>
+        )}
       </AdminLayout>
     </AdminRouteGuard>
   );
