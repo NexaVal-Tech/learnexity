@@ -32,7 +32,8 @@ class ConsultationPaymentController extends Controller
             'full_name'         => 'required|string|max:255',
             'email'             => 'required|email|max:255',
             'phone'             => 'nullable|string|max:30',
-            'consultation_type' => 'required|in:course_guidance,career_advice,technical_support,renewal,general',
+            'consultation_type' => 'required|in:course_guidance,career_advice,technical_support,renewal,general,technology_value_assessment',
+            'source'            => 'nullable|in:learnexity,advisory',
             'course'            => 'nullable|string|max:255',
             'message'           => 'nullable|string|max:2000',
             'preferred_date'    => 'required|date|after_or_equal:today',
@@ -46,6 +47,62 @@ class ConsultationPaymentController extends Controller
         $date = Carbon::parse($request->preferred_date);
         if ($date->isWeekend()) {
             return response()->json(['message' => 'Consultations are only available Monday–Friday.'], 422);
+        }
+
+        $source = $request->source ?? 'learnexity';
+
+        // ── Learnexity Advisory bookings: always free ──────────────────────
+        // The "Technology Value Assessment" is complimentary by definition —
+        // independent of the admin's main-site free-day promo mechanism
+        // below (that one only ever applies to paid course consultations).
+        // Advisory has its own slot-conflict namespace (scoped by `source`)
+        // so it never competes with course-consultation availability.
+        if ($source === 'advisory') {
+            $slotTaken = Consultation::where('preferred_date', $request->preferred_date)
+                ->where('preferred_time', $request->preferred_time)
+                ->where('source', 'advisory')
+                ->where('status', 'scheduled')
+                ->exists();
+
+            if ($slotTaken) {
+                return response()->json(['message' => 'This time slot is no longer available. Please choose another.'], 409);
+            }
+
+            $consultation = Consultation::create([
+                'user_id'           => auth('api')->id(),
+                'full_name'         => $request->full_name,
+                'email'             => $request->email,
+                'phone'             => $request->phone,
+                'consultation_type' => $request->consultation_type,
+                'source'            => 'advisory',
+                'course'            => $request->course,
+                'message'           => $request->message,
+                'preferred_date'    => $request->preferred_date,
+                'preferred_time'    => $request->preferred_time,
+                'status'            => 'scheduled',
+                'payment_status'    => 'free',
+                'amount'            => 0,
+            ]);
+
+            try {
+                Mail::to($consultation->email)->send(new ConsultationConfirmation($consultation));
+            } catch (\Throwable $e) {
+                Log::error('Consultation confirmation email failed: ' . $e->getMessage());
+            }
+
+            $adminEmail = config('mail.admin_email', env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS')));
+            try {
+                Mail::to($adminEmail)->send(new ConsultationBookedAdmin($consultation));
+            } catch (\Throwable $e) {
+                Log::error('Consultation admin notification email failed: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'is_free'         => true,
+                'message'         => 'Your Technology Value Assessment is booked.',
+                'consultation'    => $consultation,
+                'consultation_id' => $consultation->id,
+            ], 201);
         }
 
         // ── Admin-marked free day: unlimited bookings, no payment ─────────

@@ -5,9 +5,12 @@ return [
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'http://localhost:3000',
+        'http://localhost:3001',
         'https://learnexity.org',
         'https://www.learnexity.org',
-        env('FRONTEND_URL', 'http://localhost:3000')
+        'https://advisory.learnexity.org',
+        env('FRONTEND_URL', 'http://localhost:3000'),
+        env('ADVISORY_URL', 'http://localhost:3001'),
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],

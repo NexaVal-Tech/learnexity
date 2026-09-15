@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Learnexity Advisory design tokens.
+   Same brand color and semantic surface/text tokens as the main
+   learnexity.org frontend (see frontend/styles/globals.css), but this is a
+   single always-light marketing page, so only the light-mode values are
+   carried over — no theme toggle here.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --brand: #4A3AFF;
+  --brand-rgb: 74, 58, 255;
+
+  --page-bg: #ffffff;
+  --page-bg-alt: #f6f6fb;
+  --surface: #ffffff;
+  --surface-alt: #f3f4f6;
+  --surface-elevated: #ffffff;
+  --text-primary: #0f0f14;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --border-subtle: rgba(15, 15, 20, 0.1);
+  --border-strong: rgba(15, 15, 20, 0.18);
+  --overlay: rgba(15, 15, 20, 0.5);
+  color-scheme: light;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--page-bg);
+  font-family: var(--font-geist), sans-serif;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}

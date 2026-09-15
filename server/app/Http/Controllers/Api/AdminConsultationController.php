@@ -31,6 +31,10 @@ class AdminConsultationController extends Controller
             $query->where('consultation_type', $request->consultation_type);
         }
 
+        if ($request->source) {
+            $query->where('source', $request->source);
+        }
+
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -71,10 +75,12 @@ class AdminConsultationController extends Controller
     public function stats()
     {
         return response()->json([
-            'total'     => Consultation::count(),
-            'scheduled' => Consultation::where('status', 'scheduled')->count(),
-            'completed' => Consultation::where('status', 'completed')->count(),
-            'cancelled' => Consultation::where('status', 'cancelled')->count(),
+            'total'            => Consultation::count(),
+            'scheduled'        => Consultation::where('status', 'scheduled')->count(),
+            'completed'        => Consultation::where('status', 'completed')->count(),
+            'cancelled'        => Consultation::where('status', 'cancelled')->count(),
+            'advisory_total'   => Consultation::where('source', 'advisory')->count(),
+            'advisory_pending' => Consultation::where('source', 'advisory')->where('status', 'scheduled')->count(),
         ]);
     }
 

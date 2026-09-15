@@ -117,7 +117,25 @@ class ConsultationController extends Controller
      */
     public function bookedSlots(Request $request)
     {
-        $request->validate(['date' => 'required|date']);
+        $request->validate([
+            'date'   => 'required|date',
+            'source' => 'nullable|in:learnexity,advisory',
+        ]);
+
+        $source = $request->source ?? 'learnexity';
+
+        // Advisory bookings are always free and have their own slot
+        // namespace (see ConsultationPaymentController::initiate) — they
+        // don't participate in the main site's free-day promo mechanism.
+        if ($source === 'advisory') {
+            $slots = Consultation::where('preferred_date', $request->date)
+                ->where('source', 'advisory')
+                ->where('status', 'scheduled')
+                ->pluck('preferred_time')
+                ->values();
+
+            return response()->json(['booked_slots' => $slots, 'is_free_day' => false]);
+        }
 
         if (ConsultationFreeDay::isFreeDay($request->date)) {
             return response()->json(['booked_slots' => [], 'is_free_day' => true]);
@@ -125,6 +143,7 @@ class ConsultationController extends Controller
 
         $slots = Consultation::where('preferred_date', $request->date)
             ->where('status', 'scheduled')
+            ->where('source', 'learnexity')
             ->pluck('preferred_time')
             ->values();
 

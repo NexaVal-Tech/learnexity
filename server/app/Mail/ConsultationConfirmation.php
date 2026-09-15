@@ -17,9 +17,11 @@ class ConsultationConfirmation extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: '✅ Your Consultation is Confirmed — Learnexity',
-        );
+        $subject = $this->consultation->source === 'advisory'
+            ? '✅ Your Technology Value Assessment is Confirmed — Learnexity Advisory'
+            : '✅ Your Consultation is Confirmed — Learnexity';
+
+        return new Envelope(subject: $subject);
     }
 
     public function content(): Content

@@ -17,9 +17,11 @@ class ConsultationBookedAdmin extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: 'New Consultation Booked — ' . $this->consultation->full_name,
-        );
+        $prefix = $this->consultation->source === 'advisory'
+            ? 'New Technology Value Assessment — '
+            : 'New Consultation Booked — ';
+
+        return new Envelope(subject: $prefix . $this->consultation->full_name);
     }
 
     public function content(): Content

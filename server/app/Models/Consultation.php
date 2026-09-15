@@ -14,6 +14,7 @@ class Consultation extends Model
         'email',
         'phone',
         'consultation_type',
+        'source',
         'course',
         'message',
         'preferred_date',

@@ -15,7 +15,7 @@
           <tr>
             <td style="background:#0a0a0f;padding:28px 40px;text-align:center;">
               <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
-                <span style="color:#4A3AFF;">Learnexity</span> Admin
+                <span style="color:#4A3AFF;">Learnexity</span>{{ $consultation->source === 'advisory' ? ' Advisory' : '' }} Admin
               </p>
             </td>
           </tr>
@@ -24,7 +24,7 @@
           <tr>
             <td style="background:#4A3AFF;padding:14px 40px;">
               <p style="margin:0;color:#ffffff;font-size:14px;font-weight:600;text-align:center;">
-                 &nbsp; New Consultation Booking Received
+                 &nbsp; {{ $consultation->source === 'advisory' ? 'New Technology Value Assessment Booked' : 'New Consultation Booking Received' }}
               </p>
             </td>
           </tr>
@@ -33,7 +33,7 @@
           <tr>
             <td style="padding:36px 40px;">
               <p style="margin:0 0 24px;font-size:15px;color:#374151;">
-                A new consultation has been booked. Here are the details:
+                {{ $consultation->source === 'advisory' ? 'A new Technology Value Assessment has been booked via Learnexity Advisory. Here are the details:' : 'A new consultation has been booked. Here are the details:' }}
               </p>
 
               <!-- Details table -->
@@ -45,17 +45,19 @@
                     'technical_support'=> 'Technical Support',
                     'renewal'          => 'Renewal',
                     'general'          => 'General Inquiry',
+                    'technology_value_assessment' => 'Technology Value Assessment',
                   ];
                   $typeLabel = $typeLabels[$consultation->consultation_type] ?? $consultation->consultation_type;
                   $dateFormatted = \Carbon\Carbon::parse($consultation->preferred_date)->format('l, F j, Y');
                 @endphp
 
                 @foreach ([
-                  ['Student Name',       $consultation->full_name],
+                  ['Source',             $consultation->source === 'advisory' ? 'Learnexity Advisory' : 'Learnexity (main site)'],
+                  ['Name',               $consultation->full_name],
                   ['Email',              $consultation->email],
                   ['Phone',              $consultation->phone ?: '—'],
-                  ['Course',             $consultation->course ?: '—'],
-                  ['Consultation Type',  $typeLabel],
+                  ['Company/Course',     $consultation->course ?: '—'],
+                  ['Type',               $typeLabel],
                   ['Date',               $dateFormatted],
                   ['Time',               $consultation->preferred_time],
                 ] as $i => [$label, $value])

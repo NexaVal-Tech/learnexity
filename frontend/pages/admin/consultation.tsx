@@ -13,6 +13,7 @@ interface Consultation {
   email: string;
   phone?: string;
   consultation_type: string;
+  source: 'learnexity' | 'advisory';
   course?: string;
   message?: string;
   preferred_date: string;
@@ -28,6 +29,8 @@ interface ConsultationStats {
   scheduled: number;
   completed: number;
   cancelled: number;
+  advisory_total: number;
+  advisory_pending: number;
 }
 
 interface Meta { current_page: number; last_page: number; total: number; per_page: number; }
@@ -38,6 +41,17 @@ const TYPE_LABELS: Record<string, string> = {
   technical_support: 'Technical Support',
   renewal: 'Renewal',
   general: 'General Inquiry',
+  technology_value_assessment: 'Technology Value Assessment',
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  learnexity: 'Learnexity',
+  advisory: 'Advisory',
+};
+
+const SOURCE_COLORS: Record<string, string> = {
+  learnexity: 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400',
+  advisory: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -97,9 +111,17 @@ function DetailModal({ c, onClose, onUpdate }: { c: Consultation; onClose: () =>
             </div>
           )}
 
-          <div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Type</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300">{TYPE_LABELS[c.consultation_type] || c.consultation_type}</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Type</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{TYPE_LABELS[c.consultation_type] || c.consultation_type}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Source</p>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SOURCE_COLORS[c.source] || SOURCE_COLORS.learnexity}`}>
+                {SOURCE_LABELS[c.source] || c.source || 'Learnexity'}
+              </span>
+            </div>
           </div>
 
           {c.message && (
@@ -298,7 +320,7 @@ function FreeDaysPanel() {
 // ─── Inner page (no layout wrappers) ─────────────────────────────────────────
 function ConsultationsPageInner() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [stats, setStats] = useState<ConsultationStats>({ total: 0, scheduled: 0, completed: 0, cancelled: 0 });
+  const [stats, setStats] = useState<ConsultationStats>({ total: 0, scheduled: 0, completed: 0, cancelled: 0, advisory_total: 0, advisory_pending: 0 });
   const [meta, setMeta] = useState<Meta>({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -307,6 +329,7 @@ function ConsultationsPageInner() {
   const [filters, setFilters] = useState({
     search: '',
     consultation_type: '',
+    source: '',
     status: '',
     payment_status: '',
     course: '',
@@ -321,6 +344,7 @@ function ConsultationsPageInner() {
       const params: any = { per_page: 15, page: filters.page };
       if (filters.search)             params.search = filters.search;
       if (filters.consultation_type)  params.consultation_type = filters.consultation_type;
+      if (filters.source)             params.source = filters.source;
       if (filters.status)             params.status = filters.status;
       if (filters.payment_status)     params.payment_status = filters.payment_status;
       if (filters.course)             params.course = filters.course;
@@ -344,7 +368,7 @@ function ConsultationsPageInner() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleFilterChange = (k: string, v: string) => setFilters(p => ({ ...p, [k]: v, page: 1 }));
-  const resetFilters = () => setFilters({ search: '', consultation_type: '', status: '', payment_status: '', course: '', date_from: '', date_to: '', page: 1 });
+  const resetFilters = () => setFilters({ search: '', consultation_type: '', source: '', status: '', payment_status: '', course: '', date_from: '', date_to: '', page: 1 });
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this consultation?')) return;
     await adminApi.delete(`/api/admin/consultations/${id}`);
@@ -396,6 +420,13 @@ function ConsultationsPageInner() {
                 <select value={filters.consultation_type} onChange={e => handleFilterChange('consultation_type', e.target.value)} className={selectCls}>
                   <option value="">All Types</option>
                   {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Source</label>
+                <select value={filters.source} onChange={e => handleFilterChange('source', e.target.value)} className={selectCls}>
+                  <option value="">All Sources</option>
+                  {Object.entries(SOURCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
               <div>
@@ -452,12 +483,13 @@ function ConsultationsPageInner() {
       <FreeDaysPanel />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
         {[
           { label: 'Total Consultations', value: stats.total,     color: 'text-gray-900 dark:text-white' },
           { label: 'Scheduled',           value: stats.scheduled, color: 'text-blue-600 dark:text-blue-400' },
           { label: 'Completed',           value: stats.completed, color: 'text-green-600 dark:text-green-400' },
           { label: 'Cancelled',           value: stats.cancelled, color: 'text-red-500 dark:text-red-400' },
+          { label: 'Advisory Bookings',   value: stats.advisory_total, color: 'text-amber-600 dark:text-amber-400' },
         ].map(s => (
           <div key={s.label} className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-2xl p-5">
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{s.label}</p>
@@ -482,7 +514,7 @@ function ConsultationsPageInner() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 dark:border-white/10">
-                {['Student Name', 'Course Enrolled', 'Consultation Type', 'Date & Time', 'Status', 'Payment', 'Actions'].map(h => (
+                {['Student Name', 'Course Enrolled', 'Consultation Type', 'Source', 'Date & Time', 'Status', 'Payment', 'Actions'].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -491,16 +523,16 @@ function ConsultationsPageInner() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-5 py-4">
-                        <div className="h-4 bg-gray-100 dark:bg-white/10 rounded animate-pulse" style={{ width: j === 6 ? '60px' : '100%' }} />
+                        <div className="h-4 bg-gray-100 dark:bg-white/10 rounded animate-pulse" style={{ width: j === 7 ? '60px' : '100%' }} />
                       </td>
                     ))}
                   </tr>
                 ))
               ) : consultations.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
+                  <td colSpan={8} className="px-5 py-16 text-center text-gray-400 dark:text-gray-500 text-sm">
                     No consultations found.
                   </td>
                 </tr>
@@ -516,6 +548,11 @@ function ConsultationsPageInner() {
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-sm text-gray-700 dark:text-gray-300">{TYPE_LABELS[c.consultation_type] || c.consultation_type}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SOURCE_COLORS[c.source] || SOURCE_COLORS.learnexity}`}>
+                        {SOURCE_LABELS[c.source] || c.source || 'Learnexity'}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">

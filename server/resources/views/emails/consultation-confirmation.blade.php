@@ -15,7 +15,7 @@
           <tr>
             <td style="background:#0a0a0f;padding:28px 40px;text-align:center;">
               <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;">
-                <span style="color:#4A3AFF;">Learnexity</span>
+                <span style="color:#4A3AFF;">Learnexity</span>{{ $isAdvisory ? ' Advisory' : '' }}
               </p>
             </td>
           </tr>
@@ -31,7 +31,7 @@
                 </tr>
               </table>
               <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">
-                Your Consultation is Confirmed!
+                {{ $isAdvisory ? 'Your Technology Value Assessment is Confirmed!' : 'Your Consultation is Confirmed!' }}
               </h1>
               <p style="margin:0;font-size:15px;color:#6b7280;">
                 Hi {{ $consultation->full_name }}, we've received your booking. Here's a summary:
@@ -49,8 +49,10 @@
                   'technical_support'=> 'Technical Support',
                   'renewal'          => 'Renewal',
                   'general'          => 'General Inquiry',
+                  'technology_value_assessment' => 'Technology Value Assessment',
                 ];
                 $typeLabel = $typeLabels[$consultation->consultation_type] ?? $consultation->consultation_type;
+                $isAdvisory = $consultation->source === 'advisory';
                 $dateFormatted = \Carbon\Carbon::parse($consultation->preferred_date)->format('l, F j, Y');
               @endphp
 
