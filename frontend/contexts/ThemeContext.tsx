@@ -40,11 +40,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Read the value the no-flash inline script (pages/_document.tsx) already
   // wrote to <html data-theme="..."> and localStorage, so there's no
   // mismatch/flash on mount.
-  const [theme, setThemeState] = useState<ThemeMode>("system");
+  const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
 
   useEffect(() => {
-    let stored: ThemeMode = "system";
+    // Default is "dark" (not "system") when nothing is stored yet, so first-time
+    // visitors always land on dark regardless of their OS preference. Anyone can
+    // still switch to light or system explicitly via the toggle.
+    let stored: ThemeMode = "dark";
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw === "light" || raw === "dark" || raw === "system") stored = raw;

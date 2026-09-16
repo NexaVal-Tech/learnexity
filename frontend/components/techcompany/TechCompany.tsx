@@ -16,8 +16,12 @@ export default function CurriculumPartners() {
     // { name: "Udacity", logo: "/partners/udacity.png" },
     // { name: "edX", logo: "/partners/edx.png" },
     // { name: "CompTIA", logo: "/partners/comptia.png" },
-    { name: "Coursera", logo: "/partners/coursera.png" },
+    { name: "Oganiru Technologies", logo: "/partners/oganiru.png" },
   ];
+
+  // Duplicated so the mobile marquee can loop seamlessly (second copy picks up
+  // right where the first ends, no visible seam/jump).
+  const marqueePartners = [...partners, ...partners];
 
   return (
     <section className="py-10">
@@ -28,6 +32,13 @@ export default function CurriculumPartners() {
         }
         .partner-header-box {
           border-radius: 2rem 0.75rem 2rem 0.75rem;
+        }
+        @keyframes partners-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .partner-marquee-track {
+          animation: partners-marquee 18s linear infinite;
         }
       `}</style>
 
@@ -42,12 +53,12 @@ export default function CurriculumPartners() {
               shadow-2xl shadow-black/80"
           >
             <h2 className="text-4xl md:text-3xl font-semibold text-[var(--text-primary)] leading-tight">
-              Imagine working with global<br /> tech giants like:
+              Trusted By
             </h2>
           </div>
 
-          {/* Partner logos */}
-          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8">
+          {/* Partner logos — static wrap on desktop, auto-scrolling marquee on mobile */}
+          <div className="hidden sm:flex flex-wrap justify-center items-center gap-6 md:gap-8">
             {partners.map((partner) => (
               <div
                 key={partner.name}
@@ -58,15 +69,39 @@ export default function CurriculumPartners() {
                   min-w-[100px] h-20
                   transition-all duration-300 cursor-pointer"
               >
-              <Image
-                src={partner.logo}
-                alt={`${partner.name} logo`}
-                width={80}
-                height={30}
-                className="object-contain transition-opacity duration-200"
-              />
+                <Image
+                  src={partner.logo}
+                  alt={`${partner.name} logo`}
+                  width={110}
+                  height={42}
+                  className="object-contain transition-opacity duration-200"
+                />
               </div>
             ))}
+          </div>
+
+          <div className="sm:hidden overflow-hidden">
+            <div className="partner-marquee-track flex items-center gap-6 w-max">
+              {marqueePartners.map((partner, i) => (
+                <div
+                  key={`${partner.name}-${i}`}
+                  className="partner-card flex items-center justify-center
+                    border border-[var(--border-subtle)]
+                    bg-[var(--surface-elevated)] backdrop-blur-sm
+                    rounded-xl px-5 py-4
+                    min-w-[100px] h-20
+                    flex-shrink-0"
+                >
+                  <Image
+                    src={partner.logo}
+                    alt={`${partner.name} logo`}
+                    width={110}
+                    height={42}
+                    className="object-contain"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </FadeUpOnScroll>

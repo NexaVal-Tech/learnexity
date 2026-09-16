@@ -9,19 +9,27 @@ const BRAND = "#4A3AFF";
 type Testimonial = {
   name: string;
   role: string;
-  type: "video" | "text";
+  type: "video" | "text" | "image";
   thumbnail: string;
   video?: string;
   text?: string;
 };
 
 const data: Testimonial[] = [
+  // Video kept on disk and in code, just commented out in favor of the
+  // designed image testimonial below.
+  // {
+  //   name: "Benedict",
+  //   role: "Video Editor",
+  //   type: "video",
+  //   video: "/videos/testimobial-1.mp4",
+  //   thumbnail: "/thumbnails/thumbnail-3.png",
+  // },
   {
     name: "Benedict",
     role: "Video Editor",
-    type: "video",
-    video: "/videos/testimobial-1.mp4",
-    thumbnail: "/thumbnails/thumbnail-3.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-1.jpeg",
   },
   // {
   //   name: "Diane Johnson",
@@ -30,12 +38,18 @@ const data: Testimonial[] = [
   //   thumbnail: "/thumbnails/images.png",
   //   text: "Coming Soon.",
   // },
+  // {
+  //   name: "Lilian Anekwe",
+  //   role: "Cybersecurity",
+  //   type: "video",
+  //   video: "/videos/testimony.mp4",
+  //   thumbnail: "/thumbnails/lilian-thumbnail.png",
+  // },
   {
     name: "Lilian Anekwe",
     role: "Cybersecurity",
-    type: "video",
-    video: "/videos/testimony.mp4",
-    thumbnail: "/thumbnails/lilian-thumbnail.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-6.jpeg",
   },
   {
     name: "Ogechi",
@@ -51,26 +65,44 @@ const data: Testimonial[] = [
   //   thumbnail: "/thumbnails/images-2.png",
   //   text: "Coming Soon.",
   // },
+  // {
+  //   name: "Lilian",
+  //   role: "AI Automation",
+  //   type: "video",
+  //   video: "/videos/testimonial-video.mp4",
+  //   thumbnail: "/thumbnails/thumbnail-2.png",
+  // },
   {
     name: "Lilian",
     role: "AI Automation",
-    type: "video",
-    video: "/videos/testimonial-video.mp4",
-    thumbnail: "/thumbnails/thumbnail-2.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-3.jpeg",
   },
+  // {
+  //   name: "Daniel Ugwusiani",
+  //   role: "UI/Ux Designer",
+  //   type: "video",
+  //   video: "/videos/testimonial-vid-5.mp4",
+  //   thumbnail: "/thumbnails/thumbnail-6.png",
+  // },
   {
     name: "Daniel Ugwusiani",
     role: "UI/Ux Designer",
-    type: "video",
-    video: "/videos/testimonial-vid-5.mp4",
-    thumbnail: "/thumbnails/thumbnail-6.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-4.jpeg",
   },
+  // {
+  //   name: "Mercy Aleke",
+  //   role: "Digital Marketing",
+  //   type: "video",
+  //   video: "/videos/testimonial-vid-6.mp4",
+  //   thumbnail: "/thumbnails/thumbnail-5.png",
+  // },
   {
     name: "Mercy Aleke",
     role: "Digital Marketing",
-    type: "video",
-    video: "/videos/testimonial-vid-6.mp4",
-    thumbnail: "/thumbnails/thumbnail-5.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-2.jpeg",
   },
   // {
   //   name: "james williams",
@@ -79,14 +111,19 @@ const data: Testimonial[] = [
   //   thumbnail: "/thumbnails/images-3.png",
   //   text: "Coming Soon.",
   // },
+  // {
+  //   name: "Amadineze Christain Chinonso",
+  //   role: "Digital Marketing",
+  //   type: "video",
+  //   video: "/videos/testimonial-vid-7.mp4",
+  //   thumbnail: "/thumbnails/thumbnail-7.png",
+  // },
   {
     name: "Amadineze Christain Chinonso",
     role: "Digital Marketing",
-    type: "video",
-    video: "/videos/testimonial-vid-7.mp4",
-    thumbnail: "/thumbnails/thumbnail-7.png",
+    type: "image",
+    thumbnail: "/images/testimonial-image-5.jpeg",
   },
-
 ];
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
@@ -119,7 +156,9 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
       style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
     >
       <div
-        className="relative overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
+        className={`relative overflow-hidden border border-[var(--border-subtle)] ${
+          testimonial.type === "image" ? "bg-black" : "bg-[var(--surface-elevated)]"
+        }`}
         style={{
           borderRadius: "2rem 0.75rem 2rem 0.75rem",
           aspectRatio: "9/10",
@@ -130,12 +169,15 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
             src={testimonial.thumbnail}
             alt={testimonial.name}
             fill
-            className="object-cover"
+            className={testimonial.type === "image" ? "object-contain" : "object-cover"}
             sizes="340px"
           />
         )}
 
-        {!playing && (
+        {/* Designed quote-card images already contain the name, role and
+            quote, so skip the play button / gradient / name overlay used
+            for video and text testimonials. */}
+        {!playing && testimonial.type !== "image" && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         )}
 
@@ -192,7 +234,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           </div>
         )}
 
-        {!playing && (
+        {!playing && testimonial.type !== "image" && (
           <button
             onClick={handlePlay}
             className="absolute inset-0 flex items-center justify-center group z-10"
@@ -216,7 +258,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           </button>
         )}
 
-        {!playing && (
+        {!playing && testimonial.type !== "image" && (
           <div className="absolute bottom-0 left-0 right-0 px-5 py-4 z-10">
             <p className="text-white font-semibold text-base">
               {testimonial.name}

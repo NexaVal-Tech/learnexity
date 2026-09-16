@@ -105,12 +105,6 @@ export default function Contact() {
 
               <ScrollFadeIn delay={0} duration={0.3}>
                 <div className="contact-card-brand text-white p-8 transition-all duration-300 cursor-pointer h-full">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mb-6"
-                    style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
-                  >
-                    <Calendar className="w-6 h-6 text-white" />
-                  </div>
                   <h3 className="text-2xl font-bold mb-3">Schedule a Free Call</h3>
                   <p className="mb-6 text-purple-100">
                     Book a free consultation call with our team.
@@ -123,12 +117,6 @@ export default function Contact() {
 
               <ScrollFadeIn delay={0.15} duration={0.3}>
                 <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mb-6"
-                    style={{ backgroundColor: `${BRAND}22` }}
-                  >
-                    <MessageCircle className="w-6 h-6" style={{ color: BRAND }} />
-                  </div>
                   <h3 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">Chat on WhatsApp</h3>
                   <p className="mb-6 text-[var(--text-secondary)]">
                     Get instant responses to your questions
@@ -141,12 +129,6 @@ export default function Contact() {
 
               <ScrollFadeIn delay={0.3} duration={0.3}>
                 <div className="contact-card border border-[var(--border-subtle)] bg-[var(--surface-elevated)] backdrop-blur-sm shadow-2xl shadow-black/80 p-8 transition-all duration-300 cursor-pointer h-full">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center mb-6"
-                    style={{ backgroundColor: `${BRAND}22` }}
-                  >
-                    <HelpCircle className="w-6 h-6" style={{ color: BRAND }} />
-                  </div>
                   <h3 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">Email Us</h3>
                   <p className="mb-6 text-[var(--text-secondary)]">
                     For detailed enquiries, send an email to{" "}

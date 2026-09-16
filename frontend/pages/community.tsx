@@ -220,13 +220,6 @@ export default function CommunityPage() {
                       cursor-pointer transition-all duration-300
                       h-full"
                   >
-                    {/* Icon with brand bg bubble */}
-                    <div
-                      className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-                      style={{ backgroundColor: `${BRAND}22` }}
-                    >
-                      {feature.icon}
-                    </div>
                     <h3 className="text-xl font-bold text-white mb-3">
                       {feature.title}
                     </h3>

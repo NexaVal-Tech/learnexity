@@ -119,31 +119,31 @@ const NAV: NavEntry[] = [
     items: [
       {
         href: "/courses/courses",
-        label: "Deep Tech Courses",
+        label: "Deep Tech Programs",
         description: "Group mentorship & one-on-one coaching",
         subMenu: "deeptech",
       },
       {
+        href: "/intermediate",
+        label: "Career Accelerator Programs",
+        description: "For learners past the basics",
+        subMenu: "intermediate",
+      },
+      {
         href: "/flex",
-        label: "Flexible Courses",
+        label: "Flexible Programs",
         description: "Self-paced programmes",
         subMenu: "flex",
       },
       {
         href: "/free-courses",
-        label: "Free Courses",
+        label: "Free Programs",
         description: "Enroll and get full access, no payment",
         subMenu: "free",
       },
-      // Uncomment to bring back the Career Accelerator track in the nav:
-      // {
-      //   href: "/intermediate",
-      //   label: "Career Accelerator Courses",
-      //   description: "For learners past the basics",
-      //   subMenu: "intermediate",
-      // },
     ],
   },
+  { type: "link", href: "/b2b", label: "B2B" },
   {
     type: "group",
     label: "Learn More",
@@ -155,7 +155,6 @@ const NAV: NavEntry[] = [
   },
   { type: "link", href: "/community", label: "Community" },
   { type: "link", href: "/refer&earn", label: "Refer & Earn" },
-  { type: "link", href: "/b2b", label: "B2B" },
 ];
 
 // ─── Courses Sub-Panel (Desktop) ──────────────────────────────────────────────

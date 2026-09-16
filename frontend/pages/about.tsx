@@ -134,9 +134,6 @@ export default function About() {
 
           <div className="grid md:grid-cols-3 gap-12">
             <div className="about-card p-6 text-left">
-              <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
-                <Target className="w-8 h-8" style={{ color: BRAND }} />
-              </div>
               <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Mission</h3>
               <p className="text-[var(--text-secondary)]">
                 Our promise is that every decision we make from curriculum to mentorship to projects is designed to maximize your readiness for the modern technology workforce. 
@@ -145,9 +142,6 @@ export default function About() {
             </div>
 
             <div className="about-card p-6 text-left">
-              <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
-                <Eye className="w-8 h-8" style={{ color: BRAND }} />
-              </div>
               <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Mision</h3>
               <p className="text-[var(--text-secondary)]">
                Our mission is to identify high-potential professionals, help them develop future-relevant skills, provide practical experience, and connect qualified individuals with global opportunity networks. We are building professionals who are ready to contribute to the technologies shaping the future. 
@@ -155,9 +149,6 @@ export default function About() {
             </div>
 
             <div className="about-card p-6 text-left">
-              <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mb-6">
-                <Heart className="w-8 h-8" style={{ color: BRAND }} />
-              </div>
               <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Our Guiding Belief</h3>
               <p className="text-[var(--text-secondary)]">
                 Learning alone is no longer enough. Knowledge becomes valuable when it can be applied to real problems, demonstrated through practical work, and continuously adapted as technology evolves. That belief shapes everything we build. 
@@ -181,9 +172,6 @@ export default function About() {
                 <img src="/images/about-1.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
               <div className="p-4">
-                <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6" style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Team-based real projects</h3>
                 <p className="text-[var(--text-secondary)]">
                   Collaborate with peers on real-world projects that build both technical and teamwork skills.
@@ -196,9 +184,6 @@ export default function About() {
                 <img src="/images/about-2.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
               <div className="p-4">
-                <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
-                  <Briefcase className="w-6 h-6" style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Portfolio-building challenges</h3>
                 <p className="text-[var(--text-secondary)]">
                   Complete projects that showcase your skills and add real value to your portfolio.
@@ -211,9 +196,6 @@ export default function About() {
                 <img src="/images/about-3.png" alt="about image" className="w-full h-full p-4 object-contain" />
               </div>
               <div className="p-4">
-                <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-4">
-                  <GraduationCap className="w-6 h-6" style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">Industry mentorship</h3>
                 <p className="text-[var(--text-secondary)]">
                   Learn from tech professionals who provide guidance, feedback, and industry insights.
@@ -242,9 +224,6 @@ export default function About() {
               { Icon: MapPin, title: "Learners in Emerging Regions", desc: "Providing access to world-class tech education and opportunities to learners in Africa and beyond." },
             ].map(({ Icon, title, desc }, i) => (
               <div key={i} className="about-card text-center p-8">
-                <div className="w-16 h-16 icon-bubble rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-8 h-8" style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">{title}</h3>
                 <p className="text-[var(--text-secondary)]">{desc}</p>
               </div>
@@ -265,9 +244,6 @@ export default function About() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="highlight-box p-8">
-              <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-6">
-                <Lightbulb className="w-6 h-6" style={{ color: BRAND }} />
-              </div>
               <h3 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Hands-on Project Experience</h3>
               <p className="text-[var(--text-secondary)] text-lg">
                 Work on real projects that teach both technical skills and professional practices like version control and collaboration.
@@ -275,9 +251,6 @@ export default function About() {
             </div>
 
             <div className="highlight-box p-8">
-              <div className="w-12 h-12 icon-bubble rounded-full flex items-center justify-center mb-6">
-                <Rocket className="w-6 h-6" style={{ color: BRAND }} />
-              </div>
               <h3 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Career Launch Programs</h3>
               <p className="text-[var(--text-secondary)] text-lg">
                 Training by the Global Community for Jobs and Digital Marketing. We don't just prepare you, we connect you to opportunities.

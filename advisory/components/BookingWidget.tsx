@@ -122,7 +122,7 @@ export default function BookingWidget() {
 
       <div className="grid md:grid-cols-2 gap-5 mb-5">
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 block">Full name *</label>
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 block">Full name *</label>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -132,7 +132,7 @@ export default function BookingWidget() {
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 block">Work email *</label>
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 block">Work email *</label>
           <input
             type="email"
             value={email}
@@ -143,7 +143,7 @@ export default function BookingWidget() {
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 block">Phone</label>
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 block">Phone</label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -152,7 +152,7 @@ export default function BookingWidget() {
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 block">Company</label>
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 block">Company</label>
           <input
             value={company}
             onChange={(e) => setCompany(e.target.value)}
@@ -163,7 +163,7 @@ export default function BookingWidget() {
       </div>
 
       <div className="mb-5">
-        <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 block">
+        <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 block">
           What technology investment or decision would you like to discuss?
         </label>
         <textarea
@@ -177,7 +177,7 @@ export default function BookingWidget() {
 
       <div className="grid md:grid-cols-2 gap-5 mb-8">
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
             <CalendarDays size={13} /> Preferred date *
           </label>
           <select value={date} onChange={(e) => setDate(e.target.value)} required className="assessment-input">
@@ -188,7 +188,7 @@ export default function BookingWidget() {
           </select>
         </div>
         <div>
-          <label className="text-xs font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
+          <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
             <Clock size={13} /> Preferred time *
           </label>
           <select
@@ -220,7 +220,7 @@ export default function BookingWidget() {
           "Book my complimentary assessment"
         )}
       </button>
-      <p className="text-xs text-[var(--text-muted)] text-center mt-3">
+      <p className="text-sm text-[var(--text-muted)] text-center mt-3">
         No cost, no obligation. Monday–Friday, 30 minutes.
       </p>
 
@@ -230,7 +230,7 @@ export default function BookingWidget() {
           border: 1px solid var(--border-subtle);
           border-radius: 0.75rem;
           padding: 0.7rem 0.9rem;
-          font-size: 0.9rem;
+          font-size: 1rem;
           color: var(--text-primary);
           background: white;
           transition: border-color 0.2s;

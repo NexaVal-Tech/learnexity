@@ -8,16 +8,23 @@ export default function Document() {
       <Head>
         {/* Set data-theme on <html> before hydration so there's no flash of
             the wrong theme. Mirrors the logic in contexts/ThemeContext.tsx —
-            keep the two in sync if this ever changes. */}
+            keep the two in sync if this ever changes.
+            Default (nothing stored yet) is "dark", regardless of OS preference —
+            only an explicit "light" or "system" choice overrides that. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function () {
                 try {
                   var stored = localStorage.getItem('learnexity-theme');
-                  var theme = (stored === 'light' || stored === 'dark')
-                    ? stored
-                    : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+                  var theme;
+                  if (stored === 'light' || stored === 'dark') {
+                    theme = stored;
+                  } else if (stored === 'system') {
+                    theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                  } else {
+                    theme = 'dark';
+                  }
                   document.documentElement.setAttribute('data-theme', theme);
                   document.documentElement.style.colorScheme = theme;
                 } catch (e) {}

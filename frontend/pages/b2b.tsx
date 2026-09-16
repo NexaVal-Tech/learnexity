@@ -293,7 +293,7 @@ export default function B2B() {
                   Identify the Gap. Build the Skills. Strengthen the Workforce.
                 </p>
                 <Link href="/consultation" className="b2b-cta-btn">
-                  Talk to Learnexity
+                  Book a Consultation
                 </Link>
               </div>
               <div className="hidden md:flex items-center gap-3">
@@ -335,9 +335,6 @@ export default function B2B() {
           <div className="grid md:grid-cols-4 gap-5">
             {PROCESS_STEPS.map((s) => (
               <div key={s.title} className="b2b-card p-6">
-                <div className="b2b-icon-bubble mb-4">
-                  <s.icon size={20} style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">{s.title}</h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{s.text}</p>
               </div>
@@ -417,9 +414,6 @@ export default function B2B() {
           <div className="grid md:grid-cols-3 gap-6">
             {SEGMENTS.map((s) => (
               <div key={s.title} className="b2b-card p-7">
-                <div className="b2b-icon-bubble mb-4">
-                  <s.icon size={20} style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{s.title}</h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{s.text}</p>
               </div>
@@ -443,9 +437,6 @@ export default function B2B() {
           <div className="grid md:grid-cols-3 gap-6">
             {BUILD_CARDS.map((b) => (
               <div key={b.title} className="b2b-card p-7">
-                <div className="b2b-icon-bubble mb-4">
-                  <b.icon size={20} style={{ color: BRAND }} />
-                </div>
                 <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{b.title}</h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{b.text}</p>
               </div>
@@ -485,7 +476,7 @@ export default function B2B() {
               href="/consultation"
               className="inline-flex items-center gap-2 bg-white text-[#1a1040] px-7 py-3.5 rounded-2xl font-bold hover:bg-white/90 transition-colors"
             >
-              Talk to Learnexity
+              Book a Consultation
             </Link>
           </div>
         </section>

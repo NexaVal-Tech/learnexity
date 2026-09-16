@@ -82,18 +82,6 @@ export default function Method() {
                   cursor-pointer transition-all duration-300
                   min-h-[280px]"
               >
-                {/* Icon centered on top in brand color */}
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center mb-5 flex-shrink-0"
-                  style={{ backgroundColor: `${BRAND}22` }}
-                >
-                  <img
-                    src={card.icon}
-                    alt={card.label}
-                    className="w-6 h-6"
-                    style={{ filter: "invert(30%) sepia(90%) saturate(500%) hue-rotate(210deg) brightness(120%)" }}
-                  />
-                </div>
 
                 {/* Text below */}
                 <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">

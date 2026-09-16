@@ -35,7 +35,7 @@ export default function ParticlesBackground() {
 
           opacity: { value: 0.6 },
 
-          size: { value: { min: 0.4, max: 1.2 } },
+          size: { value: { min: 0.8, max: 2.4 } },
 
           move: {
             enable: true,
