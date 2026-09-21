@@ -71,16 +71,19 @@ const SEGMENTS = [
     icon: Building2,
     title: "Business",
     text: "Strengthen workforce capability, improve performance, and support organizational growth.",
+    img: "/images/segment-business.jpg",
   },
   {
     icon: GraduationCap,
     title: "Education",
     text: "Build stronger learning programs, instructional capacity, and digital learning experiences.",
+    img: "/images/segment-education.jpg",
   },
   {
     icon: Briefcase,
     title: "Professional Services",
     text: "Develop specialized training for employees, clients, and professional development initiatives.",
+    img: "/images/segment-professional.jpg",
   },
 ];
 
@@ -116,69 +119,6 @@ const FAQS = [
     a: "Yes. We can take your initiative from identifying the learning need through design, development, delivery, and improvement.",
   },
 ];
-
-function HeroIllustration() {
-  return (
-    <svg viewBox="0 0 480 260" className="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="250" cy="140" r="120" fill={`${BRAND}0d`} />
-      <circle cx="250" cy="140" r="88" fill={`${BRAND}0a`} />
-
-      {/* ascending bars */}
-      {[
-        { x: 80, h: 40, o: 0.25 },
-        { x: 150, h: 65, o: 0.4 },
-        { x: 220, h: 95, o: 0.55 },
-        { x: 290, h: 125, o: 0.75 },
-        { x: 360, h: 155, o: 1 },
-      ].map((b) => (
-        <rect
-          key={b.x}
-          x={b.x}
-          y={210 - b.h}
-          width="42"
-          height={b.h}
-          rx="8"
-          fill={BRAND}
-          opacity={b.o}
-        />
-      ))}
-
-      {/* baseline */}
-      <line x1="60" y1="210" x2="440" y2="210" stroke="var(--border-subtle)" strokeWidth="1.5" />
-
-      {/* ascending dashed trend line */}
-      <polyline
-        points="101,180 171,155 241,125 311,95 381,55"
-        fill="none"
-        stroke={BRAND}
-        strokeWidth="3"
-        strokeDasharray="2 8"
-        strokeLinecap="round"
-      />
-
-      {/* node dots along trend line */}
-      {[
-        [101, 180],
-        [171, 155],
-        [241, 125],
-        [311, 95],
-      ].map(([cx, cy]) => (
-        <circle key={cx} cx={cx} cy={cy} r="5" fill="white" stroke={BRAND} strokeWidth="2.5" />
-      ))}
-
-      {/* badge at the peak */}
-      <circle cx="381" cy="55" r="20" fill="white" stroke={BRAND} strokeWidth="3" />
-      <path
-        d="M371 55 L378 62 L392 46"
-        fill="none"
-        stroke={BRAND}
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 export default function B2B() {
   return (
@@ -260,51 +200,45 @@ export default function B2B() {
             box-shadow: 0 8px 24px rgba(74,58,255,0.5);
             transform: translateY(-1px);
           }
-          .b2b-vertical-label {
-            writing-mode: vertical-rl;
-            letter-spacing: 0.2em;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-          }
         `}</style>
 
-        {/* ── Hero ── */}
-        <section className="max-w-[1230px] mx-auto mt-19 py-2 px-6">
-          <div className="b2b-hero-box py-8 px-6 md:py-1 md:px-10">
-            <div className="grid md:grid-cols-2 gap-8 md:gap-10 items-center">
-              <div className="text-center md:text-left">
-                <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide mb-4"
-                  style={{ background: `${BRAND}1a`, color: BRAND, border: `1px solid ${BRAND}44` }}
-                >
-                  <Building2 size={13} />
-                  Learnexity for Business
-                </div>
-                <h1 className="text-5xl md:text-6xl font-bold text-[var(--text-primary)] mb-4 leading-[1.1]">
-                  Build the Skills Your Business Needs to Move Forward
-                </h1>
-                <p className="text-lg text-[var(--text-secondary)] mb-3 max-w-xl mx-auto md:mx-0">
-                  We help organizations identify workforce skill gaps, design targeted learning,
-                  and train people to perform better.
-                </p>
-                <p className="text-sm font-semibold mb-6" style={{ color: BRAND }}>
-                  Identify the Gap. Build the Skills. Strengthen the Workforce.
-                </p>
+        {/* ── Hero — same full-bleed photo + dark-gradient treatment as the
+              homepage hero (components/hero/Hero.tsx), so it reads the same
+              way on mobile instead of the small centered card it used to be. ── */}
+        <section className="relative overflow-hidden bg-black w-full pt-16 min-h-[60vh] md:min-h-[75vh]">
+          <img
+            src="/images/b2b-hero.jpg"
+            alt="Team in a corporate workforce training session"
+            className="absolute inset-0 w-full h-full object-cover z-0"
+          />
+          <div
+            className="absolute inset-0 z-[1]"
+            style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.48) 60%, rgba(0,0,0,0.68) 100%)" }}
+          />
+
+          <div className="relative z-10 max-w-7xl mx-auto flex items-center px-5 sm:px-8 py-14 md:py-0 min-h-[60vh] md:min-h-[75vh]">
+            <div className="max-w-3xl">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide mb-5"
+                style={{ background: `${BRAND}33`, color: "#fff", border: `1px solid ${BRAND}88` }}
+              >
+                <Building2 size={13} />
+                Learnexity for Business
+              </div>
+              <h1 className="text-left text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] text-white">
+                Build the Skills Your Business Needs to Move Forward
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg sm:text-xl leading-relaxed text-gray-200">
+                We help organizations identify workforce skill gaps, design targeted learning, and
+                train people to perform better.
+              </p>
+              <p className="mt-3 text-sm sm:text-base font-semibold" style={{ color: "#b3a6ff" }}>
+                Identify the Gap. Build the Skills. Strengthen the Workforce.
+              </p>
+              <div className="flex flex-row items-start gap-4 mt-8">
                 <Link href="/consultation" className="b2b-cta-btn">
                   Book a Consultation
                 </Link>
-              </div>
-              <div className="hidden md:flex items-center gap-3">
-                <div className="flex-1">
-                  <HeroIllustration />
-                </div>
-                <div className="py-6">
-                  <span className="b2b-vertical-label">
-                    Learnexity Learning Consulting · Instructional Design · eLearning · Training
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -413,9 +347,12 @@ export default function B2B() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {SEGMENTS.map((s) => (
-              <div key={s.title} className="b2b-card p-7">
-                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{s.title}</h3>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{s.text}</p>
+              <div key={s.title} className="b2b-card overflow-hidden">
+                <img src={s.img} alt={s.title} className="w-full h-40 object-cover" />
+                <div className="p-7">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{s.title}</h3>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{s.text}</p>
+                </div>
               </div>
             ))}
           </div>
