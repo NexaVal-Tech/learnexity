@@ -12,6 +12,11 @@ const CREAM = "#fbfaf6";
 const ORANGE = "#e7a13c";
 const TEAL = "#006271";
 const GRAY = "#576574";
+// New accent — distinct from the warm ORANGE already used on the navy band,
+// and legible on both the dark NAVY section and the light CREAM page
+// background, so the same value can mark "We access:" and "Our work can
+// help you:" as a matching, clearly-different pair.
+const SKY = "#0284c7";
 
 const HERO_PILLS = [
   "Workflow Optimization",
@@ -32,26 +37,31 @@ const OUTCOMES = [
     n: "01",
     title: "Reduce unnecessary costs",
     text: "Identify inefficient processes and activities that consume resources without creating proportional value.",
+    img: "/images/outcome-costs.jpg",
   },
   {
     n: "02",
     title: "Increase productive capacity",
     text: "Reduce repetitive work and enable your team to focus more time on customers, revenue, and higher-value responsibilities.",
+    img: "/images/outcome-capacity.jpg",
   },
   {
     n: "03",
     title: "Improve workforce productivity",
     text: "Strengthen technology adoption and employee capabilities so your organization gets more from the tools it already uses.",
+    img: "/images/outcome-workforce.jpg",
   },
   {
     n: "04",
     title: "Identify growth opportunities",
     text: "Evaluate where technology, automation, and AI can improve capacity, customer service, scalability, or revenue potential.",
+    img: "/images/outcome-growth.jpg",
   },
   {
     n: "05",
     title: "Manage technology and AI risk",
     text: "Establish practical governance, controls, and responsible-use practices around data, technology, and AI.",
+    img: "/images/outcome-risk.jpg",
   },
 ];
 
@@ -59,18 +69,22 @@ const AREAS = [
   {
     title: "Workflow Optimization",
     text: "Improve operational efficiency by identifying and addressing unnecessary work, bottlenecks, and process inefficiencies.",
+    img: "/images/area-workflow.jpg",
   },
   {
     title: "Technology & Workforce Enablement",
     text: "Improve technology adoption, employee capability, and the return on existing technology investments.",
+    img: "/images/area-tech-workforce.jpg",
   },
   {
     title: "AI & Automation Advisory",
     text: "Identify and prioritize opportunities where AI and automation can create meaningful business value.",
+    img: "/images/area-ai-automation.jpg",
   },
   {
     title: "Technology Risk & Governance",
     text: "Establish practical controls and governance to manage privacy, security, compliance, and operational risks associated with technology and AI.",
+    img: "/images/area-risk-governance.jpg",
   },
 ];
 
@@ -147,8 +161,8 @@ export default function AdvisoryHome() {
         {/* ── Hero ── */}
         <section className="relative overflow-hidden" style={{ background: NAVY }}>
           <img
-            src="/images/hero-learnexity.jpg"
-            alt="Consultant working on a laptop in a modern office lounge"
+            src="/images/hero-tech.jpg"
+            alt="Consultant working on a laptop, reviewing technology and business data"
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div
@@ -176,7 +190,7 @@ export default function AdvisoryHome() {
                 <a href="#assessment" className="adv-btn-primary inline-flex items-center rounded-full px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90">
                   Book a Consultation
                 </a>
-                <a href="#advisory" className="adv-btn-outline inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-semibold transition-colors hover:bg-black/50">
+                <a href="#how-it-works" className="adv-btn-outline inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-semibold transition-colors hover:bg-black/50">
                   How It Works
                   <ArrowUpRight size={15} />
                 </a>
@@ -184,7 +198,7 @@ export default function AdvisoryHome() {
 
               <div className="mt-10 flex flex-wrap gap-2 border-t pt-5 lg:border-0 lg:pt-0" style={{ borderColor: `${CREAM}33` }}>
                 {HERO_PILLS.map((p) => (
-                  <a key={p} href="#advisory" className="adv-pill px-3 py-1.5 text-xs sm:text-sm">
+                  <a key={p} href="#services" className="adv-pill px-3 py-1.5 text-xs sm:text-sm">
                     {p}
                   </a>
                 ))}
@@ -211,6 +225,11 @@ export default function AdvisoryHome() {
                   The result can be unnecessary operating costs, underutilized technology, limited
                   employee capacity, and missed opportunities for growth.
                 </p>
+                <img
+                  src="/images/problem-statement.jpg"
+                  alt="Business analytics dashboard reviewed on a laptop screen"
+                  className="adv-card mt-7 w-full h-48 sm:h-56 object-cover"
+                />
               </div>
 
               <div className="adv-card p-7 sm:p-8">
@@ -219,9 +238,11 @@ export default function AdvisoryHome() {
                 </p>
                 <ul className="space-y-4">
                   {QUESTIONS.map((q) => (
-                    <li key={q} className="flex items-start gap-3">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: ORANGE }} />
-                      <span className="text-base sm:text-lg font-medium leading-snug" style={{ color: NAVY }}>{q}</span>
+                    <li key={q}>
+                      <a href="#services" className="flex items-start gap-3 group">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: ORANGE }} />
+                        <span className="text-base sm:text-lg font-medium leading-snug group-hover:underline" style={{ color: NAVY }}>{q}</span>
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -231,7 +252,7 @@ export default function AdvisoryHome() {
         </section>
 
         {/* ── Close the gap ── */}
-        <section className="adv-section pb-16 sm:pb-24">
+        <section id="how-it-works" className="adv-section pb-16 sm:pb-24 scroll-mt-6">
           <FadeInOut>
             <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: TEAL }}>
               Close the gap
@@ -242,13 +263,17 @@ export default function AdvisoryHome() {
             <p className="mt-5 max-w-2xl text-base sm:text-lg leading-relaxed" style={{ color: GRAY }}>
               We work with business leaders to identify where time, productivity, capacity, and
               technology value are being lost, then develop practical strategies to improve
-              business performance. Our work can help you:
+              business performance.{" "}
+              <span className="font-bold" style={{ color: SKY }}>Our work can help you:</span>
             </p>
 
             <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {OUTCOMES.map((o) => (
                 <div key={o.n} className="adv-card p-6">
-                  <p className="text-base font-bold mb-2" style={{ color: TEAL }}>{o.n}</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <img src={o.img} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                    <p className="text-base font-bold" style={{ color: TEAL }}>{o.n}</p>
+                  </div>
                   <h3 className="text-xl font-semibold mb-2" style={{ color: NAVY }}>{o.title}</h3>
                   <p className="text-base leading-relaxed" style={{ color: GRAY }}>{o.text}</p>
                 </div>
@@ -258,27 +283,21 @@ export default function AdvisoryHome() {
         </section>
 
         {/* ── Four Areas of Advisory ── */}
-        <section className="adv-section pb-16 sm:pb-24">
+        <section id="services" className="adv-section pb-16 sm:pb-24 scroll-mt-6">
           <FadeInOut>
             <h2 className="text-4xl sm:text-5xl font-semibold mb-10" style={{ color: NAVY }}>
               Four Areas of Advisory
             </h2>
-            <div className="adv-card overflow-hidden">
-              <div className="grid sm:grid-cols-2">
-                {AREAS.map((a, i) => (
-                  <div
-                    key={a.title}
-                    className="p-7 sm:p-8"
-                    style={{
-                      borderTop: i >= 2 ? "1px solid #05192e14" : undefined,
-                      borderLeft: i % 2 === 1 ? "1px solid #05192e14" : undefined,
-                    }}
-                  >
+            <div className="grid sm:grid-cols-2 gap-5">
+              {AREAS.map((a) => (
+                <div key={a.title} className="adv-card overflow-hidden">
+                  <img src={a.img} alt={a.title} className="w-full h-44 object-cover" />
+                  <div className="p-7 sm:p-8">
                     <h3 className="text-xl font-semibold mb-2" style={{ color: NAVY }}>{a.title}</h3>
                     <p className="text-base leading-relaxed" style={{ color: GRAY }}>{a.text}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </FadeInOut>
         </section>
@@ -291,6 +310,9 @@ export default function AdvisoryHome() {
             </h2>
             <p className="mt-2 text-xl sm:text-2xl font-medium" style={{ color: ORANGE }}>
               We start with the business problem.
+            </p>
+            <p className="mt-4 text-lg sm:text-xl font-bold" style={{ color: SKY }}>
+              We access:
             </p>
 
             <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">

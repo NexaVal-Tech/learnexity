@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Edit2, Trash2, Search, Filter, X, ChevronDown, Calendar, Clock, RefreshCw, Plus, Gift } from 'lucide-react';
+import { Eye, Edit2, Trash2, Search, Filter, X, ChevronDown, Calendar, Clock, RefreshCw, Plus, Gift, Repeat, CalendarClock, Power } from 'lucide-react';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
@@ -317,6 +317,194 @@ function FreeDaysPanel() {
   );
 }
 
+// ─── Booking availability panel ──────────────────────────────────────────────
+interface AvailabilityWindow {
+  id: number;
+  source: 'learnexity' | 'advisory' | null;
+  weekday: number | null;
+  specific_date: string | null;
+  start_time: string;
+  end_time: string;
+  slot_interval_minutes: number;
+  is_recurring: boolean;
+  is_active: boolean;
+  label: string | null;
+}
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function fmtTime(t: string) {
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function AvailabilityPanel() {
+  const [windows, setWindows] = useState<AvailabilityWindow[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState('');
+
+  const [isRecurring, setIsRecurring] = useState(true);
+  const [source, setSource] = useState<''|'learnexity'|'advisory'>('');
+  const [weekday, setWeekday] = useState('1');
+  const [specificDate, setSpecificDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('16:30');
+  const [interval, setInterval_] = useState(30);
+  const [label, setLabel] = useState('');
+
+  const fetchWindows = useCallback(async () => {
+    try {
+      const res = await adminApi.get('/api/admin/consultations/availability');
+      setWindows(res.availability || []);
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => { fetchWindows(); }, [fetchWindows]);
+
+  const addWindow = async () => {
+    setError('');
+    if (isRecurring === false && !specificDate) { setError('Pick a date for the one-off window.'); return; }
+    setAdding(true);
+    try {
+      await adminApi.post('/api/admin/consultations/availability', {
+        source: source || null,
+        is_recurring: isRecurring,
+        weekday: isRecurring ? Number(weekday) : null,
+        specific_date: isRecurring ? null : specificDate,
+        start_time: startTime,
+        end_time: endTime,
+        slot_interval_minutes: interval,
+        label: label || undefined,
+      });
+      setSpecificDate('');
+      setLabel('');
+      fetchWindows();
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Failed to add availability window.');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const toggleActive = async (w: AvailabilityWindow) => {
+    await adminApi.patch(`/api/admin/consultations/availability/${w.id}`, { is_active: !w.is_active });
+    fetchWindows();
+  };
+
+  const removeWindow = async (id: number) => {
+    if (!confirm('Remove this availability window?')) return;
+    await adminApi.delete(`/api/admin/consultations/availability/${id}`);
+    fetchWindows();
+  };
+
+  if (!loaded) return null;
+
+  const inputCls = "w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white";
+
+  return (
+    <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-2xl mb-5 p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <CalendarClock size={16} className="text-blue-600 dark:text-blue-400" />
+        <h3 className="font-semibold text-gray-900 dark:text-white">Booking Availability</h3>
+      </div>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+        Set when consultations can be booked — a recurring weekly window (e.g. every Monday) or a one-off date. Applies to both Learnexity and Advisory bookings unless scoped to one source. Shown to visitors on the consultation page and the advisory booking widget. With nothing configured, the legacy default (Monday–Friday, 9:00 AM–4:30 PM) applies.
+      </p>
+
+      {/* Existing windows */}
+      {windows.length === 0 ? (
+        <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-4">No custom availability configured — using the default Mon–Fri, 9:00 AM–4:30 PM schedule.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {windows.map(w => (
+            <div key={w.id}
+              className={`flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full border ${w.is_active ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30' : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 opacity-60'}`}>
+              {w.is_recurring
+                ? <Repeat size={12} className="text-blue-500 dark:text-blue-400" />
+                : <Calendar size={12} className="text-blue-500 dark:text-blue-400" />}
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-400">
+                {w.is_recurring ? WEEKDAYS[w.weekday ?? 0] : new Date((w.specific_date || '') + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {' · '}{fmtTime(w.start_time)}–{fmtTime(w.end_time)}
+              </span>
+              {w.source && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${SOURCE_COLORS[w.source]}`}>{SOURCE_LABELS[w.source]}</span>
+              )}
+              <button onClick={() => toggleActive(w)} title={w.is_active ? 'Deactivate' : 'Activate'}
+                className="p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/25 text-blue-500 dark:text-blue-400">
+                <Power size={11} />
+              </button>
+              <button onClick={() => removeWindow(w.id)}
+                className="p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/25 text-blue-500 dark:text-blue-400 hover:text-red-500 dark:hover:text-red-400">
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add form */}
+      <div className="border-t border-gray-100 dark:border-white/10 pt-4">
+        <div className="flex items-center gap-4 mb-3">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input type="radio" checked={isRecurring} onChange={() => setIsRecurring(true)} /> Recurring weekly
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <input type="radio" checked={!isRecurring} onChange={() => setIsRecurring(false)} /> One-off date
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end mb-3">
+          {isRecurring ? (
+            <div>
+              <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Day of week</label>
+              <select value={weekday} onChange={e => setWeekday(e.target.value)} className={inputCls}>
+                {WEEKDAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Date</label>
+              <input type="date" value={specificDate} onChange={e => setSpecificDate(e.target.value)} className={inputCls} />
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Start time</label>
+            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">End time</label>
+            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Slot length (min)</label>
+            <input type="number" min={5} step={5} value={interval} onChange={e => setInterval_(parseInt(e.target.value) || 30)} className={inputCls} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Applies to</label>
+            <select value={source} onChange={e => setSource(e.target.value as any)} className={inputCls}>
+              <option value="">Both</option>
+              <option value="learnexity">Learnexity</option>
+              <option value="advisory">Advisory</option>
+            </select>
+          </div>
+          <button onClick={addWindow} disabled={adding}
+            className="flex items-center justify-center gap-1.5 text-sm font-medium text-white rounded-lg py-2 px-4 transition-colors disabled:opacity-50"
+            style={{ background: '#2563eb' }}>
+            <Plus size={14} /> {adding ? 'Adding…' : 'Add'}
+          </button>
+        </div>
+
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Inner page (no layout wrappers) ─────────────────────────────────────────
 function ConsultationsPageInner() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -480,6 +668,7 @@ function ConsultationsPageInner() {
       </div>
 
       <PricingSettingsPanel />
+      <AvailabilityPanel />
       <FreeDaysPanel />
 
       {/* Stats */}

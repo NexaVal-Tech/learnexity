@@ -1,28 +1,27 @@
 // components/BookingWidget.tsx
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Clock, CheckCircle2, Loader2 } from "lucide-react";
-import { bookAssessment, getBookedSlots } from "@/lib/api";
+import { bookAssessment, getAvailableSlots, getSchedule, ScheduleResponse } from "@/lib/api";
 import toast from "react-hot-toast";
 
 const BRAND = "#4A3AFF";
 
-const TIME_SLOTS = [
-  "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
-  "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
-  "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
-  "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
-];
-
-/** Next 14 weekdays (Mon–Fri) starting tomorrow, as { value, label } pairs. */
-function getUpcomingWeekdays(count: number) {
+/**
+ * Next N calendar days (starting tomorrow) that admin has made bookable —
+ * either a recurring weekday match or an explicit one-off date — as
+ * { value, label } pairs. Falls back to the legacy Mon–Fri rule while the
+ * schedule is still loading, so the picker isn't empty for a beat.
+ */
+function getUpcomingAvailableDays(count: number, activeWeekdays: number[], oneOffDates: string[]) {
   const days: { value: string; label: string }[] = [];
   const d = new Date();
   d.setDate(d.getDate() + 1);
+  let guard = 0;
 
-  while (days.length < count) {
-    const day = d.getDay();
-    if (day !== 0 && day !== 6) {
-      const value = d.toISOString().slice(0, 10);
+  while (days.length < count && guard < 90) {
+    guard++;
+    const value = d.toISOString().slice(0, 10);
+    if (activeWeekdays.includes(d.getDay()) || oneOffDates.includes(value)) {
       const label = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
       days.push({ value, label });
     }
@@ -32,7 +31,17 @@ function getUpcomingWeekdays(count: number) {
 }
 
 export default function BookingWidget() {
-  const dateOptions = useMemo(() => getUpcomingWeekdays(14), []);
+  const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
+
+  useEffect(() => {
+    getSchedule().then(setSchedule).catch(() => setSchedule(null));
+  }, []);
+
+  const dateOptions = useMemo(() => {
+    const activeWeekdays = schedule?.active_weekdays ?? [1, 2, 3, 4, 5];
+    const oneOffDates = (schedule?.one_off ?? []).map((o) => o.date);
+    return getUpcomingAvailableDays(14, activeWeekdays, oneOffDates);
+  }, [schedule]);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -42,7 +51,7 @@ export default function BookingWidget() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -50,18 +59,16 @@ export default function BookingWidget() {
 
   useEffect(() => {
     if (!date) {
-      setBookedSlots([]);
+      setAvailableSlots([]);
       return;
     }
     setSlotsLoading(true);
     setTime("");
-    getBookedSlots(date)
-      .then((res) => setBookedSlots(res.booked_slots || []))
-      .catch(() => setBookedSlots([]))
+    getAvailableSlots(date)
+      .then((res) => setAvailableSlots(res.slots || []))
+      .catch(() => setAvailableSlots([]))
       .finally(() => setSlotsLoading(false));
   }, [date]);
-
-  const availableSlots = TIME_SLOTS.filter((t) => !bookedSlots.includes(t));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +182,13 @@ export default function BookingWidget() {
         />
       </div>
 
+      {schedule && (
+        <div className="mb-5 flex items-center gap-2 text-sm font-medium rounded-xl px-4 py-2.5" style={{ background: `${BRAND}12`, color: BRAND }}>
+          <CalendarDays size={14} className="shrink-0" />
+          {schedule.text}
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-5 mb-8">
         <div>
           <label className="text-sm font-semibold text-[var(--text-secondary)] mb-1.5 flex items-center gap-1.5">
@@ -221,7 +235,7 @@ export default function BookingWidget() {
         )}
       </button>
       <p className="text-sm text-[var(--text-muted)] text-center mt-3">
-        No cost, no obligation. Monday–Friday, 30 minutes.
+        No cost, no obligation. 30 minutes.
       </p>
 
       <style jsx>{`

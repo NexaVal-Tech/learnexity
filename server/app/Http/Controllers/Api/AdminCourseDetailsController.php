@@ -81,7 +81,7 @@ class AdminCourseDetailsController extends Controller
         }
 
         $tool = CourseTool::create([
-            'course_id' => $course->id,
+            'course_id' => $course->course_id,
             'name'      => $validated['name'],
             'icon'      => $iconPath,
             'order'     => $validated['order'] ?? 0,
@@ -116,7 +116,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $learning = CourseLearning::create([
-            'course_id'      => $course->id,
+            'course_id'      => $course->course_id,
             'learning_point' => $validated['learning_point'],
             'order'          => $validated['order'] ?? 0,
         ]);
@@ -151,7 +151,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $benefit = CourseBenefit::create([
-            'course_id' => $course->id,
+            'course_id' => $course->course_id,
             'title'     => $validated['title'],
             'text'      => $validated['text'],
             'order'     => $validated['order'] ?? 0,
@@ -187,7 +187,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $careerPath = CourseCareerPath::create([
-            'course_id' => $course->id,
+            'course_id' => $course->course_id,
             'level'     => $validated['level'],
             'position'  => $validated['position'],
             'order'     => $validated['order'] ?? 0,
@@ -223,7 +223,7 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         $industry = CourseIndustry::create([
-            'course_id' => $course->id,
+            'course_id' => $course->course_id,
             'title'     => $validated['title'],
             'text'      => $validated['text'],
             'order'     => $validated['order'] ?? 0,
@@ -258,7 +258,7 @@ class AdminCourseDetailsController extends Controller
 
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
-        $salary = CourseSalary::where('course_id', $course->id)->first();
+        $salary = CourseSalary::where('course_id', $course->course_id)->first();
 
         if ($salary) {
             $salary->update($validated);
@@ -266,7 +266,7 @@ class AdminCourseDetailsController extends Controller
             Log::info('✅ [addSalary] Updated existing salary id: ' . $salary->id);
         } else {
             $salary = CourseSalary::create([
-                'course_id'   => $course->id,
+                'course_id'   => $course->course_id,
                 'entry_level' => $validated['entry_level'] ?? null,
                 'mid_level'   => $validated['mid_level'] ?? null,
                 'senior_level'=> $validated['senior_level'] ?? null,
@@ -309,7 +309,7 @@ class AdminCourseDetailsController extends Controller
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
-        $tool = CourseTool::where('course_id', $course->id)
+        $tool = CourseTool::where('course_id', $course->course_id)
             ->where('id', $toolId)
             ->firstOrFail();
 
@@ -328,7 +328,7 @@ class AdminCourseDetailsController extends Controller
     public function deleteLearning(string $courseId, int $learningId): JsonResponse
     {
         $course   = Course::where('course_id', $courseId)->firstOrFail();
-        $learning = CourseLearning::where('course_id', $course->id)->where('id', $learningId)->firstOrFail();
+        $learning = CourseLearning::where('course_id', $course->course_id)->where('id', $learningId)->firstOrFail();
         $learning->delete();
 
         return response()->json(['success' => true, 'message' => 'Learning point deleted successfully']);
@@ -340,7 +340,7 @@ class AdminCourseDetailsController extends Controller
     public function deleteBenefit(string $courseId, int $benefitId): JsonResponse
     {
         $course  = Course::where('course_id', $courseId)->firstOrFail();
-        $benefit = CourseBenefit::where('course_id', $course->id)->where('id', $benefitId)->firstOrFail();
+        $benefit = CourseBenefit::where('course_id', $course->course_id)->where('id', $benefitId)->firstOrFail();
         $benefit->delete();
 
         return response()->json(['success' => true, 'message' => 'Benefit deleted successfully']);
@@ -352,7 +352,7 @@ class AdminCourseDetailsController extends Controller
     public function deleteCareerPath(string $courseId, int $careerPathId): JsonResponse
     {
         $course     = Course::where('course_id', $courseId)->firstOrFail();
-        $careerPath = CourseCareerPath::where('course_id', $course->id)->where('id', $careerPathId)->firstOrFail();
+        $careerPath = CourseCareerPath::where('course_id', $course->course_id)->where('id', $careerPathId)->firstOrFail();
         $careerPath->delete();
 
         return response()->json(['success' => true, 'message' => 'Career path deleted successfully']);
@@ -364,7 +364,7 @@ class AdminCourseDetailsController extends Controller
     public function deleteIndustry(string $courseId, int $industryId): JsonResponse
     {
         $course   = Course::where('course_id', $courseId)->firstOrFail();
-        $industry = CourseIndustry::where('course_id', $course->id)->where('id', $industryId)->firstOrFail();
+        $industry = CourseIndustry::where('course_id', $course->course_id)->where('id', $industryId)->firstOrFail();
         $industry->delete();
 
         return response()->json(['success' => true, 'message' => 'Industry deleted successfully']);
@@ -377,11 +377,11 @@ class AdminCourseDetailsController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         // Delete existing tools
-        $existing = CourseTool::where('course_id', $course->id)->get();
+        $existing = CourseTool::where('course_id', $course->course_id)->get();
         foreach ($existing as $tool) {
             if ($tool->icon) Storage::disk('public')->delete($tool->icon);
         }
-        CourseTool::where('course_id', $course->id)->delete();
+        CourseTool::where('course_id', $course->course_id)->delete();
 
         // Re-create from submitted data
         $tools = $request->input('tools', []);
@@ -400,7 +400,7 @@ class AdminCourseDetailsController extends Controller
 
             if (!empty($toolData['name'])) {
                 CourseTool::create([
-                    'course_id' => $course->id,
+                    'course_id' => $course->course_id,
                     'name'      => $toolData['name'],
                     'icon'      => $iconPath,
                     'order'     => $i,
@@ -414,12 +414,12 @@ class AdminCourseDetailsController extends Controller
     public function syncLearnings(Request $request, string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
-        CourseLearning::where('course_id', $course->id)->delete();
+        CourseLearning::where('course_id', $course->course_id)->delete();
 
         foreach ($request->input('learnings', []) as $i => $item) {
             if (!empty($item['learning_point'])) {
                 CourseLearning::create([
-                    'course_id'      => $course->id,
+                    'course_id'      => $course->course_id,
                     'learning_point' => $item['learning_point'],
                     'order'          => $i,
                 ]);
@@ -432,12 +432,12 @@ class AdminCourseDetailsController extends Controller
     public function syncBenefits(Request $request, string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
-        CourseBenefit::where('course_id', $course->id)->delete();
+        CourseBenefit::where('course_id', $course->course_id)->delete();
 
         foreach ($request->input('benefits', []) as $i => $item) {
             if (!empty($item['title']) && !empty($item['text'])) {
                 CourseBenefit::create([
-                    'course_id' => $course->id,
+                    'course_id' => $course->course_id,
                     'title'     => $item['title'],
                     'text'      => $item['text'],
                     'order'     => $i,
@@ -451,12 +451,12 @@ class AdminCourseDetailsController extends Controller
     public function syncCareerPaths(Request $request, string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
-        CourseCareerPath::where('course_id', $course->id)->delete();
+        CourseCareerPath::where('course_id', $course->course_id)->delete();
 
         foreach ($request->input('career_paths', []) as $i => $item) {
             if (!empty($item['position'])) {
                 CourseCareerPath::create([
-                    'course_id' => $course->id,
+                    'course_id' => $course->course_id,
                     'level'     => $item['level'] ?? 'entry',
                     'position'  => $item['position'],
                     'order'     => $i,
@@ -470,12 +470,12 @@ class AdminCourseDetailsController extends Controller
     public function syncIndustries(Request $request, string $courseId): JsonResponse
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
-        CourseIndustry::where('course_id', $course->id)->delete();
+        CourseIndustry::where('course_id', $course->course_id)->delete();
 
         foreach ($request->input('industries', []) as $i => $item) {
             if (!empty($item['title']) && !empty($item['text'])) {
                 CourseIndustry::create([
-                    'course_id' => $course->id,
+                    'course_id' => $course->course_id,
                     'title'     => $item['title'],
                     'text'      => $item['text'],
                     'order'     => $i,

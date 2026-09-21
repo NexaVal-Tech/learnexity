@@ -24,6 +24,33 @@ export async function getBookedSlots(date: string): Promise<BookedSlotsResponse>
   return res.data;
 }
 
+export interface AvailableSlotsResponse {
+  available: boolean;
+  slots: string[];
+  is_free_day: boolean;
+}
+
+export async function getAvailableSlots(date: string): Promise<AvailableSlotsResponse> {
+  const res = await client.get("/api/consultations/available-slots", {
+    params: { date, source: "advisory" },
+  });
+  return res.data;
+}
+
+export interface ScheduleResponse {
+  recurring: { days: string; hours: string }[];
+  one_off: { date: string; label: string; hours: string }[];
+  active_weekdays: number[];
+  text: string;
+}
+
+export async function getSchedule(): Promise<ScheduleResponse> {
+  const res = await client.get("/api/consultations/schedule", {
+    params: { source: "advisory" },
+  });
+  return res.data;
+}
+
 export interface BookAssessmentPayload {
   full_name: string;
   email: string;

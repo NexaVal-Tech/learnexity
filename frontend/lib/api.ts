@@ -471,6 +471,21 @@ consultations: {
     return response.data;
   },
 
+  getSchedule: async (source?: 'learnexity' | 'advisory'): Promise<{
+    recurring: { days: string; hours: string }[];
+    one_off: { date: string; label: string; hours: string }[];
+    active_weekdays: number[];
+    text: string;
+  }> => {
+    const response = await apiClient.get('/api/consultations/schedule', { params: source ? { source } : {} });
+    return response.data;
+  },
+
+  getAvailableSlots: async (date: string, source?: 'learnexity' | 'advisory'): Promise<{ available: boolean; slots: string[]; is_free_day: boolean }> => {
+    const response = await apiClient.get('/api/consultations/available-slots', { params: { date, ...(source ? { source } : {}) } });
+    return response.data;
+  },
+
   initiate: async (data: {
     full_name: string;
     email: string;

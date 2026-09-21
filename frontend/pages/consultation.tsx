@@ -18,14 +18,6 @@ const CONSULTATION_TYPES = [
   { value: 'general', label: 'General Inquiry', desc: 'Any other questions or discussions' },
 ];
 
-const TIME_SLOTS = [
-  '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
-  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
-  '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM',
-  '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM',
-  '05:00 PM', '05:30 PM',
-];
-
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -44,13 +36,15 @@ export default function ConsultationPage() {
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   const [pricing, setPricing] = useState<{ currency: string; amount: number } | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [freeDays, setFreeDays] = useState<string[]>([]);
+  const [schedule, setSchedule] = useState<{ recurring: { days: string; hours: string }[]; one_off: { date: string; label: string; hours: string }[]; active_weekdays: number[]; text: string } | null>(null);
 
 useEffect(() => {
   const fetchPricing = async () => {
@@ -93,6 +87,18 @@ useEffect(() => {
   fetchFreeDays();
 }, []);
 
+useEffect(() => {
+  const fetchSchedule = async () => {
+    try {
+      const res = await api.consultations.getSchedule('learnexity');
+      setSchedule(res);
+    } catch {
+      setSchedule(null);
+    }
+  };
+  fetchSchedule();
+}, []);
+
 const formatPrice = () => {
   if (!pricing) return '';
   return pricing.currency === 'NGN'
@@ -118,14 +124,20 @@ const isFreeDay = (date: string) => freeDays.includes(date);
   }, [user]);
 
   useEffect(() => {
-    if (selectedDate) fetchBookedSlots(selectedDate);
+    if (selectedDate) fetchAvailableSlots(selectedDate);
+    else setAvailableSlots([]);
   }, [selectedDate]);
 
-  const fetchBookedSlots = async (date: string) => {
+  const fetchAvailableSlots = async (date: string) => {
+    setSlotsLoading(true);
     try {
-      const res = await api.get(`/api/consultations/booked-slots?date=${date}`);
-      setBookedSlots(res.booked_slots || []);
-    } catch { setBookedSlots([]); }
+      const res = await api.consultations.getAvailableSlots(date, 'learnexity');
+      setAvailableSlots(res.slots || []);
+    } catch {
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -181,7 +193,12 @@ const isFreeDay = (date: string) => freeDays.includes(date);
   const isDateDisabled = (day: number) => {
     const d = new Date(calYear, calMonth, day);
     const t = new Date(); t.setHours(0, 0, 0, 0);
-    return d < t || d.getDay() === 0 || d.getDay() === 6;
+    if (d < t) return true;
+    const dateStr = formatDate(day);
+    const isOneOff = schedule?.one_off.some(o => o.date === dateStr);
+    if (isOneOff) return false;
+    const activeWeekdays = schedule?.active_weekdays ?? [1, 2, 3, 4, 5];
+    return !activeWeekdays.includes(d.getDay());
   };
   const formatDate = (day: number) => `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -481,7 +498,13 @@ const isFreeDay = (date: string) => freeDays.includes(date);
               {step === 2 && (
                 <div>
                   <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>Pick a Date & Time</h2>
-                  <p className="text-sm text-gray-500 mb-6">Choose a slot that works for you (Mon–Fri only).</p>
+                  <p className="text-sm text-gray-500 mb-2">Choose a slot that works for you.</p>
+                  {schedule && (
+                    <div className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: 'rgba(74,58,255,0.1)', color: BRAND, border: '1px solid rgba(74,58,255,0.25)' }}>
+                      <Calendar size={12} />
+                      {schedule.text}
+                    </div>
+                  )}
 
                   <div className="calendar-wrap mb-6">
                     <div className="cal-header">
@@ -526,15 +549,21 @@ const isFreeDay = (date: string) => freeDays.includes(date);
                   {selectedDate && (
                     <div className="mb-7">
                       <p className="field-label mb-3">Available Times — {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                      <div className="time-grid">
-                        {TIME_SLOTS.map(slot => (
-                          <div key={slot}
-                            className={`time-slot ${bookedSlots.includes(slot) ? 'booked' : ''} ${selectedTime === slot ? 'selected' : ''}`}
-                            onClick={() => { if (!bookedSlots.includes(slot)) setSelectedTime(slot); }}>
-                            {slot}
-                          </div>
-                        ))}
-                      </div>
+                      {slotsLoading ? (
+                        <p className="text-sm text-gray-500">Loading availability…</p>
+                      ) : availableSlots.length === 0 ? (
+                        <p className="text-sm text-gray-500">No times left on this date — please pick another.</p>
+                      ) : (
+                        <div className="time-grid">
+                          {availableSlots.map(slot => (
+                            <div key={slot}
+                              className={`time-slot ${selectedTime === slot ? 'selected' : ''}`}
+                              onClick={() => setSelectedTime(slot)}>
+                              {slot}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

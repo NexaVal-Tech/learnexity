@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationSetting;
 use App\Models\ConsultationFreeDay;
+use App\Models\ConsultationAvailability;
 use App\Services\LocationService;
 use App\Mail\ConsultationBookedAdmin;
 use App\Mail\ConsultationConfirmation;
@@ -162,5 +163,67 @@ class ConsultationController extends Controller
         $dates = ConsultationFreeDay::orderBy('date')->pluck('date')->values();
 
         return response()->json(['free_days' => $dates]);
+    }
+
+    /**
+     * Human-readable booking schedule for a source — the recurring weekly
+     * window(s) plus any upcoming one-off dates admin has configured via
+     * AdminConsultationController::addAvailability(). Both the main-site
+     * /consultation page and the advisory booking widget call this to show
+     * visitors exactly when they can book, before they open the calendar.
+     * Falls back to the historical Mon–Fri, 9:00 AM–4:30 PM description
+     * when no admin availability has been configured yet.
+     */
+    public function schedule(Request $request)
+    {
+        $request->validate(['source' => 'nullable|in:learnexity,advisory']);
+
+        return response()->json(
+            ConsultationAvailability::summaryForSource($request->source)
+        );
+    }
+
+    /**
+     * Bookable time slots for one calendar date + source — combines the
+     * admin-configured availability window (or the legacy Mon–Fri default
+     * if none is configured) with already-booked slots and the free-day /
+     * weekend rules already enforced elsewhere in this controller and in
+     * ConsultationPaymentController.
+     */
+    public function availableSlots(Request $request)
+    {
+        $request->validate([
+            'date'   => 'required|date',
+            'source' => 'nullable|in:learnexity,advisory',
+        ]);
+
+        $source = $request->source ?? 'learnexity';
+        $window = ConsultationAvailability::windowForDate($request->date, $source);
+
+        if (!$window) {
+            return response()->json(['available' => false, 'slots' => [], 'is_free_day' => false]);
+        }
+
+        $isFreeDay = $source === 'learnexity' && ConsultationFreeDay::isFreeDay($request->date);
+
+        $slots = ConsultationAvailability::generateSlots(
+            $window['start_time'],
+            $window['end_time'],
+            $window['slot_interval_minutes']
+        );
+
+        if (!$isFreeDay) {
+            // Mirrors bookedSlots() above exactly, per-source, so the two
+            // endpoints never disagree about what's taken.
+            $booked = Consultation::where('preferred_date', $request->date)
+                ->where('status', 'scheduled')
+                ->where('source', $source)
+                ->pluck('preferred_time')
+                ->all();
+
+            $slots = array_values(array_diff($slots, $booked));
+        }
+
+        return response()->json(['available' => true, 'slots' => $slots, 'is_free_day' => $isFreeDay]);
     }
 }

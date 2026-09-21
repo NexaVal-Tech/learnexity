@@ -24,7 +24,7 @@ export default function Header() {
 
       <nav aria-label="Primary navigation" className="flex items-center gap-5 sm:gap-8">
         <a
-          href="#advisory"
+          href="/#services"
           className="hidden sm:inline text-sm transition-colors"
           style={{ color: `${CREAM}d9` }}
         >

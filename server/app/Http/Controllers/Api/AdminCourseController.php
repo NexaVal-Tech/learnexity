@@ -617,7 +617,7 @@ class AdminCourseController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
         // ── FIX: Use the model accessor so icon_url is always a full URL ──────
-        $tools = \App\Models\CourseTool::where('course_id', $course->id)
+        $tools = \App\Models\CourseTool::where('course_id', $course->course_id)
             ->orderBy('order')
             ->get()
             ->map(fn($t) => [
@@ -627,11 +627,11 @@ class AdminCourseController extends Controller
                 'order'    => $t->order,
             ]);
 
-        $learnings  = DB::table('course_learnings')->where('course_id', $course->id)->orderBy('order')->get();
-        $benefits   = DB::table('course_benefits')->where('course_id', $course->id)->orderBy('order')->get();
-        $careerPaths = DB::table('course_career_paths')->where('course_id', $course->id)->orderBy('order')->get();
-        $industries = DB::table('course_industries')->where('course_id', $course->id)->orderBy('order')->get();
-        $salary     = DB::table('course_salaries')->where('course_id', $course->id)->first();
+        $learnings  = DB::table('course_learnings')->where('course_id', $course->course_id)->orderBy('order')->get();
+        $benefits   = DB::table('course_benefits')->where('course_id', $course->course_id)->orderBy('order')->get();
+        $careerPaths = DB::table('course_career_paths')->where('course_id', $course->course_id)->orderBy('order')->get();
+        $industries = DB::table('course_industries')->where('course_id', $course->course_id)->orderBy('order')->get();
+        $salary     = DB::table('course_salaries')->where('course_id', $course->course_id)->first();
 
         return response()->json([
             'tools'        => $tools,
@@ -655,7 +655,7 @@ class AdminCourseController extends Controller
         $course = Course::where('course_id', $courseId)->firstOrFail();
         $tools  = $request->input('tools', []);
 
-        DB::table('course_tools')->where('course_id', $course->id)->delete();
+        DB::table('course_tools')->where('course_id', $course->course_id)->delete();
 
         $uploadedFiles = $request->file('tool_icons') ?? []; // ← fix here
 
@@ -673,7 +673,7 @@ class AdminCourseController extends Controller
             }
 
             DB::table('course_tools')->insert([
-                'course_id'  => $course->id,
+                'course_id'  => $course->course_id,
                 'name'       => $tool['name'],
                 'icon'       => $iconPath,
                 'order'      => $index,
@@ -712,11 +712,11 @@ class AdminCourseController extends Controller
             'learnings.*.learning_point' => 'required|string',
         ]);
 
-        DB::table('course_learnings')->where('course_id', $course->id)->delete();
+        DB::table('course_learnings')->where('course_id', $course->course_id)->delete();
 
         foreach ($validated['learnings'] as $index => $learning) {
             DB::table('course_learnings')->insert([
-                'course_id'      => $course->id,
+                'course_id'      => $course->course_id,
                 'learning_point' => $learning['learning_point'],
                 'order'          => $index,
                 'created_at'     => now(),
@@ -740,11 +740,11 @@ class AdminCourseController extends Controller
             'benefits.*.text'  => 'required|string',
         ]);
 
-        DB::table('course_benefits')->where('course_id', $course->id)->delete();
+        DB::table('course_benefits')->where('course_id', $course->course_id)->delete();
 
         foreach ($validated['benefits'] as $index => $benefit) {
             DB::table('course_benefits')->insert([
-                'course_id'  => $course->id,
+                'course_id'  => $course->course_id,
                 'title'      => $benefit['title'],
                 'text'       => $benefit['text'],
                 'order'      => $index,
@@ -769,11 +769,11 @@ class AdminCourseController extends Controller
             'career_paths.*.position' => 'required|string',
         ]);
 
-        DB::table('course_career_paths')->where('course_id', $course->id)->delete();
+        DB::table('course_career_paths')->where('course_id', $course->course_id)->delete();
 
         foreach ($validated['career_paths'] as $index => $path) {
             DB::table('course_career_paths')->insert([
-                'course_id'  => $course->id,
+                'course_id'  => $course->course_id,
                 'level'      => $path['level'],
                 'position'   => $path['position'],
                 'order'      => $index,
@@ -798,11 +798,11 @@ class AdminCourseController extends Controller
             'industries.*.text'  => 'required|string',
         ]);
 
-        DB::table('course_industries')->where('course_id', $course->id)->delete();
+        DB::table('course_industries')->where('course_id', $course->course_id)->delete();
 
         foreach ($validated['industries'] as $index => $industry) {
             DB::table('course_industries')->insert([
-                'course_id'  => $course->id,
+                'course_id'  => $course->course_id,
                 'title'      => $industry['title'],
                 'text'       => $industry['text'],
                 'order'      => $index,
@@ -828,9 +828,9 @@ class AdminCourseController extends Controller
         ]);
 
         DB::table('course_salaries')->updateOrInsert(
-            ['course_id' => $course->id],
+            ['course_id' => $course->course_id],
             array_merge($validated, [
-                'course_id'  => $course->id,
+                'course_id'  => $course->course_id,
                 'updated_at' => now(),
                 'created_at' => now(),
             ])

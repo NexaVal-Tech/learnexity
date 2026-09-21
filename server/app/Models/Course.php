@@ -99,34 +99,39 @@ class Course extends Model
         return $this->belongsTo(CourseGroup::class);
     }
 
+    // NOTE: these six detail tables key on the string `course_id` slug column
+    // (not the numeric `id` PK) since migration 2026_02_14_153847 switched
+    // their foreign keys to reference courses.course_id — explicit local key
+    // required below, or Eloquent defaults to the wrong `id` column and every
+    // one of these relations silently returns nothing / writes orphaned rows.
     public function tools(): HasMany
     {
-        return $this->hasMany(CourseTool::class)->orderBy('order');
+        return $this->hasMany(CourseTool::class, 'course_id', 'course_id')->orderBy('order');
     }
 
     public function learnings(): HasMany
     {
-        return $this->hasMany(CourseLearning::class)->orderBy('order');
+        return $this->hasMany(CourseLearning::class, 'course_id', 'course_id')->orderBy('order');
     }
 
     public function benefits(): HasMany
     {
-        return $this->hasMany(CourseBenefit::class)->orderBy('order');
+        return $this->hasMany(CourseBenefit::class, 'course_id', 'course_id')->orderBy('order');
     }
 
     public function careerPaths(): HasMany
     {
-        return $this->hasMany(CourseCareerPath::class)->orderBy('order');
+        return $this->hasMany(CourseCareerPath::class, 'course_id', 'course_id')->orderBy('order');
     }
 
     public function industries(): HasMany
     {
-        return $this->hasMany(CourseIndustry::class)->orderBy('order');
+        return $this->hasMany(CourseIndustry::class, 'course_id', 'course_id')->orderBy('order');
     }
 
     public function salary(): HasOne
     {
-        return $this->hasOne(CourseSalary::class);
+        return $this->hasOne(CourseSalary::class, 'course_id', 'course_id');
     }
 
     /**

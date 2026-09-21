@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationSetting;
 use App\Models\ConsultationFreeDay;
+use App\Models\ConsultationAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -196,5 +197,86 @@ class AdminConsultationController extends Controller
         $freeDay->delete();
 
         return response()->json(['message' => 'Free day removed.']);
+    }
+
+    /**
+     * Booking availability windows — when admin can be booked, per source
+     * (learnexity / advisory / both), either recurring every week on a
+     * given weekday or as a one-off specific date. Consumed publicly via
+     * ConsultationController::schedule() / availableSlots() and shown on
+     * both the main-site /consultation page and the advisory booking widget.
+     */
+    public function getAvailability(Request $request)
+    {
+        $query = ConsultationAvailability::query()->orderBy('is_recurring', 'desc')->orderBy('weekday')->orderBy('specific_date');
+
+        if ($request->source) {
+            $query->where(function ($q) use ($request) {
+                $q->where('source', $request->source)->orWhereNull('source');
+            });
+        }
+
+        return response()->json(['availability' => $query->get()]);
+    }
+
+    public function addAvailability(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'source'                 => 'nullable|in:learnexity,advisory',
+            'is_recurring'           => 'required|boolean',
+            'weekday'                => 'required_if:is_recurring,1|nullable|integer|min:0|max:6',
+            'specific_date'          => 'required_if:is_recurring,0|nullable|date|after_or_equal:today',
+            'start_time'             => 'required|date_format:H:i',
+            'end_time'               => 'required|date_format:H:i|after:start_time',
+            'slot_interval_minutes'  => 'nullable|integer|min:5|max:240',
+            'label'                  => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $validator->errors()], 422);
+        }
+
+        $availability = ConsultationAvailability::create([
+            'source'                => $request->source,
+            'is_recurring'          => (bool) $request->is_recurring,
+            'weekday'               => $request->is_recurring ? $request->weekday : null,
+            'specific_date'         => $request->is_recurring ? null : $request->specific_date,
+            'start_time'            => $request->start_time,
+            'end_time'              => $request->end_time,
+            'slot_interval_minutes' => $request->slot_interval_minutes ?? 30,
+            'is_active'             => true,
+            'label'                 => $request->label,
+        ]);
+
+        return response()->json(['message' => 'Availability window added.', 'availability' => $availability], 201);
+    }
+
+    public function updateAvailability(Request $request, $id)
+    {
+        $availability = ConsultationAvailability::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'is_active' => 'sometimes|boolean',
+            'start_time' => 'sometimes|date_format:H:i',
+            'end_time'   => 'sometimes|date_format:H:i|after:start_time',
+            'slot_interval_minutes' => 'sometimes|integer|min:5|max:240',
+            'label' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $validator->errors()], 422);
+        }
+
+        $availability->update($request->only(['is_active', 'start_time', 'end_time', 'slot_interval_minutes', 'label']));
+
+        return response()->json(['message' => 'Availability window updated.', 'availability' => $availability->fresh()]);
+    }
+
+    public function removeAvailability($id)
+    {
+        $availability = ConsultationAvailability::findOrFail($id);
+        $availability->delete();
+
+        return response()->json(['message' => 'Availability window removed.']);
     }
 }
