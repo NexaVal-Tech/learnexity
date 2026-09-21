@@ -30,7 +30,11 @@ class Consultation extends Model
     ];
 
     protected $casts = [
-        'preferred_date' => 'date',
+        // Format modifier keeps JSON output a plain "Y-m-d" string (what the
+        // admin dashboard and booking widgets expect) instead of Eloquent's
+        // default full ISO-8601 datetime, which broke `new Date(x + 'T12:00:00')`
+        // parsing on the frontend and showed "Invalid Date".
+        'preferred_date' => 'date:Y-m-d',
     ];
 
     public function user()

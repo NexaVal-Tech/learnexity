@@ -6,6 +6,13 @@
   <title>Consultation Confirmed</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  @php
+    // Computed up-front — this template references $isAdvisory in the
+    // header (below) which renders before the "Details card" section
+    // further down the page, so it must be defined before its first use
+    // or every consultation confirmation email fails to render at all.
+    $isAdvisory = $consultation->source === 'advisory';
+  @endphp
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:32px 0;">
     <tr>
       <td align="center">
@@ -52,7 +59,6 @@
                   'technology_value_assessment' => 'Technology Value Assessment',
                 ];
                 $typeLabel = $typeLabels[$consultation->consultation_type] ?? $consultation->consultation_type;
-                $isAdvisory = $consultation->source === 'advisory';
                 $dateFormatted = \Carbon\Carbon::parse($consultation->preferred_date)->format('l, F j, Y');
               @endphp
 

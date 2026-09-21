@@ -269,13 +269,13 @@ export default function AdvisoryHome() {
 
             <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {OUTCOMES.map((o) => (
-                <div key={o.n} className="adv-card p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <img src={o.img} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                    <p className="text-base font-bold" style={{ color: TEAL }}>{o.n}</p>
+                <div key={o.n} className="adv-card overflow-hidden">
+                  <img src={o.img} alt="" className="w-full h-36 object-cover" />
+                  <div className="p-6">
+                    <p className="text-base font-bold mb-2" style={{ color: TEAL }}>{o.n}</p>
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: NAVY }}>{o.title}</h3>
+                    <p className="text-base leading-relaxed" style={{ color: GRAY }}>{o.text}</p>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: NAVY }}>{o.title}</h3>
-                  <p className="text-base leading-relaxed" style={{ color: GRAY }}>{o.text}</p>
                 </div>
               ))}
             </div>
