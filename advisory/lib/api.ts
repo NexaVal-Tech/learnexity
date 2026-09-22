@@ -8,7 +8,19 @@
 // always-free and admin can tell it apart from course consultations.
 import axios from "axios";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// NEXT_PUBLIC_API_URL should be set per-environment (see .env.local.example).
+// The advisory app currently has no NEXT_PUBLIC_API_URL configured in its
+// production hosting environment, which meant every request here silently
+// fell back to http://localhost:8000 — unreachable from a real visitor's
+// browser, so the schedule/slots/booking calls all failed with no visible
+// error (caught and swallowed by the callers below). Falling back to the
+// real production API instead of localhost means the site works correctly
+// even if that env var is still missing; local dev should set
+// NEXT_PUBLIC_API_URL=http://localhost:8000 in advisory/.env.local to
+// override this and hit a local backend instead.
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "https://api.learnexity.org");
 
 const client = axios.create({ baseURL: API_URL });
 
