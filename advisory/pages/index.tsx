@@ -252,7 +252,7 @@ export default function AdvisoryHome() {
         </section>
 
         {/* ── Close the gap ── */}
-        <section id="how-it-works" className="adv-section pb-16 sm:pb-24 scroll-mt-6">
+        <section className="adv-section pb-16 sm:pb-24 scroll-mt-6">
           <FadeInOut>
             <p className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: TEAL }}>
               Close the gap
@@ -303,7 +303,7 @@ export default function AdvisoryHome() {
         </section>
 
         {/* ── We do not start with technology ── */}
-        <section className="adv-band-shadow relative py-16 sm:py-20" style={{ background: NAVY }}>
+        <section id="how-it-works" className="adv-band-shadow relative py-16 sm:py-20 scroll-mt-6" style={{ background: NAVY }}>
           <FadeInOut className="adv-section">
             <h2 className="text-4xl sm:text-5xl font-semibold" style={{ color: CREAM }}>
               We do not start with technology.
