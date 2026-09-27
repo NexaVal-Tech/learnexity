@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Course } from "@/lib/api";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { useCmsGlobals } from "@/contexts/CmsGlobalsContext";
+import { safeHref } from "@/lib/cms/url";
+import type { NavbarData, NavEntryData } from "@/lib/cms/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -88,12 +91,15 @@ function CloseIcon({ className }: { className?: string }) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type PanelKey = "deeptech" | "flex" | "free" | "intermediate";
+
 interface DropdownItem {
   href: string;
   label: string;
   description: string;
-  // hasSubMenu now carries which sub-panel to show
-  subMenu?: "deeptech" | "flex" | "free" | "intermediate";
+  // which live course list (if any) this item expands into
+  subMenu?: PanelKey;
+  panelTitle?: string;
 }
 
 interface NavGroup {
@@ -105,57 +111,43 @@ interface NavLink {
   type: "link";
   href: string;
   label: string;
+  newTab?: boolean;
 }
 
 type NavEntry = NavLink | (NavGroup & { type: "group" });
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
+// Menu entries come from the CMS (Admin → Website CMS → Navbar); defaults in
+// lib/cms/globalDefaults.ts reproduce the original hard-coded menu.
 
-const NAV: NavEntry[] = [
-  { type: "link", href: "/", label: "Home" },
-  {
-    type: "group",
-    label: "Courses",
-    items: [
-      {
-        href: "/courses/courses",
-        label: "Deep Tech Programs",
-        description: "Group mentorship & one-on-one coaching",
-        subMenu: "deeptech",
-      },
-      {
-        href: "/intermediate",
-        label: "Career Accelerator Programs",
-        description: "For learners past the basics",
-        subMenu: "intermediate",
-      },
-      {
-        href: "/flex",
-        label: "Flexible Programs",
-        description: "Self-paced programmes",
-        subMenu: "flex",
-      },
-      {
-        href: "/free-courses",
-        label: "Free Programs",
-        description: "Enroll and get full access, no payment",
-        subMenu: "free",
-      },
-    ],
-  },
-  { type: "link", href: "/b2b", label: "B2B" },
-  {
-    type: "group",
-    label: "Learn More",
-    items: [
-      { href: "/about", label: "About Us", description: "Our story and mission" },
-      { href: "/contact", label: "Contact Us", description: "Get in touch" },
-      { href: "/our-team", label: "Meet our Team", description: "Get in touch" },
-    ],
-  },
-  { type: "link", href: "/community", label: "Community" },
-  { type: "link", href: "/refer&earn", label: "Refer & Earn" },
-];
+const PANEL_TITLES: Record<PanelKey, string> = {
+  deeptech: "Mentorship Courses",
+  intermediate: "Career Accelerator Courses",
+  flex: "Self-Paced Courses",
+  free: "Free Courses",
+};
+
+function toNavEntries(entries: NavEntryData[] | undefined): NavEntry[] {
+  return (entries ?? [])
+    .filter((e) => e && !e.hidden && e.label)
+    .map((e): NavEntry =>
+      e.kind === "group"
+        ? {
+            type: "group",
+            label: e.label,
+            items: (e.items ?? [])
+              .filter((i) => i && !i.hidden && i.label)
+              .map((i) => ({
+                href: safeHref(i.href || "/"),
+                label: i.label,
+                description: i.description ?? "",
+                subMenu: i.coursePanel && i.coursePanel !== "none" ? (i.coursePanel as PanelKey) : undefined,
+                panelTitle: i.panelTitle || undefined,
+              })),
+          }
+        : { type: "link", href: safeHref(e.href || "/"), label: e.label, newTab: e.newTab }
+    );
+}
 
 // ─── Courses Sub-Panel (Desktop) ──────────────────────────────────────────────
 // Shows the list of courses for a given sub-menu type
@@ -166,12 +158,14 @@ function CoursesSubPanel({
   isLoading,
   browseHref,
   browseLabel,
+  browseAllLabel,
 }: {
   isOpen: boolean;
   courses: Course[];
   isLoading: boolean;
   browseHref: string;
   browseLabel: string;
+  browseAllLabel: string;
 }) {
   return (
     <div
@@ -243,7 +237,7 @@ function CoursesSubPanel({
           href={browseHref}
           className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-semibold text-[#6C63FF] bg-indigo-50 hover:bg-indigo-100 transition-colors duration-150"
         >
-          Browse all
+          {browseAllLabel}
           <ChevronRight className="text-[#6C63FF]" />
         </Link>
       </div>
@@ -265,7 +259,9 @@ function DropdownMenu({
   freeLoading,
   intermediateCourses,
   intermediateLoading,
+  browseAllLabel,
 }: {
+  browseAllLabel: string;
   group: NavGroup;
   isOpen: boolean;
   onClose: () => void;
@@ -315,14 +311,10 @@ function DropdownMenu({
             item.subMenu === "free"     ? freeLoading :
             item.subMenu === "intermediate" ? intermediateLoading :
             flexLoading;
-          const browseLabel =
-            item.subMenu === "deeptech" ? "Mentorship Courses" :
-            item.subMenu === "free"     ? "Free Courses" :
-            item.subMenu === "intermediate" ? "Career Accelerator Courses" :
-            "Self-Paced Courses";
+          const browseLabel = item.panelTitle || (item.subMenu ? PANEL_TITLES[item.subMenu] : "");
 
           return (
-            <div key={item.href} className="relative">
+            <div key={`${item.href}-${i}`} className="relative">
               {hasSubMenu ? (
                 <button
                   onClick={() => setOpenSubMenu(isSubOpen ? null : item.label)}
@@ -369,6 +361,7 @@ function DropdownMenu({
                   isLoading={subLoading}
                   browseHref={item.href}
                   browseLabel={browseLabel}
+                  browseAllLabel={browseAllLabel}
                 />
               )}
             </div>
@@ -387,12 +380,14 @@ function MobileCoursesAccordion({
   isLoading,
   onLinkClick,
   browseHref,
+  browseAllLabel,
 }: {
   isOpen: boolean;
   courses: Course[];
   isLoading: boolean;
   onLinkClick: () => void;
   browseHref: string;
+  browseAllLabel: string;
 }) {
   return (
     <AnimatedAccordion isOpen={isOpen}>
@@ -438,7 +433,7 @@ function MobileCoursesAccordion({
           onClick={onLinkClick}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#6C63FF] hover:bg-indigo-50 transition-colors mt-1"
         >
-          Browse all
+          {browseAllLabel}
         </Link>
       </div>
     </AnimatedAccordion>
@@ -452,9 +447,21 @@ interface NavbarProps {
    * used when a fixed banner (e.g. the scholarship countdown) is showing
    * above it. Defaults to 0, matching prior behavior exactly. */
   topOffsetPx?: number;
+  /** Explicit content — only the admin preview passes this; the live site
+   * reads the saved navbar from the CMS globals context. */
+  data?: NavbarData;
+  /** Render in-flow (not fixed) for the admin preview. */
+  preview?: boolean;
 }
 
-export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
+export default function Navbar({ topOffsetPx = 0, data, preview = false }: NavbarProps = {}) {
+  const globals = useCmsGlobals();
+  const nav = data ?? globals.navbar;
+  const NAV = toNavEntries(nav.entries);
+  const browseAllLabel = nav.browseAllLabel || "Browse all";
+  const ctaHref = safeHref(nav.cta?.href || "/consultation");
+  const showCta = nav.cta?.show !== false && !!nav.cta?.label;
+
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
@@ -578,9 +585,9 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
       {/* ── Desktop Navbar ── */}
       <nav
         ref={navRef}
-        style={{ top: topOffsetPx }}
+        style={preview ? undefined : { top: topOffsetPx }}
         className={`
-          bg-white fixed w-full z-50
+          bg-white ${preview ? "relative" : "fixed"} w-full z-50
           transition-all duration-300
           ${scrolled
             ? "border-b border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.06)]"
@@ -593,7 +600,8 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
 
           {/* Logo */}
           <Link href="/" aria-label="Learnexity homepage" className="flex-shrink-0">
-            <img src="/images/Logo.png" alt="Learnexity" width={136} height={38} className="object-contain" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={nav.logo || "/images/Logo.png"} alt={nav.logoAlt || "Learnexity"} width={136} height={38} className="object-contain max-h-[38px] w-auto" />
           </Link>
 
           {/* Desktop links */}
@@ -637,6 +645,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
                       freeLoading={freeLoading}
                       intermediateCourses={intermediateCourses}
                       intermediateLoading={intermediateLoading}
+                      browseAllLabel={browseAllLabel}
                     />
                   </div>
                 );
@@ -645,8 +654,9 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
               const isActive = pathname === entry.href;
               return (
                 <Link
-                  key={entry.href}
+                  key={`${entry.href}-${entry.label}`}
                   href={entry.href}
+                  {...(entry.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={`
                     flex items-center gap-1.5 px-3.5 py-2 rounded-xl
                     text-[13.5px] font-medium transition-all duration-150
@@ -671,6 +681,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
                 nav/mobile-panel bg-white above) — pin the CSS vars ThemeToggle
                 reads so its icon/dropdown stay legible against that white bg
                 even when the rest of the page is in dark mode. */}
+            {nav.showThemeToggle !== false && (
             <div
               style={{
                 "--text-secondary": "#4b5563",
@@ -682,6 +693,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
             >
               <ThemeToggle />
             </div>
+            )}
             {user && (
               <Link
                 href="/user/dashboard"
@@ -695,23 +707,25 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
                 `}
               >
                 <DashboardIcon />
-                Dashboard
+                {nav.dashboardLabel || "Dashboard"}
               </Link>
             )}
             {!user ? (
               <Link
-                href="/user/auth/login"
+                href={safeHref(nav.loginHref || "/user/auth/login")}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
               >
                 <UserIcon />
-                Log in
+                {nav.loginLabel || "Log in"}
               </Link>
             ) : (
               <></>
             )}
 
+            {showCta && (
             <Link
-              href="/consultation"
+              href={ctaHref}
+              {...(nav.cta?.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="
                 relative overflow-hidden
                 bg-[#6C63FF] text-white text-[13px] px-5 py-2.5 rounded-xl font-semibold
@@ -721,8 +735,9 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
                 hover:-translate-y-px
               "
             >
-              Book a consultation
+              {nav.cta?.label}
             </Link>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -741,6 +756,8 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
         </div>
       </nav>
 
+      {!preview && (
+      <>
       {/* ── Mobile overlay ── */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 md:hidden transition-opacity duration-300 ${
@@ -765,9 +782,11 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
         {/* Mobile header */}
         <div className="flex items-center justify-between px-5 h-[62px] border-b border-gray-100">
           <Link href="/" onClick={() => setIsMobileOpen(false)}>
-            <img src="/images/Logo.png" alt="Learnexity" width={116} height={34} className="object-contain" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={nav.logo || "/images/Logo.png"} alt={nav.logoAlt || "Learnexity"} width={116} height={34} className="object-contain max-h-[34px] w-auto" />
           </Link>
           <div className="flex items-center gap-1">
+            {nav.showThemeToggle !== false && (
             <div
               style={{
                 "--text-secondary": "#4b5563",
@@ -779,6 +798,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
             >
               <ThemeToggle />
             </div>
+            )}
             <button
               onClick={() => setIsMobileOpen(false)}
               className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500"
@@ -867,6 +887,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
                                 isLoading={subLoading}
                                 onLinkClick={() => setIsMobileOpen(false)}
                                 browseHref={item.href}
+                                browseAllLabel={browseAllLabel}
                               />
                             </div>
                           );
@@ -904,8 +925,9 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
             const isActive = pathname === entry.href;
             return (
               <Link
-                key={entry.href}
+                key={`${entry.href}-${entry.label}`}
                 href={entry.href}
+                {...(entry.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 onClick={() => setIsMobileOpen(false)}
                 className={`
                   flex items-center gap-2 px-4 py-3.5 rounded-xl
@@ -931,7 +953,7 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
               className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold text-[#6C63FF] border border-indigo-200 bg-indigo-50/50 mt-1 hover:bg-indigo-100 transition-colors"
             >
               <DashboardIcon />
-              Dashboard
+              {nav.dashboardLabel || "Dashboard"}
             </Link>
           )}
         </nav>
@@ -941,18 +963,20 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
           <div className="border-t border-gray-100 pt-4">
             {!user ? (
               <Link
-                href="/user/auth/login"
+                href={safeHref(nav.loginHref || "/user/auth/login")}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
               >
                 <UserIcon />
-                Log in
+                {nav.loginLabel || "Log in"}
               </Link>
             ) : (
               <></>
             )}
           </div>
+          {showCta && (
           <Link
-            href="/consultation"
+            href={ctaHref}
+            {...(nav.cta?.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             onClick={() => setIsMobileOpen(false)}
             className="
               block w-full text-center
@@ -962,10 +986,13 @@ export default function Navbar({ topOffsetPx = 0 }: NavbarProps = {}) {
               shadow-[0_2px_12px_rgba(108,99,255,0.35)]
             "
           >
-            Book a consultation
+            {nav.cta?.label}
           </Link>
+          )}
         </div>
       </div>
+      </>
+      )}
     </>
   );
 }

@@ -32,6 +32,8 @@ import type {
   ReferralStats,
   ReferralResponse,
   CreateReferralResponse,
+  PayoutBalance,
+  PayoutRequestItem,
   AdminStats,
   StatCard,
   DashboardData,
@@ -614,6 +616,28 @@ settings: {
 
     validateReferralCode: async (code: string): Promise<{ valid: boolean; message: string }> => {
       const response = await apiClient.post('/api/referrals/validate', { code });
+      return response.data;
+    },
+  },
+
+  // ── REFER & EARN PAYOUTS ──────────────────────────────────────────────────────
+  payouts: {
+    getBalance: async (): Promise<PayoutBalance> => {
+      const response = await apiClient.get<PayoutBalance>('/api/payouts/balance');
+      return response.data;
+    },
+
+    getHistory: async (): Promise<{ history: PayoutRequestItem[] }> => {
+      const response = await apiClient.get('/api/payouts/history');
+      return response.data;
+    },
+
+    requestPayout: async (payload: {
+      bank_name: string;
+      account_number: string;
+      account_name: string;
+    }): Promise<{ message: string; payout: PayoutRequestItem }> => {
+      const response = await apiClient.post('/api/payouts', payload);
       return response.data;
     },
   },
@@ -1436,6 +1460,8 @@ export const coursesApi = {
 export type {
   ReferralResponse,
   CreateReferralResponse,
+  PayoutBalance,
+  PayoutRequestItem,
   ReferralCode,
   ReferralHistory,
   ReferralStats,

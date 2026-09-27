@@ -1,6 +1,8 @@
 "use client";
 
-import Image from "next/image";
+import { CmsImage, CmsText } from "@/components/cms/ui";
+import { f } from "@/lib/cms/fields";
+import type { BlockDefinition } from "@/lib/cms/blockTypes";
 import { useState, useRef } from "react";
 import { ScrollFadeIn } from "@/components/animations/Animation";
 
@@ -15,116 +17,28 @@ type Testimonial = {
   text?: string;
 };
 
-const data: Testimonial[] = [
-  // Video kept on disk and in code, just commented out in favor of the
-  // designed image testimonial below.
-  // {
-  //   name: "Benedict",
-  //   role: "Video Editor",
-  //   type: "video",
-  //   video: "/videos/testimobial-1.mp4",
-  //   thumbnail: "/thumbnails/thumbnail-3.png",
-  // },
-  {
-    name: "Benedict",
-    role: "Video Editor",
-    type: "image",
-    thumbnail: "/images/testimonial-image-1.jpeg",
-  },
-  // {
-  //   name: "Diane Johnson",
-  //   role: "Data Analytics",
-  //   type: "text",
-  //   thumbnail: "/thumbnails/images.png",
-  //   text: "Coming Soon.",
-  // },
-  // {
-  //   name: "Lilian Anekwe",
-  //   role: "Cybersecurity",
-  //   type: "video",
-  //   video: "/videos/testimony.mp4",
-  //   thumbnail: "/thumbnails/lilian-thumbnail.png",
-  // },
-  {
-    name: "Lilian Anekwe",
-    role: "Cybersecurity",
-    type: "image",
-    thumbnail: "/images/testimonial-image-6.jpeg",
-  },
-  {
-    name: "Ogechi",
-    role: "Product Management",
-    type: "video",
-    video: "/videos/product-manager-review.mp4",
-    thumbnail: "/thumbnails/thumbnail-1.png",
-  },
-  // {
-  //   name: "Ross Micheal",
-  //   role: "Frontend Development",
-  //   type: "text",
-  //   thumbnail: "/thumbnails/images-2.png",
-  //   text: "Coming Soon.",
-  // },
-  // {
-  //   name: "Lilian",
-  //   role: "AI Automation",
-  //   type: "video",
-  //   video: "/videos/testimonial-video.mp4",
-  //   thumbnail: "/thumbnails/thumbnail-2.png",
-  // },
-  {
-    name: "Lilian",
-    role: "AI Automation",
-    type: "image",
-    thumbnail: "/images/testimonial-image-3.jpeg",
-  },
-  // {
-  //   name: "Daniel Ugwusiani",
-  //   role: "UI/Ux Designer",
-  //   type: "video",
-  //   video: "/videos/testimonial-vid-5.mp4",
-  //   thumbnail: "/thumbnails/thumbnail-6.png",
-  // },
-  {
-    name: "Daniel Ugwusiani",
-    role: "UI/Ux Designer",
-    type: "image",
-    thumbnail: "/images/testimonial-image-4.jpeg",
-  },
-  // {
-  //   name: "Mercy Aleke",
-  //   role: "Digital Marketing",
-  //   type: "video",
-  //   video: "/videos/testimonial-vid-6.mp4",
-  //   thumbnail: "/thumbnails/thumbnail-5.png",
-  // },
-  {
-    name: "Mercy Aleke",
-    role: "Digital Marketing",
-    type: "image",
-    thumbnail: "/images/testimonial-image-2.jpeg",
-  },
-  // {
-  //   name: "james williams",
-  //   role: "Cloud Computing",
-  //   type: "text",
-  //   thumbnail: "/thumbnails/images-3.png",
-  //   text: "Coming Soon.",
-  // },
-  // {
-  //   name: "Amadineze Christain Chinonso",
-  //   role: "Digital Marketing",
-  //   type: "video",
-  //   video: "/videos/testimonial-vid-7.mp4",
-  //   thumbnail: "/thumbnails/thumbnail-7.png",
-  // },
-  {
-    name: "Amadineze Christain Chinonso",
-    role: "Digital Marketing",
-    type: "image",
-    thumbnail: "/images/testimonial-image-5.jpeg",
-  },
-];
+export interface TestimonialsData {
+  eyebrow: string;
+  heading: string;
+  items: Testimonial[];
+}
+
+// Older video/text testimonials that were commented out in favour of the
+// designed image cards are still on disk (/videos, /thumbnails) and can be
+// re-added from the admin with type "Video".
+export const TESTIMONIALS_DEFAULTS: TestimonialsData = {
+  eyebrow: "Real Stories",
+  heading: "Student Transformations",
+  items: [
+    { name: "Benedict", role: "Video Editor", type: "image", thumbnail: "/images/testimonial-image-1.jpeg" },
+    { name: "Lilian Anekwe", role: "Cybersecurity", type: "image", thumbnail: "/images/testimonial-image-6.jpeg" },
+    { name: "Ogechi", role: "Product Management", type: "video", video: "/videos/product-manager-review.mp4", thumbnail: "/thumbnails/thumbnail-1.png" },
+    { name: "Lilian", role: "AI Automation", type: "image", thumbnail: "/images/testimonial-image-3.jpeg" },
+    { name: "Daniel Ugwusiani", role: "UI/Ux Designer", type: "image", thumbnail: "/images/testimonial-image-4.jpeg" },
+    { name: "Mercy Aleke", role: "Digital Marketing", type: "image", thumbnail: "/images/testimonial-image-2.jpeg" },
+    { name: "Amadineze Christain Chinonso", role: "Digital Marketing", type: "image", thumbnail: "/images/testimonial-image-5.jpeg" },
+  ],
+};
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   const [playing, setPlaying] = useState(false);
@@ -165,7 +79,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         }}
       >
         {!playing && (
-          <Image
+          <CmsImage
             src={testimonial.thumbnail}
             alt={testimonial.name}
             fill
@@ -204,7 +118,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
               background: `linear-gradient(160deg, ${BRAND}22 0%, #0f0f0f 100%)`,
             }}
           >
-            <Image
+            <CmsImage
               src={testimonial.thumbnail}
               alt={testimonial.name}
               fill
@@ -276,7 +190,8 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   );
 }
 
-export default function Testimonials() {
+export default function Testimonials({ data = TESTIMONIALS_DEFAULTS }: { data?: TestimonialsData }) {
+  const items = (data.items ?? []).filter((t) => t.thumbnail || t.video || t.text);
   const [paused, setPaused] = useState(false);
 
   return (
@@ -316,11 +231,11 @@ export default function Testimonials() {
               className="text-sm font-semibold uppercase tracking-widest mb-3"
               style={{ color: BRAND }}
             >
-              Real Stories
+              {data.eyebrow}
             </p>
 
             <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)]">
-              Student Transformations
+              <CmsText text={data.heading} />
             </h2>
           </div>
         </ScrollFadeIn>
@@ -338,7 +253,7 @@ export default function Testimonials() {
                 paused ? "paused" : ""
               }`}
             >
-              {[...data, ...data].map((testimonial, index) => (
+              {[...items, ...items].map((testimonial, index) => (
                 <TestimonialCard
                   key={index}
                   testimonial={testimonial}
@@ -351,3 +266,36 @@ export default function Testimonials() {
     </section>
   );
 }
+
+export const block: BlockDefinition<TestimonialsData> = {
+  type: "home.testimonials",
+  label: "Student transformations (scrolling)",
+  category: "Homepage",
+  description: "Auto-scrolling row of testimonial cards — designed images, videos or text quotes.",
+  fields: [
+    f.text("eyebrow", "Small label"),
+    f.textarea("heading", "Heading", { rows: 2 }),
+    f.list(
+      "items",
+      "Testimonials",
+      [
+        f.text("name", "Name"),
+        f.text("role", "Role / course"),
+        f.select("type", "Type", [
+          { value: "image", label: "Designed image (name & quote are in the picture)" },
+          { value: "video", label: "Video" },
+          { value: "text", label: "Text quote" },
+        ]),
+        f.image("thumbnail", "Image / video cover"),
+        { ...f.video("video", "Video"), showIf: { key: "type", equals: "video" } },
+        { ...f.textarea("text", "Quote", { rows: 4 }), showIf: { key: "type", equals: "text" } },
+      ],
+      {
+        itemLabelKey: "name",
+        addLabel: "Add testimonial",
+        itemDefaults: { name: "Student", role: "Course", type: "image", thumbnail: "", video: "", text: "" },
+      }
+    ),
+  ],
+  defaults: TESTIMONIALS_DEFAULTS,
+};

@@ -9,6 +9,7 @@ use App\Mail\PaymentConfirmation;
 use App\Mail\AdminNewStudentMail;
 use App\Models\CourseEnrollment;
 use App\Models\Scholarship;
+use App\Services\ReferralCommissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -264,6 +265,11 @@ class StripeController extends Controller
                 if ($scholarshipId) {
                     Scholarship::find($scholarshipId)?->markAsUsed($enrollment->id);
                 }
+
+                // ── Refer & Earn: credit the referrer 10% of this payment ──
+                // No-op if this student wasn't referred, or was already
+                // credited on an earlier payment (e.g. a prior installment).
+                ReferralCommissionService::creditReferrerForPayment($enrollment->user_id, $amountPaid);
 
                 Log::info('✅ Payment completed via Stripe webhook', [
                     'enrollment_id' => $enrollmentId,

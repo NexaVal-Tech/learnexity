@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
-import { api, ReferralResponse, handleApiError } from '@/lib/api';
+import { api, ReferralResponse, PayoutBalance, PayoutRequestItem, handleApiError } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Users,
@@ -15,6 +15,8 @@ import {
   Copy,
   Share2,
   TrendingUp,
+  Banknote,
+  XCircle,
 } from 'lucide-react';
 
 export default function ReferralsPage() {
@@ -25,6 +27,15 @@ export default function ReferralsPage() {
   const [referralData, setReferralData] = useState<ReferralResponse | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ── Payout state ──
+  const [payoutBalance, setPayoutBalance] = useState<PayoutBalance | null>(null);
+  const [payoutHistory, setPayoutHistory] = useState<PayoutRequestItem[]>([]);
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState('');
+  const [requesting, setRequesting] = useState(false);
+  const [payoutMessage, setPayoutMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     checkReferralStatus();
@@ -39,11 +50,51 @@ export default function ReferralsPage() {
       if (status.has_referral) {
         const data = await api.referrals.getReferralData();
         setReferralData(data);
+        loadPayoutInfo();
       }
     } catch (err) {
       setError(handleApiError(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPayoutInfo = async () => {
+    try {
+      const [balance, historyRes] = await Promise.all([
+        api.payouts.getBalance(),
+        api.payouts.getHistory(),
+      ]);
+      setPayoutBalance(balance);
+      setPayoutHistory(historyRes.history || []);
+      setBankName(balance.bank_name || '');
+      setAccountNumber(balance.account_number || '');
+      setAccountName(balance.account_name || '');
+    } catch (err) {
+      // Non-critical — the rest of the page still works without it.
+      console.error('Failed to load payout info:', err);
+    }
+  };
+
+  const handleRequestPayout = async () => {
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      setPayoutMessage({ text: 'Please fill in all bank details.', type: 'error' });
+      return;
+    }
+    setRequesting(true);
+    setPayoutMessage(null);
+    try {
+      const res = await api.payouts.requestPayout({
+        bank_name: bankName.trim(),
+        account_number: accountNumber.trim(),
+        account_name: accountName.trim(),
+      });
+      setPayoutMessage({ text: res.message, type: 'success' });
+      await loadPayoutInfo();
+    } catch (err) {
+      setPayoutMessage({ text: handleApiError(err), type: 'error' });
+    } finally {
+      setRequesting(false);
     }
   };
 
@@ -110,8 +161,8 @@ export default function ReferralsPage() {
               Start Earning Rewards
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
-              Apply for your unique referral link and start earning <span className="font-semibold text-purple-600 dark:text-purple-400">30% </span> for
-              every friend who signs up and purchases a self paced course and 20% for deep tech courses.
+              Apply for your unique referral link and start earning <span className="font-semibold text-purple-600 dark:text-purple-400">10% </span>
+              of what every friend you refer pays for their course.
             </p>
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 rounded-lg text-red-600 dark:text-red-300">
@@ -165,8 +216,8 @@ export default function ReferralsPage() {
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Referral Rewards</h3>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Earn <span className="font-semibold text-purple-600 dark:text-purple-400">30% </span> for each friend who
-                  successfully signs up and purchases a self paced course and 20% for deep tech courses
+                  Earn <span className="font-semibold text-purple-600 dark:text-purple-400">10% </span> of what each friend
+                  pays when they sign up and purchase a course through your link
                 </p>
               </div>
             </div>
@@ -210,6 +261,100 @@ export default function ReferralsPage() {
               value={`${referralData?.statistics.current_streak_months || 0} months`}
             />
           </div>
+        </div>
+
+        {/* Payout */}
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Banknote className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Payout</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-5 text-sm">
+            Request a payout of your earned rewards. We send payments manually via bank transfer once approved.
+          </p>
+
+          <div className="mb-5 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/25 rounded-lg p-4">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Available Balance</p>
+            <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+              ${payoutBalance?.available_balance.toFixed(2) ?? '0.00'}
+            </p>
+          </div>
+
+          {payoutMessage && (
+            <div
+              className={`mb-4 p-3 rounded-lg text-sm ${
+                payoutMessage.type === 'success'
+                  ? 'bg-green-50 border border-green-200 dark:bg-green-500/15 dark:border-green-500/30 text-green-700 dark:text-green-300'
+                  : 'bg-red-50 border border-red-200 dark:bg-red-500/15 dark:border-red-500/30 text-red-600 dark:text-red-300'
+              }`}
+            >
+              {payoutMessage.text}
+            </div>
+          )}
+
+          <div className="grid sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bank Name</label>
+              <input
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                placeholder="e.g. GTBank"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Account Number</label>
+              <input
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="0123456789"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Account Name</label>
+              <input
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder="As it appears on your account"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleRequestPayout}
+            disabled={requesting || !payoutBalance || payoutBalance.available_balance <= 0}
+            className="bg-purple-600 text-white px-6 py-2.5 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            {requesting ? 'Submitting...' : 'Request Payout'}
+          </button>
+
+          {payoutHistory.length > 0 && (
+            <div className="mt-6 overflow-x-auto">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payout History</p>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-white/10">
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Date</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Amount</th>
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payoutHistory.map((p) => (
+                    <tr key={p.id} className="border-b border-gray-100 dark:border-white/10">
+                      <td className="py-2 px-3 text-sm text-gray-600 dark:text-gray-300">
+                        {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td className="py-2 px-3 text-sm font-medium text-gray-900 dark:text-white">${Number(p.amount).toFixed(2)}</td>
+                      <td className="py-2 px-3"><PayoutStatusBadge status={p.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Referral History */}
@@ -326,6 +471,24 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${styles[status as keyof typeof styles] || styles.pending}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+// Payout Status Badge Component
+function PayoutStatusBadge({ status }: { status: string }) {
+  const styles = {
+    approved: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30',
+    pending: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
+    declined: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30',
+  };
+
+  const labels: Record<string, string> = { approved: 'Paid', pending: 'Pending', declined: 'Declined' };
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${styles[status as keyof typeof styles] || styles.pending}`}>
+      {status === 'approved' ? <CheckCircle className="w-3 h-3" /> : status === 'declined' ? <XCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+      {labels[status] || status}
     </span>
   );
 }

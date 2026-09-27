@@ -21,6 +21,9 @@ class PublicReferrer extends Authenticatable implements JWTSubject
         'successful_referrals',
         'pending_referrals',
         'total_earnings',
+        'payout_bank_name',
+        'payout_account_number',
+        'payout_account_name',
     ];
  
     protected $hidden = ['password'];

@@ -167,12 +167,14 @@ class ReferralController extends Controller
         $existingReferral = ReferralHistory::where('referred_user_id', $referredUser->id)->first();
 
         if (!$existingReferral) {
-            // Create new referral record
+            // Create new referral record. reward_amount is computed later —
+            // 10% of this referred user's first successful course payment —
+            // see App\Services\ReferralCommissionService.
             ReferralHistory::create([
                 'referrer_id' => $referralCode->user_id,
                 'referred_user_id' => $referredUser->id,
                 'status' => 'pending',
-                'reward_amount' => 30.00,
+                'reward_amount' => 0.00,
                 'referred_at' => now(),
             ]);
 

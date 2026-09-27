@@ -68,6 +68,13 @@ class AppServiceProvider extends ServiceProvider
                 });
         });
 
+        // Public CMS reads — mostly hit by the Next.js server itself while
+        // (re)building pages, all from one IP, so the guest 'api' limit of
+        // 30/min is far too low (saving the navbar revalidates every page).
+        RateLimiter::for('cms-read', function (Request $request) {
+            return Limit::perMinute(600)->by($request->ip());
+        });
+
         // Webhooks — Paystack/Stripe; don't throttle by user IP
         RateLimiter::for('webhooks', function (Request $request) {
             return Limit::perMinute(60)->by('webhook');

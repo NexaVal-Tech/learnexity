@@ -9,6 +9,7 @@ import { InstructorAuthProvider } from '@/contexts/InstructorAuthContext';
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import WhatsAppButton from "@/components/chat/WhatsappButton";
 import Head from "next/head";
+import { CmsGlobalsProvider } from "@/contexts/CmsGlobalsContext";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -27,23 +28,24 @@ export default function App({ Component, pageProps }: AppProps) {
           content="Learnexity is a tech career platform. Build real skills, gain hands-on experience, and land jobs, freelance work, or start your own business."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://learnexity.org${router.asPath}`} />
+        <link key="canonical" rel="canonical" href={`https://learnexity.org${router.asPath.split(/[?#]/)[0]}`} />
 
         {/* Open Graph defaults */}
         <meta property="og:site_name" content="Learnexity" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://learnexity.org${router.asPath}`} />
-        <meta property="og:title" content="Learnexity — Learn In-Demand Tech Skills" />
+        <meta key="og:url" property="og:url" content={`https://learnexity.org${router.asPath.split(/[?#]/)[0]}`} />
+        <meta key="og:title" property="og:title" content="Learnexity — Learn In-Demand Tech Skills" />
         <meta
+          key="og:description"
           property="og:description"
           content="Build real tech skills, gain hands-on experience, and launch your career with Learnexity."
         />
-        <meta property="og:image" content="https://learnexity.org/images/og-image.png" />
+        <meta key="og:image" property="og:image" content="https://learnexity.org/images/og-image.png" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Learnexity — Learn In-Demand Tech Skills" />
-        <meta name="twitter:image" content="https://learnexity.org/images/og-image.png" />
+        <meta key="twitter:title" name="twitter:title" content="Learnexity — Learn In-Demand Tech Skills" />
+        <meta key="twitter:image" name="twitter:image" content="https://learnexity.org/images/og-image.png" />
 
         {/* Organization JSON-LD — controls Google logo + knowledge panel */}
         <script
@@ -84,7 +86,11 @@ export default function App({ Component, pageProps }: AppProps) {
             </InstructorAuthProvider>
           ) : (
             <AuthProvider>
-              <Component {...pageProps} />
+              {/* CMS pages pass navbar/footer content via getStaticProps;
+                  other pages fall back to a client-side fetch. */}
+              <CmsGlobalsProvider value={pageProps?.cmsGlobals}>
+                <Component {...pageProps} />
+              </CmsGlobalsProvider>
               <WhatsAppButton />
             </AuthProvider>
           )}

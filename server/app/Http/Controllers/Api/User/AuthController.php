@@ -735,7 +735,10 @@ class AuthController extends Controller
                 'referrer_id'      => $studentCode->user_id,
                 'referred_user_id' => $user->id,
                 'status'           => 'pending',
-                'reward_amount'    => 30.00,
+                // reward_amount is computed later, as 10% of this referred
+                // user's first successful course payment — see
+                // ReferralCommissionService::creditReferrerForPayment().
+                'reward_amount'    => 0.00,
                 'referred_at'      => now(),
             ]);
 

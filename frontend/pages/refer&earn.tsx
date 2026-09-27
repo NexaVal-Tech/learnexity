@@ -2,11 +2,16 @@
 
 'use client';
 
-import Head from "next/head";
+import type { GetStaticProps } from "next";
 import { useState, useEffect, useCallback } from "react";
 import { Eye, EyeOff, Copy, Share2, Users, Gift, TrendingUp, CheckCircle, Clock, LogOut, ArrowRight, Zap } from "lucide-react";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
+import SectionRenderer from "@/components/cms/SectionRenderer";
+import CmsHead from "@/components/cms/CmsHead";
+import { ReferLandingContext, ReferStyles } from "@/components/cms/blocks/refer";
+import { getCmsPageProps, type CmsPageProps } from "@/lib/cms/server";
+import type { CmsSection } from "@/lib/cms/types";
 
 const BRAND = "#4A3AFF";
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -34,6 +39,20 @@ interface ReferralHistoryItem {
   referred_at: string;
 }
 
+interface PayoutBalance {
+  available_balance: number;
+  bank_name: string | null;
+  account_number: string | null;
+  account_name: string | null;
+}
+
+interface PayoutItem {
+  id: number;
+  amount: number;
+  status: "pending" | "approved" | "declined";
+  created_at: string;
+}
+
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 const SESSION_KEY = "re_session";
 
@@ -53,12 +72,18 @@ function clearSession() {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function ReferAndEarn() {
+// Landing-page copy is managed in Admin → Website CMS → Refer & Earn; the
+// sign-up form and referral dashboard below stay in code.
+export const getStaticProps: GetStaticProps<CmsPageProps> = () => getCmsPageProps("refer-earn");
+
+export default function ReferAndEarn({ cmsPage }: CmsPageProps) {
   const [view, setView] = useState<"landing" | "auth" | "dashboard">("landing");
   const [session, setSession] = useState<ReferrerSession | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [history, setHistory] = useState<ReferralHistoryItem[]>([]);
   const [loadingDash, setLoadingDash] = useState(false);
+  const [payoutBalance, setPayoutBalance] = useState<PayoutBalance | null>(null);
+  const [payoutHistory, setPayoutHistory] = useState<PayoutItem[]>([]);
 
   // Restore session on mount
   useEffect(() => {
@@ -112,22 +137,38 @@ export default function ReferAndEarn() {
       }
   }, [session]);
 
+  const fetchPayoutInfo = useCallback(async () => {
+      if (!session) return;
+      try {
+          const [balanceRes, historyRes] = await Promise.all([
+              fetch(`${API}/api/payouts/public/balance`, { headers: { Authorization: `Bearer ${session.token}` } }),
+              fetch(`${API}/api/payouts/public/history`, { headers: { Authorization: `Bearer ${session.token}` } }),
+          ]);
+          if (balanceRes.ok) setPayoutBalance(await balanceRes.json());
+          if (historyRes.ok) {
+              const data = await historyRes.json();
+              setPayoutHistory(data.history || []);
+          }
+      } catch (err) {
+          console.error('Payout info fetch error:', err);
+      }
+  }, [session]);
+
   useEffect(() => {
-    if (view === "dashboard" && session) fetchDashboard();
-  }, [view, session, fetchDashboard]);
+    if (view === "dashboard" && session) {
+      fetchDashboard();
+      fetchPayoutInfo();
+    }
+  }, [view, session, fetchDashboard, fetchPayoutInfo]);
 
   return (
     <>
-      <Head>
-        <title>Refer &amp; Earn — Learnexity</title>
-        <meta name="description" content="Share your referral link and earn 10% for every person who signs up through your link." />
-        <link rel="canonical" href="https://learnexity.org/refer-earn" />
-      </Head>
+      <CmsHead page={cmsPage} />
 
       <AppLayout>
-        <GlobalStyles />
+        <ReferStyles />
 
-        {view === "landing" && <LandingView onGetStarted={() => setView("auth")} />}
+        {view === "landing" && <LandingView sections={cmsPage.sections} onGetStarted={() => setView("auth")} />}
         {view === "auth" && <AuthView onSuccess={handleAuthSuccess} onBack={() => setView("landing")} />}
         {view === "dashboard" && session && (
           <DashboardView
@@ -137,6 +178,9 @@ export default function ReferAndEarn() {
             loading={loadingDash}
             onLogout={handleLogout}
             onRefresh={fetchDashboard}
+            payoutBalance={payoutBalance}
+            payoutHistory={payoutHistory}
+            onPayoutRequested={fetchPayoutInfo}
           />
         )}
 
@@ -146,243 +190,14 @@ export default function ReferAndEarn() {
   );
 }
 
-// ─── Global Styles ────────────────────────────────────────────────────────────
-function GlobalStyles() {
-  return (
-    <style>{`
-      @keyframes reEnter {
-        from { opacity: 0; transform: translateY(28px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes reShimmer {
-        0%   { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-      }
-      .re-enter { animation: reEnter 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-      .re-card {
-        border-radius: 2rem 0.75rem 2rem 0.75rem;
-        border: 1px solid var(--border-subtle);
-        background: var(--surface);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 32px 80px rgba(0,0,0,0.7);
-      }
-      .re-btn {
-        background: ${BRAND};
-        color: white;
-        font-weight: 700;
-        padding: 0.8rem 1.75rem;
-        border-radius: 2rem 0.5rem 2rem 0.5rem;
-        font-size: 0.9rem;
-        letter-spacing: 0.02em;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        border: none;
-      }
-      .re-btn:hover:not(:disabled) {
-        background: #3628e0;
-        box-shadow: 0 0 32px ${BRAND}55;
-        transform: translateY(-2px);
-      }
-      .re-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-      .re-btn-outline {
-        background: transparent;
-        border: 1.5px solid var(--border-subtle);
-        color: var(--text-secondary);
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        border-radius: 2rem 0.5rem 2rem 0.5rem;
-        font-size: 0.875rem;
-        transition: all 0.25s ease;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .re-btn-outline:hover {
-        border-color: var(--border-strong);
-        color: var(--text-primary);
-        background: var(--surface-alt);
-      }
-      .re-input {
-        background: transparent;
-        border: none;
-        border-bottom: 1.5px solid var(--border-strong);
-        width: 100%;
-        padding: 0.5rem 0;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        outline: none;
-        transition: border-color 0.25s;
-        caret-color: ${BRAND};
-      }
-      .re-input::placeholder { color: var(--text-muted); font-size: 0.875rem; }
-      .re-input:focus { border-bottom-color: ${BRAND}; }
-      .re-input:disabled { opacity: 0.4; }
-      .re-label {
-        font-size: 0.68rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        display: block;
-        margin-bottom: 0.3rem;
-      }
-      .re-stat-card {
-        border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-        border: 1px solid var(--border-subtle);
-        background: var(--surface-elevated);
-        padding: 1.5rem;
-        backdrop-filter: blur(12px);
-      }
-      .re-link-box {
-        background: rgba(74,58,255,0.08);
-        border: 1px solid rgba(74,58,255,0.25);
-        border-radius: 1rem 0.4rem 1rem 0.4rem;
-        padding: 1rem 1.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-family: monospace;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        word-break: break-all;
-      }
-      .re-copy-btn {
-        flex-shrink: 0;
-        background: ${BRAND};
-        color: white;
-        border: none;
-        border-radius: 0.6rem;
-        padding: 0.5rem 0.9rem;
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-      }
-      .re-copy-btn:hover { background: #3628e0; }
-      .re-social-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.65rem 1rem;
-        border: 1px solid var(--border-subtle);
-        border-radius: 1rem 0.35rem 1rem 0.35rem;
-        background: var(--surface-alt);
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-      }
-      .re-social-btn:hover { background: var(--surface-alt); color: var(--text-primary); }
-      .re-divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.5rem 0;
-      }
-      .re-divider::before, .re-divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: var(--border-subtle);
-      }
-      .re-divider span { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; }
-      .re-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 600;
-      }
-      .re-badge-pending  { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
-      .re-badge-completed { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
-      .re-badge-failed   { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-      .re-accent { color: #a5b4fc; }
-      .re-pulse {
-        animation: rePulse 2s ease-in-out infinite;
-      }
-      @keyframes rePulse {
-        0%,100% { opacity: 1; }
-        50% { opacity: 0.5; }
-      }
-    `}</style>
-  );
-}
-
 // ─── Landing View ─────────────────────────────────────────────────────────────
-function LandingView({ onGetStarted }: { onGetStarted: () => void }) {
+function LandingView({ sections, onGetStarted }: { sections: CmsSection[]; onGetStarted: () => void }) {
   return (
-    <section className="min-h-screen px-4 pt-28 pb-20 re-enter">
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-
-        {/* Hero */}
-        <div className="text-center mb-16">
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            background: "rgba(74,58,255,0.12)", border: "1px solid rgba(74,58,255,0.3)",
-            borderRadius: "999px", padding: "0.35rem 1rem", marginBottom: "1.5rem",
-          }}>
-            <Zap size={13} style={{ color: BRAND }} />
-            <span style={{ fontSize: "0.75rem", color: "#a5b4fc", fontWeight: 600, letterSpacing: "0.06em" }}>
-              REFERRAL PROGRAM
-            </span>
-          </div>
-
-          <h1 style={{ fontSize: "clamp(2.2rem,5vw,3.8rem)", fontWeight: 900, color: "var(--text-primary)", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1.25rem" }}>
-            Share Learnexity.<br />
-            <span className="re-accent">Earn 10%</span> per referral.
-          </h1>
-          <p style={{ fontSize: "1.05rem", color: "var(--text-secondary)", maxWidth: 520, margin: "0 auto 2.5rem" }}>
-            No course enrollment needed. Get your unique link, share it, and earn for every person who signs up through it.
-          </p>
-          <button className="re-btn" onClick={onGetStarted} style={{ fontSize: "1rem", padding: "1rem 2.25rem" }}>
-            Get My Referral Link <ArrowRight size={18} />
-          </button>
-        </div>
-
-        {/* How it works */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: "1.25rem", marginBottom: "4rem" }}>
-          {[
-            { n: "01", title: "Sign Up", desc: "Enter your email and create a password — takes 30 seconds." },
-            { n: "02", title: "Get Your Link", desc: "Instantly receive your unique referral link to share anywhere." },
-            { n: "03", title: "Share & Earn", desc: "Every person who registers through your link earns you 10%." },
-          ].map((s) => (
-            <div key={s.n} className="re-card" style={{ padding: "1.75rem" }}>
-              <div style={{ fontSize: "0.65rem", letterSpacing: "0.14em", color: BRAND, fontWeight: 700, marginBottom: "0.75rem" }}>{s.n}</div>
-              <h3 style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "1.05rem", marginBottom: "0.5rem" }}>{s.title}</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Earnings visual */}
-        {/* <div className="re-card" style={{ padding: "2.5rem", textAlign: "center" }}>
-          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Your potential earnings</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "2rem", flexWrap: "wrap" }}>
-            {[
-              { refs: 5, earn: "₦25,000" },
-              { refs: 10, earn: "₦50,000" },
-              { refs: 25, earn: "₦125,000" },
-              { refs: 50, earn: "₦250,000" },
-            ].map((r) => (
-              <div key={r.refs} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "white" }}>{r.earn}</div>
-                <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", marginTop: "0.2rem" }}>{r.refs} referrals</div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-      </div>
-    </section>
+    <div className="min-h-screen">
+      <ReferLandingContext.Provider value={{ onGetStarted }}>
+        <SectionRenderer sections={sections} />
+      </ReferLandingContext.Provider>
+    </div>
   );
 }
 
@@ -531,7 +346,7 @@ function AuthView({ onSuccess, onBack }: { onSuccess: (s: ReferrerSession) => vo
 
 // ─── Dashboard View ───────────────────────────────────────────────────────────
 function DashboardView({
-  session, stats, history, loading, onLogout, onRefresh
+  session, stats, history, loading, onLogout, onRefresh, payoutBalance, payoutHistory, onPayoutRequested
 }: {
   session: ReferrerSession;
   stats: Stats | null;
@@ -539,6 +354,9 @@ function DashboardView({
   loading: boolean;
   onLogout: () => void;
   onRefresh: () => void;
+  payoutBalance: PayoutBalance | null;
+  payoutHistory: PayoutItem[];
+  onPayoutRequested: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -585,7 +403,7 @@ function DashboardView({
           <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "1rem" }}>Your Referral Link</span>
         </div>
         <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1rem" }}>
-          Share this link — every signup earns you <strong style={{ color: "#4ade80" }}>₦5,000</strong>
+          Share this link — earn <strong style={{ color: "#4ade80" }}>10%</strong> of what every person who signs up through it pays
         </p>
         <div className="re-link-box">
           <span style={{ flex: 1 }}>{session.referral_link}</span>
@@ -623,6 +441,9 @@ function DashboardView({
           accent
         />
       </div>
+
+      {/* Payout */}
+      <PayoutSection session={session} balance={payoutBalance} history={payoutHistory} onRequested={onPayoutRequested} />
 
       {/* History */}
       <div className="re-card" style={{ padding: "1.75rem 2rem" }}>
@@ -680,6 +501,139 @@ function DashboardView({
         )}
       </div>
     </section>
+  );
+}
+
+// ─── Payout Section ───────────────────────────────────────────────────────────
+function PayoutSection({
+  session, balance, history, onRequested
+}: {
+  session: ReferrerSession;
+  balance: PayoutBalance | null;
+  history: PayoutItem[];
+  onRequested: () => void;
+}) {
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [requesting, setRequesting] = useState(false);
+  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
+
+  useEffect(() => {
+    if (balance) {
+      setBankName(balance.bank_name || "");
+      setAccountNumber(balance.account_number || "");
+      setAccountName(balance.account_name || "");
+    }
+  }, [balance]);
+
+  const submit = async () => {
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      setMessage({ text: "Please fill in all bank details.", ok: false });
+      return;
+    }
+    setRequesting(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`${API}/api/payouts/public`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+        body: JSON.stringify({
+          bank_name: bankName.trim(),
+          account_number: accountNumber.trim(),
+          account_name: accountName.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage({ text: data.message || "Something went wrong.", ok: false });
+        return;
+      }
+      setMessage({ text: data.message, ok: true });
+      onRequested();
+    } catch {
+      setMessage({ text: "Network error. Please try again.", ok: false });
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    const labels: Record<string, string> = { approved: "Paid", pending: "Pending", declined: "Declined" };
+    return <span className={`re-badge re-badge-${status === "approved" ? "completed" : status}`}>{labels[status] || status}</span>;
+  };
+
+  return (
+    <div className="re-card" style={{ padding: "1.75rem 2rem", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem" }}>
+        <Gift size={16} style={{ color: BRAND }} />
+        <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>Payout</span>
+      </div>
+      <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginBottom: "1.25rem" }}>
+        Request a payout of your earned rewards — sent manually via bank transfer once approved.
+      </p>
+
+      <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: "1rem 0.4rem 1rem 0.4rem", padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>Available Balance</p>
+        <p style={{ fontSize: "1.6rem", fontWeight: 800, color: "#4ade80" }}>₦{(balance?.available_balance ?? 0).toLocaleString()}</p>
+      </div>
+
+      {message && (
+        <div style={{
+          marginBottom: "1rem", padding: "0.75rem 1rem", borderRadius: "0.75rem", fontSize: "0.85rem",
+          background: message.ok ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+          border: `1px solid ${message.ok ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+          color: message.ok ? "#4ade80" : "#fca5a5",
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: "1.25rem", marginBottom: "1.25rem" }}>
+        <div>
+          <label className="re-label">Bank Name</label>
+          <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="e.g. GTBank" className="re-input" />
+        </div>
+        <div>
+          <label className="re-label">Account Number</label>
+          <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="0123456789" className="re-input" />
+        </div>
+        <div>
+          <label className="re-label">Account Name</label>
+          <input value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="As it appears on your account" className="re-input" />
+        </div>
+      </div>
+
+      <button className="re-btn" onClick={submit} disabled={requesting || !balance || balance.available_balance <= 0}>
+        {requesting ? "Submitting…" : "Request Payout"}
+      </button>
+
+      {history.length > 0 && (
+        <div style={{ marginTop: "1.75rem" }}>
+          <p style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.75rem" }}>Payout History</p>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {["Date", "Amount", "Status"].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "0.5rem 0.6rem", fontSize: "0.7rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", borderBottom: "1px solid var(--border-subtle)", fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {history.map(p => (
+                <tr key={p.id} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                  <td style={{ padding: "0.65rem 0.6rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                    {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </td>
+                  <td style={{ padding: "0.65rem 0.6rem", fontSize: "0.82rem", fontWeight: 600, color: "var(--text-primary)" }}>₦{Number(p.amount).toLocaleString()}</td>
+                  <td style={{ padding: "0.65rem 0.6rem" }}>{statusBadge(p.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -1,37 +1,36 @@
 "use client";
 
 import { ScrollFadeIn } from "@/components/animations/Animation";
+import { CmsIcon, CmsText } from "@/components/cms/ui";
+import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
+import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
 const BRAND = "#4A3AFF";
 
-const cards = [
-  {
-    label: "Turn Your Skills Into Income",
-    icon: "/icons/black_folder.png",
-    description:
-      "We do not just teach tech skills; we help you start earning with them.",
-  },
-  {
-    label: "Get Job Placement",
-    icon: "/icons/hugeicons_mentoring.png",
-    description:
-      "Get matched with our local and international partners for your dream job.  ",
-  },
-  {
-    label: "Gain Real-World Internship Experience",
-    icon: "/icons/job.png",
-    description:
-      "We provide the hands-on experience employers are looking for.",
-  },
-  {
-    label: "Job Support:",
-    icon: "/icons/job.png",
-    description:
-      "We help you with resume reviews, LinkedIn optimization, interview preparation, and access to remote and global job opportunities.",
-  },
-];
+export interface MethodData {
+  heading: string;
+  intro: string;
+  cards: { title: string; description: string; icon: string }[];
+}
 
-export default function Method() {
+export const METHOD_DEFAULTS: MethodData = {
+  heading: "Why Choose Learnexity",
+  intro: "We help you move from learning, ** to earning, ** to real opportunity, without quitting your job.",
+  cards: [
+    { title: "Turn Your Skills Into Income", description: "We do not just teach tech skills; we help you start earning with them.", icon: "" },
+    { title: "Get Job Placement", description: "Get matched with our local and international partners for your dream job.", icon: "" },
+    { title: "Gain Real-World Internship Experience", description: "We provide the hands-on experience employers are looking for.", icon: "" },
+    {
+      title: "Job Support:",
+      description:
+        "We help you with resume reviews, LinkedIn optimization, interview preparation, and access to remote and global job opportunities.",
+      icon: "",
+    },
+  ],
+};
+
+export default function Method({ data = METHOD_DEFAULTS }: { data?: MethodData }) {
+  const cards = data.cards ?? [];
   return (
     <section className="py-16">
       <style>{`
@@ -59,20 +58,17 @@ export default function Method() {
               shadow-2xl shadow-black/80"
           >
             <h2 className="text-4xl md:text-5xl font-semibold text-[var(--text-primary)] mb-4">
-              Why Choose Learnexity
+              <CmsText text={data.heading} />
             </h2>
             <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto">
-              We help you move from learning, 
-              <span style={{ color: "#4A3AFF" }}> to earning, </span> 
-               to real opportunity, without quitting your job.
+              <CmsText text={data.intro} />
             </p>
           </div>
         </ScrollFadeIn>
 
-        {/* 4 cards in a single row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${cards.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
           {cards.map((card, index) => (
-            <ScrollFadeIn key={card.label} delay={index * 0.15} duration={0.3}>
+            <ScrollFadeIn key={index} delay={index * 0.15} duration={0.3}>
               <div
                 className="h-full method-card flex flex-col items-center text-center px-6 py-8
                   border border-[var(--border-subtle)]
@@ -82,13 +78,16 @@ export default function Method() {
                   cursor-pointer transition-all duration-300
                   min-h-[280px]"
               >
-
-                {/* Text below */}
+                {card.icon && (
+                  <span className="mb-4">
+                    <CmsIcon value={card.icon} size={36} color={BRAND} />
+                  </span>
+                )}
                 <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
-                  {card.label}
+                  <CmsText text={card.title} />
                 </h3>
                 <p className="text-[var(--text-secondary)] text-xl">
-                  {card.description}
+                  <CmsText text={card.description} />
                 </p>
               </div>
             </ScrollFadeIn>
@@ -98,3 +97,21 @@ export default function Method() {
     </section>
   );
 }
+
+export const block: BlockDefinition<MethodData> = {
+  type: "home.method",
+  label: "Why choose us",
+  category: "Homepage",
+  description: "Header card plus a row of benefit cards.",
+  fields: [
+    f.textarea("heading", "Heading", { rows: 2, help: EMPHASIS_HELP }),
+    f.textarea("intro", "Intro", { rows: 3, help: EMPHASIS_HELP }),
+    f.list(
+      "cards",
+      "Cards",
+      [f.textarea("title", "Title", { rows: 2 }), f.textarea("description", "Description", { rows: 3 }), f.icon("icon", "Icon (optional)")],
+      { itemLabelKey: "title", addLabel: "Add card", max: 8, itemDefaults: { title: "New benefit", description: "Describe it.", icon: "" } }
+    ),
+  ],
+  defaults: METHOD_DEFAULTS,
+};

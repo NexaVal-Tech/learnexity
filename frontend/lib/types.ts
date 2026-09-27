@@ -378,6 +378,27 @@ export interface ReferralResponse {
   history: ReferralHistory[];
 }
 
+export interface PayoutBalance {
+  available_balance: number;
+  bank_name: string | null;
+  account_number: string | null;
+  account_name: string | null;
+}
+
+export interface PayoutRequestItem {
+  id: number;
+  payee_type: 'user' | 'public_referrer';
+  payee_id: number;
+  amount: number;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  status: 'pending' | 'approved' | 'declined';
+  admin_note: string | null;
+  processed_at: string | null;
+  created_at: string;
+}
+
 export interface CreateReferralResponse {
   message: string;
   referral_code: string;

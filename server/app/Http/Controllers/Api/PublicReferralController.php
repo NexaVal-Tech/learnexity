@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Log;
  *
  * Non-student referrers sign up with email + password only.
  * JWT is issued from the 'public_referrer' guard.
- * ₦5,000 reward per successful referral signup.
+ * Reward is 10% of the referred person's first course payment — credited by
+ * ReferralCommissionService once that payment happens, not at signup.
  */
 class PublicReferralController extends Controller
 {
@@ -185,7 +186,10 @@ class PublicReferralController extends Controller
                     'referrer_id'        => null,        // nullable after your migration
                     'referred_user_id'   => $newUser->id,
                     'status'             => 'pending',
-                    'reward_amount'      => 5000.00,
+                    // reward_amount is computed later, as 10% of this
+                    // referred user's first successful course payment — see
+                    // ReferralCommissionService::creditReferrerForPayment().
+                    'reward_amount'      => 0.00,
                     'referred_at'        => now(),
                 ]);
 

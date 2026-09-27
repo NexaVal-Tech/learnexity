@@ -4,10 +4,35 @@
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { PrimaryButton2 } from '@/components/button/Button';
+import { CmsText } from '@/components/cms/ui';
+import { f, EMPHASIS_HELP } from '@/lib/cms/fields';
+import type { BlockDefinition } from '@/lib/cms/blockTypes';
 
 const BRAND = '#4A3AFF';
 
-export default function ScholarshipBanner() {
+export interface ScholarshipBannerData {
+  heading: string;
+  lines: { text: string; style: 'normal' | 'accent' | 'highlight' }[];
+  buttonLabel: string;
+  image: string;
+  imageAlt: string;
+}
+
+export const SCHOLARSHIP_BANNER_DEFAULTS: ScholarshipBannerData = {
+  heading: "Can't Afford the Full Price?\n**Scholarships And Installment Payments Are Available.**",
+  lines: [
+    { text: 'We believe cost should never be a barrier to learning.', style: 'accent' },
+    {
+      text: 'Learnexity offers need-based, full-tuition scholarships across all courses — approved applicants pay only a flat registration fee.',
+      style: 'normal',
+    },
+  ],
+  buttonLabel: 'Apply for a Scholarship',
+  image: '/images/learnexity-image.jpeg',
+  imageAlt: 'Learnexity',
+};
+
+export default function ScholarshipBanner({ data = SCHOLARSHIP_BANNER_DEFAULTS }: { data?: ScholarshipBannerData }) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -198,36 +223,67 @@ export default function ScholarshipBanner() {
             <div className="schb-accent-bar" />
 
             <h2 className="schb-headline">
-              Can't Afford the Full Price?<br />
-              <em>Scholarships And Installment Payments Are Available.</em>
+              <CmsText text={data.heading} accentColor="#a5b4fc" />
             </h2>
 
             <div className="schb-body">
-              <p className="text-lg schb-body-line accent">We believe cost should never be a barrier to learning.</p>
-              <p className="text-lg schb-body-line">
-                Learnexity offers need-based, full-tuition scholarships across all courses — approved
-                applicants pay only a flat registration fee.
-              </p>
+              {(data.lines ?? []).map((line, i) => (
+                <p
+                  key={i}
+                  className={`text-lg schb-body-line ${line.style === 'accent' ? 'accent' : line.style === 'highlight' ? 'highlight' : ''}`}
+                >
+                  <CmsText text={line.text} accentColor="#7a70ff" />
+                </p>
+              ))}
             </div>
 
             <div onClick={handleApply}>
-              <PrimaryButton2 label="Apply for a Scholarship" />
+              {/* Signed-out visitors go to sign-up (and are sent on to the
+                  course list afterwards); signed-in students go straight to
+                  the course list, where they apply per course. */}
+              <PrimaryButton2 label={data.buttonLabel || 'Apply for a Scholarship'} />
             </div>
           </div>
 
           {/* ── Right panel: logo, large screens only ── */}
-          <div className="schb-right">
-            <div className="schb-logo-wrap">
-              <img
-                src="/images/learnexity-image.jpeg"
-                alt="Learnexity"
-                className="schb-logo-img"
-              />
+          {data.image && (
+            <div className="schb-right">
+              <div className="schb-logo-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.image} alt={data.imageAlt || ''} className="schb-logo-img" />
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
     </section>
   );
 }
+
+export const block: BlockDefinition<ScholarshipBannerData> = {
+  type: 'home.scholarshipBanner',
+  label: 'Scholarship banner',
+  category: 'Homepage',
+  description: 'Highlighted card promoting scholarships. The button always leads to sign-up / the course list.',
+  fields: [
+    f.textarea('heading', 'Headline', { rows: 3, help: EMPHASIS_HELP }),
+    f.list(
+      'lines',
+      'Paragraphs',
+      [
+        f.textarea('text', 'Text', { rows: 3 }),
+        f.select('style', 'Style', [
+          { value: 'normal', label: 'Normal' },
+          { value: 'accent', label: 'Bold' },
+          { value: 'highlight', label: 'Bold purple' },
+        ]),
+      ],
+      { itemLabelKey: 'text', addLabel: 'Add paragraph', itemDefaults: { text: 'New paragraph', style: 'normal' } }
+    ),
+    f.text('buttonLabel', 'Button text'),
+    f.image('image', 'Side image (large screens)'),
+    f.text('imageAlt', 'Image description'),
+  ],
+  defaults: SCHOLARSHIP_BANNER_DEFAULTS,
+};

@@ -1,43 +1,26 @@
 // pages/index.tsx
-
-// import ScrollFadeIn  from "@/components/animations/Animation";
+//
+// Homepage. Every section is managed in Admin → Website CMS → Homepage
+// (reorder, hide, edit, add sections); defaults in lib/cms/pages.ts
+// reproduce the original hand-built page.
 import Head from "next/head";
+import type { GetStaticProps } from "next";
 import AppLayout from "@/components/layouts/AppLayout";
-import Hero from "@/components/hero/Hero";
-import Experience from "@/components/experience/Experience";
-import Pathways from "@/components/pathways/Pathways";
-import Courses from "@/components/courses/Courses";
-// import Skills from "@/components/skills/Skills";
-// import Navbar from "@/components/navbar/Navbar";
-import Method from "@/components/method/Method";
-import Testimonials from "@/components/testimonials/Testimonials";
-import FAQs from "@/components/FAQs/FAQs";
-import TechCompany from "@/components/techcompany/TechCompany";
-// import Community from "@/components/community/Community";
 import Footer from "@/components/footer/Footer";
-// import InstallmentBanner from "@/components/installment/InstallmentBanner";
-import ProbStatement from "@/components/probstatement/ProbStatement";
-import ScholarshipBanner from "@/components/Scholarship/ScholarshipBanner";
 import ScholarshipCountdownBanner from "@/components/ScholarshipCountdownBanner";
+import SectionRenderer from "@/components/cms/SectionRenderer";
+import CmsHead from "@/components/cms/CmsHead";
+import { getCmsPageProps, type CmsPageProps } from "@/lib/cms/server";
 
-export default function Home() {
+export const getStaticProps: GetStaticProps<CmsPageProps> = () => getCmsPageProps("home");
+
+export default function Home({ cmsPage }: CmsPageProps) {
   return (
     <AppLayout
       topBanner={({ onHeightChange }) => <ScholarshipCountdownBanner onHeightChange={onHeightChange} />}
     >
+      <CmsHead page={cmsPage} />
       <Head>
-        <title>Learnexity — Learn In-Demand Tech Skills & Launch Your Career</title>
-        <meta
-          name="description"
-          content="Learnexity helps you go from learning to doing — through hands-on training, internships, and real pathways into jobs, freelancing, and entrepreneurship in tech."
-        />
-        <meta property="og:title" content="Learnexity — Learn In-Demand Tech Skills" />
-        <meta
-          property="og:description"
-          content="Build real tech skills and gain hands-on experience. Courses in AI (artificial intelligence), Web Development, UI/UX Design, Data Analytics and more."
-        />
-        <link rel="canonical" href="https://learnexity.org" />
-
         {/* WebSite JSON-LD — enables Google Sitelinks Search Box */}
         <script
           type="application/ld+json"
@@ -52,20 +35,7 @@ export default function Home() {
         />
       </Head>
 
-      {/* <Navbar /> */}
-      <Hero />
-      <Experience />
-      <ProbStatement />
-      <Courses />
-      <Method />
-      <Pathways />
-      <TechCompany />
-      <Testimonials />
-      {/* <InstallmentBanner /> */}
-      <ScholarshipBanner />
-      {/* <Skills /> */}
-      {/* <Community /> */}
-      <FAQs />
+      <SectionRenderer sections={cmsPage.sections} />
       <Footer />
     </AppLayout>
   );

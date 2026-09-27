@@ -23,6 +23,7 @@ import {
   Sticker,
   PenTool,
   Users,
+  Globe,
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { adminHasPermission } from '@/lib/adminApi';
@@ -53,6 +54,7 @@ const Sidebar = () => {
     { icon: Stamp, label: 'Certificate/Badge Generators', href: '/admin/generators', permission: 'certificate_badge_generators' },
     { icon: ImagePlus, label: '"I Will Be Attending" Flyer', href: '/admin/attending-flyer', permission: 'attending_flyer' },
     { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics', permission: 'activity' },
+    { icon: Globe, label: 'Website CMS', href: '/admin/cms', permission: 'cms' },
   ];
 
   const visibleMenuItems = menuItems.filter(
@@ -86,7 +88,7 @@ const Sidebar = () => {
       <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
         <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-4 px-2">Main</div>
         {visibleMenuItems.map((item) => {
-          const isActive = router.pathname === item.href;
+          const isActive = router.pathname === item.href || (item.href === '/admin/cms' && router.pathname.startsWith('/admin/cms/'));
           return (
             <Link
               key={item.href}

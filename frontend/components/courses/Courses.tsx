@@ -1,7 +1,11 @@
+import React from "react";
 import { FadeInCard, FadeUpOnScroll } from "../animations/Animation";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { Course } from "@/lib/api";
+import { CmsText } from "@/components/cms/ui";
+import { f } from "@/lib/cms/fields";
+import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -10,7 +14,22 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const AUTO_SCROLL_PX_PER_SEC = 45;
 const RESUME_IDLE_MS = 7000;
 
-export default function Courses() {
+export interface HomeCoursesData {
+  heading: string;
+  subheading: string;
+  flexCardTitle: string;
+  flexCardText: string;
+}
+
+export const HOME_COURSES_DEFAULTS: HomeCoursesData = {
+  // The line break only applies below the lg breakpoint (as before).
+  heading: "In-Demand Courses That\nGet Results",
+  subheading: "Proven curriculum with measurable outcomes",
+  flexCardTitle: "Explore Our Flexible Courses",
+  flexCardText: "Learn at your own pace, no fixed schedule, Start anytime.",
+};
+
+export default function Courses({ data = HOME_COURSES_DEFAULTS }: { data?: HomeCoursesData }) {
   const [deepTechCourses, setDeepTechCourses] = useState<Course[]>([]);
   const [flexCourses, setFlexCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,11 +219,15 @@ export default function Courses() {
             <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
               <div>
                 <h2 className="text-5xl font-semibold text-gray-900 dark:text-white mb-4 leading-tight">
-                  In-Demand Courses That <br className="block lg:hidden" />
-                  Get Results
+                  {(data.heading ?? "").split("\n").map((line, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <>{" "}<br className="block lg:hidden" /></>}
+                      <CmsText text={line} />
+                    </React.Fragment>
+                  ))}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-200 text-xl">
-                  Proven curriculum with measurable outcomes
+                  <CmsText text={data.subheading} />
                 </p>
               </div>
             </div>
@@ -321,10 +344,10 @@ export default function Courses() {
                             }}
                           >
                             <h3 className="text-2xl font-bold text-white mb-2 leading-snug">
-                              Explore Our Flexible Courses
+                              <CmsText text={data.flexCardTitle} accentColor="#a5b4fc" />
                             </h3>
                             <p className="text-gray-400 text-sm mb-5 leading-relaxed">
-                              Learn at your own pace, no fixed schedule, Start anytime.
+                              <CmsText text={data.flexCardText} />
                             </p>
 
                             {/* Scrollable flex course list — shows ~3, scrolls for more */}
@@ -421,3 +444,17 @@ export default function Courses() {
     </FadeUpOnScroll>
   );
 }
+
+export const block: BlockDefinition<HomeCoursesData> = {
+  type: "home.courses",
+  label: "Featured courses carousel",
+  category: "Homepage",
+  description: "Heading plus the live course carousel. The courses themselves come from Course Management.",
+  fields: [
+    f.textarea("heading", "Heading", { rows: 2, help: "A line break here only applies on smaller screens." }),
+    f.text("subheading", "Subheading"),
+    f.text("flexCardTitle", "Flexible-courses card title"),
+    f.textarea("flexCardText", "Flexible-courses card text", { rows: 2 }),
+  ],
+  defaults: HOME_COURSES_DEFAULTS,
+};

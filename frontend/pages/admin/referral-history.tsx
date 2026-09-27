@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/adminApi';
 import {
   Loader2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Users, DollarSign, TrendingUp, Link2, CheckCircle, Clock, XCircle,
-  X, Check, Eye, Copy
+  X, Check, Eye, Copy, Banknote, ThumbsDown
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -47,6 +47,29 @@ interface Meta {
   per_page: number;
 }
 
+interface PayoutItem {
+  id: number;
+  payee_type: 'user' | 'public_referrer';
+  payee_id: number;
+  payee: { id: number; name?: string; email: string } | null;
+  amount: number;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  status: 'pending' | 'approved' | 'declined';
+  admin_note: string | null;
+  processed_at: string | null;
+  created_at: string;
+}
+
+interface PayoutStats {
+  pending: number;
+  approved: number;
+  declined: number;
+  pending_amount: number;
+  paid_amount: number;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const statusStyle = (s: string) => {
@@ -61,11 +84,21 @@ const statusIcon = (s: string) => {
   return <Clock size={12} />;
 };
 
+// adminApi.get() already returns the response body, and Laravel's paginator
+// puts current_page/last_page/total/per_page at the top level of that body
+// (not under a "meta" key), so read them from there.
+const toMeta = (body: any): Meta => ({
+  current_page: body?.current_page ?? 1,
+  last_page: body?.last_page ?? 1,
+  total: body?.total ?? 0,
+  per_page: body?.per_page ?? 15,
+});
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ReferralHistoryPage: React.FC = () => {
   // ── State ──
-  const [tab, setTab] = useState<'history' | 'public_referrers'>('history');
+  const [tab, setTab] = useState<'history' | 'public_referrers' | 'payouts'>('history');
 
   // History tab
   const [history, setHistory] = useState<ReferralHistoryItem[]>([]);
@@ -79,6 +112,16 @@ const ReferralHistoryPage: React.FC = () => {
   const [referrersMeta, setReferrersMeta] = useState<Meta>({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
   const [referrersLoading, setReferrersLoading] = useState(false);
   const [referrersSearch, setReferrersSearch] = useState('');
+
+  // Payouts tab
+  const [payouts, setPayouts] = useState<PayoutItem[]>([]);
+  const [payoutsMeta, setPayoutsMeta] = useState<Meta>({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
+  const [payoutsLoading, setPayoutsLoading] = useState(false);
+  const [payoutStatusFilter, setPayoutStatusFilter] = useState('pending');
+  const [payoutStats, setPayoutStats] = useState<PayoutStats | null>(null);
+  const [declineTarget, setDeclineTarget] = useState<PayoutItem | null>(null);
+  const [declineNote, setDeclineNote] = useState('');
+  const [actingOn, setActingOn] = useState<number | null>(null);
 
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -95,13 +138,8 @@ const ReferralHistoryPage: React.FC = () => {
       if (statusFilter !== 'all') params.status = statusFilter;
         const response = await adminApi.get('/api/admin/referrals/history', { params });
 
-        setHistory(response.data.data ?? []);
-        setHistoryMeta(response.data.meta ?? {
-          current_page: 1,
-          last_page: 1,
-          total: 0,
-          per_page: 15
-        });
+        setHistory(response?.data ?? []);
+        setHistoryMeta(toMeta(response));
     } catch {
       showToast('Failed to load referral history', 'error');
     } finally {
@@ -121,17 +159,76 @@ const ReferralHistoryPage: React.FC = () => {
       if (referrersSearch) params.search = referrersSearch;
         const response = await adminApi.get('/api/admin/referrals/public-referrers', { params });
 
-        setReferrers(response.data.data ?? []);
-        setReferrersMeta(response.data.meta ?? {
-          current_page: 1,
-          last_page: 1,
-          total: 0,
-          per_page: 15
-        });
+        setReferrers(response?.data ?? []);
+        setReferrersMeta(toMeta(response));
     } catch {
       showToast('Failed to load referrers', 'error');
     } finally {
       setReferrersLoading(false);
+    }
+  };
+
+  // ── Fetch payouts ──
+  useEffect(() => {
+    if (tab === 'payouts') {
+      fetchPayouts(1);
+      fetchPayoutStats();
+    }
+  }, [payoutStatusFilter, tab]);
+
+  const fetchPayouts = async (page = 1) => {
+    try {
+      setPayoutsLoading(true);
+      const params: any = { page, per_page: payoutsMeta.per_page };
+      if (payoutStatusFilter !== 'all') params.status = payoutStatusFilter;
+      const response = await adminApi.get('/api/admin/payouts', { params });
+
+      setPayouts(response?.data ?? []);
+      setPayoutsMeta(toMeta(response));
+    } catch {
+      showToast('Failed to load payout requests', 'error');
+    } finally {
+      setPayoutsLoading(false);
+    }
+  };
+
+  const fetchPayoutStats = async () => {
+    try {
+      const response = await adminApi.get('/api/admin/payouts/stats');
+      setPayoutStats(response);
+    } catch {
+      // Non-critical — the table still works without the stat cards.
+    }
+  };
+
+  const approvePayout = async (payout: PayoutItem) => {
+    setActingOn(payout.id);
+    try {
+      await adminApi.post(`/api/admin/payouts/${payout.id}/approve`, {});
+      showToast('Payout marked as paid.', 'success');
+      fetchPayouts(payoutsMeta.current_page);
+      fetchPayoutStats();
+    } catch {
+      showToast('Failed to approve payout', 'error');
+    } finally {
+      setActingOn(null);
+    }
+  };
+
+  const declinePayout = async () => {
+    if (!declineTarget) return;
+    setActingOn(declineTarget.id);
+    try {
+      await adminApi.post(`/api/admin/payouts/${declineTarget.id}/decline`, { admin_note: declineNote });
+      showToast('Payout request declined.', 'success');
+      setDeclineTarget(null);
+      setDeclineNote('');
+      fetchPayouts(payoutsMeta.current_page);
+      fetchPayoutStats();
+    } catch {
+      showToast('Failed to decline payout', 'error');
+    } finally {
+      setActingOn(null);
     }
   };
 
@@ -181,7 +278,7 @@ const ReferralHistoryPage: React.FC = () => {
 
           {/* Tabs */}
           <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1.5 rounded-full w-fit">
-            {(['history', 'public_referrers'] as const).map(t => (
+            {(['history', 'public_referrers', 'payouts'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -189,7 +286,12 @@ const ReferralHistoryPage: React.FC = () => {
                   tab === t ? 'bg-white dark:bg-[#0f0f14] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                {t === 'history' ? 'All Referrals' : 'Public Referrers'}
+                {t === 'history' ? 'All Referrals' : t === 'public_referrers' ? 'Public Referrers' : 'Payout Requests'}
+                {t === 'payouts' && payoutStats && payoutStats.pending > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                    {payoutStats.pending}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -462,7 +564,173 @@ const ReferralHistoryPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* ── PAYOUTS TAB ── */}
+          {tab === 'payouts' && (
+            <div className="space-y-4">
+              {/* Stats */}
+              {payoutStats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Pending', value: payoutStats.pending, icon: <Clock size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
+                    { label: 'Approved', value: payoutStats.approved, icon: <CheckCircle size={16} />, color: 'text-green-600 dark:text-green-400' },
+                    { label: 'Pending Amount', value: `$${Number(payoutStats.pending_amount).toFixed(2)}`, icon: <Banknote size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
+                    { label: 'Paid Out', value: `$${Number(payoutStats.paid_amount).toFixed(2)}`, icon: <DollarSign size={16} />, color: 'text-green-600 dark:text-green-400' },
+                  ].map(s => (
+                    <div key={s.label} className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3">
+                      <div className={s.color}>{s.icon}</div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">{s.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Filter */}
+              <select
+                value={payoutStatusFilter}
+                onChange={e => setPayoutStatusFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg bg-white dark:bg-white/5 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+                <option value="all">All Statuses</option>
+              </select>
+
+              <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
+                {payoutsLoading ? (
+                  <div className="flex items-center justify-center h-48">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
+                  </div>
+                ) : payouts.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Banknote size={32} className="mx-auto text-gray-300 dark:text-white/10 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">No payout requests found.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
+                          <tr>
+                            {['Referrer', 'Amount', 'Bank Details', 'Status', 'Requested', 'Actions'].map(h => (
+                              <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                          {payouts.map(p => (
+                            <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                              <td className="py-3 px-4">
+                                <div>
+                                  <p className="text-sm text-gray-900 dark:text-white">{p.payee?.name || p.payee?.email || `#${p.payee_id}`}</p>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded border font-medium ${
+                                    p.payee_type === 'public_referrer'
+                                      ? 'bg-purple-50 dark:bg-indigo-500/15 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-indigo-500/30'
+                                      : 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/30'
+                                  }`}>
+                                    {p.payee_type === 'public_referrer' ? 'Public' : 'Student'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">${Number(p.amount).toFixed(2)}</td>
+                              <td className="py-3 px-4">
+                                <p className="text-sm text-gray-700 dark:text-gray-300">{p.bank_name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{p.account_number} · {p.account_name}</p>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded border text-xs font-medium ${statusStyle(p.status === 'approved' ? 'completed' : p.status)}`}>
+                                  {statusIcon(p.status === 'approved' ? 'completed' : p.status)} {p.status === 'approved' ? 'Paid' : p.status}
+                                </span>
+                                {p.admin_note && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-[180px]">{p.admin_note}</p>}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                                {new Date(p.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="py-3 px-4">
+                                {p.status === 'pending' ? (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => approvePayout(p)}
+                                      disabled={actingOn === p.id}
+                                      className="flex items-center gap-1 text-xs font-medium bg-green-50 dark:bg-green-500/15 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30 px-2.5 py-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-500/25 disabled:opacity-50"
+                                    >
+                                      <Check size={12} /> Approve
+                                    </button>
+                                    <button
+                                      onClick={() => { setDeclineTarget(p); setDeclineNote(''); }}
+                                      disabled={actingOn === p.id}
+                                      className="flex items-center gap-1 text-xs font-medium bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 px-2.5 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/25 disabled:opacity-50"
+                                    >
+                                      <ThumbsDown size={12} /> Decline
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="px-4 py-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{payoutsMeta.total} total requests</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600 dark:text-gray-300">Page {payoutsMeta.current_page} of {payoutsMeta.last_page}</span>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => fetchPayouts(1)} disabled={payoutsMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsLeft size={15} /></button>
+                          <button onClick={() => fetchPayouts(payoutsMeta.current_page - 1)} disabled={payoutsMeta.current_page === 1} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronLeft size={15} /></button>
+                          <button onClick={() => fetchPayouts(payoutsMeta.current_page + 1)} disabled={payoutsMeta.current_page === payoutsMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronRight size={15} /></button>
+                          <button onClick={() => fetchPayouts(payoutsMeta.last_page)} disabled={payoutsMeta.current_page === payoutsMeta.last_page} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"><ChevronsRight size={15} /></button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Decline modal */}
+        {declineTarget && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-xl shadow-xl max-w-sm w-full p-6">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Decline payout request?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                ${Number(declineTarget.amount).toFixed(2)} for {declineTarget.payee?.name || declineTarget.payee?.email}. No money is sent — they'll be notified and can request again with corrected details.
+              </p>
+              <textarea
+                value={declineNote}
+                onChange={e => setDeclineNote(e.target.value)}
+                placeholder="Optional note (e.g. 'Account number looks incorrect')"
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => { setDeclineTarget(null); setDeclineNote(''); }}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={declinePayout}
+                  disabled={actingOn === declineTarget.id}
+                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {actingOn === declineTarget.id ? 'Declining…' : 'Decline'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Toast */}
         {toast && (

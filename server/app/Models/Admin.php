@@ -40,6 +40,7 @@ class Admin extends Authenticatable implements JWTSubject
         'course_badge_template'         => 'Course badge design',
         'attending_flyer'               => '"I Will Be Attending" flyer',
         'activity'                      => 'Activity log & analytics',
+        'cms'                           => 'Website content (CMS): pages, navbar, footer, media',
     ];
 
     protected $fillable = [

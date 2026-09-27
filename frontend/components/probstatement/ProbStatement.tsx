@@ -1,10 +1,33 @@
 import React from "react";
-import Link from "next/link";
-import { PrimaryButton2 } from "../button/Button";
+import { CmsText } from "@/components/cms/ui";
+import { CmsButton, buttonFields, type CmsButtonData } from "@/components/cms/CmsButton";
+import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
+import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
 const BRAND = "#4A3AFF";
 
-export default function ProbStatement() {
+export interface ProbStatementData {
+  backgroundImage: string;
+  heading: string;
+  lines: { text: string; style: "normal" | "accent" | "highlight" }[];
+  button: CmsButtonData;
+}
+
+export const PROB_STATEMENT_DEFAULTS: ProbStatementData = {
+  backgroundImage: "/images/nnamdi.png",
+  heading: "Not all skills create equal opportunities.",
+  lines: [
+    { text: "Many spend valuable time and money learning technical skills and earning certificate,", style: "accent" },
+    { text: "only to struggle to monetize them, especially with today's rapid AI advancements.", style: "normal" },
+    {
+      text: "That's why Learnexity offers highly selective, future-proof pathways designed to help you master the high-value infrastructure layers that remain valuable as AI transforms the workplace.",
+      style: "normal",
+    },
+  ],
+  button: { label: "Enroll Now", href: "/user/auth/register", style: "primary" },
+};
+
+export default function ProbStatement({ data = PROB_STATEMENT_DEFAULTS }: { data?: ProbStatementData }) {
   return (
     <section style={{ padding: "4rem 1rem", background: "transparent" }}>
       <style>{`
@@ -176,7 +199,10 @@ export default function ProbStatement() {
       <div className="prob-wrapper">
         <div className="prob-card">
 
-          <img src="/images/nnamdi.png" alt="" className="prob-bg-img" aria-hidden="true" />
+          {data.backgroundImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={data.backgroundImage} alt="" className="prob-bg-img" aria-hidden="true" />
+          )}
           <div className="prob-overlay" />
 
           <div className="prob-panel-left">
@@ -184,18 +210,18 @@ export default function ProbStatement() {
 
             {/* component-headers equivalent */}
             <h2 className="prob-headline">
-              Not all skills create equal opportunities.<br />
+              <CmsText text={data.heading} accentColor="#a5b4fc" />
             </h2>
 
             <div className="prob-body">
-              <p className="prob-body-line accent"> Many spend valuable time and money learning technical skills and earning certificate,</p>
-              <p className="prob-body-line">
-               only to struggle to monetize them, especially with today's rapid AI advancements.
-              </p>
-              <p className="prob-body-line">That's why Learnexity offers highly selective, future-proof pathways designed to help you master the high-value infrastructure layers that remain valuable as AI transforms the workplace. </p>
+              {(data.lines ?? []).map((line, i) => (
+                <p key={i} className={`prob-body-line ${line.style === "accent" ? "accent" : line.style === "highlight" ? "highlight" : ""}`}>
+                  <CmsText text={line.text} accentColor="#c7d2fe" />
+                </p>
+              ))}
             </div>
 
-            <PrimaryButton2 />
+            <CmsButton button={data.button} className="w-fit" />
 
           </div>
         </div>
@@ -203,3 +229,29 @@ export default function ProbStatement() {
     </section>
   );
 }
+
+export const block: BlockDefinition<ProbStatementData> = {
+  type: "home.problemStatement",
+  label: "Problem statement panel",
+  category: "Homepage",
+  description: "Large photo panel with a headline, supporting lines and a button.",
+  fields: [
+    f.image("backgroundImage", "Background photo"),
+    f.textarea("heading", "Headline", { rows: 2, help: EMPHASIS_HELP }),
+    f.list(
+      "lines",
+      "Paragraphs",
+      [
+        f.textarea("text", "Text", { rows: 3 }),
+        f.select("style", "Style", [
+          { value: "normal", label: "Normal (grey)" },
+          { value: "accent", label: "Bold white" },
+          { value: "highlight", label: "Bold lilac" },
+        ]),
+      ],
+      { itemLabelKey: "text", addLabel: "Add paragraph", itemDefaults: { text: "New paragraph", style: "normal" } }
+    ),
+    f.group("button", "Button", buttonFields),
+  ],
+  defaults: PROB_STATEMENT_DEFAULTS,
+};

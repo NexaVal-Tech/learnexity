@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AdminCourseGroupController;
 use App\Http\Controllers\Api\AdminCourseDetailsController;
 use App\Http\Controllers\Api\AdminRegistrationFeeController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\PayoutController;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\User\ScholarshipController;
 use App\Http\Controllers\Api\AdminKidsController;
 use App\Http\Controllers\Api\AdminReferralController;
+use App\Http\Controllers\Api\AdminPayoutController;
+use App\Http\Controllers\Api\CmsController;
+use App\Http\Controllers\Api\AdminCmsController;
+use App\Http\Controllers\Api\AdminCmsMediaController;
 use App\Http\Controllers\Api\AdminScholarshipController;
 use App\Http\Controllers\Api\BadgeController;
 use App\Http\Controllers\Api\CertificateController;
@@ -218,6 +223,12 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
         Route::get('/',       [ReferralController::class, 'getReferralData']);
     });
 
+    Route::prefix('payouts')->group(function () {
+        Route::get('/balance', [PayoutController::class, 'balance']);
+        Route::get('/history', [PayoutController::class, 'history']);
+        Route::post('/',       [PayoutController::class, 'requestPayout']);
+    });
+
     Route::prefix('courses')->group(function () {
         Route::get('/enrollments',              [CourseEnrollmentController::class, 'getUserEnrollments']);
         Route::get('/{courseId}/enrollment-status', [CourseEnrollmentController::class, 'checkEnrollmentStatus']);
@@ -281,6 +292,13 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
         Route::put('/password',          [UserSettingsController::class, 'changePassword']);
         Route::delete('/account',        [UserSettingsController::class, 'deleteAccount']);
     });
+});
+
+// =================== PUBLIC CMS (read-only; used by getStaticProps) =================== //
+Route::middleware('throttle:cms-read')->prefix('cms')->group(function () {
+    Route::get('/pages/{slug}',  [CmsController::class, 'page']);
+    Route::get('/globals',       [CmsController::class, 'globals']);
+    Route::get('/custom-pages',  [CmsController::class, 'customPages']);
 });
 
 Route::middleware('throttle:api')->prefix('consultations')->group(function () {
@@ -394,6 +412,36 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::get('/stats',            [AdminReferralController::class, 'stats']);
         Route::get('/history',          [AdminReferralController::class, 'history']);
         Route::get('/public-referrers', [AdminReferralController::class, 'publicReferrers']);
+    });
+
+    // Website CMS — pages, navbar/footer, media, revision history
+    Route::prefix('cms')->middleware('admin.permission:cms')->group(function () {
+        Route::get('/pages',            [AdminCmsController::class, 'index']);
+        Route::post('/pages',           [AdminCmsController::class, 'store']);
+        Route::get('/pages/{slug}',     [AdminCmsController::class, 'show']);
+        Route::put('/pages/{slug}',     [AdminCmsController::class, 'update']);
+        Route::delete('/pages/{slug}',  [AdminCmsController::class, 'destroy']);
+
+        Route::get('/globals/{key}',    [AdminCmsController::class, 'showGlobal']);
+        Route::put('/globals/{key}',    [AdminCmsController::class, 'updateGlobal']);
+        Route::delete('/globals/{key}', [AdminCmsController::class, 'resetGlobal']);
+
+        Route::get('/revisions',               [AdminCmsController::class, 'revisions']);
+        Route::get('/revisions/{id}',          [AdminCmsController::class, 'revision'])->whereNumber('id');
+        Route::post('/revisions/{id}/restore', [AdminCmsController::class, 'restore'])->whereNumber('id');
+
+        Route::get('/media',          [AdminCmsMediaController::class, 'index']);
+        Route::post('/media',         [AdminCmsMediaController::class, 'store']);
+        Route::patch('/media/{id}',   [AdminCmsMediaController::class, 'update'])->whereNumber('id');
+        Route::delete('/media/{id}',  [AdminCmsMediaController::class, 'destroy'])->whereNumber('id');
+    });
+
+    // Refer & Earn payouts (same 'referrals' permission — same admin screen)
+    Route::prefix('payouts')->middleware('admin.permission:referrals')->group(function () {
+        Route::get('/',              [AdminPayoutController::class, 'index']);
+        Route::get('/stats',         [AdminPayoutController::class, 'stats']);
+        Route::post('/{id}/approve', [AdminPayoutController::class, 'approve']);
+        Route::post('/{id}/decline', [AdminPayoutController::class, 'decline']);
     });
 
     // Scholarships
@@ -617,4 +665,10 @@ Route::middleware('throttle:auth')->prefix('referrals/public')->group(function (
 
 Route::middleware(['jwt.auth.re', 'throttle:api'])->group(function () {
     Route::get('/referrals/public/stats', [PublicReferralController::class, 'stats']);
+
+    Route::prefix('payouts/public')->group(function () {
+        Route::get('/balance', [PayoutController::class, 'balance']);
+        Route::get('/history', [PayoutController::class, 'history']);
+        Route::post('/',       [PayoutController::class, 'requestPayout']);
+    });
 });

@@ -1,23 +1,29 @@
 "use client";
 
 import { FadeUpOnScroll } from "../animations/Animation";
-import Image from "next/image";
+import { CmsImage, CmsText } from "@/components/cms/ui";
+import { f } from "@/lib/cms/fields";
+import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
 const BRAND = "#4A3AFF";
 
-export default function CurriculumPartners() {
-  const partners = [
+export interface PartnersData {
+  heading: string;
+  partners: { name: string; logo: string }[];
+}
+
+export const PARTNERS_DEFAULTS: PartnersData = {
+  heading: "Trusted By",
+  partners: [
     { name: "Microsoft", logo: "/partners/microsoft.png" },
     { name: "Google Cloud", logo: "/partners/google.png" },
-    // { name: "AWS", logo: "/partners/aws.png" },
     { name: "Cisco", logo: "/partners/cisco.png" },
-    // { name: "IBM", logo: "/partners/IBM.png" },
-    // { name: "Oracle", logo: "/partners/oracle.png" },
-    // { name: "Udacity", logo: "/partners/udacity.png" },
-    // { name: "edX", logo: "/partners/edx.png" },
-    // { name: "CompTIA", logo: "/partners/comptia.png" },
     { name: "Oganiru Technologies", logo: "/partners/oganiru.png" },
-  ];
+  ],
+};
+
+export default function CurriculumPartners({ data = PARTNERS_DEFAULTS }: { data?: PartnersData }) {
+  const partners = (data.partners ?? []).filter((p) => p.logo);
 
   // Duplicated so the mobile marquee can loop seamlessly (second copy picks up
   // right where the first ends, no visible seam/jump).
@@ -53,15 +59,15 @@ export default function CurriculumPartners() {
               shadow-2xl shadow-black/80"
           >
             <h2 className="text-4xl md:text-3xl font-semibold text-[var(--text-primary)] leading-tight">
-              Trusted By
+              <CmsText text={data.heading} />
             </h2>
           </div>
 
           {/* Partner logos — static wrap on desktop, auto-scrolling marquee on mobile */}
           <div className="hidden sm:flex flex-wrap justify-center items-center gap-6 md:gap-8">
-            {partners.map((partner) => (
+            {partners.map((partner, i) => (
               <div
-                key={partner.name}
+                key={`${partner.name}-${i}`}
                 className="partner-card flex items-center justify-center
                   border border-[var(--border-subtle)]
                   bg-[var(--surface-elevated)] backdrop-blur-sm
@@ -69,7 +75,7 @@ export default function CurriculumPartners() {
                   min-w-[100px] h-20
                   transition-all duration-300 cursor-pointer"
               >
-                <Image
+                <CmsImage
                   src={partner.logo}
                   alt={`${partner.name} logo`}
                   width={110}
@@ -92,7 +98,7 @@ export default function CurriculumPartners() {
                     min-w-[100px] h-20
                     flex-shrink-0"
                 >
-                  <Image
+                  <CmsImage
                     src={partner.logo}
                     alt={`${partner.name} logo`}
                     width={110}
@@ -108,3 +114,19 @@ export default function CurriculumPartners() {
     </section>
   );
 }
+
+export const block: BlockDefinition<PartnersData> = {
+  type: "home.partners",
+  label: "Trusted by (partner logos)",
+  category: "Homepage",
+  description: "Heading card and a row of partner logos (scrolls on mobile).",
+  fields: [
+    f.text("heading", "Heading"),
+    f.list("partners", "Partner logos", [f.text("name", "Company name"), f.image("logo", "Logo", "Transparent PNG/SVG, roughly 110×42.")], {
+      itemLabelKey: "name",
+      addLabel: "Add partner",
+      itemDefaults: { name: "Company", logo: "" },
+    }),
+  ],
+  defaults: PARTNERS_DEFAULTS,
+};

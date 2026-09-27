@@ -145,6 +145,7 @@ export const ADMIN_PERMISSIONS: Record<string, string> = {
   course_badge_template: 'Course badge design',
   attending_flyer: '"I Will Be Attending" flyer',
   activity: 'Activity log & analytics',
+  cms: 'Website content (CMS): pages, navbar, footer, media',
 };
 
 /** True if this admin can access the given permission key (super admins always can). */
