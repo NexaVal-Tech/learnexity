@@ -17,21 +17,19 @@ const RESUME_IDLE_MS = 7000;
 export interface HomeCoursesData {
   heading: string;
   subheading: string;
-  flexCardTitle: string;
-  flexCardText: string;
+  /** No longer shown (the flexible-courses card was removed); kept so saved content still loads. */
+  flexCardTitle?: string;
+  flexCardText?: string;
 }
 
 export const HOME_COURSES_DEFAULTS: HomeCoursesData = {
   // The line break only applies below the lg breakpoint (as before).
   heading: "In-Demand Courses That\nGet Results",
   subheading: "Proven curriculum with measurable outcomes",
-  flexCardTitle: "Explore Our Flexible Courses",
-  flexCardText: "Learn at your own pace, no fixed schedule, Start anytime.",
 };
 
 export default function Courses({ data = HOME_COURSES_DEFAULTS }: { data?: HomeCoursesData }) {
   const [deepTechCourses, setDeepTechCourses] = useState<Course[]>([]);
-  const [flexCourses, setFlexCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,22 +59,13 @@ export default function Courses({ data = HOME_COURSES_DEFAULTS }: { data?: HomeC
       try {
         setLoading(true);
 
-        const [deepRes, flexRes] = await Promise.all([
-          fetch(
-            API_URL + "/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one",
-            { headers: { Accept: "application/json" } }
-          ),
-          fetch(
-            API_URL + "/api/courses/by-track?track[]=self_paced",
-            { headers: { Accept: "application/json" } }
-          ),
-        ]);
-
+        const deepRes = await fetch(
+          API_URL + "/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one",
+          { headers: { Accept: "application/json" } }
+        );
         const deepData = await deepRes.json();
-        const flexData = await flexRes.json();
 
         setDeepTechCourses(Array.isArray(deepData) ? deepData : deepData?.data ?? []);
-        setFlexCourses(Array.isArray(flexData) ? flexData : flexData?.data ?? []);
       } catch (err) {
         console.error("Failed to fetch courses:", err);
         setError("Failed to load courses");
@@ -87,20 +76,10 @@ export default function Courses({ data = HOME_COURSES_DEFAULTS }: { data?: HomeC
     fetchCourses();
   }, []);
 
-  const allCards = [
-    ...deepTechCourses.map((course) => ({
-      type: "course" as const,
-      data: course,
-    })),
-    ...(flexCourses.length > 0
-      ? [
-          {
-            type: "flex" as const,
-            data: null,
-          },
-        ]
-      : []),
-  ];
+  const allCards = deepTechCourses.map((course) => ({
+    type: "course" as const,
+    data: course,
+  }));
 
   const marqueeItems = [...allCards, ...allCards];
 
@@ -328,101 +307,6 @@ export default function Courses({ data = HOME_COURSES_DEFAULTS }: { data?: HomeC
                       );
                     }
 
-                    if (item.type === "flex") {
-                      return (
-                        <Link
-                          key={`flex-${index}`}
-                          href="/flex"
-                          className="block flex-shrink-0 w-[19rem] sm:w-[18rem] md:w-[22rem] lg:w-[26rem] xl:w-[28rem]"
-                        >
-                          <div
-                            className="h-full flex flex-col rounded-3xl p-5 cursor-pointer transition-all duration-300 hover:scale-[1.02] bg-gray-900"
-                            style={{
-                              border: "1px solid rgba(74,58,255,0.35)",
-                              boxShadow:
-                                "0 0 40px rgba(74,58,255,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
-                            }}
-                          >
-                            <h3 className="text-2xl font-bold text-white mb-2 leading-snug">
-                              <CmsText text={data.flexCardTitle} accentColor="#a5b4fc" />
-                            </h3>
-                            <p className="text-gray-400 text-sm mb-5 leading-relaxed">
-                              <CmsText text={data.flexCardText} />
-                            </p>
-
-                            {/* Scrollable flex course list — shows ~3, scrolls for more */}
-                            <div
-                              className="flex-grow overflow-y-auto pr-0.5 flex-list"
-                              style={{
-                                maxHeight: "10.5rem" /* ~3 items × 3.5rem each */,
-                                scrollbarWidth: "none" /* Firefox */,
-                                msOverflowStyle: "none" /* IE */,
-                              }}
-                            >
-                              <div className="space-y-2">
-                                {flexCourses.map((course) => (
-                                  <div
-                                    key={course.id}
-                                    className="flex items-center gap-3 rounded-full px-3 py-2"
-                                    style={{
-                                      background: "rgba(74,58,255,0.08)",
-                                      border: "1px solid rgba(74,58,255,0.15)",
-                                    }}
-                                  >
-                                    <div
-                                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                                      style={{ background: "rgba(74,58,255,0.3)" }}
-                                    >
-                                      <svg
-                                        className="w-3 h-3"
-                                        style={{ color: "#a89fff" }}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={3}
-                                          d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-                                        />
-                                      </svg>
-                                    </div>
-                                    <span className="text-gray-300 font-medium text-sm truncate">
-                                      {course.title}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div
-                              className="mt-5 flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm text-white transition-all duration-200"
-                              style={{
-                                background: "#4A3AFF",
-                                boxShadow: "0 4px 20px rgba(74,58,255,0.4)",
-                              }}
-                            >
-                              <span>Browse flexible programmes</span>
-                              <svg
-                                className="w-4 h-4 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    }
-
                     return null;
                   })}
                 </div>
@@ -453,8 +337,6 @@ export const block: BlockDefinition<HomeCoursesData> = {
   fields: [
     f.textarea("heading", "Heading", { rows: 2, help: "A line break here only applies on smaller screens." }),
     f.text("subheading", "Subheading"),
-    f.text("flexCardTitle", "Flexible-courses card title"),
-    f.textarea("flexCardText", "Flexible-courses card text", { rows: 2 }),
   ],
   defaults: HOME_COURSES_DEFAULTS,
 };

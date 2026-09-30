@@ -1,5 +1,11 @@
 // pages/courses/[id].tsx
+//
+// Course details page. Layout: dark hero (pathway tag, title, description,
+// course images), then a two-column body — course content on the left,
+// a sticky "Program Structure" / price / Apply card on the right.
+// Data, enrolment and payment flow are unchanged.
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { api, Course, handleApiError } from "@/lib/api";
@@ -7,13 +13,55 @@ import { getCourses } from "@/lib/courseCache";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
-import Courses from "@/components/headercourses/HeaderCourse";
-import { ExpertButton } from "@/components/button/Button";
-import { ArrowRight } from "lucide-react";
-// import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
+import {
+  ArrowLeft, BadgeCheck, CalendarDays, Check, CircleCheck, ClipboardCheck, Clock,
+  Flame, Gauge, Headset, Monitor, Quote, Star, Briefcase, Factory, PlayCircle,
+} from "lucide-react";
+import {
+  API_URL, BRAND, PATHWAYS, imageUrl, pathwayForCourse, type PathwayKey, type Track,
+} from "@/components/catalog/pathways";
+import { CatalogTheme } from "@/components/catalog/CatalogTheme";
 
-const BRAND = "#4A3AFF";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const HERO_BG = "#140c3d";
+
+const PATHWAY_TAG: Record<PathwayKey, { bg: string; border: string; color: string }> = {
+  flex: { bg: "rgba(59,130,246,0.25)", border: "#3b82f6", color: "#bfdbfe" },
+  accelerator: { bg: "rgba(147,51,234,0.3)", border: "#a855f7", color: "#e9d5ff" },
+  deeptech: { bg: "rgba(74,58,255,0.3)", border: "#6d5dff", color: "#c7d2fe" },
+  free: { bg: "rgba(5,150,105,0.3)", border: "#10b981", color: "#a7f3d0" },
+};
+
+const NEXT_STEPS = ["Employment", "Freelance Projects", "Consulting", "Internships", "Entrepreneurship", "Further Specialization"];
+const INCLUDES = [
+  "Structured instruction",
+  "Practical projects & Assessments",
+  "Mentorship/support",
+  "Portfolio development",
+  "2 months global certifications support",
+];
+const CAREER_LEVELS = [
+  { key: "entry", label: "Entry Level" },
+  { key: "mid", label: "Mid Level" },
+  { key: "advanced", label: "Advanced Level" },
+  { key: "specialized", label: "Specialized Roles" },
+] as const;
+
+function offersTrack(course: Course, track: Track): boolean {
+  switch (track) {
+    case "self_paced": return !!course.offers_self_paced;
+    case "intermediate": return !!course.offers_intermediate;
+    case "group_mentorship": return !!course.offers_group_mentorship;
+    case "one_on_one": return !!course.offers_one_on_one;
+  }
+}
+
+function trackPrice(course: Course, track: Track, currency: "USD" | "NGN"): number {
+  const raw =
+    currency === "NGN"
+      ? { self_paced: course.self_paced_price_ngn, intermediate: course.intermediate_price_ngn, group_mentorship: course.group_mentorship_price_ngn, one_on_one: course.one_on_one_price_ngn }[track]
+      : { self_paced: course.self_paced_price_usd, intermediate: course.intermediate_price_usd, group_mentorship: course.group_mentorship_price_usd, one_on_one: course.one_on_one_price_usd }[track];
+  return parseFloat(raw?.toString() || "0") || 0;
+}
 
 export default function CoursePage() {
   const router = useRouter();
@@ -33,32 +81,7 @@ export default function CoursePage() {
 
   const [currency, setCurrency] = useState<"USD" | "NGN">("USD");
   const [currencyDetected, setCurrencyDetected] = useState(false);
-  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
-
-  /**
-   * Resolve any image path/URL to a fully-qualified public URL.
-   *
-   * Handles all four formats the backend may return:
-   *   1. Already a full URL:   "https://example.com/storage/course-images/abc.jpg"
-   *   2. Absolute path:        "/storage/course-images/abc.jpg"
-   *   3. Relative storage:     "course-images/abc.jpg"
-   *   4. Prefixed with storage: "storage/course-images/abc.jpg"
-   *   5. null / undefined      → fallback image
-   */
-  const getImageUrl = (path: string | null | undefined): string => {
-    if (!path) return "/images/default-course.jpg";
-
-    // Already a full URL
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
-
-    // Absolute path starting with /storage/ or just /
-    if (path.startsWith("/storage/")) return `${API_URL}${path}`;
-    if (path.startsWith("/")) return path; // serve from Next.js public folder
-
-    // Relative path — strip any leading "storage/" prefix then prepend
-    const normalized = path.replace(/^storage\//, "");
-    return `${API_URL}/storage/${normalized}`;
-  };
+  const [, setDetectedLocation] = useState<string | null>(null);
 
   useEffect(() => {
     getCourses().catch(() => {});
@@ -69,7 +92,7 @@ export default function CoursePage() {
       try {
         const response = await fetch(`${API_URL}/api/detect-currency`);
         const data = await response.json();
-        setCurrency(data.currency);
+        setCurrency(data.currency === "NGN" ? "NGN" : "USD");
         setDetectedLocation(data.country);
       } catch {
         setCurrency("USD");
@@ -85,6 +108,7 @@ export default function CoursePage() {
     if (!id) return;
     fetchCourse();
     if (user) checkEnrollmentStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 
   const fetchCourse = async () => {
@@ -117,6 +141,19 @@ export default function CoursePage() {
     }
   };
 
+  const pathway: PathwayKey = course ? pathwayForCourse(course, router.query.pathway) : "flex";
+  const p = PATHWAYS[pathway];
+
+  /** Track to enrol into: the pathway's track if this course offers it. */
+  const enrollTrack = (): Track => {
+    if (!course) return "self_paced";
+    const fromPathway = p.tracks.find((t) => offersTrack(course, t));
+    if (fromPathway) return fromPathway;
+    if (course.offers_self_paced) return "self_paced";
+    const first = course.available_tracks?.[0] as Track | undefined;
+    return first ?? "self_paced";
+  };
+
   const handleEnrollClick = async () => {
     if (!user) {
       sessionStorage.setItem("intended_course", id as string);
@@ -144,7 +181,7 @@ export default function CoursePage() {
     try {
       setEnrolling(true);
       setError(null);
-      const response = await api.enrollment.enroll(id as string, "self_paced", "onetime");
+      const response = await api.enrollment.enroll(id as string, enrollTrack(), "onetime");
       router.push(`/user/payment/${response.enrollment_id}`);
     } catch (error: any) {
       if (error.response?.status === 409) {
@@ -161,39 +198,27 @@ export default function CoursePage() {
     }
   };
 
+  /** Lowest price across every track the course offers (previous behaviour). */
   const getDisplayPrice = () => {
     if (!course) return 0;
-
     const candidates: number[] = [];
-
-    if (course.offers_self_paced) {
-      const p = parseFloat(
-        (currency === 'NGN' ? course.self_paced_price_ngn : course.self_paced_price_usd)?.toString() || '0'
-      );
-      if (p > 0) candidates.push(p);
-    }
-
-    if (course.offers_group_mentorship) {
-      const p = parseFloat(
-        (currency === 'NGN' ? course.group_mentorship_price_ngn : course.group_mentorship_price_usd)?.toString() || '0'
-      );
-      if (p > 0) candidates.push(p);
-    }
-
-    if (course.offers_one_on_one) {
-      const p = parseFloat(
-        (currency === 'NGN' ? course.one_on_one_price_ngn : course.one_on_one_price_usd)?.toString() || '0'
-      );
-      if (p > 0) candidates.push(p);
-    }
-
+    (["self_paced", "group_mentorship", "one_on_one"] as Track[]).forEach((t) => {
+      if (offersTrack(course, t)) {
+        const v = trackPrice(course, t, currency);
+        if (v > 0) candidates.push(v);
+      }
+    });
     if (candidates.length === 0) {
-      return parseFloat(
-        (currency === 'NGN' ? course.price_ngn : course.price_usd)?.toString() || '0'
-      );
+      return parseFloat((currency === "NGN" ? course.price_ngn : course.price_usd)?.toString() || "0") || 0;
     }
-
     return Math.min(...candidates);
+  };
+
+  /** Price for the pathway the visitor is looking at, falling back to the above. */
+  const getPathwayPrice = () => {
+    if (!course) return 0;
+    const prices = p.tracks.filter((t) => offersTrack(course, t)).map((t) => trackPrice(course, t, currency)).filter((v) => v > 0);
+    return prices.length ? Math.min(...prices) : getDisplayPrice();
   };
 
   const hasPaidAccess =
@@ -201,6 +226,7 @@ export default function CoursePage() {
     (enrollmentStatus?.enrollment?.payment_status === "completed" ||
       enrollmentStatus?.enrollment?.has_access === true);
 
+  // ── Loading ───────────────────────────────────────────────────────
   if (!currencyDetected || loading) {
     return (
       <AppLayout>
@@ -220,10 +246,11 @@ export default function CoursePage() {
     );
   }
 
+  // ── Not found / failed ────────────────────────────────────────────
   if (!course) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
+        <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--page-bg)" }}>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
               {fetchError ? "Couldn't load this course" : "Course not found"}
@@ -237,20 +264,14 @@ export default function CoursePage() {
               {fetchError && (
                 <button
                   onClick={() => fetchCourse()}
-                  className="text-[var(--text-primary)] font-semibold px-6 py-3 transition-all border border-[var(--border-subtle)]"
-                  style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
+                  className="lx-btn-outline px-6 py-3"
                 >
                   Try Again
                 </button>
               )}
               <button
-                onClick={() => router.push("/courses/courses")}
-                className="text-white font-semibold px-6 py-3 transition-all"
-                style={{
-                  borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                  background: BRAND,
-                  boxShadow: `0 8px 24px ${BRAND}44`,
-                }}
+                onClick={() => router.push("/courses")}
+                className="lx-btn px-6 py-3"
               >
                 Back to Courses
               </button>
@@ -261,541 +282,430 @@ export default function CoursePage() {
     );
   }
 
-  const displayPrice = getDisplayPrice();
+  const isFree = !!course.is_free;
+  const price = isFree ? 0 : getPathwayPrice();
+  const listPrice = isFree ? getDisplayPrice() : 0;
+  const symbol = currency === "NGN" ? "₦" : "$";
+  const tag = PATHWAY_TAG[pathway];
+  // Same images as before: hero image (or the default course image) and
+  // the secondary image, falling back to the hero image.
+  const heroImg = imageUrl(course.hero_image);
+  const secondImg = imageUrl(course.secondary_image || course.hero_image);
+  const learnings = course.learnings ?? [];
+  const tools = course.tools ?? [];
+  const benefits = course.benefits ?? [];
+  const careerPaths = course.career_paths ?? [];
+  const industries = course.industries ?? [];
+  const salary = course.salary;
+
+  const structure: { icon: typeof Clock; label: string; value: string | null | undefined }[] = [
+    { icon: Clock, label: "Duration", value: course.duration },
+    { icon: Gauge, label: "Level", value: course.level },
+    { icon: Monitor, label: "Format", value: p.structure.format },
+    { icon: CalendarDays, label: "Schedule", value: p.structure.schedule },
+    { icon: Headset, label: "Support", value: p.structure.support },
+  ];
+
+  const card = "lx-card p-6 md:p-8";
+  const cardTitle = "text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-4 border-b border-[var(--border-subtle)] pb-4";
+  const inset = "lx-inset lx-inset-hover";
 
   return (
     <AppLayout>
-      <style>{`
-        .dc-card {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-elevated);
-          backdrop-filter: blur(12px);
-          box-shadow: 0 25px 50px rgba(0,0,0,0.7);
-          transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-        }
-        .dc-card:hover {
-          border-color: ${BRAND}55;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px ${BRAND}22;
-        }
-        .dc-btn-brand {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          background: ${BRAND};
-          color: #fff;
-          font-weight: 700;
-          padding: 0.75rem 2rem;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition: box-shadow 0.3s, transform 0.3s;
-        }
-        .dc-btn-brand:hover {
-          box-shadow: 0 8px 28px ${BRAND}55;
-          transform: translateY(-2px);
-        }
-        .dc-btn-brand:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none;
-        }
-        .dc-btn-success {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          background: #16a34a;
-          color: #fff;
-          font-weight: 700;
-          padding: 0.75rem 2rem;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition: box-shadow 0.3s, transform 0.3s, background 0.2s;
-        }
-        .dc-btn-success:hover {
-          background: #15803d;
-          box-shadow: 0 8px 28px rgba(22,163,74,0.4);
-          transform: translateY(-2px);
-        }
-        .dc-enrolled-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          background: rgba(22,163,74,0.12);
-          border: 1px solid rgba(22,163,74,0.3);
-          color: #4ade80;
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 0.35rem 0.85rem;
-          letter-spacing: 0.05em;
-        }
-        .dc-btn-outline {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 2px solid ${BRAND}55;
-          color: ${BRAND};
-          font-weight: 600;
-          padding: 0.75rem 2rem;
-          transition: background 0.3s, border-color 0.3s;
-        }
-        .dc-btn-outline:hover {
-          background: ${BRAND}15;
-          border-color: ${BRAND};
-        }
-        .dc-pill {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-alt);
-          padding: 1rem 1.25rem;
-          color: var(--text-secondary);
-          font-size: 0.95rem;
-          line-height: 1.5;
-          transition: border-color 0.2s, background 0.2s;
-        }
-        .dc-pill:hover {
-          border-color: ${BRAND}44;
-          background: ${BRAND}0a;
-        }
-        .dc-section-label {
-          font-size: 0.7rem;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: ${BRAND};
-          margin-bottom: 0.5rem;
-        }
-        .dc-divider { border: none; border-top: 1px solid var(--border-subtle); }
-        .dc-tool {
-          padding: 1rem;
-          border-radius: 1rem 0.5rem 1rem 0.5rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-alt);
-          transition: border-color 0.25s, background 0.25s, transform 0.25s;
-        }
-        .dc-tool:hover { border-color: ${BRAND}44; background: ${BRAND}0d; transform: translateY(-3px); }
-        .dc-career {
-          border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-alt);
-          padding: 1.25rem;
-          transition: border-color 0.25s, background 0.25s;
-        }
-        .dc-career:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
-        .dc-industry {
-          border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-alt);
-          padding: 1.5rem;
-          transition: border-color 0.25s, background 0.25s;
-        }
-        .dc-industry:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
-        .dc-salary-grid {
-          border-radius: 2rem 0.75rem 2rem 0.75rem;
-          border: 1px solid var(--border-subtle);
-          background: var(--surface-elevated);
-          overflow: hidden;
-        }
-        .dc-salary-cell { border-right: 1px solid var(--border-subtle); }
-        .dc-salary-cell:last-child { border-right: none; }
-        .dc-benefits-bg {
-          border-top: 1px solid var(--border-subtle);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-        .dc-benefit-card {
-          border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
-          border: 1px solid var(--border-subtle);
-          padding: 1.5rem;
-          transition: border-color 0.25s, background 0.25s;
-        }
-        .dc-benefit-card:hover { border-color: ${BRAND}44; background: ${BRAND}08; }
+      <CatalogTheme />
+      <div className="min-h-screen" style={{ background: "var(--page-bg-alt)" }}>
+        {/* ── Hero ───────────────────────────────────────────────────── */}
+        <div className="text-white pt-32 pb-32 relative overflow-hidden" style={{ background: HERO_BG }}>
+          <div
+            className="absolute inset-0 pointer-events-none opacity-60"
+            style={{ backgroundImage: "radial-gradient(#334155 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+          />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to bottom, transparent, ${HERO_BG})` }} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[120px] rounded-full pointer-events-none" style={{ background: `${BRAND}33` }} />
 
-        /* Tool icon placeholder shown when image fails to load */
-        .dc-tool-placeholder {
-          width: 48px;
-          height: 48px;
-          border-radius: 8px;
-          background: ${BRAND}20;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.25rem;
-          flex-shrink: 0;
-        }
-      `}</style>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <Link
+              href={p.href}
+              className="text-indigo-300 hover:text-white mb-8 inline-flex items-center text-sm font-medium transition"
+            >
+              <ArrowLeft size={16} className="mr-2" /> Back to Programs
+            </Link>
 
-      <div className="course-detail-root" style={{ background: "", minHeight: "100vh", position: "relative", zIndex: 1 }}>
-        <Courses variant="white" />
-
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="pt-32 pb-20 px-6">
-          <div className="max-w-[1230px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            {/* Left */}
-            <div className="space-y-6">
-              <p className="dc-section-label">Course Details</p>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-[var(--text-primary)]">
-                {course.title}
-              </h1>
-              <p className="text-lg text-[var(--text-secondary)] leading-relaxed">
-                {course.description}
-              </p>
-{/* 
-              {!hasPaidAccess && (
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {displayPrice > 0 && (
-                    <div
-                      className="dc-card flex items-center gap-4 px-6 py-4"
-                      style={{ borderRadius: "2rem 0.75rem 2rem 0.75rem" }}
-                    >
-                      <div className="flex gap-4 items-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
-                          Price
-                        </p>
-                        <p className="text-3xl font-bold" style={{ color: BRAND }}>
-                          {currency === "NGN" ? "₦" : "$"}
-                          {displayPrice.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <ScholarshipBadge
-                    courseId={course.course_id}
-                    isLoggedIn={!!user}
-                    showCta={!enrollmentStatus?.isEnrolled}
-                  />
-                </div>
-              )} */}
-
-              {hasPaidAccess && (
-                <div className="flex items-center gap-3">
-                  <span className="dc-enrolled-badge">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    You're enrolled in this course
+            <div className={`grid grid-cols-1 ${heroImg ? "md:grid-cols-[1fr_auto]" : ""} gap-10 items-center`}>
+              <div>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <span
+                    className="px-3 py-1 text-xs font-bold rounded-full uppercase border"
+                    style={{ background: tag.bg, borderColor: tag.border, color: tag.color }}
+                  >
+                    {p.tag}
                   </span>
+                  {isFree && pathway !== "free" && (
+                    <span className="px-3 py-1 text-xs font-bold rounded-full uppercase border" style={{ background: PATHWAY_TAG.free.bg, borderColor: PATHWAY_TAG.free.border, color: PATHWAY_TAG.free.color }}>
+                      Free
+                    </span>
+                  )}
+                  <span className="px-3 py-1 bg-emerald-600/30 border border-emerald-500 text-emerald-200 text-xs font-bold rounded-full uppercase inline-flex items-center">
+                    <Flame size={12} className="mr-1" /> In-Demand
+                  </span>
+                  {hasPaidAccess && (
+                    <span className="px-3 py-1 bg-green-600/30 border border-green-500 text-green-200 text-xs font-bold rounded-full uppercase inline-flex items-center">
+                      <Check size={12} className="mr-1" /> You're enrolled
+                    </span>
+                  )}
                 </div>
-              )}
-
-              {error && (
-                <div
-                  className="px-4 py-3 text-sm text-red-400"
-                  style={{
-                    borderRadius: "1rem 0.5rem 1rem 0.5rem",
-                    background: "rgba(239,68,68,0.08)",
-                    border: "1px solid rgba(239,68,68,0.25)",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              <div className="flex flex-row items-center gap-3 pt-2">
-                {hasPaidAccess ? (
-                  <button
-                    onClick={() =>
-                      router.push({
-                        pathname: "/user/resource",
-                        query: { courseId: course.course_id },
-                      })
-                    }
-                    className="dc-btn-success"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Continue Learning
-                  </button>
-                ) : enrollmentStatus?.isEnrolled ? (
-                  <button
-                    onClick={() =>
-                      router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)
-                    }
-                    className="dc-btn-brand"
-                    style={{ background: "#d97706" }}
-                  >
-                    Complete Payment
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleEnrollClick}
-                    disabled={checkingEnrollment || enrolling}
-                    className="dc-btn-brand"
-                  >
-                    {enrolling ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Enrolling…
-                      </span>
-                    ) : user ? (
-                      <>Purchase Course</>
-                    ) : (
-                      <>Get Started</>
-                    )}
-                  </button>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">{course.title}</h1>
+                {course.description && (
+                  <p className="text-lg md:text-2xl text-slate-300 max-w-3xl font-light leading-relaxed">{course.description}</p>
                 )}
-
-                {!hasPaidAccess && <ExpertButton />}
               </div>
-            </div>
 
-            {/* Right — hero images */}
-            <div className="flex justify-center md:justify-end gap-4">
-              <img
-                src={getImageUrl(course.hero_image)}
-                alt={course.title}
-                className="object-cover -mt-8"
-                style={{
-                  width: "clamp(130px,18vw,220px)",
-                  height: "clamp(200px,28vw,360px)",
-                  borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                  border: "1px solid var(--border-subtle)",
-                  boxShadow: `0 30px 60px rgba(0,0,0,0.7), 0 0 40px ${BRAND}22`,
-                }}
-              />
-              <img
-                src={getImageUrl(course.secondary_image || course.hero_image)}
-                alt={course.title}
-                className="object-cover"
-                style={{
-                  width: "clamp(130px,18vw,220px)",
-                  height: "clamp(200px,28vw,360px)",
-                  borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                  border: "1px solid var(--border-subtle)",
-                  boxShadow: `0 30px 60px rgba(0,0,0,0.7)`,
-                }}
-              />
+              {heroImg && (
+                <div className="flex justify-center md:justify-end gap-4">
+                  <img
+                    src={heroImg}
+                    alt={course.title}
+                    className="object-cover lx-r border border-white/10 md:-mt-8"
+                    style={{ width: "clamp(130px,16vw,210px)", height: "clamp(200px,26vw,330px)", boxShadow: `0 30px 60px rgba(0,0,0,0.5), 0 0 40px ${BRAND}33` }}
+                  />
+                  {secondImg && (
+                    <img
+                      src={secondImg}
+                      alt={course.title}
+                      className="object-cover lx-r border border-white/10 md:mt-8"
+                      style={{ width: "clamp(130px,16vw,210px)", height: "clamp(200px,26vw,330px)", boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}
+                    />
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── Tools & Technologies ──────────────────────────────────────── */}
-        {course.tools && course.tools.length > 0 && (
-          <section className="py-10 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <p className="dc-section-label text-center">Stack</p>
-              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-12">
-                Key Tools &amp; Technologies
-              </h2>
-              <div className="flex flex-wrap justify-center items-center gap-6">
-                {course.tools.map((tool) => {
-                  // Resolve icon URL — prefer icon_url accessor, fall back to raw icon field
-                  const resolvedIconUrl = tool.icon_url
-                    ? getImageUrl(tool.icon_url)
-                    : tool.icon
-                    ? getImageUrl(tool.icon)
-                    : null;
-
-                  return (
-                    <div
-                      key={tool.id}
-                      className="dc-tool flex flex-col items-center gap-2"
-                      title={tool.name}
-                    >
-                      {resolvedIconUrl ? (
-                        <img
-                          src={resolvedIconUrl}
-                          alt={tool.name}
-                          className="w-12 h-12 object-contain"
-                          onError={(e) => {
-                            // If image fails to load, replace with letter placeholder
-                            const target = e.currentTarget;
-                            target.style.display = "none";
-                            const placeholder = target.nextElementSibling as HTMLElement | null;
-                            if (placeholder) placeholder.style.display = "flex";
-                          }}
-                        />
-                      ) : null}
-                      {/* Fallback placeholder — visible when no icon or image fails */}
-                      <div
-                        className="dc-tool-placeholder"
-                        style={{ display: resolvedIconUrl ? "none" : "flex" }}
-                      >
-                        {tool.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-xs text-gray-500 font-medium text-center max-w-[80px] truncate">
-                        {tool.name}
-                      </span>
-                    </div>
-                  );
-                })}
+        {/* ── Body ───────────────────────────────────────────────────── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20 pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left column */}
+            <div className="lg:col-span-2 space-y-8 min-w-0">
+              {/* Who this is for */}
+              <div className={card}>
+                <h2 className={cardTitle}>Who This Is For</h2>
+                <p className="text-[var(--text-secondary)] text-lg leading-relaxed">{p.who}</p>
+                <div className={`mt-6 p-4 ${inset}`}>
+                  <h4 className="font-semibold text-[var(--text-primary)] mb-2 flex items-center">
+                    <ClipboardCheck size={18} className="mr-2" style={{ color: BRAND }} /> Prerequisites
+                  </h4>
+                  <p className="text-[var(--text-secondary)] text-sm">{p.prereqs}</p>
+                </div>
               </div>
-            </div>
-          </section>
-        )}
 
-        <hr className="dc-divider max-w-screen-xl mx-auto" />
+              {/* Outcomes (what you will learn) */}
+              {learnings.length > 0 && (
+                <div className={card}>
+                  <h2 className={`${cardTitle} mb-6`}>By the end of the program, you should be able to:</h2>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {learnings.map((l) => (
+                      <li key={l.id} className="flex items-start">
+                        <CircleCheck size={20} className="mt-0.5 mr-3 flex-shrink-0" style={{ color: BRAND }} />
+                        <span className="text-[var(--text-secondary)]">{l.learning_point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-        {/* ── What You Will Learn ───────────────────────────────────────── */}
-        {course.learnings && course.learnings.length > 0 && (
-          <section className="py-16 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <p className="dc-section-label text-center">Curriculum</p>
-              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-12">
-                What you will learn
-              </h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                {course.learnings.map((learning) => (
-                  <div key={learning.id} className="dc-pill flex items-start gap-3">
-                    <span
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: `${BRAND}30` }}
-                    >
-                      <svg className="w-3 h-3" style={{ color: BRAND }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                    {learning.learning_point}
+              {/* Tools */}
+              {tools.length > 0 && (
+                <div className={card}>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">Key Tools &amp; Technologies</h2>
+                  <p className="text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">The stack you'll work with.</p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                    {tools.map((tool) => {
+                      const icon = tool.icon_url ? imageUrl(tool.icon_url) : tool.icon ? imageUrl(tool.icon) : null;
+                      return (
+                        <div key={tool.id} className={`flex flex-col items-center gap-2 p-3 ${inset} hover:-translate-y-1 transition`} title={tool.name}>
+                          {icon ? (
+                            <img
+                              src={icon}
+                              alt={tool.name}
+                              className="w-10 h-10 object-contain"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                img.style.display = "none";
+                                const ph = img.nextElementSibling as HTMLElement | null;
+                                if (ph) ph.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="w-10 h-10 lx-r-sm items-center justify-center font-bold"
+                            style={{ display: icon ? "none" : "flex", background: `${BRAND}20`, color: BRAND }}
+                          >
+                            {tool.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-xs text-[var(--text-muted)] font-medium text-center w-full truncate">{tool.name}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+                </div>
+              )}
 
-        {/* ── Key Benefits ─────────────────────────────────────────────── */}
-        {course.benefits && course.benefits.length > 0 && (
-          <section className="dc-benefits-bg py-6 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <div className="mb-12">
-                <p className="dc-section-label">Project</p>
-                <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
-                  {course.project || "Complete AI-powered solution with automation"}
-                </h2>
-              </div>
-              <div>
-                <p className="dc-section-label mb-6">Key Benefits</p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {course.benefits.map((benefit) => (
-                    <div key={benefit.id} className="dc-benefit-card flex gap-4">
-                      <span style={{ color: BRAND }} className="text-2xl flex-shrink-0">★</span>
-                      <div>
-                        <h4 className="font-bold text-[var(--text-primary)] text-lg mb-1">{benefit.title}</h4>
-                        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{benefit.text}</p>
+              {/* What you'll build */}
+              {(course.project || benefits.length > 0) && (
+                <div className={card}>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">What You'll Build</h2>
+                  <p className="text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">Real-world systems for your portfolio.</p>
+                  <div className="space-y-6">
+                    {course.project && (
+                      <div className="p-6 lx-r-sm relative overflow-hidden border" style={{ background: `${BRAND}0d`, borderColor: `${BRAND}33` }}>
+                        <div className="absolute top-0 right-0 text-white text-xs font-bold px-3 py-1 rounded-bl-lg" style={{ background: BRAND }}>
+                          CAPSTONE
+                        </div>
+                        <h3 className="font-semibold text-lg text-[var(--text-primary)] mb-1 pr-20">Capstone Project</h3>
+                        <p className="text-[var(--text-secondary)] text-sm">{course.project}</p>
                       </div>
+                    )}
+                    {benefits.length > 0 && (
+                      <>
+                        <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] pt-2">Key Benefits</p>
+                        {benefits.map((b, i) => (
+                          <div key={b.id} className={`${inset} p-6 relative overflow-hidden`}>
+                            <div className="absolute top-0 left-0 w-1 h-full" style={{ background: i % 2 ? "#a855f7" : BRAND }} />
+                            <h3 className="font-semibold text-lg text-[var(--text-primary)] mb-2 flex items-center">
+                              <Star size={16} className="mr-2 flex-shrink-0" style={{ color: BRAND }} fill="currentColor" />
+                              {b.title}
+                            </h3>
+                            <p className="text-[var(--text-secondary)] text-sm">{b.text}</p>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Career path */}
+              {careerPaths.length > 0 && (
+                <div className={card}>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">Career Path &amp; Progression</h2>
+                  <p className="text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">
+                    We equip you with the skills and guidance to grow and succeed in your career.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div className="space-y-3">
+                      {CAREER_LEVELS.map(({ key, label }) => {
+                        const positions = careerPaths.filter((cp) => cp.level === key).map((cp) => cp.position).join(", ");
+                        if (!positions) return null;
+                        return (
+                          <div key={key} className={`${inset} p-4 flex items-start gap-3`}>
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
+                              <Briefcase size={16} />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-[var(--text-primary)] mb-0.5">{label}</h3>
+                              <p className="text-[var(--text-secondary)] text-sm">{positions}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                    <img
+                      src="/images/career-path.png"
+                      alt="Career path"
+                      className="w-full object-cover lx-r border border-[var(--border-subtle)]"
+                      style={{ height: "clamp(240px, 30vw, 380px)" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Industries */}
+              {industries.length > 0 && (
+                <div className={card}>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">Industries &amp; Applications</h2>
+                  <p className="text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">
+                    Discover how this course translates into real-world impact across industries.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {industries.map((ind) => (
+                      <div key={ind.id} className={`${inset} p-5 flex items-start gap-3`}>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
+                          <Factory size={16} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-[var(--text-primary)] mb-1">{ind.title}</h3>
+                          <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{ind.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* What comes next */}
+              <div className={card}>
+                <h2 className={cardTitle}>What Comes Next</h2>
+                <p className="text-[var(--text-secondary)] mb-4">After the program, you can use your capability to pursue:</p>
+                <div className="flex flex-wrap gap-3">
+                  {NEXT_STEPS.map((s) => (
+                    <span key={s} className="bg-[var(--surface-alt)] text-[var(--text-secondary)] px-4 py-2 lx-r-sm text-sm font-medium border border-[var(--border-subtle)]">{s}</span>
                   ))}
                 </div>
               </div>
-            </div>
-          </section>
-        )}
 
-        {/* ── Career Path ───────────────────────────────────────────────── */}
-        {course.career_paths && course.career_paths.length > 0 && (
-          <section className="py-6 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <p className="dc-section-label text-center">Growth</p>
-              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
-                Career Path &amp; Progression
-              </h2>
-              <p className="text-center text-gray-500 mb-12">
-                We equip you with the skills and guidance to grow and succeed in your career.
-              </p>
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="space-y-4">
-                  {(["entry", "mid", "advanced", "specialized"] as const).map((level) => {
-                    const positions = course.career_paths
-                      ?.filter((cp) => cp.level === level)
-                      .map((cp) => cp.position)
-                      .join(", ");
-                    if (!positions) return null;
-                    const icons: Record<string, string> = {
-                      entry: "📋", mid: "⚙️", advanced: "🎯", specialized: "🔧",
-                    };
-                    return (
-                      <div key={level} className="dc-career flex items-start gap-4">
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ background: `${BRAND}20` }}
-                        >
-                          <span>{icons[level]}</span>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-[var(--text-primary)] mb-1 capitalize">
-                            {level === "specialized" ? "Specialized Roles" : `${level} Level`}
-                          </h3>
-                          <p className="text-[var(--text-secondary)] text-sm">{positions}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div>
-                  <img
-                    src="/images/career-path.png"
-                    alt="Career path"
-                    className="w-full object-cover shadow-2xl"
-                    style={{
-                      borderRadius: "2rem 0.75rem 2rem 0.75rem",
-                      height: "clamp(300px, 40vw, 500px)",
-                      border: "1px solid var(--border-subtle)",
-                    }}
-                  />
+              {/* Our commitment */}
+              <div className="text-white lx-r shadow-xl p-6 md:p-8 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #2e1065 0%, #3b1a8a 100%)" }}>
+                <Quote size={64} className="absolute top-4 left-4 opacity-20" style={{ color: "#a78bfa" }} />
+                <div className="relative z-10">
+                  <h2 className="text-2xl md:text-3xl font-semibold mb-4">Our Commitment</h2>
+                  <p className="text-violet-200 font-medium mb-4 text-lg">We don’t believe learning should end with a certificate.</p>
+                  <p className="text-slate-300 mb-4 leading-relaxed">
+                    We are committed to developing practical skills through relevant learning, real-world application, performance validation, and structured support.
+                  </p>
+                  <p className="text-slate-300 leading-relaxed">
+                    Our goal is to help people become more capable, more adaptable, and better prepared to create value as technology and the economy evolve.
+                  </p>
                 </div>
               </div>
             </div>
-          </section>
-        )}
 
-        {/* ── Industries ────────────────────────────────────────────────── */}
-        {course.industries && course.industries.length > 0 && (
-          <section className="py-6 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <p className="dc-section-label text-center">Applications</p>
-              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
-                Industries &amp; Applications
-              </h2>
-              <p className="text-center text-gray-500 mb-12">
-                Discover how this course translates into real-world impact across industries.
-              </p>
-              <div className="grid md:grid-cols-3 gap-6">
-                {course.industries.map((industry) => (
-                  <div key={industry.id} className="dc-industry">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${BRAND}20` }}
-                      >
-                        <span>📄</span>
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-28 space-y-6">
+                <div className="lx-card p-6">
+                  <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Program Structure</h3>
+                  <ul className="space-y-4 mb-6">
+                    {structure.filter((r) => r.value).map(({ icon: Icon, label, value }) => (
+                      <li key={label} className="flex justify-between items-center gap-4 text-sm border-b border-[var(--border-subtle)] pb-2">
+                        <span className="text-[var(--text-muted)] inline-flex items-center flex-shrink-0">
+                          <Icon size={15} className="mr-2" /> {label}
+                        </span>
+                        <span className="font-semibold text-[var(--text-primary)] text-right capitalize">{value}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {salary && (salary.entry_level || salary.mid_level || salary.senior_level) && (
+                    <div className={`mb-6 p-4 ${inset}`}>
+                      <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wide mb-2">Avg. Earning Potential</p>
+                      <div className="space-y-1.5">
+                        {[
+                          { label: "Entry level", value: salary.entry_level },
+                          { label: "Mid level", value: salary.mid_level },
+                          { label: "Senior level", value: salary.senior_level },
+                        ].filter((r) => r.value).map((r) => (
+                          <div key={r.label} className="flex justify-between items-baseline gap-3">
+                            <span className="text-xs text-[var(--text-muted)]">{r.label}</span>
+                            <span className="font-bold text-emerald-600 text-right">{r.value}</span>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-[var(--text-primary)] mb-1">{industry.title}</h3>
-                        <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{industry.text}</p>
-                      </div>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-2">Global remote opportunities</p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+                  )}
 
-        {/* ── Salary Expectations ───────────────────────────────────────── */}
-        {course.salary && (
-          <section className="py-6 px-6">
-            <div className="max-w-[1230px] mx-auto">
-              <p className="dc-section-label text-center">Earnings</p>
-              <h2 className="text-3xl font-bold text-center text-[var(--text-primary)] mb-3">
-                Salary Expectations
-              </h2>
-              <p className="text-center text-gray-500 mb-12">Global Remote Opportunities</p>
-              <div className="dc-salary-grid grid md:grid-cols-3 max-w-3xl mx-auto">
-                {[
-                  { label: "Entry level", value: course.salary.entry_level },
-                  { label: "Mid level",   value: course.salary.mid_level   },
-                  { label: "Senior level",value: course.salary.senior_level },
-                ].map((row, i, arr) => (
-                  <div
-                    key={row.label}
-                    className={`p-8 text-center ${i < arr.length - 1 ? "dc-salary-cell" : ""}`}
-                  >
-                    <p className="text-gray-500 text-sm font-medium mb-2">{row.label}</p>
-                    <p className="text-[var(--text-primary)] font-bold text-lg">{row.value}</p>
+                  {!hasPaidAccess && (
+                    <div className="mb-6">
+                      <p className="text-sm text-[var(--text-muted)] mb-1">Program Investment</p>
+                      {isFree ? (
+                        <p className="text-3xl font-bold text-emerald-600">
+                          Free
+                          {listPrice > 0 && (
+                            <span className="ml-2 text-base font-medium text-[var(--text-muted)] line-through">
+                              {symbol}{listPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </p>
+                      ) : price > 0 ? (
+                        <p className="text-3xl font-bold text-[var(--text-primary)]">{symbol}{price.toLocaleString()}</p>
+                      ) : (
+                        <p className="text-lg font-bold text-[var(--text-primary)]">See pricing at checkout</p>
+                      )}
+                      <p className="text-xs font-medium mt-1" style={{ color: BRAND }}>
+                        {isFree ? "No payment required" : "Flexible payment options available"}
+                      </p>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="mb-4 px-4 py-3 text-sm text-red-500 lx-r-sm" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                      {error}
+                    </div>
+                  )}
+
+                  {hasPaidAccess ? (
+                    <button
+                      onClick={() => router.push({ pathname: "/user/resource", query: { courseId: course.course_id } })}
+                      className="w-full py-4 lx-r bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-md transition transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2"
+                    >
+                      <PlayCircle size={20} /> Continue Learning
+                    </button>
+                  ) : enrollmentStatus?.isEnrolled ? (
+                    <button
+                      onClick={() => router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)}
+                      className="w-full py-4 lx-r bg-amber-600 hover:bg-amber-700 text-white font-semibold text-lg shadow-md transition transform hover:-translate-y-0.5"
+                    >
+                      Complete Payment
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleEnrollClick}
+                      disabled={checkingEnrollment || enrolling}
+                      className="lx-btn w-full py-4 text-lg"
+                    >
+                      {enrolling ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Enrolling…
+                        </span>
+                      ) : isFree ? (
+                        "Enroll for Free"
+                      ) : (
+                        "Apply Now"
+                      )}
+                    </button>
+                  )}
+
+                  {!hasPaidAccess && (
+                    <a
+                      href="https://calendly.com/nexavaltech/30min"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lx-btn-outline mt-3 w-full py-3 text-sm"
+                    >
+                      Talk to an expert
+                    </a>
+                  )}
+
+                  <div className="mt-6 pt-4 border-t border-[var(--border-subtle)]">
+                    <p className="text-xs font-bold text-[var(--text-primary)] mb-2">Program Includes:</p>
+                    <ul className="text-xs text-[var(--text-muted)] space-y-1">
+                      {INCLUDES.map((i) => (
+                        <li key={i} className="flex items-center">
+                          <Check size={12} className="mr-1.5 flex-shrink-0" style={{ color: BRAND }} /> {i}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
+                </div>
+
+                <div className="text-white lx-r shadow-md p-6 border border-slate-800" style={{ background: `linear-gradient(135deg, #0f172a 0%, ${HERO_BG} 100%)` }}>
+                  <div className="flex items-center mb-3">
+                    <BadgeCheck size={24} className="text-emerald-400 mr-3" />
+                    <h4 className="font-semibold text-lg">Learnexity Validation</h4>
+                  </div>
+                  <p className="text-sm text-slate-300 mb-2">
+                    Qualified individuals will get <strong>Learnexity Verified</strong>
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Which allows you to join our verified talent pool for potential employment opportunities, projects, and employer partnerships.
+                  </p>
+                </div>
               </div>
             </div>
-          </section>
-        )}
+          </div>
+        </div>
 
         <Footer />
       </div>
