@@ -23,3 +23,18 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ── Performance (Apache) ─────────────────────────────────────────────────
+# Compress text responses (JSON, HTML, CSS, JS, SVG). Skipped automatically
+# for responses the app already gzipped.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json application/javascript text/html text/css text/plain text/xml application/xml image/svg+xml
+</IfModule>
+
+# Uploaded files (/storage/...) get unique random names, so browsers can
+# keep them for a long time instead of downloading them again.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpe?g|png|gif|webp|avif|svg|ico|mp4|webm|woff2?)$">
+        Header set Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
+    </FilesMatch>
+</IfModule>

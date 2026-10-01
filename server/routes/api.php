@@ -295,7 +295,7 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
 });
 
 // =================== PUBLIC CMS (read-only; used by getStaticProps) =================== //
-Route::middleware('throttle:cms-read')->prefix('cms')->group(function () {
+Route::middleware(['throttle:cms-read', 'public.cache:0'])->prefix('cms')->group(function () {
     Route::get('/pages/{slug}',  [CmsController::class, 'page']);
     Route::get('/globals',       [CmsController::class, 'globals']);
     Route::get('/custom-pages',  [CmsController::class, 'customPages']);
@@ -347,7 +347,7 @@ Route::middleware(['auth:instructor', 'throttle:api'])->prefix('instructor')->gr
 
 // =================== PUBLIC COURSE ROUTES (throttle:api) =================== //
 
-Route::middleware('throttle:api')->prefix('courses')->group(function () {
+Route::middleware(['throttle:api', 'public.cache:30'])->prefix('courses')->group(function () {
     Route::get('/',           [CourseController::class, 'index']);
     Route::get('/featured',   [CourseController::class, 'featured']);
     Route::get('/freemium',   [CourseController::class, 'freemium']);

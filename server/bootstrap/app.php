@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
         'admin.super' => \App\Http\Middleware\EnsureSuperAdmin::class,
         'oauth.csrf.disable' => \App\Http\Middleware\DisableCsrfForOAuth::class,
+        'public.cache' => \App\Http\Middleware\PublicApiCache::class,
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

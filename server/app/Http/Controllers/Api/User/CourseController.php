@@ -51,10 +51,13 @@ public function byTrack(Request $request): JsonResponse
 
     $tracks = $request->input('track', []);
 
-    $query = Course::with([
-        'tools', 'learnings', 'benefits',
-        'careerPaths', 'industries', 'salary'
-    ])->where('is_active', true);
+    // ?lite=1 — course lists only need the basics plus "what you'll learn";
+    // skipping the other relations makes the response much smaller.
+    $relations = $request->boolean('lite')
+        ? ['learnings']
+        : ['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'];
+
+    $query = Course::with($relations)->where('is_active', true);
 
     if (!empty($tracks)) {
         $query->where(function ($q) use ($tracks) {
@@ -98,11 +101,15 @@ public function byTrack(Request $request): JsonResponse
      * can enroll and get instant full access with no payment step. Separate
      * from freemium() above, which only unlocks a preview (sprints 1-2).
      */
-    public function free(): JsonResponse
+    public function free(Request $request): JsonResponse
     {
+        $relations = $request->boolean('lite')
+            ? ['learnings']
+            : ['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'];
+
         $courses = Course::where('is_free', true)
             ->where('is_active', true)
-            ->with(['tools', 'learnings', 'benefits', 'careerPaths', 'industries', 'salary'])
+            ->with($relations)
             ->get();
 
         return response()->json($courses);

@@ -21,6 +21,7 @@ import {
   API_URL, BRAND, PATHWAYS, imageUrl, pathwayForCourse, type PathwayKey, type Track,
 } from "@/components/catalog/pathways";
 import { CatalogTheme } from "@/components/catalog/CatalogTheme";
+import { CmsImage } from "@/components/cms/ui";
 
 const HERO_BG = "#140c3d";
 
@@ -362,16 +363,23 @@ export default function CoursePage() {
 
               {heroImg && (
                 <div className="flex justify-center md:justify-end gap-4">
-                  <img
+                  <CmsImage
                     src={heroImg}
                     alt={course.title}
+                    width={420}
+                    height={660}
+                    priority
+                    sizes="(min-width: 768px) 210px, 130px"
                     className="object-cover lx-r border border-white/10 md:-mt-8"
                     style={{ width: "clamp(130px,16vw,210px)", height: "clamp(200px,26vw,330px)", boxShadow: `0 30px 60px rgba(0,0,0,0.5), 0 0 40px ${BRAND}33` }}
                   />
                   {secondImg && (
-                    <img
+                    <CmsImage
                       src={secondImg}
                       alt={course.title}
+                      width={420}
+                      height={660}
+                      sizes="(min-width: 768px) 210px, 130px"
                       className="object-cover lx-r border border-white/10 md:mt-8"
                       style={{ width: "clamp(130px,16vw,210px)", height: "clamp(200px,26vw,330px)", boxShadow: "0 30px 60px rgba(0,0,0,0.5)" }}
                     />
@@ -428,6 +436,8 @@ export default function CoursePage() {
                             <img
                               src={icon}
                               alt={tool.name}
+                              loading="lazy"
+                              decoding="async"
                               className="w-10 h-10 object-contain"
                               onError={(e) => {
                                 const img = e.currentTarget;
@@ -510,9 +520,12 @@ export default function CoursePage() {
                         );
                       })}
                     </div>
-                    <img
+                    <CmsImage
                       src="/images/career-path.png"
                       alt="Career path"
+                      width={596}
+                      height={500}
+                      sizes="(min-width: 1024px) 400px, 90vw"
                       className="w-full object-cover lx-r border border-[var(--border-subtle)]"
                       style={{ height: "clamp(240px, 30vw, 380px)" }}
                     />

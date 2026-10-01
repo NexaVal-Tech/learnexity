@@ -16,7 +16,11 @@ export interface ScholarshipBannerData {
   buttonLabel: string;
   image: string;
   imageAlt: string;
+  /** Turn the image white in dark mode (for a dark logo). Unset = only for the default Learnexity logo. */
+  whiteInDark?: boolean;
 }
+
+const DEFAULT_LOGO = '/images/learnexity-image.jpeg';
 
 export const SCHOLARSHIP_BANNER_DEFAULTS: ScholarshipBannerData = {
   heading: "Can't Afford the Full Price?\n**Scholarships And Installment Payments Are Available.**",
@@ -28,7 +32,7 @@ export const SCHOLARSHIP_BANNER_DEFAULTS: ScholarshipBannerData = {
     },
   ],
   buttonLabel: 'Apply for a Scholarship',
-  image: '/images/learnexity-image.jpeg',
+  image: DEFAULT_LOGO,
   imageAlt: 'Learnexity',
 };
 
@@ -153,7 +157,6 @@ export default function ScholarshipBanner({ data = SCHOLARSHIP_BANNER_DEFAULTS }
           position: relative;
           z-index: 2;
           flex: 0 0 auto;
-          display: none; /* hidden by default (mobile) */
           flex-direction: column;
           align-items: center;
           justify-content: center;
@@ -176,19 +179,23 @@ export default function ScholarshipBanner({ data = SCHOLARSHIP_BANNER_DEFAULTS }
 
         .schb-logo-img {
           width: 220px;
+          max-width: 100%;
           height: auto;
+          max-height: 260px;
+          object-fit: contain;
           display: block;
         }
-        /* Invert dark logo to white so it reads on the dark-theme card */
-        [data-theme="dark"] .schb-logo-img {
+        /* Turn the dark default logo white on the dark-theme card. Only for
+           the logo — applying it to an uploaded photo turned the whole
+           picture into a white block, so a new image looked like it hadn't
+           changed. */
+        [data-theme="dark"] .schb-logo-img.is-white-in-dark {
           filter: brightness(0) invert(1);
         }
 
-        /* Show only on large screens */
-        @media (min-width: 1024px) {
-          .schb-right {
-            display: flex;
-          }
+        .schb-right { display: flex; width: 100%; justify-content: flex-start; }
+        @media (min-width: 769px) {
+          .schb-right { width: auto; justify-content: center; }
         }
 
         @keyframes schb-pulse {
@@ -203,6 +210,11 @@ export default function ScholarshipBanner({ data = SCHOLARSHIP_BANNER_DEFAULTS }
             align-items: flex-start;
             gap: 2rem;
           }
+        }
+
+        @media (max-width: 768px) {
+          .schb-logo-wrap { padding: 1.25rem 1.5rem; }
+          .schb-logo-img { width: 160px; }
         }
 
         @media (max-width: 480px) {
@@ -245,12 +257,19 @@ export default function ScholarshipBanner({ data = SCHOLARSHIP_BANNER_DEFAULTS }
             </div>
           </div>
 
-          {/* ── Right panel: logo, large screens only ── */}
+          {/* ── Right panel: image (beside the text; below it on mobile) ── */}
           {data.image && (
             <div className="schb-right">
               <div className="schb-logo-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={data.image} alt={data.imageAlt || ''} className="schb-logo-img" />
+                <img
+                  key={data.image /* remount when the image changes */}
+                  src={data.image}
+                  alt={data.imageAlt || ''}
+                  loading="lazy"
+                  decoding="async"
+                  className={`schb-logo-img ${(data.whiteInDark ?? data.image === DEFAULT_LOGO) ? 'is-white-in-dark' : ''}`}
+                />
               </div>
             </div>
           )}
@@ -282,8 +301,9 @@ export const block: BlockDefinition<ScholarshipBannerData> = {
       { itemLabelKey: 'text', addLabel: 'Add paragraph', itemDefaults: { text: 'New paragraph', style: 'normal' } }
     ),
     f.text('buttonLabel', 'Button text'),
-    f.image('image', 'Side image (large screens)'),
+    f.image('image', 'Side image'),
     f.text('imageAlt', 'Image description'),
+    f.bool('whiteInDark', 'Show the image white in dark mode (only for a dark logo)'),
   ],
   defaults: SCHOLARSHIP_BANNER_DEFAULTS,
 };

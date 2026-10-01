@@ -52,7 +52,7 @@ export const PATHWAYS: Record<PathwayKey, PathwayDef> = {
       "Build practical skills, complete real projects, and develop a portfolio you can use beyond the classroom.",
     tag: "Foundation Pathway",
     href: "/flex",
-    endpoint: "/api/courses/by-track?track[]=self_paced",
+    endpoint: "/api/courses/by-track?track[]=self_paced&lite=1",
     tracks: ["self_paced"],
     who:
       "Designed for people who want to build immediately useful digital skills for work, business, creativity, or personal growth, and learn on their own schedule.",
@@ -70,7 +70,7 @@ export const PATHWAYS: Record<PathwayKey, PathwayDef> = {
     outcomeNote: "(3–6 month commitment)",
     tag: "Accelerator Pathway",
     href: "/intermediate",
-    endpoint: "/api/courses/by-track?track[]=intermediate",
+    endpoint: "/api/courses/by-track?track[]=intermediate&lite=1",
     tracks: ["intermediate"],
     who:
       "Designed for professionals and ambitious learners who already have the basics and want to build specialized, practical capability they can apply to real-world problems.",
@@ -88,7 +88,7 @@ export const PATHWAYS: Record<PathwayKey, PathwayDef> = {
     outcomeNote: "Go deeper. Build what’s next.",
     tag: "DeepTech Pathway",
     href: "/courses/courses",
-    endpoint: "/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one",
+    endpoint: "/api/courses/by-track?track[]=group_mentorship&track[]=one_on_one&lite=1",
     tracks: ["group_mentorship", "one_on_one"],
     who:
       "Designed for professionals and technologists preparing to work more deeply with the technologies transforming how organizations build, secure, manage, and use technology.",
@@ -105,7 +105,7 @@ export const PATHWAYS: Record<PathwayKey, PathwayDef> = {
       "Build real skills, explore a pathway, and decide your next step with confidence.",
     tag: "Free Course",
     href: "/free-courses",
-    endpoint: "/api/courses/free",
+    endpoint: "/api/courses/free?lite=1",
     tracks: ["self_paced"],
     who:
       "Designed for anyone who wants to explore a new skill, try a pathway, and get started without any cost.",

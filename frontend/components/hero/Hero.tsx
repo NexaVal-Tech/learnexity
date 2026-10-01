@@ -82,22 +82,16 @@ export default function Hero({ data = HOME_HERO_DEFAULTS }: { data?: HomeHeroDat
 
       <div className="relative z-10 max-w-7xl mx-auto flex items-center px-5 sm:px-8 min-h-[60vh] md:min-h-[80vh]">
         <div className="max-w-5xl">
-          {/* Mobile: pill + smaller heading */}
-          <div className="md:hidden">
-            {text.badge && (
-              <div className="inline-flex items-center px-4 py-2 mb-5 rounded-full bg-slate-800/60 border border-slate-600/70 text-sm font-medium text-indigo-100 backdrop-blur-sm">
-                <span className="flex h-2 w-2 rounded-full mr-2 animate-pulse flex-shrink-0" style={{ background: "#8b7cff" }} />
-                <CmsText text={text.badge} accentColor="#a5b4fc" />
-              </div>
-            )}
-            <h1 className="text-left text-4xl sm:text-5xl font-bold leading-tight text-white">
-              <CmsText text={text.mobile} accentColor="#a5b4fc" />
-            </h1>
-          </div>
-
-          {/* Desktop: unchanged two-line headline */}
-          <h1 className="hidden md:block text-left md:text-5xl lg:text-6xl font-bold leading-tight text-white">
-            <CmsText text={text.desktop} accentColor="#a5b4fc" />
+          {/* Pill + heading on every screen size. The pill stays small on
+              mobile and is shown large on bigger screens. */}
+          {text.badge && (
+            <div className="inline-flex items-center px-4 py-2 md:px-8 md:py-3 lg:px-12 lg:py-4 mb-5 md:mb-7 rounded-full bg-slate-800/60 border border-slate-600/70 text-sm md:text-xl lg:text-[1.75rem] lg:tracking-wide font-medium text-indigo-100 backdrop-blur-sm">
+              <span className="flex h-2 w-2 md:h-3 md:w-3 rounded-full mr-2 md:mr-3 lg:mr-4 animate-pulse flex-shrink-0" style={{ background: "#8b7cff" }} />
+              <CmsText text={text.badge} accentColor="#a5b4fc" />
+            </div>
+          )}
+          <h1 className="text-left text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white">
+            <CmsText text={text.mobile} accentColor="#a5b4fc" />
           </h1>
 
           {/* Subheading */}
@@ -119,7 +113,7 @@ export const block: BlockDefinition<HomeHeroData> = {
   category: "Homepage",
   description: "Full-width video banner with headline and two buttons.",
   fields: [
-    f.text("badge", "Badge text", { help: "Small pill above the headline on mobile (e.g. The Digital Economy is Changing). On larger screens it's shown as the first line of the headline." }),
+    f.text("badge", "Badge text", { help: "Pill shown above the headline (e.g. The Digital Economy is Changing). Leave empty to hide it." }),
     f.textarea("heading", "Headline", { rows: 3, help: EMPHASIS_HELP }),
     f.textarea("subheading", "Subheading", { rows: 3, help: EMPHASIS_HELP }),
     f.video("backgroundVideo", "Background video", "Plays muted on a loop. Leave empty to use the image below instead."),

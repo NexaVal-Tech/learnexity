@@ -1,5 +1,5 @@
 import React from "react";
-import { CmsText } from "@/components/cms/ui";
+import { CmsImage, CmsText } from "@/components/cms/ui";
 import { CmsButton, buttonFields, type CmsButtonData } from "@/components/cms/CmsButton";
 import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
 import type { BlockDefinition } from "@/lib/cms/blockTypes";
@@ -200,8 +200,8 @@ export default function ProbStatement({ data = PROB_STATEMENT_DEFAULTS }: { data
         <div className="prob-card">
 
           {data.backgroundImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.backgroundImage} alt="" className="prob-bg-img" aria-hidden="true" />
+            // next/image: served resized and as WebP/AVIF, loaded lazily.
+            <CmsImage src={data.backgroundImage} alt="" aria-hidden="true" fill sizes="(min-width: 1280px) 1230px, 100vw" className="prob-bg-img" />
           )}
           <div className="prob-overlay" />
 
