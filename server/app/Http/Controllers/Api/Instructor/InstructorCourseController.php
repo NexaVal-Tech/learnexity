@@ -89,6 +89,7 @@ class InstructorCourseController extends Controller
 
         $sprints = CourseMaterial::where('course_id', $courseId)
             ->with('items')
+            ->orderBy('order')
             ->orderBy('sprint_number')
             ->get()
             ->map(fn ($s) => [

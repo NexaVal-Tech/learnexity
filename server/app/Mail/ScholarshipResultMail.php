@@ -2,6 +2,8 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\Scholarship;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -20,7 +22,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class ScholarshipResultMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     public function __construct(
         public User $user,
@@ -33,28 +35,45 @@ class ScholarshipResultMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $isFullTuition = (float) $this->scholarship->discount_percentage >= 100;
+        $subject = "🎓 You've been awarded a scholarship — {$this->scholarship->course_name}";
 
-        $subject = $isFullTuition
-            ? "🎓 You've been awarded a full-tuition scholarship — {$this->scholarship->course_name}"
-            : "🎓 You've been awarded a {$this->scholarship->discount_percentage}% scholarship — {$this->scholarship->course_name}";
-
-        return new Envelope(subject: $subject);
+        return new Envelope(subject: $this->templatedSubject($subject));
     }
 
     public function content(): Content
     {
-        return new Content(
+        return $this->templatedContent(new Content(
             view: 'emails.student.scholarship_result',
             with: [
                 'user'          => $this->user,
                 'scholarship'   => $this->scholarship,
                 'isApproved'    => $this->isApproved,
-                'isFullTuition' => (float) $this->scholarship->discount_percentage >= 100,
+                'isFullTuition' => true, // single-award model
                 'paymentUrl'    => $this->paymentUrl,
                 'amountDue'     => $this->amountDue,
                 'currency'      => $this->currency,
             ],
-        );
+        ));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'scholarship_result';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'first_name' => explode(' ', trim((string) $this->user->name))[0], 'course' => $this->scholarship->course_name, 'fee' => $this->amountDue ? (strtoupper((string) $this->currency) === 'NGN' ? '₦' : '$') . number_format((float) $this->amountDue, 2) : 'the registration fee shown on your payment page'];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return $this->paymentUrl;
+    }
+
+    protected function emailTemplateDetails(): array
+    {
+        return ['Course' => $this->scholarship->course_name, 'Status' => 'Scholarship awarded', 'Registration fee' => $this->amountDue ? (strtoupper((string) $this->currency) === 'NGN' ? '₦' : '$') . number_format((float) $this->amountDue, 2) : 'Shown on your payment page'];
     }
 }

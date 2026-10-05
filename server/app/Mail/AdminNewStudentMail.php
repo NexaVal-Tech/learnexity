@@ -3,6 +3,8 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\User;
 use App\Models\CourseEnrollment;
 use Illuminate\Bus\Queueable;
@@ -13,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 
 class AdminNewStudentMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     public function __construct(
         public User $user,
@@ -24,18 +26,32 @@ class AdminNewStudentMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: $this->subjectOverride
+        return new Envelope(subject: $this->templatedSubject($this->subjectOverride
                 ?? ($this->enrollment
                     ? 'New Course Enrollment - ' . $this->user->name
-                    : 'New Student Signup - ' . $this->user->name),
-        );
+                    : 'New Student Signup - ' . $this->user->name)));
     }
 
     public function content(): Content
     {
-        return new Content(
+        return $this->templatedContent(new Content(
             view: 'emails.admin.new_student',
-        );
+        ));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'admin_new_student';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'email' => $this->user->email, 'course' => $this->enrollment?->course_name ?? '—'];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return null;
     }
 }

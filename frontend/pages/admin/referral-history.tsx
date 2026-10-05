@@ -1,3 +1,4 @@
+import { formatMoney } from '@/lib/format';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
@@ -505,7 +506,7 @@ const ReferralHistoryPage: React.FC = () => {
                                 <span className="text-sm font-medium text-amber-600 dark:text-yellow-400">{r.pending_referrals}</span>
                               </td>
                               <td className="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">
-                                ${Number(r.total_earnings).toFixed(2)}
+                                {formatMoney(r.total_earnings, 'NGN')}
                               </td>
                               <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(r.created_at).toLocaleDateString()}
@@ -528,7 +529,7 @@ const ReferralHistoryPage: React.FC = () => {
                                 {r.referral_code} <Copy size={10} className="text-gray-400 dark:text-gray-500" />
                               </button>
                             </div>
-                            <span className="text-sm font-bold text-gray-900 dark:text-white">${Number(r.total_earnings).toFixed(2)}</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">{formatMoney(r.total_earnings, 'NGN')}</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             {[
@@ -574,8 +575,8 @@ const ReferralHistoryPage: React.FC = () => {
                   {[
                     { label: 'Pending', value: payoutStats.pending, icon: <Clock size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
                     { label: 'Approved', value: payoutStats.approved, icon: <CheckCircle size={16} />, color: 'text-green-600 dark:text-green-400' },
-                    { label: 'Pending Amount', value: `$${Number(payoutStats.pending_amount).toFixed(2)}`, icon: <Banknote size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
-                    { label: 'Paid Out', value: `$${Number(payoutStats.paid_amount).toFixed(2)}`, icon: <DollarSign size={16} />, color: 'text-green-600 dark:text-green-400' },
+                    { label: 'Pending Amount', value: formatMoney(payoutStats.pending_amount, 'NGN'), icon: <Banknote size={16} />, color: 'text-amber-600 dark:text-yellow-400' },
+                    { label: 'Paid Out', value: formatMoney(payoutStats.paid_amount, 'NGN'), icon: <DollarSign size={16} />, color: 'text-green-600 dark:text-green-400' },
                   ].map(s => (
                     <div key={s.label} className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3">
                       <div className={s.color}>{s.icon}</div>
@@ -636,7 +637,7 @@ const ReferralHistoryPage: React.FC = () => {
                                   </span>
                                 </div>
                               </td>
-                              <td className="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">${Number(p.amount).toFixed(2)}</td>
+                              <td className="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">{formatMoney(p.amount, 'NGN')}</td>
                               <td className="py-3 px-4">
                                 <p className="text-sm text-gray-700 dark:text-gray-300">{p.bank_name}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">{p.account_number} · {p.account_name}</p>
@@ -704,7 +705,7 @@ const ReferralHistoryPage: React.FC = () => {
             <div className="bg-white dark:bg-[#0f0f14] rounded-xl shadow-xl max-w-sm w-full p-6">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Decline payout request?</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                ${Number(declineTarget.amount).toFixed(2)} for {declineTarget.payee?.name || declineTarget.payee?.email}. No money is sent — they'll be notified and can request again with corrected details.
+                {formatMoney(declineTarget.amount, 'NGN')} for {declineTarget.payee?.name || declineTarget.payee?.email}. No money is sent — they'll be notified and can request again with corrected details.
               </p>
               <textarea
                 value={declineNote}

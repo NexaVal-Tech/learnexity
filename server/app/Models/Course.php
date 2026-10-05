@@ -55,6 +55,10 @@ class Course extends Model
         // One-time payment discounts
         'onetime_discount_usd',
         'onetime_discount_ngn',
+
+        // Per-course instructors + optional struck-through "was" prices
+        'course_instructors',
+        'compare_prices',
     ];
 
     protected $casts = [
@@ -84,6 +88,9 @@ class Course extends Model
 
         'onetime_discount_usd' => 'decimal:2',
         'onetime_discount_ngn' => 'decimal:2',
+
+        'course_instructors' => 'array',
+        'compare_prices' => 'array',
     ];
 
     // Append learning tracks info to JSON responses

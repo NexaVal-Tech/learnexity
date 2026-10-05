@@ -25,6 +25,7 @@ interface AuthContextType {
   loginWithGoogle: () => void;
   clearError: () => void;
   setUserFromToken: (token: string) => Promise<void>;
+  loginWithVerificationCode: (email: string, password: string, otp: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +46,17 @@ async function persistIntendedCourse(courseId: string): Promise<void> {
 }
 
 async function resolvePostLoginRedirect(router: ReturnType<typeof useRouter>) {
+  // Came from an email "Proceed to Payment" link while logged out → go
+  // back to that payment page. Only payment URLs are accepted.
+  const postLogin = sessionStorage.getItem('post_login_redirect');
+  if (postLogin) {
+    sessionStorage.removeItem('post_login_redirect');
+    if (/^\/user\/payment\/[A-Za-z0-9_-]+(\?[A-Za-z0-9_=&%-]*)?$/.test(postLogin)) {
+      router.push(postLogin);
+      return;
+    }
+  }
+
   const scholarshipRedirect = sessionStorage.getItem('scholarship_course_redirect');
   if (scholarshipRedirect) {
     sessionStorage.removeItem('scholarship_course_redirect');
@@ -110,6 +122,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       const response = await api.auth.login({ email, password });
+      if (response.token) localStorage.setItem('token', response.token);
+      await refreshUser();
+      await resolvePostLoginRedirect(router);
+    } catch (error: any) {
+      const err = handleApiError(error);
+      setError(err);
+      const e = new Error(err) as Error & { emailUnverified?: boolean };
+      // 403 + email_verified:false → the login page offers a verification code.
+      e.emailUnverified = error?.response?.status === 403 && error?.response?.data?.email_verified === false;
+      throw e;
+    }
+  };
+
+  /** Verify an older account with the emailed 6-digit code and log in. */
+  const loginWithVerificationCode = async (email: string, password: string, otp: string) => {
+    try {
+      setError(null);
+      const response = await api.auth.verifyLoginCode({ email, password, otp });
       if (response.token) localStorage.setItem('token', response.token);
       await refreshUser();
       await resolvePostLoginRedirect(router);
@@ -250,6 +280,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={{
       user, loading, error, login,
       sendRegistrationOtp, resendRegistrationOtp, verifyRegistrationOtp, completeRegistration,
+      loginWithVerificationCode,
       logout, refreshUser, loginWithGoogle, clearError, setUserFromToken,
     }}>
       {children}

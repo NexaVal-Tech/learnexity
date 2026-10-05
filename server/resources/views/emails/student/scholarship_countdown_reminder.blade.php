@@ -52,7 +52,7 @@
 
       <p class="text">
         Just a friendly reminder that your
-        {{ $isFullTuition ? 'full-tuition scholarship' : "{$scholarship->discount_percentage}% scholarship" }}
+        scholarship
         for <strong>{{ $scholarship->course_name }}</strong> is still waiting to be used.
         @if($isUrgent)
           Time's running short — complete your enrollment soon to keep your spot.
@@ -70,7 +70,7 @@
 
       <div class="course-card">
         <div class="course-label">Your Award</div>
-        <div class="course-name">{{ $isFullTuition ? 'Full-Tuition Scholarship' : "{$scholarship->discount_percentage}% Scholarship" }}</div>
+        <div class="course-name">Scholarship — registration fee only</div>
       </div>
 
       <div class="cta-wrap">

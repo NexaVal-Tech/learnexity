@@ -36,6 +36,51 @@ export interface CmsRevisionItem {
   snapshot?: any;
 }
 
+export interface EmailTemplateListItem {
+  key: string;
+  label: string;
+  group: string;
+  description: string;
+  customized: boolean;
+  customize_body: boolean;
+  updated_at: string | null;
+}
+
+export interface EmailTemplateDetail {
+  key: string;
+  label: string;
+  description: string;
+  placeholders: { name: string; label: string; sample: string }[];
+  defaults: { subject: string; heading: string; body: string; button: string };
+  template: {
+    subject: string | null;
+    customize_body: boolean;
+    heading: string | null;
+    body: string | null;
+    button_label: string | null;
+    updated_at: string | null;
+  } | null;
+}
+
+export interface EmailTemplateInput {
+  subject: string;
+  customize_body: boolean;
+  heading: string;
+  body: string;
+  button_label: string;
+}
+
+export const emailTemplatesAdmin = {
+  list: () => adminApi.get<{ templates: EmailTemplateListItem[] }>("/api/admin/cms/emails"),
+  get: (key: string) => adminApi.get<EmailTemplateDetail>(`/api/admin/cms/emails/${encodeURIComponent(key)}`),
+  save: (key: string, input: EmailTemplateInput) => adminApi.put(`/api/admin/cms/emails/${encodeURIComponent(key)}`, input),
+  reset: (key: string) => adminApi.delete(`/api/admin/cms/emails/${encodeURIComponent(key)}`),
+  preview: (key: string, input: Partial<EmailTemplateInput>) =>
+    adminApi.post<{ subject: string; html: string }>(`/api/admin/cms/emails/${encodeURIComponent(key)}/preview`, input),
+  test: (key: string, input: Partial<EmailTemplateInput>) =>
+    adminApi.post<{ message: string }>(`/api/admin/cms/emails/${encodeURIComponent(key)}/test`, input),
+};
+
 export const cmsAdmin = {
   listPages: () =>
     adminApi.get<{ system_pages: CmsPageListItem[]; custom_pages: CmsPageListItem[]; globals: { key: string; updated_at: string }[] }>(

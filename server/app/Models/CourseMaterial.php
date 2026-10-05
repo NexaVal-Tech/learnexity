@@ -23,7 +23,7 @@ class CourseMaterial extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(MaterialItem::class)->orderBy('order');
+        return $this->hasMany(MaterialItem::class)->orderBy('order')->orderBy('id');
     }
 
     public function progress(): HasMany

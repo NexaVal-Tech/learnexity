@@ -9,7 +9,7 @@
     .wrapper { max-width:600px; margin:40px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08); }
 
     .header { padding:40px; text-align:center; }
-    .header-approved { background:linear-gradient(135deg,#15803d 0%,#22c55e 100%); }
+    .header-approved { background:linear-gradient(135deg,#2e1065 0%,#4A3AFF 100%); }
     .header-rejected { background:linear-gradient(135deg,#0F172A 0%,#1e3a5f 100%); }
     .header h1 { color:#fff; font-size:22px; font-weight:800; margin:0 0 6px; }
     .header p  { color:rgba(255,255,255,0.75); font-size:14px; margin:0; }
@@ -50,44 +50,27 @@
     <div class="body">
       <p class="greeting">Hi {{ explode(' ', $user->name)[0] }},</p>
 
-      @if($isFullTuition)
-        <p class="text">
-          Congratulations! You've been awarded a <strong>full-tuition scholarship</strong> for
-          <strong>{{ $scholarship->course_name }}</strong>. Instead of paying the full course price,
-          you only need to pay the flat registration fee below to secure your spot — the rest of your
-          tuition is fully covered.
-        </p>
-
-        <div class="award-box">
-          <p><strong>Full-tuition scholarship:</strong> You only owe the registration fee of
-            <strong>{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</strong> —
-            no further course payments. Complete it below to lock in your spot.</p>
-        </div>
-      @else
-        <p class="text">
-          Congratulations! You've been awarded a <strong>{{ $scholarship->discount_percentage }}% scholarship</strong>
-          for <strong>{{ $scholarship->course_name }}</strong>. The discount is applied automatically —
-          just pick your learning track and payment plan as normal (installments are still available)
-          and the reduced price shows up at checkout.
-        </p>
-
-        <div class="award-box">
-          <p><strong>{{ $scholarship->discount_percentage }}% scholarship:</strong> Your discounted price
-            comes to <strong>{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</strong>
-            to get started — complete it below to lock in your spot.</p>
-        </div>
-      @endif
+      @php
+        $feeText = $amountDue !== null && $amountDue > 0
+          ? (strtoupper($currency) === 'NGN' ? '₦' : '$') . number_format($amountDue, 2)
+          : null;
+      @endphp
+      <p class="text">
+        Congratulations! You've been awarded a <strong>scholarship</strong> for
+        <strong>{{ $scholarship->course_name }}</strong>. You only need to pay the registration fee
+        to secure your spot — your tuition is covered.
+      </p>
 
       <div class="course-card">
-        <div class="course-label">Application Summary</div>
+        <div class="course-label">Scholarship Summary</div>
         <div class="course-name">{{ $scholarship->course_name }}</div>
         <div class="detail-row">
           <span>Status</span>
-          <span class="detail-val">{{ $isFullTuition ? 'Approved — full tuition' : "Approved — {$scholarship->discount_percentage}% scholarship" }}</span>
+          <span class="detail-val">Scholarship awarded</span>
         </div>
         <div class="detail-row">
-          <span>{{ $isFullTuition ? 'Registration fee' : 'Amount due today' }}</span>
-          <span class="detail-val">{{ strtoupper($currency) }} {{ number_format($amountDue ?? 0, 2) }}</span>
+          <span>Registration fee</span>
+          <span class="detail-val">{{ $feeText ?? 'Shown on your payment page' }}</span>
         </div>
       </div>
 

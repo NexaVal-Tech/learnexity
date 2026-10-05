@@ -1,6 +1,6 @@
 // lib/cms/globalSchemas.ts — admin form schemas for the navbar and footer.
 import { f, type Field } from "./fields";
-import { NAVBAR_DEFAULTS, FOOTER_DEFAULTS } from "./globalDefaults";
+import { NAVBAR_DEFAULTS, FOOTER_DEFAULTS, SCHOLARSHIP_DEFAULTS } from "./globalDefaults";
 
 const linkFields = (labelHelp?: string): Field[] => [
   f.text("label", "Text", labelHelp ? { help: labelHelp } : {}),
@@ -115,7 +115,37 @@ export const FOOTER_FIELDS: Field[] = [
   { ...f.url("poweredByHref", "“Powered by” link"), showIf: { key: "showPoweredBy", equals: true } },
 ];
 
+const PH = "{course} is replaced with the course name.";
+export const SCHOLARSHIP_FIELDS: Field[] = [
+  f.text("welcomeTitle", "Welcome title"),
+  f.textarea("welcomeText", "Welcome text", { rows: 3, help: PH }),
+  f.text("applyButton", "Apply button"),
+  f.text("skipButton", "Skip button"),
+  f.text("pickerTitle", "Course picker — title"),
+  f.textarea("pickerSubtitle", "Course picker — text", { rows: 2 }),
+  f.text("pickerNote", "Course picker — important note", { help: "Shown in a highlighted box, e.g. One scholarship per user across all courses." }),
+  f.text("pickerContinue", "Course picker — continue button"),
+  f.text("applicationLabel", "Application — small label above each question"),
+  f.text("submitButton", "Application — submit button"),
+  f.text("awardBadge", "Award — badge text"),
+  f.text("awardHeading", "Award — heading"),
+  f.textarea("awardMessage", "Award — message", { rows: 3, help: PH + " Also used in the reply right after applying." }),
+  f.text("awardButton", "Award — button"),
+  f.textarea("paymentBanner", "Payment page — scholarship banner", { rows: 2, help: PH }),
+  f.text("paymentDiscountLabel", "Payment page — discount line label"),
+  f.text("paymentFeeLabel", "Payment page — registration fee label"),
+  f.textarea("alreadyAppliedMessage", "Message — already applied", { rows: 2 }),
+  f.textarea("alreadyUsedMessage", "Message — scholarship already used", { rows: 2 }),
+];
+
 export const GLOBAL_EDITORS = {
-  navbar: { title: "Navbar", fields: NAVBAR_FIELDS, defaults: NAVBAR_DEFAULTS },
-  footer: { title: "Footer", fields: FOOTER_FIELDS, defaults: FOOTER_DEFAULTS },
+  navbar: { title: "Navbar", fields: NAVBAR_FIELDS, defaults: NAVBAR_DEFAULTS, subtitle: "Shown on every page of the website.", preview: true },
+  footer: { title: "Footer", fields: FOOTER_FIELDS, defaults: FOOTER_DEFAULTS, subtitle: "Shown on every page of the website.", preview: true },
+  scholarship: {
+    title: "Scholarship",
+    fields: SCHOLARSHIP_FIELDS,
+    defaults: SCHOLARSHIP_DEFAULTS,
+    subtitle: "All the scholarship wording students see — dashboard, course picker, application, award and payment page. The award email is under Emails.",
+    preview: false,
+  },
 } as const;

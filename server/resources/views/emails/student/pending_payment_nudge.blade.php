@@ -78,7 +78,7 @@
       <p class="text">{!! $bodyMessage !!}</p>
 
       @if($isRegistrationFee)
-        <div class="urgency" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">🎓 Full-tuition scholarship awarded</div>
+        <div class="urgency" style="background:#f0fdf4; border-color:#bbf7d0; color:#166534;">🎓 Scholarship awarded</div>
       @endif
 
       <div class="course-card">
@@ -106,7 +106,7 @@
 
       @if($isRegistrationFee)
         <div class="installment-box">
-          <p><strong>Full-tuition scholarship:</strong> You only owe the registration fee of <strong>{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->total_amount, 2) }}</strong> — no further course payments. Complete it now to lock in your spot.</p>
+          <p><strong>Scholarship awarded:</strong> You only owe the registration fee of <strong>{{ strtoupper($enrollment->currency) }} {{ number_format($enrollment->total_amount, 2) }}</strong> — no further course payments. Complete it now to lock in your spot.</p>
         </div>
       @elseif($enrollment->payment_type === 'installment')
         <div class="installment-box">

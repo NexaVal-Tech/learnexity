@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { X, BookOpen, DollarSign, Clock, BarChart3, Crown, Sparkles, ArrowRight, ArrowLeft, Check, Upload } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
 import { toast } from 'react-hot-toast';
+import { formatMoneyInput } from '@/lib/format';
+import {
+  InstructorsFields, ComparePricesFields, instructorsToFormData, comparePricesToPayload, emptyComparePrices,
+  type InstructorDraft, type ComparePricesDraft,
+} from './CourseExtrasFields';
 
 interface CreateCourseModalProps {
   isOpen: boolean;
@@ -61,6 +66,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     onetime_discount_ngn: '',
   });
 
+  // Optional extras (saved right after the course is created)
+  const [instructors, setInstructors] = useState<InstructorDraft[]>([]);
+  const [comparePrices, setComparePrices] = useState<ComparePricesDraft>(emptyComparePrices());
+
   // Step 3: Images
   // Replace imageData state with:
   const [heroFile, setHeroFile] = useState<File | null>(null);
@@ -106,7 +115,8 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     
     setPricingData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      // Price inputs show thousands separators — store the plain number.
+      [name]: type === 'checkbox' ? checked : value.replace(/,/g, ''),
     }));
   };
 
@@ -197,6 +207,19 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
       const response = await api.admin.courses.createFormData(formDataPayload);
 
+      // Extras need the course to exist first.
+      try {
+        const extrasCompare = comparePricesToPayload(comparePrices);
+        if (Object.keys(extrasCompare).length) {
+          await api.admin.courses.updateComparePrices(formData.course_id, extrasCompare);
+        }
+        if (instructors.some((i) => i.name.trim())) {
+          await api.admin.courses.syncInstructors(formData.course_id, instructorsToFormData(instructors));
+        }
+      } catch (extraErr) {
+        toast.error('Course created, but instructors / slashed prices could not be saved: ' + handleApiError(extraErr));
+      }
+
       toast.success('Course created successfully!', { duration: 5000 });
       onSuccess(response.course);
       handleClose();
@@ -213,6 +236,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
     setFormData({ title: '', course_id: '', description: '', project: '', duration: '', level: 'Beginner', is_freemium: false, is_premium: false, is_free: false });
     setPricingData({ price_usd: '', price_ngn: '', offers_one_on_one: true, offers_group_mentorship: true, offers_self_paced: true, offers_intermediate: false, one_on_one_price_usd: '', group_mentorship_price_usd: '', self_paced_price_usd: '', intermediate_price_usd: '', one_on_one_price_ngn: '', group_mentorship_price_ngn: '', self_paced_price_ngn: '', intermediate_price_ngn: '', onetime_discount_usd: '', onetime_discount_ngn: '' });
     setHeroFile(null); setHeroPreview(null);
+    setInstructors([]); setComparePrices(emptyComparePrices());
     setSecondaryFile(null); setSecondaryPreview(null);
     onClose();
   };
@@ -427,9 +451,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="price_usd"
-                        value={pricingData.price_usd}
+                        value={formatMoneyInput(String(pricingData.price_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -447,9 +472,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="price_ngn"
-                        value={pricingData.price_ngn}
+                        value={formatMoneyInput(String(pricingData.price_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -523,9 +549,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="one_on_one_price_usd"
-                        value={pricingData.one_on_one_price_usd}
+                        value={formatMoneyInput(String(pricingData.one_on_one_price_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -543,9 +570,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="group_mentorship_price_usd"
-                        value={pricingData.group_mentorship_price_usd}
+                        value={formatMoneyInput(String(pricingData.group_mentorship_price_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -563,9 +591,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="self_paced_price_usd"
-                        value={pricingData.self_paced_price_usd}
+                        value={formatMoneyInput(String(pricingData.self_paced_price_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -583,9 +612,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="intermediate_price_usd"
-                        value={pricingData.intermediate_price_usd}
+                        value={formatMoneyInput(String(pricingData.intermediate_price_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -609,9 +639,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="one_on_one_price_ngn"
-                        value={pricingData.one_on_one_price_ngn}
+                        value={formatMoneyInput(String(pricingData.one_on_one_price_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -629,9 +660,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="group_mentorship_price_ngn"
-                        value={pricingData.group_mentorship_price_ngn}
+                        value={formatMoneyInput(String(pricingData.group_mentorship_price_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -649,9 +681,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="self_paced_price_ngn"
-                        value={pricingData.self_paced_price_ngn}
+                        value={formatMoneyInput(String(pricingData.self_paced_price_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -669,9 +702,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="intermediate_price_ngn"
-                        value={pricingData.intermediate_price_ngn}
+                        value={formatMoneyInput(String(pricingData.intermediate_price_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -695,9 +729,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">$</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="onetime_discount_usd"
-                        value={pricingData.onetime_discount_usd}
+                        value={formatMoneyInput(String(pricingData.onetime_discount_usd ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -714,9 +749,10 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500">₦</span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         name="onetime_discount_ngn"
-                        value={pricingData.onetime_discount_ngn}
+                        value={formatMoneyInput(String(pricingData.onetime_discount_ngn ?? ""))}
                         onChange={handlePricingChange}
                         step="0.01"
                         min="0"
@@ -726,6 +762,12 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Slashed prices (optional) */}
+              <div className="pt-6 border-t border-gray-200 dark:border-white/10">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Slashed prices <span className="text-sm font-normal text-gray-500">(optional)</span></h3>
+                <ComparePricesFields value={comparePrices} onChange={setComparePrices} offers={pricingData} />
               </div>
             </div>
           )}
@@ -805,6 +847,12 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
                 </div>
                 <input id="secondary-upload" type="file" accept="image/*" className="hidden" onChange={onSecondaryChange} />
                 {secondaryFile && <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1"><Check size={12} /> {secondaryFile.name} ready to upload</p>}
+              </div>
+
+              {/* Instructors (optional) */}
+              <div className="pt-6 border-t border-gray-200 dark:border-white/10">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Instructors <span className="text-sm font-normal text-gray-500">(optional)</span></h3>
+                <InstructorsFields value={instructors} onChange={setInstructors} />
               </div>
 
               <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4">

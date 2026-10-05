@@ -150,12 +150,10 @@ const DetailModal: React.FC<{
           {application.status === 'pending' && (
             <div className="border-t border-gray-100 dark:border-white/10 pt-4 space-y-4">
               <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-400">Two-tier scholarship — no reject outcome</p>
+                <p className="text-sm font-semibold text-green-800 dark:text-green-400">One award for everyone</p>
                 <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
-                  Every applicant gets awarded something. Full tuition (100%) means the student only
-                  pays the platform's registration fee (set under Settings). The partial award
-                  (percentage set under Settings, default 50%) is a straight discount off the normal
-                  course price through the regular payment flow.
+                  Every awarded student pays only the registration fee set under Settings — the rest of
+                  the course price is covered.
                 </p>
               </div>
               <div>
@@ -186,20 +184,12 @@ const DetailModal: React.FC<{
         {application.status === 'pending' && (
           <div className="p-6 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3">
             <button
-              onClick={() => handleSubmit(50)}
-              disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-60"
-            >
-              {saving && action === 'partial' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              Approve (partial award)
-            </button>
-            <button
               onClick={() => handleSubmit(100)}
               disabled={saving}
               className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-60"
             >
               {saving && action === 'full' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              Approve (full tuition)
+              Award scholarship
             </button>
           </div>
         )}
@@ -398,7 +388,7 @@ function ScholarshipApplicationsPage() {
                           <td className="py-3 px-4">
                             {app.status === 'approved' ? (
                               <span className="text-sm font-semibold text-green-700 dark:text-green-400">
-                                {app.discount_percentage >= 100 ? 'Full tuition' : `${app.discount_percentage}% scholarship`}
+                                {'Registration fee only'}
                               </span>
                             ) : (
                               <span className="text-sm text-gray-400 dark:text-gray-500">—</span>

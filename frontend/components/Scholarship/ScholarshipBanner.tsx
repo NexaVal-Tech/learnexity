@@ -27,7 +27,7 @@ export const SCHOLARSHIP_BANNER_DEFAULTS: ScholarshipBannerData = {
   lines: [
     { text: 'We believe cost should never be a barrier to learning.', style: 'accent' },
     {
-      text: 'Learnexity offers need-based, full-tuition scholarships across all courses — approved applicants pay only a flat registration fee.',
+      text: 'Learnexity offers need-based scholarships across all courses — awarded students pay only a flat registration fee.',
       style: 'normal',
     },
   ],

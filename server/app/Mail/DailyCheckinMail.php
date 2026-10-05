@@ -4,6 +4,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -13,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 
 class DailyCheckinMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     public function __construct(
         public User $user,
@@ -23,11 +25,27 @@ class DailyCheckinMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: "📚 Your Daily Learning Check-in — {$this->user->name}");
+        return new Envelope(subject: $this->templatedSubject("📚 Your Daily Learning Check-in — {$this->user->name}"));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.student.daily_checkin');
+        return $this->templatedContent(new Content(view: 'emails.student.daily_checkin'));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'daily_checkin';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'first_name' => explode(' ', trim((string) $this->user->name))[0], 'streak' => $this->loginStreakDays];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/user/dashboard';
     }
 }

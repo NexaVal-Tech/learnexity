@@ -3,6 +3,8 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -16,7 +18,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class UnenrolledUserNudgeMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     public function __construct(
         public User $user,
@@ -32,14 +34,28 @@ class UnenrolledUserNudgeMail extends Mailable
             3 => "Last nudge — we'd love to see you in a course, {$this->user->name}",
         ];
 
-        return new Envelope(
-            subject: $subjects[min($this->nudgeDay, 3)]
-                ?? "Your courses are waiting at Learnexity"
-        );
+        return new Envelope(subject: $this->templatedSubject($subjects[min($this->nudgeDay, 3)]
+                ?? "Your courses are waiting at Learnexity"));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.student.unenrolled_nudge');
+        return $this->templatedContent(new Content(view: 'emails.student.unenrolled_nudge'));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'unenrolled_nudge';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'first_name' => explode(' ', trim((string) $this->user->name))[0]];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return $this->coursesUrl;
     }
 }

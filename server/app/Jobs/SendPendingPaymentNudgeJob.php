@@ -78,6 +78,7 @@ class SendPendingPaymentNudgeJob implements ShouldQueue
 
                 if (
                     $pricing['is_registration_fee'] &&
+                    (float) $pricing['amount'] > 0 && // never sync to an unset (0) fee
                     (
                         !$enrollment->is_registration_fee ||
                         (float) $enrollment->total_amount !== (float) $pricing['amount']

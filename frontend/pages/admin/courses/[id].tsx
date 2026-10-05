@@ -15,6 +15,7 @@ import {
   Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import ComposeMessageModal from '@/components/admin/students/ComposeMessageModal';
+import SprintReorderBoard from '@/components/admin/courses/SprintReorderBoard';
 import { api, handleApiError } from '@/lib/api';
 import type { AdminCourseDetail, AdminCourseSprint } from '@/lib/types';
 
@@ -386,6 +387,7 @@ const CourseDetail = () => {
   const router = useRouter();
   const { id } = router.query;
   const [activeTab, setActiveTab] = useState('Sprints');
+  const [reordering, setReordering] = useState(false);
   const [courseData, setCourseData] = useState<AdminCourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -693,8 +695,37 @@ const CourseDetail = () => {
           </div>
 
           {/* ─── SPRINTS TAB ───────────────────────────────────────────────────── */}
-          {activeTab === 'Sprints' && (
+          {activeTab === 'Sprints' && reordering && (
+            <SprintReorderBoard
+              sprints={sprints.map((sp: any) => ({
+                id: sp.id,
+                number: sp.number,
+                title: sp.title,
+                topics: [...sp.topics]
+                  .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+                  .map((t: any) => ({ id: t.id, title: t.title, type: t.type })),
+              }))}
+              onCancel={() => setReordering(false)}
+              onSave={async (order) => {
+                await api.admin.courses.reorderMaterials(id as string, order);
+                setReordering(false);
+                await fetchCourseDetails();
+              }}
+            />
+          )}
+
+          {activeTab === 'Sprints' && !reordering && (
             <div className="space-y-6">
+              {sprints.length > 1 && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setReordering(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/20 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
+                    <GripVertical size={15} /> Rearrange sprints &amp; materials
+                  </button>
+                </div>
+              )}
               {sprints.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">No sprints yet. Click "Add Sprint" to create one.</div>
               ) : (

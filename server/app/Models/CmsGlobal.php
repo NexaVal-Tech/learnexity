@@ -11,5 +11,5 @@ class CmsGlobal extends Model
     protected $casts = ['data' => 'array'];
 
     /** Keep in sync with frontend/lib/cms/globals.ts. */
-    public const KEYS = ['navbar', 'footer'];
+    public const KEYS = ['navbar', 'footer', 'scholarship'];
 }

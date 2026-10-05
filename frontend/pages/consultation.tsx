@@ -1,5 +1,6 @@
 'use client';
 
+import { formatMoney } from '@/lib/format';
 import Head from "next/head";
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, User, Mail, Phone, BookOpen, MessageSquare, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -101,9 +102,7 @@ useEffect(() => {
 
 const formatPrice = () => {
   if (!pricing) return '';
-  return pricing.currency === 'NGN'
-    ? `₦${pricing.amount.toLocaleString()}`
-    : `$${pricing.amount.toFixed(2)}`;
+  return formatMoney(pricing.amount, pricing.currency);
 };
 
 const isFreeDay = (date: string) => freeDays.includes(date);

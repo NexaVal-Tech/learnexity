@@ -8,6 +8,8 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import AppLayout from '@/components/layouts/AppLayout';
+import { useCmsGlobals } from '@/contexts/CmsGlobalsContext';
+import { fillCopy } from '@/lib/cms/globalDefaults';
 
 const BRAND = '#4A3AFF';
 
@@ -58,55 +60,28 @@ function ResultCard({
   courseName: string;
   onContinue: () => void;
 }) {
-  // Every application is approved now — there's no reject outcome. The only
-  // question is which tier: 100% (full tuition) or the partial award.
-  const isFullTuition = Number(scholarship.discount_percentage) >= 100;
-  const pct = Number(scholarship.discount_percentage) || 0;
+  // Single-award model: every scholarship = pay only the registration fee.
+  const copy = useCmsGlobals().scholarship;
 
   return (
     <div className="text-center py-8 px-4">
       <div
         className="mx-auto mb-6 w-24 h-24 rounded-full flex items-center justify-center text-5xl"
         style={{
-          background: 'rgba(22,163,74,0.15)',
-          border: '2px solid rgba(22,163,74,0.4)',
+          background: `${BRAND}1f`,
+          border: `2px solid ${BRAND}66`,
           animation: 'pop 0.5s cubic-bezier(0.34,1.56,0.64,1)',
         }}
       >
         🎓
       </div>
 
-      <h2 className="text-3xl font-bold text-white mb-3">
-        {isFullTuition ? 'You got a Full-Tuition Scholarship!' : `You got a ${pct}% Scholarship!`}
-      </h2>
+      <p className="text-xs uppercase tracking-widest font-bold mb-2" style={{ color: BRAND }}>{copy.awardBadge}</p>
+      <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-3">{copy.awardHeading}</h2>
 
-      <p className="text-gray-400 mb-2 max-w-md mx-auto leading-relaxed">
-        {isFullTuition
-          ? `Congratulations — your full-tuition scholarship has been applied to ${courseName}. This is tied exclusively to your account and this course. You'll only need to pay the registration fee to secure your spot.`
-          : `Congratulations — your ${pct}% scholarship has been applied to ${courseName}. This is tied exclusively to your account and this course. The discount is applied automatically — just pick your learning track and payment plan as normal.`}
+      <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto leading-relaxed">
+        {fillCopy(copy.awardMessage, { course: courseName })}
       </p>
-
-      <div
-        className="mx-auto mt-6 mb-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
-        style={{
-          background: 'rgba(22,163,74,0.12)',
-          border: '1px solid rgba(22,163,74,0.3)',
-        }}
-      >
-        <span className="text-green-400 text-2xl font-black">{isFullTuition ? '100% TUITION' : `${pct}% OFF`}</span>
-        <span className="text-green-300 text-sm">{isFullTuition ? 'just pay the registration fee' : 'applied automatically at checkout'}</span>
-      </div>
-
-      <div
-        className="mx-auto mt-2 mb-8 max-w-sm p-4 rounded-xl text-sm text-left"
-        style={{
-          background: 'var(--surface-alt)',
-          border: '1px solid var(--border-subtle)',
-        }}
-      >
-        <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">Review notes</p>
-        <p className="text-gray-300">{scholarship.review_notes}</p>
-      </div>
 
       <button
         onClick={onContinue}
@@ -117,7 +92,7 @@ function ResultCard({
           boxShadow: `0 8px 28px ${BRAND}55`,
         }}
       >
-        Continue to Payment
+        {copy.awardButton}
       </button>
 
       <style>{`
@@ -175,10 +150,12 @@ export default function ScholarshipPage() {
   const router = useRouter();
   const { courseId } = router.query;
   const { user, loading: authLoading } = useAuth();
+  const copy = useCmsGlobals().scholarship;
 
   // CHANGE 5: 4 steps (0=intro, 1-4=questions, 5=result)
   const TOTAL_STEPS = 4;
-  const [step, setStep] = useState(0);
+  // The intro screen was removed — the application starts at question 1.
+  const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [eligibility, setEligibility] = useState<any>(null);
   const [eligibilityLoading, setEligibilityLoading] = useState(true);
@@ -285,8 +262,8 @@ export default function ScholarshipPage() {
   // ── Not eligible ──────────────────────────────────────────────────────────
   if (eligibility && !eligibility.eligible && !eligibility.existing_application) {
     const reasons: Record<string, string> = {
-      already_applied: 'You have already submitted a scholarship application. Each user may only apply for one scholarship across all courses.',
-      scholarship_already_used: 'You have already used your scholarship on another course. Scholarships are single-use and non-transferable.',
+      already_applied: copy.alreadyAppliedMessage,
+      scholarship_already_used: copy.alreadyUsedMessage,
       course_not_found: 'This course could not be found.',
       error: 'An error occurred while checking your eligibility.',
     };
@@ -315,7 +292,6 @@ export default function ScholarshipPage() {
   }
 
   const courseName = eligibility?.course_name || result?.course_name || 'this course';
-  const partialPct = eligibility?.partial_scholarship_percentage ?? 50;
 
   return (
     <AppLayout>
@@ -424,66 +400,12 @@ export default function ScholarshipPage() {
       <div className="scholarship-root flex items-center justify-center py-24 px-6">
         <div className="w-full max-w-2xl">
 
-          {/* ── INTRO ──────────────────────────────────────────────────────── */}
-          {step === 0 && (
-            <div className="s-card p-10 slide-in">
-              <div className="brand-line mb-8" />
-
-              <div className="flex items-center gap-3 mb-6">
-                <div>
-                  <p className="text-xs uppercase tracking-widest font-bold" style={{ color: BRAND }}>
-                    Scholarship Application
-                  </p>
-                  <h1 className="text-2xl font-bold text-white">{courseName}</h1>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                {[
-                  // { text: '4 quick questions — decision in under 60 seconds' },
-                  { text: 'One scholarship per user across all courses' },
-                  { text: `Every applicant is awarded 100% or ${partialPct}% off tuition` },
-                ].map((item) => (
-                  <div
-                    key={item.text}
-                    className="flex items-start gap-3 p-3 rounded-xl"
-                    style={{ background: 'var(--surface-alt)', border: '1px solid var(--border-subtle)' }}
-                  >
-                    <span className="text-green-400 text-sm font-bold flex-shrink-0">✓</span>
-                    <p className="text-gray-300 text-sm leading-relaxed">{item.text}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                className="p-4 rounded-xl mb-8 text-sm"
-                style={{ background: `${BRAND}10`, border: `1px solid ${BRAND}25` }}
-              >
-                <p className="font-semibold mb-1" style={{ color: BRAND }}>Possible outcomes</p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div className="text-center p-3 rounded-lg" style={{ background: 'var(--overlay)' }}>
-                    <p className="text-xl font-black text-white">100%</p>
-                    <p className="text-xs text-gray-400 mt-1">full tuition — pay only the registration fee</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg" style={{ background: 'var(--overlay)' }}>
-                    <p className="text-xl font-black text-white">{partialPct}%</p>
-                    <p className="text-xs text-gray-400 mt-1">off the normal course price</p>
-                  </div>
-                </div>
-              </div>
-
-              <button onClick={() => setStep(1)} className="s-btn-primary w-full text-center">
-                Begin Application
-              </button>
-            </div>
-          )}
-
           {/* ── STEP 1: Weekly hours ───────────────────────────────────────── */}
           {step === 1 && (
             <div className="s-card p-8 md:p-10 slide-in" key="step1">
               <StepBar current={1} total={TOTAL_STEPS} />
               <p className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: BRAND }}>
-                Question 1 of {TOTAL_STEPS}
+                {copy.applicationLabel} · {courseName} — Question 1 of {TOTAL_STEPS}
               </p>
               <h2 className="text-xl md:text-2xl font-bold text-white leading-snug mb-2">
                 How many hours per week can you dedicate to this course?
@@ -504,7 +426,7 @@ export default function ScholarshipPage() {
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <button className="s-btn-ghost" onClick={() => setStep(0)}>Intro</button>
+                <button className="s-btn-ghost" onClick={() => router.push(`/courses/${courseId}`)}>Cancel</button>
                 <button className="s-btn-primary" onClick={handleNext} disabled={!canProceed()}>Next</button>
               </div>
             </div>
@@ -515,7 +437,7 @@ export default function ScholarshipPage() {
             <div className="s-card p-8 md:p-10 slide-in" key="step2">
               <StepBar current={2} total={TOTAL_STEPS} />
               <p className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: BRAND }}>
-                Question 2 of {TOTAL_STEPS}
+                {copy.applicationLabel} — Question 2 of {TOTAL_STEPS}
               </p>
               <h2 className="text-xl md:text-2xl font-bold text-white leading-snug mb-2">
                 Are you currently a student?
@@ -550,7 +472,7 @@ export default function ScholarshipPage() {
             <div className="s-card p-8 md:p-10 slide-in" key="step3">
               <StepBar current={3} total={TOTAL_STEPS} />
               <p className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: BRAND }}>
-                Question 3 of {TOTAL_STEPS}
+                {copy.applicationLabel} — Question 3 of {TOTAL_STEPS}
               </p>
               <h2 className="text-xl md:text-2xl font-bold text-white leading-snug mb-2">
                 Are you currently employed?
@@ -602,13 +524,13 @@ export default function ScholarshipPage() {
             <div className="s-card p-8 md:p-10 slide-in" key="step4">
               <StepBar current={4} total={TOTAL_STEPS} />
               <p className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: BRAND }}>
-                Question 4 of {TOTAL_STEPS}
+                {copy.applicationLabel} — Question 4 of {TOTAL_STEPS}
               </p>
               <h2 className="text-xl md:text-2xl font-bold text-white leading-snug mb-2">
                 Which country are you from?
               </h2>
               <p className="text-sm text-gray-500 mb-6">
-                Used to confirm your eligibility and scholarship tier.
+                Used to confirm your eligibility.
               </p>
 
               <input
@@ -631,7 +553,7 @@ export default function ScholarshipPage() {
                       Reviewing…
                     </>
                   ) : (
-                    'Submit Application'
+                    copy.submitButton
                   )}
                 </button>
               </div>

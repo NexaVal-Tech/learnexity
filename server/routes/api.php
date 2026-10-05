@@ -113,6 +113,11 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
     if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
         return redirect($frontendUrl . '/user/auth/login?error=invalid_verification_link');
     }
+    // The link must be the signed, unexpired one we emailed — not just a
+    // guessable id + email hash.
+    if (!$request->hasValidSignature()) {
+        return redirect($frontendUrl . '/user/auth/login?error=invalid_verification_link&email=' . urlencode($user->email));
+    }
     if ($user->hasVerifiedEmail()) {
         return redirect($frontendUrl . '/user/auth/login?verified=already&email=' . urlencode($user->email));
     }
@@ -140,7 +145,10 @@ Route::middleware('throttle:auth')->group(function () {
     Route::post('/login',                     [AuthController::class, 'login']);
     Route::post('/password/email',            [AuthController::class, 'sendResetLink']);
     Route::post('/password/reset',            [AuthController::class, 'resetPassword']);
-    Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+    Route::post('/email/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:3,10');
+    // Verify an older account with a 6-digit code from the login page
+    Route::post('/email/login-verification/send',   [AuthController::class, 'sendLoginVerificationCode'])->middleware('throttle:5,10');
+    Route::post('/email/login-verification/verify', [AuthController::class, 'verifyLoginCode'])->middleware('throttle:10,10');
 
     // Instructor auth
     Route::prefix('instructor')->group(function () {
@@ -434,6 +442,14 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::post('/media',         [AdminCmsMediaController::class, 'store']);
         Route::patch('/media/{id}',   [AdminCmsMediaController::class, 'update'])->whereNumber('id');
         Route::delete('/media/{id}',  [AdminCmsMediaController::class, 'destroy'])->whereNumber('id');
+
+        // Email templates (Website CMS → Emails)
+        Route::get('/emails',                [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'index']);
+        Route::get('/emails/{key}',          [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'show']);
+        Route::put('/emails/{key}',          [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'update']);
+        Route::delete('/emails/{key}',       [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'destroy']);
+        Route::post('/emails/{key}/preview', [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'preview']);
+        Route::post('/emails/{key}/test',    [\App\Http\Controllers\Api\AdminEmailTemplateController::class, 'test'])->middleware('throttle:10,1');
     });
 
     // Refer & Earn payouts (same 'referrals' permission — same admin screen)
@@ -564,6 +580,8 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::post('/{courseId}/details/career-paths/sync', [AdminCourseController::class, 'syncCareerPaths']);
         Route::post('/{courseId}/details/industries/sync',   [AdminCourseController::class, 'syncIndustries']);
         Route::post('/{courseId}/details/salary',            [AdminCourseController::class, 'upsertSalary']);
+        Route::post('/{courseId}/instructors',               [\App\Http\Controllers\Api\AdminCourseExtrasController::class, 'syncInstructors']);
+        Route::put('/{courseId}/compare-prices',             [\App\Http\Controllers\Api\AdminCourseExtrasController::class, 'updateComparePrices']);
 
         Route::prefix('{courseId}/details')->group(function () {
             Route::post('/tools',         [AdminCourseDetailsController::class, 'addTool']);
@@ -582,6 +600,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
 
         Route::prefix('{courseId}/resources')->group(function () {
             Route::post('/materials',                        [AdminCourseResourcesController::class, 'createMaterial']);
+            Route::post('/reorder',                          [AdminCourseResourcesController::class, 'reorder']);
             Route::put('/materials/{materialId}',            [AdminCourseResourcesController::class, 'updateMaterial']);
             Route::delete('/materials/{materialId}',         [AdminCourseResourcesController::class, 'deleteMaterial']);
             Route::post('/materials/{materialId}/items',     [AdminCourseResourcesController::class, 'addMaterialItem']);

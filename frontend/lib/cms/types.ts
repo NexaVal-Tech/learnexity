@@ -103,7 +103,37 @@ export interface FooterData {
   showPoweredBy: boolean;
 }
 
+/** Website CMS → Scholarship: every piece of scholarship wording students see. */
+export interface ScholarshipCopy {
+  /** Dashboard welcome step */
+  welcomeTitle: string;
+  welcomeText: string;
+  applyButton: string;
+  skipButton: string;
+  /** Course picker */
+  pickerTitle: string;
+  pickerSubtitle: string;
+  pickerNote: string;
+  pickerContinue: string;
+  /** Application questions */
+  applicationLabel: string;
+  submitButton: string;
+  /** Award (page, dashboard modal, badge) — {course} and {fee} are filled in */
+  awardBadge: string;
+  awardHeading: string;
+  awardMessage: string;
+  awardButton: string;
+  /** Payment page */
+  paymentBanner: string;
+  paymentDiscountLabel: string;
+  paymentFeeLabel: string;
+  /** Not eligible */
+  alreadyAppliedMessage: string;
+  alreadyUsedMessage: string;
+}
+
 export interface CmsGlobals {
   navbar: NavbarData;
   footer: FooterData;
+  scholarship: ScholarshipCopy;
 }

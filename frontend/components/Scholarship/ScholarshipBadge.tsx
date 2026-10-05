@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { api } from '@/lib/api';
+import { useCmsGlobals } from '@/contexts/CmsGlobalsContext';
 
 const BRAND = '#4A3AFF';
 
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props) {
+  const copy = useCmsGlobals().scholarship;
   const router = useRouter();
   const [scholarship, setScholarship] = useState<Scholarship | null>(null);
   const [eligibility, setEligibility] = useState<{ eligible: boolean; reason?: string } | null>(null);
@@ -68,25 +70,16 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
 
   // ── Active approved scholarship (not yet used) ────────────────────────────
   if (scholarship?.status === 'approved' && !scholarship.is_used) {
-    const isFullTuition = Number(scholarship.discount_percentage) >= 100;
     return (
       <div
-        className=" items-center gap-3 px-4 py-4 rounded-2xl text-sm"
-        style={{
-          background: 'rgba(22,163,74,0.1)',
-          border: '1px solid rgba(22,163,74,0.3)',
-          borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem',
-        }}
+        className="items-center gap-3 px-4 py-4 text-sm border border-[var(--border-strong)] bg-[var(--surface-alt)]"
+        style={{ borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem' }}
       >
         <div>
-          <p className="font-bold text-green-400">
-            {isFullTuition ? 'Full-Tuition Scholarship Approved' : `${scholarship.discount_percentage}% Scholarship Approved`}
-          </p>
-          <p className="text-green-600 text-xs">
-            {isFullTuition ? 'Pay only the registration fee at checkout' : 'Discount applied automatically at checkout'}
-          </p>
+          <p className="font-bold text-[var(--text-primary)]">🎓 {copy.awardBadge}</p>
+          <p className="text-[var(--text-secondary)] text-xs">Pay only the registration fee at checkout</p>
           {typeof scholarship.days_remaining === 'number' && (
-            <p className={`text-xs font-semibold mt-2 ${scholarship.days_remaining <= 7 ? 'text-red-500' : 'text-green-600'}`}>
+            <p className={`text-xs font-semibold mt-2 ${scholarship.days_remaining <= 7 ? 'text-red-500' : 'text-[var(--text-secondary)]'}`}>
               {scholarship.days_remaining > 0
                 ? `${scholarship.days_remaining} day${scholarship.days_remaining === 1 ? '' : 's'} left to use your scholarship`
                 : 'Your scholarship window has ended — enroll now to keep your spot'}
@@ -145,7 +138,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
       >
         <div className="w-full text-center">
           <p className="font-bold text-sm">
-            Apply For Full Tuition
+            {copy.applyButton}
           </p>
         </div>
       </button>

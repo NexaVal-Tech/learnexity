@@ -1,3 +1,4 @@
+import MoneyInput from '@/components/ui/MoneyInput';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
@@ -171,10 +172,9 @@ const PriceEditor: React.FC<{
               <div key={f.key as string} className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{f.label} ({f.currency})</p>
                 {editing ? (
-                  <input
-                    type="number"
+                  <MoneyInput
                     value={(values as any)[f.key] ?? ''}
-                    onChange={e => setValues(prev => ({ ...prev, [f.key]: Number(e.target.value) }))}
+                    onValueChange={raw => setValues(prev => ({ ...prev, [f.key]: Number(raw) }))}
                     className="w-full text-sm font-semibold text-gray-900 dark:text-white bg-white dark:bg-white/5 border border-gray-200 dark:border-white/20 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ) : (
@@ -196,10 +196,9 @@ const PriceEditor: React.FC<{
                 <div key={f.key as string} className="bg-purple-50 dark:bg-indigo-500/15 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{f.label} ({f.currency})</p>
                   {editing ? (
-                    <input
-                      type="number"
+                    <MoneyInput
                       value={(values as any)[f.key] ?? ''}
-                      onChange={e => setValues(prev => ({ ...prev, [f.key]: Number(e.target.value) }))}
+                      onValueChange={raw => setValues(prev => ({ ...prev, [f.key]: Number(raw) }))}
                       className="w-full text-sm font-semibold text-gray-900 dark:text-white bg-white dark:bg-white/5 border border-gray-200 dark:border-white/20 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   ) : (

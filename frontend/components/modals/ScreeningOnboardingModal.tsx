@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { X, GraduationCap, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Check, Info } from 'lucide-react';
+import { useCmsGlobals } from '@/contexts/CmsGlobalsContext';
+import { fillCopy } from '@/lib/cms/globalDefaults';
+import { CourseIcon } from '@/components/catalog/CourseIcon';
 import { api, Course, OnboardingStatus } from '@/lib/api';
 
 const BRAND = '#4A3AFF';
@@ -21,6 +24,8 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
   const [selecting, setSelecting] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const copy = useCmsGlobals().scholarship;
 
   const hasIntended = !!status.intended_course;
   const isApproved = status.screening_status === 'approved' && !!status.scholarship && !status.scholarship.is_used;
@@ -183,19 +188,37 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         .som-close:focus-visible, .som-course-row:focus-visible {
           outline: 2px solid ${BRAND}; outline-offset: 2px;
         }
-        .som-picker { margin-top: 0.25rem; max-height: 14rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+        .som-note {
+          display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.75rem 0.9rem; margin-bottom: 1rem;
+          border-radius: 1rem 0.4rem 1rem 0.4rem; background: ${BRAND}12; border: 1px solid ${BRAND}33;
+          color: var(--text-primary); font-size: 0.85rem; font-weight: 600; line-height: 1.45;
+        }
+        .som-note svg { color: ${BRAND}; flex-shrink: 0; margin-top: 0.1rem; }
+        .som-picker { max-height: 17rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.15rem; margin-bottom: 1.25rem; }
         .som-course-row {
-          display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-          width: 100%; padding: 0.75rem 0.9rem; border-radius: 1rem 0.4rem 1rem 0.4rem;
+          display: flex; align-items: center; gap: 0.75rem;
+          width: 100%; padding: 0.7rem 0.85rem; border-radius: 1rem 0.4rem 1rem 0.4rem;
           border: 1px solid var(--border-subtle); background: var(--surface-alt);
-          cursor: pointer; text-align: left; color: var(--text-primary); font-size: 0.85rem; font-weight: 600;
+          cursor: pointer; text-align: left; color: var(--text-primary);
           transition: border-color 0.2s, background 0.2s;
         }
-        .som-course-row:hover { border-color: ${BRAND}66; background: ${BRAND}0f; }
+        .som-course-row:hover { border-color: ${BRAND}66; }
+        .som-course-row.is-picked { border-color: ${BRAND}; background: ${BRAND}10; box-shadow: 0 0 0 1px ${BRAND} inset; }
         .som-course-row:disabled { opacity: 0.5; cursor: not-allowed; }
+        .som-course-icon {
+          width: 2.1rem; height: 2.1rem; border-radius: 0.75rem 0.3rem 0.75rem 0.3rem; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; background: ${BRAND}18; color: ${BRAND};
+        }
+        .som-course-name { flex: 1; min-width: 0; font-size: 0.88rem; font-weight: 600; line-height: 1.3; }
+        .som-course-meta { display: block; font-size: 0.72rem; font-weight: 500; color: var(--text-muted); margin-top: 0.1rem; }
+        .som-radio {
+          width: 1.15rem; height: 1.15rem; border-radius: 999px; border: 1.5px solid var(--border-strong);
+          flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff;
+        }
+        .som-course-row.is-picked .som-radio { background: ${BRAND}; border-color: ${BRAND}; }
         .som-badge {
           display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700;
-          color: #4ade80; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+          color: ${BRAND}; background: ${BRAND}14; border: 1px solid ${BRAND}40;
           padding: 0.3rem 0.7rem; border-radius: 999px; margin-bottom: 1rem;
         }
         .som-empty { font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0; }
@@ -208,35 +231,15 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
 
         {isApproved ? (
           <>
-            <span className="som-badge">🎉 You qualified for a scholarship</span>
+            <span className="som-badge">🎓 {copy.awardBadge}</span>
             <h2 id="som-title" className="som-title">
-              {userName ? `Nice one, ${userName}!` : 'Nice one!'} You're almost in.
+              {userName ? `${userName}, ` : ''}{copy.awardHeading}
             </h2>
             <p className="som-sub">
-              {(() => {
-                const pct = Number(status.scholarship?.discount_percentage) || 0;
-                const isFullTuition = pct >= 100;
-                return isFullTuition ? (
-                  <>
-                    You've been awarded a full-tuition scholarship on{' '}
-                    <strong style={{ color: 'var(--text-primary)' }}>
-                      {status.intended_course?.title || status.scholarship?.course_name}
-                    </strong>
-                    . Secure your spot by paying just the registration fee instead of the full course price.
-                  </>
-                ) : (
-                  <>
-                    You've been awarded a {pct}% scholarship on{' '}
-                    <strong style={{ color: 'var(--text-primary)' }}>
-                      {status.intended_course?.title || status.scholarship?.course_name}
-                    </strong>
-                    . The discount is applied automatically — pick your track and payment plan as normal.
-                  </>
-                );
-              })()}
+              {fillCopy(copy.awardMessage, { course: status.intended_course?.title || status.scholarship?.course_name || '' })}
             </p>
             <button type="button" className="som-btn-primary" onClick={goToPayment} disabled={payingNow}>
-              {payingNow ? 'Preparing payment…' : 'Proceed to Payment'} <ArrowRight size={16} aria-hidden="true" />
+              {payingNow ? 'Preparing payment…' : copy.awardButton} <ArrowRight size={16} aria-hidden="true" />
             </button>
             {enrollError && (
               <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.75rem', textAlign: 'center' }}>
@@ -246,9 +249,15 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
           </>
         ) : showPicker ? (
           <>
-            <h2 id="som-title" className="som-title">Which course are you applying for full tuition on?</h2>
-            <p className="som-sub">Full-tuition applications apply to one course only — pick the one you want to enroll in.</p>
-            <div className="som-picker">
+            <h2 id="som-title" className="som-title">{copy.pickerTitle}</h2>
+            <p className="som-sub" style={{ marginBottom: '1rem' }}>{copy.pickerSubtitle}</p>
+            {copy.pickerNote && (
+              <div className="som-note" role="note">
+                <Info size={16} aria-hidden="true" />
+                <span>{copy.pickerNote}</span>
+              </div>
+            )}
+            <div className="som-picker" role="radiogroup" aria-label="Courses">
               {loadingCourses ? (
                 <p className="som-empty">Loading courses…</p>
               ) : courses.length === 0 ? (
@@ -256,21 +265,41 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
               ) : (
                 courses.map((c) => {
                   const cid = String(c.course_id ?? c.id);
+                  const isPicked = picked === cid;
+                  const pathway = c.offers_group_mentorship || c.offers_one_on_one
+                    ? 'DeepTech'
+                    : c.offers_intermediate
+                    ? 'Accelerator'
+                    : 'Foundation / Flex';
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      className="som-course-row"
+                      role="radio"
+                      aria-checked={isPicked}
+                      className={`som-course-row ${isPicked ? 'is-picked' : ''}`}
                       disabled={selecting !== null}
-                      onClick={() => startScreeningFor(cid)}
+                      onClick={() => setPicked(cid)}
                     >
-                      <span>{c.title}</span>
-                      <ArrowRight size={14} aria-hidden="true" />
+                      <span className="som-course-icon"><CourseIcon title={c.title} size={16} /></span>
+                      <span className="som-course-name">
+                        {c.title}
+                        <span className="som-course-meta">{pathway}</span>
+                      </span>
+                      <span className="som-radio" aria-hidden="true">{isPicked && <Check size={12} strokeWidth={3} />}</span>
                     </button>
                   );
                 })
               )}
             </div>
+            <button
+              type="button"
+              className="som-btn-primary"
+              disabled={!picked || selecting !== null}
+              onClick={() => picked && startScreeningFor(picked)}
+            >
+              {selecting ? 'Opening application…' : copy.pickerContinue}
+            </button>
             <button type="button" className="som-btn-ghost" onClick={() => setShowPicker(false)}>
               Back
             </button>
@@ -278,19 +307,14 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         ) : hasIntended && status.intended_course ? (
           <>
             <h2 id="som-title" className="som-title">
-              {userName ? `Welcome, ${userName}.` : 'Welcome.'} One quick step first.
+              {userName ? `Welcome, ${userName}.` : 'Welcome.'} {copy.welcomeTitle}
             </h2>
-            <p className="som-sub">
-              Before you pay full price for{' '}
-              <strong style={{ color: 'var(--text-primary)' }}>{status.intended_course.title}</strong>, take a
-              two-minute application to see if you qualify for full tuition. No commitment
-              — you can always pay in full instead.
-            </p>
+            <p className="som-sub">{fillCopy(copy.welcomeText, { course: status.intended_course.title })}</p>
             <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
-              Apply for Full Tuition <ArrowRight size={16} aria-hidden="true" />
+              {copy.applyButton} <ArrowRight size={16} aria-hidden="true" />
             </button>
             <button type="button" className="som-btn-ghost" onClick={goToPayment}>
-              Skip — pay full price
+              {copy.skipButton}
             </button>
           </>
         ) : (
@@ -298,11 +322,9 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
             <h2 id="som-title" className="som-title">
               Welcome{userName ? `, ${userName}` : ''}.
             </h2>
-            <p className="som-sub">
-              Apply to see if you qualify for full tuition on any course.
-            </p>
+            <p className="som-sub">{copy.pickerSubtitle}</p>
             <button type="button" className="som-btn-primary" onClick={handleTakeScreening}>
-              Apply for Full Tuition <ArrowRight size={16} aria-hidden="true" />
+              {copy.applyButton} <ArrowRight size={16} aria-hidden="true" />
             </button>
             <button type="button" className="som-btn-ghost" onClick={goToPayment}>
               Browse Courses Instead

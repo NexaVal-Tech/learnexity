@@ -112,10 +112,8 @@ class SendScholarshipCountdownReminders extends Command
             return "{$frontendUrl}/user/payment/{$enrollment->id}";
         }
 
-        $course = Course::where('course_id', $scholarship->course_id)->first();
-
-        return $course
-            ? "{$frontendUrl}/courses/{$course->course_id}"
-            : $frontendUrl;
+        // No enrollment yet → the payment-start page creates it and opens
+        // checkout, so the button always lands on the payment page.
+        return "{$frontendUrl}/user/payment/start?course=" . urlencode((string) $scholarship->course_id);
     }
 }

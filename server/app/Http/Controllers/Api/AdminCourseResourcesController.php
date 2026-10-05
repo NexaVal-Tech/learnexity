@@ -16,6 +16,63 @@ use Illuminate\Support\Facades\Log;
 
 class AdminCourseResourcesController extends Controller
 {
+    /**
+     * POST /api/admin/courses/{courseId}/resources/reorder
+     *   { sprints: [ { id: <material id>, items: [<item id>, …] }, … ] }
+     *
+     * Saves the order the admin arranged: sprints are renumbered 1, 2, 3…
+     * (sprint_number + order) and every item gets its position — an item
+     * listed under a different sprint is moved into it. Students see this
+     * order on their Resources page and in the preview modal.
+     */
+    public function reorder(Request $request, string $courseId): JsonResponse
+    {
+        $data = $request->validate([
+            'sprints'           => 'required|array|min:1',
+            'sprints.*.id'      => 'required|integer',
+            'sprints.*.items'   => 'present|array',
+            'sprints.*.items.*' => 'integer',
+        ]);
+
+        $sprintIds = collect($data['sprints'])->pluck('id')->map(fn ($v) => (int) $v)->all();
+        $owned = CourseMaterial::where('course_id', $courseId)->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+        // Every sprint must belong to this course, and none may be missing/duplicated.
+        if (array_diff($sprintIds, $owned) || count(array_unique($sprintIds)) !== count($sprintIds)) {
+            return response()->json(['message' => 'Those sprints do not all belong to this course.'], 422);
+        }
+
+        $itemIds = collect($data['sprints'])->flatMap(fn ($s) => $s['items'] ?? [])->map(fn ($v) => (int) $v)->all();
+        if (count(array_unique($itemIds)) !== count($itemIds)) {
+            return response()->json(['message' => 'A material appears more than once.'], 422);
+        }
+        $ownedItems = MaterialItem::whereIn('course_material_id', $owned)->pluck('id')->map(fn ($v) => (int) $v)->all();
+        if (array_diff($itemIds, $ownedItems)) {
+            return response()->json(['message' => 'Some materials do not belong to this course.'], 422);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            // Two passes so renumbering never collides with a unique (course_id, sprint_number) index.
+            foreach ($data['sprints'] as $pos => $sprint) {
+                CourseMaterial::where('id', $sprint['id'])->update(['sprint_number' => 100000 + $pos + 1]);
+            }
+            foreach ($data['sprints'] as $pos => $sprint) {
+                CourseMaterial::where('id', $sprint['id'])->update([
+                    'sprint_number' => $pos + 1,
+                    'order'         => $pos,
+                ]);
+                foreach (array_values($sprint['items'] ?? []) as $itemPos => $itemId) {
+                    MaterialItem::where('id', $itemId)->update([
+                        'course_material_id' => $sprint['id'],
+                        'order'              => $itemPos,
+                    ]);
+                }
+            }
+        });
+
+        return response()->json(['message' => 'Order saved.']);
+    }
+
     // ===== COURSE MATERIALS =====
     
     public function createMaterial(Request $request, string $courseId): JsonResponse

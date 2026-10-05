@@ -21,6 +21,11 @@ import { api } from '@/lib/api';
 import type { CourseEnrollment } from '@/lib/types';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { ScholarshipBadge } from '@/components/Scholarship/ScholarshipBadge';
+import { useCmsGlobals } from '@/contexts/CmsGlobalsContext';
+import { fillCopy } from '@/lib/cms/globalDefaults';
+import { formatMoney } from '@/lib/format';
+import { ArrowRight, Check, Lock } from 'lucide-react';
+import Link from 'next/link';
 import { DeepTechScreeningModal, DeepTechScreeningAnswers } from '@/components/modals/DeepTechScreeningModal';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -128,6 +133,7 @@ export default function PaymentPage() {
   const router       = useRouter();
   const { nrollmentId } = router.query;
   const { user, loading: authLoading } = useAuth();
+  const scholarshipCopy = useCmsGlobals().scholarship;
 
   const [enrollment,       setEnrollment]       = useState<CourseEnrollment | null>(null);
   const [loading,          setLoading]          = useState(true);
@@ -448,7 +454,7 @@ export default function PaymentPage() {
 
   useEffect(() => {
     if (authLoading)       return;
-    if (!user)             { router.push('/user/auth/login'); return; }
+    if (!user)             { sessionStorage.setItem('post_login_redirect', router.asPath); router.push('/user/auth/login'); return; }
     if (!router.isReady)   return;
     if (!currencyDetected) return;
 
@@ -473,7 +479,7 @@ export default function PaymentPage() {
   // truth) once available, falling back to the scholarship lookup before
   // the first sync completes so the UI doesn't flash the wrong state.
   const isRegistrationFee = enrollment?.is_registration_fee ??
-    (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) >= 100);
+    (!!scholarship && !scholarship.is_used);
 
   // Deep-Tech (Live Classes / One-on-One) and Intermediate registration-fee
   // payers may split the flat fee into 2 payments instead of paying it all
@@ -487,9 +493,8 @@ export default function PaymentPage() {
   // (track selection, installments), just at a discounted price. Sourced the
   // same way as isRegistrationFee: server truth once synced, scholarship
   // lookup as a fallback before the first sync.
-  const isPartialScholarship = enrollment
-    ? (!enrollment.is_registration_fee && !!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100)
-    : (!!scholarship && !scholarship.is_used && Number(scholarship.discount_percentage) > 0 && Number(scholarship.discount_percentage) < 100);
+  // Single-award model: a scholarship always means "registration fee only".
+  const isPartialScholarship = false;
 
   // Force one-time when a scholarship applies, UNLESS this is a
   // registration fee that's eligible to be split into 2 payments (Deep-Tech
@@ -706,6 +711,13 @@ export default function PaymentPage() {
 
   // Helper to get the track option definition
   const selectedTrackDef = TRACK_OPTIONS.find(t => t.id === selectedTrack);
+  /** Optional slashed "was" price for a track (set per course in admin). */
+  const wasPrice = (id: LearningTrack | null): number => {
+    if (!id) return 0;
+    const cp: any = (course as any)?.compare_prices;
+    const v = Number(cp?.[id]?.[currency === 'NGN' ? 'ngn' : 'usd'] ?? 0);
+    return v > (trackPrices[id] ?? 0) ? v : 0;
+  };
   const isHourlyTrack = selectedTrackDef?.forceOnetime && selectedTrackDef?.priceLabel;
 
   const trackPrice = (id: LearningTrack) =>
@@ -727,307 +739,247 @@ export default function PaymentPage() {
         </div>
       )}
 
-      <div className="max-w-md mx-auto px-4 pt-8 mt-16 pb-10 overflow-x-hidden">
+      <div className="max-w-xl mx-auto px-5 pt-8 mt-16 pb-12 overflow-x-hidden text-black dark:text-white">
         <button onClick={handleBack}
-          className="mb-3 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1.5 transition-colors">
+          className="mb-6 text-sm text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white flex items-center gap-1.5 transition-colors">
           ← Back
         </button>
 
-        {/* learning track     mmm */}
-        <h1 className="text-lg font-bold text-black dark:text-white mb-4">Complete Your Payment</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-2">Payment</p>
+        <h1 className="text-3xl sm:text-4xl font-semibold leading-tight mb-3">Complete Your Payment</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+          Your learning journey is one step closer. Secure your spot and start building the skills for what&apos;s next.
+        </p>
 
-        {/* ── Single compact Order Summary card — everything lives here ── */}
-        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 space-y-3">
-          <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wide">Order Summary</h2>
+        {/* Scholarship notice */}
+        {isRegistrationFee && (
+          <div className="mb-4 rounded-xl border border-gray-200 dark:border-white/15 px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
+            🎓 {fillCopy(scholarshipCopy.paymentBanner, { course: enrollment.course_name })}
+          </div>
+        )}
 
-          {/* Course */}
-          <div className="flex justify-between items-start text-sm border-b border-gray-200 dark:border-white/10 pb-3">
-            <span className="text-gray-500 dark:text-gray-400">Course</span>
-            <span className="font-semibold text-black dark:text-white text-right max-w-[65%]">{enrollment.course_name}</span>
+        {/* ── Order summary ── */}
+        <div className="rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/10 p-5 sm:p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-500 dark:text-gray-400 mb-4">Order Summary</h2>
+
+          {/* Course + its price */}
+          <div className="flex justify-between items-start gap-4 pb-4 border-b border-gray-200 dark:border-white/10">
+            <div className="min-w-0">
+              <p className="text-lg font-medium leading-snug">{enrollment.course_name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {selectedTrackDef ? selectedTrackDef.name : 'Course'}
+                {isHourlyTrack ? ` · ${hourlyQty} hr${hourlyQty > 1 ? 's' : ''}` : ''}
+              </p>
+            </div>
+            {selectedTrack && (
+              <p className="text-lg font-semibold whitespace-nowrap text-right">
+                {wasPrice(selectedTrack) > 0 && !isRegistrationFee && (
+                  <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 line-through">
+                    {formatMoney(wasPrice(selectedTrack) * (selectedTrack === 'one_on_one' ? hourlyQty : 1), currency)}
+                  </span>
+                )}
+                {formatMoney(
+                  (trackPrices[selectedTrack] ?? 0) * (selectedTrack === 'one_on_one' && !isRegistrationFee ? hourlyQty : 1),
+                  currency
+                )}
+              </p>
+            )}
           </div>
 
-          {/* Scholarship / registration-fee notice — right under Course, before everything else */}
-          {isRegistrationFee && (
-            <div className="space-y-2 border-b border-gray-200 dark:border-white/10 pb-3">
-              <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-800 dark:text-green-300 leading-snug">
-                {canSplitRegistrationFee
-                  ? "You've been awarded a full-tuition scholarship — you only pay the registration fee below. No other discounts apply, but you can split it into 2 payments if you'd rather not pay it all at once."
-                  : "You've been awarded a full-tuition scholarship — you only pay the registration fee below, in one payment. Installments and course pricing don't apply."}
-              </div>
-              <div className="border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/15 rounded-lg px-3 py-2">
-                <p className="text-xs font-bold text-black dark:text-white">Registration Fee Payment</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">
-                  {canSplitRegistrationFee
-                    ? 'One payment secures your spot — or split it into 2. No other discounts apply.'
-                    : 'One payment secures your spot — no discounts or installments apply.'}
-                </p>
-                <p className="text-base font-bold text-green-700 dark:text-green-400">
-                  {currency === 'NGN' ? '₦' : '$'}{(enrollment?.total_amount ?? 0).toLocaleString()}
-                  {canSplitRegistrationFee && paymentType === 'installment' && (
-                    <span className="ml-1.5 text-xs font-semibold text-green-600 dark:text-green-400/80">
-                      (pay {currency === 'NGN' ? '₦' : '$'}{(enrollment?.installment_amount ?? 0).toLocaleString()} now, rest in 4 weeks)
-                    </span>
-                  )}
-                </p>
-              </div>
-
-              {canSplitRegistrationFee && (
-                <div className="flex justify-between items-center text-sm pt-1">
-                  <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
-                  <div className="flex bg-gray-200 dark:bg-white/10 rounded-full p-0.5">
-                    <button
-                      onClick={() => setPaymentType('onetime')}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                        paymentType === 'onetime' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                    >
-                      One-Time
-                    </button>
-                    <button
-                      onClick={() => setPaymentType('installment')}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                        paymentType === 'installment' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                    >
-                      Split in 2
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Partial scholarship notice — normal payment flow still applies, just discounted */}
-          {isPartialScholarship && (
-            <div className="border-b border-gray-200 dark:border-white/10 pb-3">
-              <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-800 dark:text-green-300 leading-snug">
-                You've been awarded a {Number(scholarship?.discount_percentage) || 0}% scholarship — it's applied automatically to the price below. Pick your learning track and payment plan as normal.
-              </div>
-            </div>
-          )}
-
-          {/* ── Learning Track: collapsed selector → expands to a compact list ── */}
-          <div className="border-b border-gray-200 dark:border-white/10 pb-3">
-            <div className="flex justify-between items-center text-sm mb-1">
-              <span className="text-gray-500 dark:text-gray-400">Learning Track</span>
-              {selectedTrack && availableTracks.length > 1 && (
-                <button
-                  onClick={() => setTrackPickerOpen(o => !o)}
-                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  {trackPickerOpen ? 'Close' : 'Change'}
-                </button>
-              )}
-            </div>
-
-            {selectedTrack && !trackPickerOpen ? (
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-black dark:text-white text-sm">{selectedTrackDef?.name}</span>
-                <span className="font-semibold text-indigo-600 dark:text-indigo-400 text-sm">
-                  {currency === 'NGN' ? '₦' : '$'}{trackPrice(selectedTrack)?.toLocaleString()}
-                  {selectedTrackDef?.priceLabel}
-                </span>
-              </div>
-            ) : availableTracks.length === 0 ? (
-              <p className="text-xs text-gray-400 dark:text-gray-500">Loading learning tracks...</p>
-            ) : (
-              <button
-                onClick={() => setTrackPickerOpen(true)}
-                className="w-full flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-white/20 rounded-lg px-3 py-2 hover:border-indigo-400 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors"
-              >
-                Select your learning track
-                <ArrowIcon />
-              </button>
-            )}
-
-            {trackPickerOpen && (
-              <div className="mt-2 space-y-1.5">
-                {TRACK_OPTIONS.filter(t => availableTracks.includes(t.id)).map(track => (
-                  <button
-                    key={track.id}
-                    onClick={() => { setSelectedTrack(track.id); setTrackPickerOpen(false); }}
-                    className={`w-full flex justify-between items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors border ${
-                      selectedTrack === track.id
-                        ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/15'
-                        : 'border-gray-200 bg-white dark:border-white/10 dark:bg-white/5 hover:border-indigo-300 dark:hover:border-indigo-400/50'
-                    }`}
-                  >
-                    <span className="min-w-0">
-                      <span className="font-semibold text-black dark:text-white block truncate">
-                        {track.name}
-                        {track.popular && <span className="ml-1.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/25 px-1.5 py-0.5 rounded-full">POPULAR</span>}
-                      </span>
-                    </span>
-                    <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex-shrink-0 text-xs">
-                      {currency === 'NGN' ? '₦' : '$'}{trackPrice(track.id)?.toLocaleString()}{track.priceLabel}
-                    </span>
+          {/* Learning track (only when there's a choice) */}
+          {availableTracks.length > 1 && (
+            <div className="py-4 border-b border-gray-200 dark:border-white/10">
+              <div className="flex justify-between items-center text-sm mb-2">
+                <span className="text-gray-600 dark:text-gray-400">Learning track</span>
+                {selectedTrack && (
+                  <button onClick={() => setTrackPickerOpen(o => !o)} className="text-xs font-semibold underline underline-offset-2">
+                    {trackPickerOpen ? 'Close' : 'Change'}
                   </button>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Hourly quantity — compact inline stepper, one_on_one only */}
-          {selectedTrack === 'one_on_one' && !trackPickerOpen && (
-            <div className="flex justify-between items-center text-sm border-b border-gray-200 dark:border-white/10 pb-3">
-              <span className="text-gray-500 dark:text-gray-400">Hours</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setHourlyQty(q => Math.max(1, q - 1))}
-                  className="w-6 h-6 rounded-full border border-indigo-300 dark:border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
-                >−</button>
-                <span className="w-5 text-center font-semibold text-black dark:text-white">{hourlyQty}</span>
-                <button
-                  onClick={() => setHourlyQty(q => Math.min(20, q + 1))}
-                  className="w-6 h-6 rounded-full border border-indigo-300 dark:border-indigo-400/40 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
-                >+</button>
-              </div>
-            </div>
-          )}
-
-          {/* ── Payment Method: one-line segmented toggle ── */}
-          {selectedTrack && !isRegistrationFee && !isHourlyTrack && !trackPickerOpen && (
-            <div className="flex justify-between items-center text-sm border-b border-gray-200 dark:border-white/10 pb-3">
-              <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
-              <div className="flex bg-gray-200 dark:bg-white/10 rounded-full p-0.5">
-                <button
-                  onClick={() => setPaymentType('onetime')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                    paymentType === 'onetime' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  One-Time
-                </button>
-                <button
-                  onClick={() => setPaymentType('installment')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                    paymentType === 'installment' ? 'bg-white text-indigo-600 dark:bg-[#0f0f14] dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  Installments
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Hourly notice */}
-          {!isRegistrationFee && isHourlyTrack && !trackPickerOpen && (
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-500/15 dark:border-amber-500/30 rounded-lg px-3 py-2">
-              Billed per hour, one-time payment only.
-            </p>
-          )}
-
-          {/* Installment note */}
-          {paymentType === 'installment' && selectedTrack && selectedTrack !== 'one_on_one' && !isRegistrationFee && !trackPickerOpen && (
-            <p className="text-xs text-black bg-yellow-50 border border-yellow-200 dark:text-yellow-200 dark:bg-yellow-500/15 dark:border-yellow-500/30 rounded-lg px-3 py-2">
-              Split into 4 monthly payments · must pay on time to keep access.
-            </p>
-          )}
-
-          {/* ── Price breakdown ── */}
-          {!trackPickerOpen && (
-            <div className="space-y-1 pt-1">
-              {!isRegistrationFee && selectedTrack && selectedTrack !== 'one_on_one' && onetimeDiscountPercent > 0 && paymentType === 'onetime' && (
-                <>
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <span>Track price</span>
-                    <span className="line-through">
-                      {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
-                    <span>{onetimeDiscountPercent}% one-time discount</span>
-                    <span>
-                      -{currency === 'NGN' ? '₦' : '$'}
-                      {Math.round(trackPrices[selectedTrack] * onetimeDiscountPercent / 100).toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {isPartialScholarship && selectedTrack && selectedTrack !== 'one_on_one' && (
-                <>
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <span>Track price</span>
-                    <span className="line-through">
-                      {currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
-                    <span>{scholarship?.discount_percentage}% scholarship discount</span>
-                    <span>
-                      -{currency === 'NGN' ? '₦' : '$'}
-                      {Math.round(trackPrices[selectedTrack] * (Number(scholarship?.discount_percentage) || 0) / 100).toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {selectedTrack === 'one_on_one' && (
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {isPartialScholarship ? (
-                    <>
-                      <span className="line-through mr-1">{currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}</span>
-                      <span className="text-green-600 dark:text-green-400 font-semibold">
-                        {currency === 'NGN' ? '₦' : '$'}{Math.round(trackPrices[selectedTrack] * (1 - (Number(scholarship?.discount_percentage) || 0) / 100)).toLocaleString()}/hr
-                      </span>
-                      {' '}× {hourlyQty} hr{hourlyQty > 1 ? 's' : ''} ({scholarship?.discount_percentage}% scholarship)
-                    </>
-                  ) : (
-                    <>{currency === 'NGN' ? '₦' : '$'}{trackPrices[selectedTrack]?.toLocaleString()}/hr × {hourlyQty} hr{hourlyQty > 1 ? 's' : ''}</>
-                  )}
+              {(trackPickerOpen || !selectedTrack) && (
+                <div className="space-y-2">
+                  {TRACK_OPTIONS.filter(t => availableTracks.includes(t.id)).map(track => {
+                    const active = selectedTrack === track.id;
+                    return (
+                      <button
+                        key={track.id}
+                        onClick={() => { setSelectedTrack(track.id); setTrackPickerOpen(false); }}
+                        className={`w-full flex justify-between items-center gap-3 rounded-xl px-4 py-3 text-left text-sm border transition-colors ${
+                          active
+                            ? 'border-black dark:border-white bg-white dark:bg-white/10'
+                            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-transparent hover:border-gray-400 dark:hover:border-white/40'
+                        }`}
+                      >
+                        <span className="font-medium">
+                          {track.name}
+                          {track.popular && <span className="ml-2 text-[10px] font-bold border border-current px-1.5 py-0.5 rounded-full">POPULAR</span>}
+                        </span>
+                        <span className="font-semibold whitespace-nowrap">
+                          {wasPrice(track.id) > 0 && (
+                            <span className="mr-2 font-normal text-gray-500 dark:text-gray-400 line-through">{formatMoney(wasPrice(track.id), currency)}</span>
+                          )}
+                          {formatMoney(trackPrices[track.id] ?? 0, currency)}{track.priceLabel}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
+              {selectedTrack && !trackPickerOpen && (
+                <p className="font-medium">{selectedTrackDef?.name}</p>
+              )}
+            </div>
+          )}
+          {availableTracks.length === 0 && (
+            <p className="py-4 text-sm text-gray-500 border-b border-gray-200 dark:border-white/10">Loading learning tracks…</p>
+          )}
 
-              <div className="flex justify-between items-baseline pt-1">
-                <span className="text-sm font-bold text-black dark:text-white">
-                  {selectedTrack === 'one_on_one'
-                    ? `Total (${hourlyQty} hr${hourlyQty > 1 ? 's' : ''})`
-                    : paymentType === 'installment' ? 'Pay Now' : 'Total'}
-                </span>
-                <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                  {currency === 'NGN' ? '₦' : '$'}{getCurrentPrice().toLocaleString()}
-                </span>
+          {/* Hours (one-on-one) */}
+          {selectedTrack === 'one_on_one' && !isRegistrationFee && !trackPickerOpen && (
+            <div className="flex justify-between items-center text-sm py-4 border-b border-gray-200 dark:border-white/10">
+              <span className="text-gray-600 dark:text-gray-400">Hours</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setHourlyQty(q => Math.max(1, q - 1))} aria-label="Fewer hours"
+                  className="w-8 h-8 rounded-lg border border-gray-300 dark:border-white/20 font-bold hover:border-black dark:hover:border-white">−</button>
+                <span className="w-6 text-center font-semibold">{hourlyQty}</span>
+                <button onClick={() => setHourlyQty(q => Math.min(20, q + 1))} aria-label="More hours"
+                  className="w-8 h-8 rounded-lg border border-gray-300 dark:border-white/20 font-bold hover:border-black dark:hover:border-white">+</button>
               </div>
             </div>
           )}
 
-          {/* ── Pay button + Scholarship CTA ── */}
-          {!trackPickerOpen && (
-            <div className="flex items-stretch gap-2 pt-1">
-              <button onClick={handlePayment} disabled={processing || !selectedTrack}
-                className="flex-1 font-semibold py-2.5 px-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-[#0a0a0a] text-white border border-white/10">
-                  {processing ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span className="text-sm font-bold">Processing...</span>
-                    </>
-                  ) : !selectedTrack ? (
-                    <span className="text-sm font-bold">Select a Track</span>
-                  ) : (
-                    <span className="text-sm font-bold">
-                      Pay {currency === 'NGN' ? '₦' : '$'}{getCurrentPrice().toLocaleString()}
-                      {isHourlyTrack ? '/hr' : ''} · {paymentGateway === 'stripe' ? 'Stripe' : 'Paystack'}
-                    </span>
-                  )}
-              </button>
+          {/* ── Select payment method ── */}
+          {selectedTrack && !trackPickerOpen && !isHourlyTrack && (!isRegistrationFee || canSplitRegistrationFee) && (
+            <div className="py-4 border-b border-gray-200 dark:border-white/10">
+              <p className="text-sm font-medium mb-3">Select payment method</p>
+              <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Payment method">
+                {([
+                  { id: 'onetime' as const, title: 'Pay in full', sub: 'One payment' },
+                  {
+                    id: 'installment' as const,
+                    title: isRegistrationFee ? 'Split in 2' : 'Installments',
+                    sub: isRegistrationFee ? '2 payments, 4 weeks apart' : '4 monthly payments',
+                  },
+                ]).map(opt => {
+                  const active = paymentType === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setPaymentType(opt.id)}
+                      className={`relative text-left rounded-xl border px-4 py-3 transition-colors ${
+                        active
+                          ? 'border-black dark:border-white bg-white dark:bg-white/10 ring-1 ring-black dark:ring-white'
+                          : 'border-gray-200 dark:border-white/15 bg-white dark:bg-transparent hover:border-gray-400 dark:hover:border-white/40'
+                      }`}
+                    >
+                      <span className="block font-semibold text-sm">{opt.title}</span>
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{opt.sub}</span>
+                      {active && (
+                        <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center">
+                          <Check size={12} strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {paymentType === 'installment' && !isRegistrationFee && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">Pay on time each month to keep your access.</p>
+              )}
+            </div>
+          )}
 
-              {!isRegistrationFee && course && (
-                <div className="flex-shrink-0">
-                  <ScholarshipBadge courseId={course.course_id} isLoggedIn={true} showCta={true} />
+          {isHourlyTrack && !isRegistrationFee && !trackPickerOpen && (
+            <p className="py-3 text-xs text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-white/10">Billed per hour, one-time payment only.</p>
+          )}
+
+          {/* ── Discounts ── */}
+          {!trackPickerOpen && selectedTrack && (
+            <div className="space-y-2 py-4 border-b border-gray-200 dark:border-white/10 empty:hidden">
+              {isRegistrationFee && (trackPrices[selectedTrack] ?? 0) > (enrollment.total_amount ?? 0) && (
+                <div className="flex justify-between text-sm">
+                  <span>{scholarshipCopy.paymentDiscountLabel}</span>
+                  <span className="font-medium">−{formatMoney((trackPrices[selectedTrack] ?? 0) - (enrollment.total_amount ?? 0), currency)}</span>
+                </div>
+              )}
+              {isRegistrationFee && (
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>{scholarshipCopy.paymentFeeLabel}</span>
+                  <span>{formatMoney(enrollment.total_amount ?? 0, currency)}</span>
+                </div>
+              )}
+              {!isRegistrationFee && selectedTrack !== 'one_on_one' && onetimeDiscountPercent > 0 && paymentType === 'onetime' && (
+                <div className="flex justify-between text-sm">
+                  <span>One-time payment discount</span>
+                  <span className="font-medium">−{formatMoney(Math.round((trackPrices[selectedTrack] ?? 0) * onetimeDiscountPercent / 100), currency)}</span>
+                </div>
+              )}
+              {!isRegistrationFee && paymentType === 'installment' && selectedTrack !== 'one_on_one' && (
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Each monthly payment</span>
+                  <span>{formatMoney(enrollment.installment_amount ?? 0, currency)}</span>
                 </div>
               )}
             </div>
           )}
 
+          {/* ── Total ── */}
           {!trackPickerOpen && (
-            <div className="flex items-center justify-center gap-3 text-[11px] text-gray-400 dark:text-gray-500 pt-1">
-              <span>🔒 Secure payment</span>
-              <span>·</span>
-              <span>🛡️ 256-bit encryption</span>
+            <div className="flex justify-between items-baseline pt-4">
+              <span className="text-lg font-semibold">
+                {paymentType === 'installment' && !isHourlyTrack ? 'Pay now' : 'Total'}
+              </span>
+              <span className="text-2xl sm:text-3xl font-semibold">{formatMoney(getCurrentPrice(), currency)}</span>
             </div>
           )}
         </div>
+
+        {/* Secure payment */}
+        <div className="flex items-start gap-3 mt-6 px-1">
+          <Lock size={20} className="mt-0.5 text-gray-700 dark:text-gray-300 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Secure payment</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Your information is protected and encrypted · {paymentGateway === 'stripe' ? 'Stripe' : 'Paystack'}
+            </p>
+          </div>
+        </div>
+
+        {/* Pay */}
+        {!trackPickerOpen && (
+          <button
+            onClick={handlePayment}
+            disabled={processing || !selectedTrack}
+            className="mt-6 w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-[#3b1d8f] hover:bg-[#2f1673] text-white"
+          >
+            {processing ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Processing…
+              </>
+            ) : !selectedTrack ? (
+              'Select a learning track'
+            ) : (
+              <>
+                Pay {formatMoney(getCurrentPrice(), currency)}{isHourlyTrack ? '/hr' : ''} <ArrowRight size={20} />
+              </>
+            )}
+          </button>
+        )}
+
+        {!isRegistrationFee && course && !trackPickerOpen && (
+          <div className="mt-4">
+            <ScholarshipBadge courseId={course.course_id} isLoggedIn={true} showCta={true} />
+          </div>
+        )}
+
+        <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          Need help? <Link href="/contact" className="font-medium text-black dark:text-white underline underline-offset-2">Get in touch</Link>
+        </p>
       </div>
 
       {showDeepTechScreening && enrollment && (

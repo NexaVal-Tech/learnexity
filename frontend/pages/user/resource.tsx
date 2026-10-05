@@ -8,6 +8,8 @@ import type { CourseEnrollment } from '@/lib/types';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
+import SafeVideoFrame from '@/components/resources/SafeVideoFrame';
+import { Play, X } from 'lucide-react';
 import { AccessBlockedBanner, PaymentWarningBanner } from '@/components/user/AccessBlockedBanner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -106,6 +108,8 @@ export default function ResourcesPage() {
 
   // FIX: track modal open state AND which item (if any) was clicked to open it
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  // External video tutorials play here, never in a new tab.
+  const [playingVideo, setPlayingVideo] = useState<{ title: string; url: string; source?: string } | null>(null);
   const [initialItemId, setInitialItemId] = useState<number | undefined>(undefined);
 
   const completingRef = useRef<Set<number>>(new Set());
@@ -676,7 +680,22 @@ export default function ResourcesPage() {
                         <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full" /> {label}
                       </h3>
                       <div className="space-y-3">
-                        {items.map(r => (
+                        {items.map(r => label === 'Video Tutorials' ? (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setPlayingVideo({ title: r.title, url: r.url, source: r.source })}
+                            className="w-full text-left block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400">{r.title}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{r.source}{r.duration ? ` · ${r.duration}` : ''}</div>
+                              </div>
+                              <Play className="w-4 h-4 text-gray-400 group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400 ml-2 flex-shrink-0" />
+                            </div>
+                          </button>
+                        ) : (
                           <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -789,6 +808,22 @@ onPreviewFile={async (itemId, title) => {
           />
         )}
       </div>
+      {playingVideo && (
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={() => setPlayingVideo(null)}>
+          <div className="w-full max-w-4xl bg-white dark:bg-[#0f0f14] rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-white/10">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{playingVideo.title}</p>
+                {playingVideo.source && <p className="text-xs text-gray-500">{playingVideo.source}</p>}
+              </div>
+              <button onClick={() => setPlayingVideo(null)} className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white" aria-label="Close video">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <SafeVideoFrame url={playingVideo.url} title={playingVideo.title} />
+          </div>
+        </div>
+      )}
     </UserDashboardLayout>
   );
 }

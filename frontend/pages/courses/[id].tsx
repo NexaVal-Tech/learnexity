@@ -21,7 +21,8 @@ import {
   API_URL, BRAND, PATHWAYS, imageUrl, pathwayForCourse, type PathwayKey, type Track,
 } from "@/components/catalog/pathways";
 import { CatalogTheme } from "@/components/catalog/CatalogTheme";
-import { CmsImage } from "@/components/cms/ui";
+import { CmsImage, SOCIAL_ICONS } from "@/components/cms/ui";
+import { formatMoney } from "@/lib/format";
 
 const HERO_BG = "#140c3d";
 
@@ -222,6 +223,16 @@ export default function CoursePage() {
     return prices.length ? Math.min(...prices) : getDisplayPrice();
   };
 
+  /** Optional slashed "was" price for the track that sets the price above. */
+  const getPathwayComparePrice = (shown: number) => {
+    if (!course?.compare_prices) return 0;
+    const cur = currency === "NGN" ? "ngn" : "usd";
+    const tracks = p.tracks.filter((t) => offersTrack(course, t));
+    const track = tracks.find((t) => trackPrice(course, t, currency) === shown) ?? tracks[0];
+    const was = Number(track ? course.compare_prices?.[track]?.[cur] ?? 0 : 0);
+    return was > shown ? was : 0;
+  };
+
   const hasPaidAccess =
     enrollmentStatus?.isEnrolled &&
     (enrollmentStatus?.enrollment?.payment_status === "completed" ||
@@ -287,6 +298,8 @@ export default function CoursePage() {
   const price = isFree ? 0 : getPathwayPrice();
   const listPrice = isFree ? getDisplayPrice() : 0;
   const symbol = currency === "NGN" ? "₦" : "$";
+  const comparePrice = isFree ? 0 : getPathwayComparePrice(price);
+  const instructors = (course.course_instructors ?? []).filter((i) => i && i.name);
   const tag = PATHWAY_TAG[pathway];
   // Same images as before: hero image (or the default course image) and
   // the secondary image, falling back to the hero image.
@@ -556,6 +569,56 @@ export default function CoursePage() {
                 </div>
               )}
 
+              {/* Instructors */}
+              {instructors.length > 0 && (
+                <div className={card}>
+                  <h2 className={cardTitle}>{instructors.length === 1 ? "Your Instructor" : "Your Instructors"}</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {instructors.map((ins, i) => {
+                      const photo = ins.photo ? imageUrl(ins.photo, "") : "";
+                      const links = [
+                        ...(ins.socials ?? []),
+                        ...(ins.website ? [{ platform: "website", url: ins.website }] : []),
+                      ];
+                      return (
+                        <div key={i} className={`${inset} p-4 flex items-center gap-4`}>
+                          {photo ? (
+                            <CmsImage src={photo} alt={ins.name} width={128} height={128} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
+                              {ins.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
+                            {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug">{ins.role}</p>}
+                            {links.length > 0 && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {links.map((l, j) => {
+                                  const Icon = SOCIAL_ICONS[l.platform] ?? SOCIAL_ICONS.website;
+                                  return (
+                                    <a
+                                      key={j}
+                                      href={l.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label={l.platform}
+                                      className="w-8 h-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]"
+                                    >
+                                      <Icon size={15} />
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* What comes next */}
               <div className={card}>
                 <h2 className={cardTitle}>What Comes Next</h2>
@@ -626,12 +689,19 @@ export default function CoursePage() {
                           Free
                           {listPrice > 0 && (
                             <span className="ml-2 text-base font-medium text-[var(--text-muted)] line-through">
-                              {symbol}{listPrice.toLocaleString()}
+                              {formatMoney(listPrice, currency)}
                             </span>
                           )}
                         </p>
                       ) : price > 0 ? (
-                        <p className="text-3xl font-bold text-[var(--text-primary)]">{symbol}{price.toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-[var(--text-primary)]">
+                          {formatMoney(price, currency)}
+                          {comparePrice > 0 && (
+                            <span className="ml-2 text-lg font-medium text-[var(--text-muted)] line-through align-middle">
+                              {formatMoney(comparePrice, currency)}
+                            </span>
+                          )}
+                        </p>
                       ) : (
                         <p className="text-lg font-bold text-[var(--text-primary)]">See pricing at checkout</p>
                       )}

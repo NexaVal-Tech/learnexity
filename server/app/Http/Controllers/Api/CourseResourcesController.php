@@ -62,6 +62,7 @@ class CourseResourcesController extends Controller
         $materials = CourseMaterial::where('course_id', $courseId)
             ->with(['items'])
             ->orderBy('order')
+            ->orderBy('sprint_number')
             ->get()
             ->map(function ($material) use ($userId, $isFreemiumPreview) {
                 $progress = SprintProgress::firstOrCreate(

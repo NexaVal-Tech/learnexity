@@ -1,3 +1,4 @@
+import SafeVideoFrame, { toVideoEmbedUrl } from './SafeVideoFrame';
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
@@ -57,26 +58,7 @@ interface ResourcePreviewModalProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toEmbedUrl(url: string): string | null {
-  if (!url) return null;
-
-  if (url.includes('drive.google.com')) {
-    if (url.includes('/preview')) return url;
-    const fileMatch = url.match(/\/file\/d\/([^/]+)/);
-    if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
-    const idMatch = url.match(/[?&]id=([^&]+)/);
-    if (idMatch) return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
-  }
-
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1&rel=0`;
-
-  const loomMatch = url.match(/loom\.com\/share\/([^?]+)/);
-  if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}`;
-
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-
-  return url;
+  return toVideoEmbedUrl(url);
 }
 
 function parseBlocks(raw: string | null | undefined): ContentBlock[] {
@@ -134,7 +116,7 @@ const VideoBlock = memo(function VideoBlock({
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
-    if (!embedUrl?.includes('youtube.com/embed') || hasCompleted.current) return;
+    if (!/youtube(-nocookie)?\.com\/embed/.test(embedUrl ?? '') || hasCompleted.current) return;
     const handler = (e: MessageEvent) => {
       try {
         const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
@@ -149,29 +131,9 @@ const VideoBlock = memo(function VideoBlock({
     // FIX: only re-register when the embed URL actually changes, not on every render
   }, [embedUrl]);
 
-  if (!embedUrl) {
-    return (
-      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500">
-        <ExternalLink size={14} />
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline truncate">
-          {title || url}
-        </a>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-xl overflow-hidden border border-gray-100 bg-black">
-      <div className="relative" style={{ paddingBottom: '56.25%' }}>
-        <iframe
-          ref={iframeRef}
-          src={embedUrl}
-          className="absolute inset-0 w-full h-full border-0"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-          title={title || 'Video'}
-        />
-      </div>
+      <SafeVideoFrame ref={iframeRef} url={url} title={title} />
       {!isCompleted && (
         <div className="px-3 py-2 bg-gray-950 flex items-center gap-2">
           <Play size={12} className="text-violet-400 flex-shrink-0" />
@@ -789,21 +751,6 @@ export default function ResourcePreviewModal({
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 px-4 sm:px-5 py-5">
 
-          {externalVideos && externalVideos.some(v => !toEmbedUrl(v.url)) && (
-            <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-              <p className="text-xs text-amber-700 flex items-start gap-2">
-                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                <span>
-                  Some videos can't be embedded and will open in a new tab:{' '}
-                  {externalVideos.filter(v => !toEmbedUrl(v.url)).map(v => (
-                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
-                      className="underline hover:text-amber-900 mr-1">{v.title}</a>
-                  ))}
-                </span>
-              </p>
-            </div>
-          )}
-
           {(!sprints || sprints.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-400">
               <FileX className="w-8 h-8 text-gray-200" />
@@ -829,41 +776,15 @@ export default function ResourcePreviewModal({
             <div className="mt-6 pt-6 border-t border-gray-100">
               <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-4">External Resources</p>
               <div className="space-y-3">
-                {externalVideos.map(v => {
-                  const embed = toEmbedUrl(v.url);
-                  if (embed) {
-                    return (
-                      <div key={v.id} className="rounded-xl overflow-hidden border border-gray-100">
-                        <div className="relative" style={{ paddingBottom: '56.25%' }}>
-                          <iframe
-                            src={embed}
-                            className="absolute inset-0 w-full h-full border-0"
-                            allow="autoplay; fullscreen"
-                            allowFullScreen
-                            title={v.title}
-                          />
-                        </div>
-                        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-                          <p className="text-sm font-medium text-gray-800">{v.title}</p>
-                          {v.source && <p className="text-xs text-gray-400">{v.source}{v.duration ? ` · ${v.duration}` : ''}</p>}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return (
-                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-violet-200 hover:bg-violet-50/50 transition group">
-                      <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
-                        <Play size={14} className="text-violet-600 ml-0.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 group-hover:text-violet-700 truncate">{v.title}</p>
-                        <p className="text-xs text-gray-400">{v.source}{v.duration ? ` · ${v.duration}` : ''}</p>
-                      </div>
-                      <ExternalLink size={14} className="text-gray-400 group-hover:text-violet-500 flex-shrink-0" />
-                    </a>
-                  );
-                })}
+                {externalVideos.map(v => (
+                  <div key={v.id} className="rounded-xl overflow-hidden border border-gray-100">
+                    <SafeVideoFrame url={v.url} title={v.title} />
+                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+                      <p className="text-sm font-medium text-gray-800">{v.title}</p>
+                      {v.source && <p className="text-xs text-gray-400">{v.source}{v.duration ? ` · ${v.duration}` : ''}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

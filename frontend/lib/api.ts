@@ -7,6 +7,8 @@ if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
 }
 
 import type {
+  CourseInstructor,
+  ComparePrices,
   User,
   RegisterData,
   LoginData,
@@ -225,6 +227,19 @@ export const api = {
 
     resendVerification: async (email: string): Promise<{ message: string }> => {
       const response = await apiClient.post('/api/email/resend-verification', { email });
+      return response.data;
+    },
+
+    /** Older unverified accounts: email a 6-digit code from the login page. */
+    sendLoginVerificationCode: async (email: string): Promise<{ message: string }> => {
+      const response = await apiClient.post('/api/email/login-verification/send', { email });
+      return response.data;
+    },
+
+    /** Verify that code (plus the password) — verifies the email and logs in. */
+    verifyLoginCode: async (data: { email: string; password: string; otp: string }): Promise<AuthResponse> => {
+      const response = await apiClient.post<AuthResponse>('/api/email/login-verification/verify', data);
+      if (response.data?.token) localStorage.setItem('token', response.data.token);
       return response.data;
     },
   },
@@ -1272,6 +1287,25 @@ settings: {
         return await adminApi.post(`/api/admin/courses/${courseId}/details/salary`, data);
       },
 
+      syncInstructors: async (courseId: string, data: FormData): Promise<{ message: string; instructors: CourseInstructor[] }> => {
+        return await adminApi.post(`/api/admin/courses/${courseId}/instructors`, data);
+      },
+
+      updateComparePrices: async (
+        courseId: string,
+        compare_prices: ComparePrices
+      ): Promise<{ message: string; compare_prices: ComparePrices }> => {
+        return await adminApi.put(`/api/admin/courses/${courseId}/compare-prices`, { compare_prices });
+      },
+
+      /** Save a new sprint + material order (sprints are renumbered 1, 2, 3…). */
+      reorderMaterials: async (
+        courseId: string,
+        sprints: { id: number; items: number[] }[]
+      ): Promise<{ message: string }> => {
+        return await adminApi.post(`/api/admin/courses/${courseId}/resources/reorder`, { sprints });
+      },
+
       createSprint: async (
         courseId: string,
         data: { sprint_name: string; sprint_number: number; order?: number }
@@ -1457,6 +1491,7 @@ export const coursesApi = {
   },
 };
 
+export type { CourseInstructor, ComparePrices };
 export type {
   ReferralResponse,
   CreateReferralResponse,

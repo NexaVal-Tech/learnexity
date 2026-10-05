@@ -1,5 +1,6 @@
 'use client';
 
+import MoneyInput from '@/components/ui/MoneyInput';
 import { useEffect, useState } from 'react';
 import { Loader2, Save, CheckCircle2 } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
@@ -64,12 +65,10 @@ export default function RegistrationFeeSettings() {
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Scholarship Settings</h2>
         <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-          Every scholarship applicant is approved for one of two tiers — there's no reject outcome.
-          Full-tuition (100%) applicants pay a flat registration fee instead of the course price; the
-          fee depends on which learning track they enroll in — Deep-Tech (one-on-one / live classes)
-          and Flexible (self-paced) are priced separately. Everyone who doesn't qualify for full
-          tuition gets the partial scholarship percentage below off the normal course price instead.
-          These are platform-wide settings, not configured per course.
+          Every scholarship applicant is awarded a scholarship and pays only the registration fee below
+          instead of the course price. The fee depends on the course category — Deep-Tech (one-on-one /
+          live classes), Accelerator and Flexible (self-paced) are priced separately. These are
+          platform-wide settings, not configured per course.
         </p>
       </div>
 
@@ -87,14 +86,10 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-deeptech-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-deeptech-ngn"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={deeptechNgn}
-                  onChange={(e) => setDeeptechNgn(e.target.value)}
+                  onValueChange={setDeeptechNgn}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
@@ -102,14 +97,10 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-deeptech-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-deeptech-usd"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={deeptechUsd}
-                  onChange={(e) => setDeeptechUsd(e.target.value)}
+                  onValueChange={setDeeptechUsd}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
@@ -123,14 +114,10 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-flexible-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-flexible-ngn"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={flexibleNgn}
-                  onChange={(e) => setFlexibleNgn(e.target.value)}
+                  onValueChange={setFlexibleNgn}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
@@ -138,14 +125,10 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-flexible-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-flexible-usd"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={flexibleUsd}
-                  onChange={(e) => setFlexibleUsd(e.target.value)}
+                  onValueChange={setFlexibleUsd}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
@@ -163,14 +146,10 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-intermediate-ngn" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Nigeria (₦)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-intermediate-ngn"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={intermediateNgn}
-                  onChange={(e) => setIntermediateNgn(e.target.value)}
+                  onValueChange={setIntermediateNgn}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
@@ -178,44 +157,12 @@ export default function RegistrationFeeSettings() {
                 <label htmlFor="reg-fee-intermediate-usd" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
                   Other countries ($)
                 </label>
-                <input
+                <MoneyInput
                   id="reg-fee-intermediate-usd"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
                   value={intermediateUsd}
-                  onChange={(e) => setIntermediateUsd(e.target.value)}
+                  onValueChange={setIntermediateUsd}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-5 pt-1 border-t border-gray-100 dark:border-white/10">
-            <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1 mt-4">Partial Scholarship Percentage</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
-              Awarded to anyone who applies but doesn't qualify for full tuition. Applied as a
-              straight discount off the course's normal price at checkout — the normal payment
-              flow (track selection, installments) still applies.
-            </p>
-            <div className="max-w-[160px]">
-              <label htmlFor="reg-fee-partial-pct" className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-500 mb-1.5">
-                Percentage off
-              </label>
-              <div className="relative">
-                <input
-                  id="reg-fee-partial-pct"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  inputMode="decimal"
-                  value={partialScholarshipPercentage}
-                  onChange={(e) => setPartialScholarshipPercentage(e.target.value)}
-                  className="w-full px-3 py-2 pr-8 border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 text-sm font-medium">%</span>
               </div>
             </div>
           </div>

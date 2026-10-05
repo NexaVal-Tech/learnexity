@@ -423,6 +423,109 @@ class AuthController extends Controller
         ]);
     }
 
+    // ─── Verify an existing (older) account from the login page ─────────────
+    //
+    // Accounts made with the 6-digit sign-up flow (and Google) are verified
+    // already; this is for older accounts that hit "Please verify your email"
+    // on login. They get a 6-digit code (same email as sign-up, editable in
+    // Website CMS → Emails), type it on the login page, and are logged in.
+
+    private const LOGIN_OTP_TTL_MINUTES = 10;
+    private const LOGIN_OTP_COOLDOWN_S  = 60;
+    private const LOGIN_OTP_MAX_PER_HR  = 5;
+
+    private function loginOtpKey(string $email): string
+    {
+        return 'login_verify_otp:' . sha1(strtolower(trim($email)));
+    }
+
+    /** POST /api/email/login-verification/send { email } */
+    public function sendLoginVerificationCode(Request $req)
+    {
+        $req->validate(['email' => 'required|email']);
+        $email = strtolower(trim($req->email));
+        $generic = response()->json(['message' => 'If this account needs verifying, a 6-digit code has been sent to the email.']);
+
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+        if (!$user || $user->hasVerifiedEmail()) {
+            return $generic; // same reply either way — no account enumeration
+        }
+
+        $key = $this->loginOtpKey($email);
+        $state = \Illuminate\Support\Facades\Cache::get($key, ['sent' => [], 'hash' => null, 'attempts' => 0]);
+        $recent = array_values(array_filter($state['sent'] ?? [], fn ($t) => $t > time() - 3600));
+
+        if ($recent && end($recent) > time() - self::LOGIN_OTP_COOLDOWN_S) {
+            $wait = self::LOGIN_OTP_COOLDOWN_S - (time() - end($recent));
+            return response()->json(['message' => "Please wait {$wait}s before requesting another code.", 'retry_after' => $wait], 429);
+        }
+        if (count($recent) >= self::LOGIN_OTP_MAX_PER_HR) {
+            return response()->json(['message' => 'Too many code requests. Please try again in an hour.'], 429);
+        }
+
+        $otp = (string) random_int(100000, 999999);
+        $recent[] = time();
+        \Illuminate\Support\Facades\Cache::put($key, [
+            'sent'     => $recent,
+            'hash'     => Hash::make($otp),
+            'expires'  => time() + self::LOGIN_OTP_TTL_MINUTES * 60,
+            'attempts' => 0,
+        ], now()->addHour());
+
+        try {
+            Mail::to($user->email)->queue(new RegistrationOtpMail($otp));
+        } catch (\Exception $e) {
+            Log::error('❌ [LOGIN-VERIFY] Failed to send code', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Could not send the code. Please try again.'], 500);
+        }
+
+        Log::info('✅ [LOGIN-VERIFY] Code sent', ['user_id' => $user->id]);
+        return $generic;
+    }
+
+    /** POST /api/email/login-verification/verify { email, password, otp } → logs in */
+    public function verifyLoginCode(Request $req)
+    {
+        $req->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+            'otp'      => 'required|digits:6',
+        ]);
+
+        $email = strtolower(trim($req->email));
+        $key = $this->loginOtpKey($email);
+        $state = \Illuminate\Support\Facades\Cache::get($key);
+
+        if (!$state || empty($state['hash']) || ($state['expires'] ?? 0) < time()) {
+            return response()->json(['message' => 'Code expired or not found. Please request a new code.'], 422);
+        }
+        if (($state['attempts'] ?? 0) >= self::MAX_OTP_ATTEMPTS) {
+            return response()->json(['message' => 'Too many incorrect attempts. Please request a new code.'], 422);
+        }
+
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+        // The password must be right too — a code alone never logs anyone in.
+        if (!$user || !Hash::check($req->password, $user->password)) {
+            return response()->json(['message' => 'Invalid email or password. Please try again.'], 401);
+        }
+
+        if (!Hash::check($req->otp, $state['hash'])) {
+            $state['attempts'] = ($state['attempts'] ?? 0) + 1;
+            \Illuminate\Support\Facades\Cache::put($key, $state, now()->addHour());
+            $remaining = self::MAX_OTP_ATTEMPTS - $state['attempts'];
+            return response()->json(['message' => "Incorrect code. {$remaining} attempt(s) remaining."], 422);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget($key);
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+        Log::info('✅ [LOGIN-VERIFY] Email verified from login page', ['user_id' => $user->id]);
+
+        // Normal login (token, activity log, welcome-back email).
+        return $this->login($req);
+    }
+
     public function logout()
     {
         $token = JWTAuth::getToken();
@@ -702,22 +805,13 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'No account found with this email.'
-            ], 404);
+        // Same reply whether or not the account exists / is verified.
+        if ($user && !$user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
         }
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'This email is already verified.'
-            ], 200);
-        }
-
-        $user->sendEmailVerificationNotification();
 
         return response()->json([
-            'message' => 'Verification email sent.'
+            'message' => 'If this account needs verifying, a verification email has been sent.'
         ], 200);
     }
 

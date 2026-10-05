@@ -5,6 +5,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -14,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
 
 class PerformanceMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     // email_type values: slow_progress | high_performer | streak_broken |
     //                    streak_milestone | completion_near | quality_drop
@@ -39,11 +41,27 @@ class PerformanceMail extends Mailable
             'quality_drop'      => "We noticed a dip — we're here to help",
         ];
 
-        return new Envelope(subject: $subjects[$this->emailType] ?? "A note about your learning progress");
+        return new Envelope(subject: $this->templatedSubject($subjects[$this->emailType] ?? "A note about your learning progress"));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.student.performance');
+        return $this->templatedContent(new Content(view: 'emails.student.performance'));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'performance';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'first_name' => explode(' ', trim((string) $this->user->name))[0], 'course' => $this->courseName, 'message' => $this->message];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return $this->actionUrl ?: rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/user/dashboard';
     }
 }

@@ -49,9 +49,12 @@ class PricingService
             ->where('is_used', false)
             ->first();
 
-        $scholarshipPercent = $scholarship ? (float) $scholarship->discount_percentage : 0;
-        $isRegistrationFee  = $scholarship && $scholarshipPercent >= 100;
-        $isPartialAward     = $scholarship && $scholarshipPercent > 0 && $scholarshipPercent < 100;
+        // Single-award model: every approved, unused scholarship for this
+        // course means the student pays only the flat registration fee —
+        // regardless of the percentage stored on older (partial-tier) rows.
+        $scholarshipPercent = $scholarship ? 100.0 : 0;
+        $isRegistrationFee  = (bool) $scholarship;
+        $isPartialAward     = false;
 
         if ($isRegistrationFee) {
             $regFeeSetting = RegistrationFeeSetting::current();

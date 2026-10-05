@@ -2,6 +2,7 @@
 
 'use client';
 
+import { formatMoney } from '@/lib/format';
 import { useState, useEffect } from 'react';
 import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { api, ReferralResponse, PayoutBalance, PayoutRequestItem, handleApiError } from '@/lib/api';
@@ -253,7 +254,7 @@ export default function ReferralsPage() {
             <StatCard
               icon={<Gift className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
               label="Rewards"
-              value={`$${referralData?.statistics.total_rewards || 0}`}
+              value={formatMoney(referralData?.statistics.total_rewards || 0, 'NGN')}
             />
             <StatCard
               icon={<Flame className="w-5 h-5 text-red-600 dark:text-red-400" />}
@@ -276,7 +277,7 @@ export default function ReferralsPage() {
           <div className="mb-5 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/25 rounded-lg p-4">
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Available Balance</p>
             <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-              ${payoutBalance?.available_balance.toFixed(2) ?? '0.00'}
+              {formatMoney(payoutBalance?.available_balance ?? 0, 'NGN')}
             </p>
           </div>
 
@@ -347,7 +348,7 @@ export default function ReferralsPage() {
                       <td className="py-2 px-3 text-sm text-gray-600 dark:text-gray-300">
                         {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
-                      <td className="py-2 px-3 text-sm font-medium text-gray-900 dark:text-white">${Number(p.amount).toFixed(2)}</td>
+                      <td className="py-2 px-3 text-sm font-medium text-gray-900 dark:text-white">{formatMoney(p.amount, 'NGN')}</td>
                       <td className="py-2 px-3"><PayoutStatusBadge status={p.status} /></td>
                     </tr>
                   ))}
@@ -393,7 +394,7 @@ export default function ReferralsPage() {
                         <StatusBadge status={ref.status} />
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium text-gray-900 dark:text-white">
-                        {ref.status === 'completed' ? `$${ref.reward_amount}` : '-'}
+                        {ref.status === 'completed' ? formatMoney(ref.reward_amount, 'NGN') : '-'}
                       </td>
                     </tr>
                   ))

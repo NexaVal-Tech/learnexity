@@ -1,5 +1,6 @@
 'use client';
 
+import MoneyInput from '@/components/ui/MoneyInput';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Eye, Edit2, Trash2, Search, Filter, X, ChevronDown, Calendar, Clock, RefreshCw, Plus, Gift, Repeat, CalendarClock, Power } from 'lucide-react';
 import { adminApi } from '@/lib/adminApi';
@@ -197,14 +198,14 @@ function PricingSettingsPanel() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
         <div>
           <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Price (USD)</label>
-          <input type="number" min={0} step="0.01" value={prices.price_usd}
-            onChange={e => setPrices(p => ({ ...p, price_usd: parseFloat(e.target.value) || 0 }))}
+          <MoneyInput prefix="$" value={prices.price_usd}
+            onValueChange={raw => setPrices(p => ({ ...p, price_usd: parseFloat(raw) || 0 }))}
             className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white" />
         </div>
         <div>
           <label className="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Price (NGN)</label>
-          <input type="number" min={0} step="1" value={prices.price_ngn}
-            onChange={e => setPrices(p => ({ ...p, price_ngn: parseFloat(e.target.value) || 0 }))}
+          <MoneyInput prefix="₦" value={prices.price_ngn}
+            onValueChange={raw => setPrices(p => ({ ...p, price_ngn: parseFloat(raw) || 0 }))}
             className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#08080c] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white" />
         </div>
         <button onClick={save} disabled={saving}

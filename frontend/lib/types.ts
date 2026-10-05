@@ -118,6 +118,19 @@ export interface Salary {
   senior_level: string;
 }
 
+export interface CourseInstructor {
+  name: string;
+  role: string;
+  /** Storage path or URL of the photo. */
+  photo: string | null;
+  website: string | null;
+  socials: { platform: string; url: string }[];
+}
+
+export type ComparePriceTrack = 'self_paced' | 'group_mentorship' | 'one_on_one' | 'intermediate';
+/** Optional struck-through "was" prices, per track and currency. */
+export type ComparePrices = Partial<Record<ComparePriceTrack, { usd: number | null; ngn: number | null }>>;
+
 export interface Course {
   id: number;
   course_id: string;
@@ -171,6 +184,8 @@ export interface Course {
   career_paths?: CareerPath[];
   industries?: Industry[];
   salary?: Salary;
+  course_instructors?: CourseInstructor[] | null;
+  compare_prices?: ComparePrices | null;
 }
 
 // ===============================

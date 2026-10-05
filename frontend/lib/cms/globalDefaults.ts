@@ -4,7 +4,7 @@
 // components/navbar/Navbar.tsx and components/footer/Footer.tsx before the
 // CMS. Used until an admin saves their own version, and as the base that
 // saved data is merged over (so fields added later always have a value).
-import type { CmsGlobals, FooterData, NavbarData } from './types';
+import type { CmsGlobals, FooterData, NavbarData, ScholarshipCopy } from './types';
 
 export const NAVBAR_DEFAULTS: NavbarData = {
   logo: '/images/Logo.png',
@@ -82,15 +82,49 @@ export const FOOTER_DEFAULTS: FooterData = {
   showPoweredBy: true,
 };
 
+export const SCHOLARSHIP_DEFAULTS: ScholarshipCopy = {
+  welcomeTitle: 'One quick step first.',
+  welcomeText: 'Before you pay for {course}, take a two-minute application for a scholarship. Awarded students only pay the registration fee.',
+  applyButton: 'Apply for a Scholarship',
+  skipButton: 'Skip — pay full price',
+  pickerTitle: 'Choose your scholarship course',
+  pickerSubtitle: 'Select the course you want to apply for. Your scholarship will be tied to this course.',
+  pickerNote: 'One scholarship per user across all courses.',
+  pickerContinue: 'Continue to Application',
+  applicationLabel: 'Scholarship Application',
+  submitButton: 'Submit Application',
+  awardBadge: 'Scholarship Awarded',
+  awardHeading: 'Congratulations — your scholarship has been awarded!',
+  awardMessage: "You've been awarded a scholarship for {course}. You only pay the registration fee to secure your spot.",
+  awardButton: 'Proceed to Payment',
+  paymentBanner: "You've been awarded a scholarship for {course} — you only pay the registration fee.",
+  paymentDiscountLabel: 'Scholarship',
+  paymentFeeLabel: 'Registration fee',
+  alreadyAppliedMessage: 'You have already submitted a scholarship application. Each user may only apply for one scholarship across all courses.',
+  alreadyUsedMessage: 'You have already used your scholarship on another course. Scholarships are single-use and non-transferable.',
+};
+
 export const GLOBAL_DEFAULTS: CmsGlobals = {
   navbar: NAVBAR_DEFAULTS,
   footer: FOOTER_DEFAULTS,
+  scholarship: SCHOLARSHIP_DEFAULTS,
 };
+
+/** Fill {placeholders} in CMS copy. */
+export function fillCopy(text: string | undefined | null, vars: Record<string, string | number | null | undefined>): string {
+  return String(text ?? '').replace(/\{([a-z0-9_]+)\}/gi, (m, k) => (vars[k] !== undefined && vars[k] !== null ? String(vars[k]) : m));
+}
 
 /** Merge saved global data over its defaults (top-level keys). */
 export function mergeGlobals(saved: Partial<Record<keyof CmsGlobals, any>> | null | undefined): CmsGlobals {
   return {
     navbar: { ...NAVBAR_DEFAULTS, ...(saved?.navbar ?? {}) },
     footer: { ...FOOTER_DEFAULTS, ...(saved?.footer ?? {}) },
+    scholarship: { ...SCHOLARSHIP_DEFAULTS, ...dropEmpty(saved?.scholarship) },
   };
+}
+
+/** Empty strings in saved copy fall back to the default text. */
+function dropEmpty(o: Record<string, any> | null | undefined): Record<string, any> {
+  return Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => !(typeof v === 'string' && v.trim() === '')));
 }

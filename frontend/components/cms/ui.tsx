@@ -19,7 +19,7 @@ import {
   PieChart, Play, Puzzle, Rocket, Search, Settings, Share2, Shield, ShieldCheck, Smartphone,
   Sparkles, Star, Target, Trophy, TrendingUp, User, UserCheck, Users, Video, Wallet, Wrench,
   Zap, BadgeCheck, Presentation, School, Library, Network, Server, Bot, Workflow, Timer, Coins,
-  Folder, Quote, Linkedin, Instagram, Facebook, Twitter, Youtube, type LucideIcon,
+  Folder, Quote, Linkedin, Instagram, Facebook, Twitter, Youtube, Github, type LucideIcon,
 } from 'lucide-react';
 import { canOptimizeImage, isExternalHref, safeHref } from '@/lib/cms/url';
 
@@ -171,6 +171,7 @@ export function CmsIcon({
 
 export const SOCIAL_ICONS: Record<string, LucideIcon> = {
   linkedin: Linkedin,
+  github: Github,
   instagram: Instagram,
   facebook: Facebook,
   twitter: Twitter,

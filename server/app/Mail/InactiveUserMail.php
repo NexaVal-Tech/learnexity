@@ -3,6 +3,8 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\UsesEmailTemplate;
+
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -12,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class InactiveUserMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, UsesEmailTemplate;
 
     public function __construct(
         public User $user,
@@ -37,11 +39,27 @@ class InactiveUserMail extends Mailable
             }
         }
 
-        return new Envelope(subject: $subject);
+        return new Envelope(subject: $this->templatedSubject($subject));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.student.inactive_user');
+        return $this->templatedContent(new Content(view: 'emails.student.inactive_user'));
+    }
+
+    // ── Website CMS → Emails ────────────────────────────────────────────
+    protected function emailTemplateKey(): string
+    {
+        return 'inactive_user';
+    }
+
+    protected function emailTemplateVars(): array
+    {
+        return ['name' => $this->user->name, 'first_name' => explode(' ', trim((string) $this->user->name))[0], 'days' => $this->daysInactive];
+    }
+
+    protected function emailTemplateButtonUrl(): ?string
+    {
+        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/user/dashboard';
     }
 }

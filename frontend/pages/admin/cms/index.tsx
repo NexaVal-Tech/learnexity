@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FileText, ImageIcon, Loader2, Menu, PanelBottom, Plus, X } from "lucide-react";
+import { FileText, GraduationCap, ImageIcon, Loader2, Mail, Menu, PanelBottom, Plus, X } from "lucide-react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import AdminRouteGuard from "@/components/admin/AdminRouteGuard";
 import { cmsAdmin, apiErrorMessage, type CmsPageListItem } from "@/lib/cms/adminClient";
@@ -85,11 +85,13 @@ export default function CmsHome() {
           </div>
 
           {/* Site-wide */}
-          <div className="grid sm:grid-cols-3 gap-3 mb-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
             {[
               { href: "/admin/cms/navbar", icon: <Menu size={18} />, title: "Navbar", text: "Menu items, dropdowns, logo, buttons" },
               { href: "/admin/cms/footer", icon: <PanelBottom size={18} />, title: "Footer", text: "Links, contact details, social icons" },
               { href: "/admin/cms/media", icon: <ImageIcon size={18} />, title: "Media library", text: "Upload images, logos & videos" },
+              { href: "/admin/cms/scholarship", icon: <GraduationCap size={18} />, title: "Scholarship", text: "Award message, course picker, payment page wording" },
+              { href: "/admin/cms/emails", icon: <Mail size={18} />, title: "Emails", text: "Subjects and text of every email the site sends" },
             ].map((c) => (
               <Link key={c.href} href={c.href} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f0f14] hover:border-indigo-400 transition-colors">
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-1">{c.icon}<span className="font-semibold text-gray-900 dark:text-white">{c.title}</span></div>

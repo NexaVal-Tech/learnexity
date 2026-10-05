@@ -16,6 +16,12 @@ import {
   Save, ChevronRight, Image, Check, AlertCircle, Loader2
 } from 'lucide-react';
 import { api, handleApiError } from '@/lib/api';
+import {
+  InstructorsFields, ComparePricesFields, instructorsFromCourse, instructorsToFormData,
+  comparePricesFromCourse, comparePricesToPayload, emptyComparePrices,
+  type InstructorDraft, type ComparePricesDraft,
+} from './CourseExtrasFields';
+import MoneyInput from '@/components/ui/MoneyInput';
 import { toast } from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +42,9 @@ type TabId =
   | 'benefits'
   | 'career_paths'
   | 'industries'
-  | 'salary';
+  | 'salary'
+  | 'instructors'
+  | 'compare_prices';
 
 interface Tool {
   id?: number;
@@ -64,6 +72,8 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; disabled?: bool
   { id: 'career_paths',label: 'Career Paths',   icon: Briefcase  },
   { id: 'industries',  label: 'Industries',     icon: Building2  },
   { id: 'salary',      label: 'Salary',         icon: DollarSign },
+  { id: 'instructors', label: 'Instructors',    icon: Crown      },
+  { id: 'compare_prices', label: 'Slashed prices', icon: DollarSign },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -92,13 +102,10 @@ function PriceInput({
       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-500 pointer-events-none">
         {symbol}
       </span>
-      <input
-        type="number"
+      <MoneyInput
         name={name}
         value={value}
-        onChange={onChange}
-        step="0.01"
-        min="0"
+        onValueChange={(raw) => onChange({ target: { name, value: raw } } as unknown as React.ChangeEvent<HTMLInputElement>)}
         disabled={disabled}
         placeholder={placeholder}
         className={`${INPUT} pl-8 disabled:bg-gray-100 dark:disabled:bg-white/10 disabled:cursor-not-allowed`}
@@ -238,6 +245,8 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
   const [careerPaths, setCareerPaths] = useState<CareerPath[]>([{ level: 'entry', position: '' }]);
   const [industries, setIndustries] = useState<Industry[]>([{ title: '', text: '' }]);
   const [salary, setSalary] = useState<Salary>({ entry_level: '', mid_level: '', senior_level: '' });
+  const [instructors, setInstructors] = useState<InstructorDraft[]>([]);
+  const [comparePrices, setComparePrices] = useState<ComparePricesDraft>(emptyComparePrices());
 
   // ── Load existing data when modal opens ───────────────────────
 
@@ -297,6 +306,8 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
       if (d.benefits?.length)     setBenefits(d.benefits.map((b: any) => ({ id: b.id, title: b.title, text: b.text })));
       if (d.career_paths?.length) setCareerPaths(d.career_paths.map((c: any) => ({ id: c.id, level: c.level, position: c.position })));
       if (d.industries?.length)   setIndustries(d.industries.map((i: any) => ({ id: i.id, title: i.title, text: i.text })));
+      setInstructors(instructorsFromCourse((d as any).instructors));
+      setComparePrices(comparePricesFromCourse((d as any).compare_prices));
       if (d.salary)               setSalary({ entry_level: d.salary.entry_level || '', mid_level: d.salary.mid_level || '', senior_level: d.salary.senior_level || '' });
     } catch {
       // Details may not exist yet — that's fine
@@ -373,6 +384,8 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
         case 'career_paths': await saveCareerPaths();    break;
         case 'industries':   await saveIndustries();     break;
         case 'salary':       await saveSalary();         break;
+        case 'instructors':  await api.admin.courses.syncInstructors(course.course_id, instructorsToFormData(instructors)); break;
+        case 'compare_prices': await api.admin.courses.updateComparePrices(course.course_id, comparePricesToPayload(comparePrices)); break;
       }
       toast.success('Changes saved successfully');
       onSuccess();
@@ -851,6 +864,22 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                           className={INPUT} />
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* ── INSTRUCTORS ── */}
+                {activeTab === 'instructors' && (
+                  <div className="space-y-4">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Instructors</h3>
+                    <InstructorsFields value={instructors} onChange={setInstructors} />
+                  </div>
+                )}
+
+                {/* ── SLASHED PRICES ── */}
+                {activeTab === 'compare_prices' && (
+                  <div className="space-y-4">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Slashed prices</h3>
+                    <ComparePricesFields value={comparePrices} onChange={setComparePrices} offers={pricing} />
                   </div>
                 )}
               </>

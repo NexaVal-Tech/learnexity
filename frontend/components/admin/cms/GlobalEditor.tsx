@@ -1,4 +1,4 @@
-// components/admin/cms/GlobalEditor.tsx — editor for the navbar / footer.
+// components/admin/cms/GlobalEditor.tsx — editor for site-wide content (navbar, footer, scholarship wording).
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Eye, History, Loader2, RotateCcw, Save } from "lucide-react";
@@ -106,15 +106,17 @@ export default function GlobalEditor({ globalKey }: { globalKey: Key }) {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{editor.title}</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Shown on every page of the website.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{editor.subtitle}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setHistory(true)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg text-gray-700 dark:text-gray-200">
                 <History size={14} /> History
               </button>
-              <button onClick={() => setPreview(clone(data))} disabled={!data} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg text-gray-700 dark:text-gray-200">
-                <Eye size={14} /> Preview
-              </button>
+              {editor.preview && (
+                <button onClick={() => setPreview(clone(data))} disabled={!data} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg text-gray-700 dark:text-gray-200">
+                  <Eye size={14} /> Preview
+                </button>
+              )}
               <button onClick={save} disabled={saving || !data || (!dirty && isCustomized)} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save & publish
               </button>
@@ -158,7 +160,7 @@ export default function GlobalEditor({ globalKey }: { globalKey: Key }) {
             type="global"
             subjectKey={globalKey}
             onClose={() => setHistory(false)}
-            onPreview={(snap) => setPreview({ ...clone(editor.defaults), ...(snap?.data ?? {}) })}
+            onPreview={(snap) => editor.preview && setPreview({ ...clone(editor.defaults), ...(snap?.data ?? {}) })}
             onRestored={async () => {
               setHistory(false);
               await load();

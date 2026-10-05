@@ -4,7 +4,7 @@ import Head from "next/head";
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import AppLayout from "@/components/layouts/AppLayout";
-import { handleApiError } from '@/lib/api';
+import { api, handleApiError } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import Toast from "@/components/ui/toast";
@@ -31,14 +31,64 @@ export default function LoginPage() {
   });
 
   const router = useRouter();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, loginWithVerificationCode } = useAuth();
+
+  // Older accounts that aren't verified yet: verify with a 6-digit code here.
+  const [needsVerify, setNeedsVerify] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const sendCode = async () => {
+    if (!formData.email || sending || cooldown > 0) return;
+    setSending(true);
+    setError('');
+    try {
+      await api.auth.sendLoginVerificationCode(formData.email);
+      setCodeSent(true);
+      setCooldown(60);
+      setSuccessMessage(`We sent a 6-digit code to ${formData.email}.`);
+    } catch (err: any) {
+      const retry = err?.response?.data?.retry_after;
+      if (retry) setCooldown(Number(retry));
+      setError(handleApiError(err));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const verifyCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (code.length !== 6 || verifying) return;
+    setVerifying(true);
+    setError('');
+    try {
+      await loginWithVerificationCode(formData.email, formData.password, code);
+    } catch (err: any) {
+      setError(err.message || handleApiError(err));
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('remembered_email');
     if (rememberedEmail) {
       setFormData(prev => ({ ...prev, email: rememberedEmail, rememberMe: true }));
     }
-    const { message, email, verified } = router.query;
+    const { message, email, verified, error: linkError } = router.query;
+    if (linkError === 'invalid_verification_link') {
+      setError('That verification link is invalid or has expired. Log in to get a new 6-digit code.');
+      if (email) setFormData(prev => ({ ...prev, email: email as string }));
+    }
     if (verified === 'success') {
       setSuccessMessage('Email verified successfully! You can now log in.');
     }
@@ -67,7 +117,13 @@ export default function LoginPage() {
         localStorage.removeItem('remembered_email');
       }
     } catch (err: any) {
-      setError(err.message || handleApiError(err));
+      if (err?.emailUnverified) {
+        setNeedsVerify(true);
+        setCodeSent(false);
+        setCode('');
+      } else {
+        setError(err.message || handleApiError(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -243,6 +299,53 @@ export default function LoginPage() {
             <Toast message={error} type="error" duration={4000} onClose={() => setError('')} />
           )}
 
+          {needsVerify ? (
+            <form onSubmit={verifyCode} className="space-y-6">
+              <div className="p-4 text-sm border border-[var(--border-subtle)] bg-[var(--surface-alt)]" style={{ borderRadius: '1.25rem 0.5rem 1.25rem 0.5rem' }}>
+                <p className="font-semibold text-gray-900 dark:text-white mb-1">Verify your email to continue</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Your account <strong>{formData.email}</strong> hasn&apos;t been verified yet. {codeSent ? 'Enter the 6-digit code we emailed you.' : "We'll email you a 6-digit code."}
+                </p>
+              </div>
+
+              {codeSent && (
+                <div>
+                  <label className="field-label">Verification code</label>
+                  <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="••••••"
+                    className="underline-input text-center tracking-[0.6em] text-xl"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {codeSent ? (
+                <button type="submit" disabled={code.length !== 6 || verifying} className="auth-btn">
+                  {verifying ? 'Verifying…' : 'Verify & Log In'}
+                </button>
+              ) : (
+                <button type="button" onClick={sendCode} disabled={sending} className="auth-btn">
+                  {sending ? 'Sending…' : 'Send verification code'}
+                </button>
+              )}
+
+              <div className="flex items-center justify-between text-sm">
+                <button type="button" onClick={() => { setNeedsVerify(false); setCode(''); }} className="text-gray-500 dark:text-gray-400 hover:underline">
+                  ← Back to log in
+                </button>
+                {codeSent && (
+                  <button type="button" onClick={sendCode} disabled={sending || cooldown > 0} className="page-switch-link disabled:opacity-50">
+                    {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
+                  </button>
+                )}
+              </div>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
@@ -321,6 +424,7 @@ export default function LoginPage() {
               Sign in with Google
             </button>
           </form>
+          )}
         </div>
       </div>
     </AppLayout>

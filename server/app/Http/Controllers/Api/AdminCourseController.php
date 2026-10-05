@@ -72,6 +72,7 @@ class AdminCourseController extends Controller
 
         $sprints = CourseMaterial::where('course_id', $courseId)
             ->with(['items'])
+            ->orderBy('order')
             ->orderBy('sprint_number')
             ->get()
             ->map(function($sprint) {
@@ -640,6 +641,8 @@ class AdminCourseController extends Controller
             'career_paths' => $careerPaths,
             'industries'   => $industries,
             'salary'       => $salary,
+            'instructors'    => $course->course_instructors ?? [],
+            'compare_prices' => $course->compare_prices ?? (object) [],
         ]);
     }
 

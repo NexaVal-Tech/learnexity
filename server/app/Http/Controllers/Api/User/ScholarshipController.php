@@ -193,75 +193,18 @@ class ScholarshipController extends Controller
         $this->sendResultEmail($user, $scholarship, $course);
 
         return response()->json([
-            'message'     => $discountPercentage >= 100
-                ? "Congratulations! You've been awarded a full-tuition scholarship. You'll only pay the registration fee to secure your spot."
-                : "Congratulations! You've been awarded a {$discountPercentage}% scholarship — it'll be applied automatically when you check out.",
+            'message'     => \App\Services\ScholarshipAwardService::awardMessage($course),
             'scholarship' => $scholarship,
         ], 201);
     }
 
     /**
-     * Send the "Proceed to Payment" result email — fired for BOTH approved
-     * and rejected outcomes (user gets a CTA either way). For an APPROVED
-     * outcome this also creates the enrollment now (pending, registration
-     * fee) rather than waiting for the person to click through the modal or
-     * payment page — being awarded a scholarship should immediately show up
-     * as "enrolled, payment pending" in their dashboard, the same way
-     * starting checkout on a normal course does. Every applicant is
-     * approved now (100% or the partial tier) — there's no reject outcome,
-     * so this always runs.
-     *
-     * Reuses CourseEnrollmentController::enroll() — the single source of
-     * truth for enrollment creation/pricing — rather than duplicating it.
+     * Prepare the pending (registration-fee) enrollment and send the award
+     * email — see ScholarshipAwardService.
      */
     private function sendResultEmail(\App\Models\User $user, Scholarship $scholarship, Course $course): void
     {
-        $isApproved = $scholarship->status === 'approved';
-        $currency   = LocationService::detectCurrency();
-        $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/courses/' . $course->course_id;
-        $amountDue  = null;
-
-        if ($isApproved) {
-            try {
-                $controller  = new \App\Http\Controllers\Api\User\CourseEnrollmentController();
-                // self_paced is just a starting point — if the person picks
-                // a different track (one_on_one/group_mentorship) on the
-                // payment page, that page's own syncPricing() re-calls
-                // enroll() and corrects the amount/tier, so this default
-                // never under/over-charges anyone.
-                $fakeRequest = new Request([], [
-                    'learning_track' => 'self_paced',
-                    'payment_type'   => 'onetime',
-                ]);
-                $response = $controller->enroll($fakeRequest, $course->course_id);
-                $data     = $response->getData(true);
-
-                if (!empty($data['enrollment_id'])) {
-                    $paymentUrl = rtrim(config('app.frontend_url'), '/') . '/user/payment/' . $data['enrollment_id'];
-                    $amountDue  = $data['total_amount'] ?? null;
-                    $currency   = $data['currency'] ?? $currency;
-                }
-            } catch (\Exception $e) {
-                Log::error('❌ [ScholarshipResult] Failed to prepare enrollment for email link', [
-                    'user_id'       => $user->id,
-                    'course_id'     => $course->course_id,
-                    'error'         => $e->getMessage(),
-                ]);
-                // Fall back to the course page URL set above — the frontend
-                // scholarship/payment flow can still take it from there.
-            }
-        }
-
-        try {
-            Mail::to($user->email)->queue(
-                new ScholarshipResultMail($user, $scholarship, $isApproved, $paymentUrl, $amountDue, $currency)
-            );
-        } catch (\Exception $e) {
-            Log::error('❌ [ScholarshipResult] Failed to send result email', [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
-            ]);
-        }
+        \App\Services\ScholarshipAwardService::prepareAndNotify($user, $scholarship, $course);
     }
 
     /**
@@ -310,29 +253,9 @@ class ScholarshipController extends Controller
      */
     private function autoDecide(bool $isStudent, bool $isEmployed, string $salaryRange, bool $isNigeria): array
     {
-        // Student (employed or unemployed)
-        if ($isStudent) {
-            return ['approved', 100.0, 'Full-tuition scholarship awarded — student applicant.'];
-        }
-
-        // Not a student but unemployed
-        if (! $isStudent && ! $isEmployed) {
-            return ['approved', 100.0, 'Full-tuition scholarship awarded — unemployed applicant.'];
-        }
-
-        // Employed with income under ₦100k / $100
-        if ($isEmployed && $salaryRange === 'under_100') {
-            return ['approved', 100.0, 'Full-tuition scholarship awarded — low-income employed applicant.'];
-        }
-
-        // Everyone else still gets the partial (admin-configured) award —
-        // there's no more reject outcome.
-        $partialPercent = RegistrationFeeSetting::current()->getPartialScholarshipPercentageValue();
-
-        return [
-            'approved',
-            $partialPercent,
-            "{$partialPercent}% scholarship awarded — does not meet full-tuition criteria based on current employment and income level.",
-        ];
+        // Single-award model: every applicant is awarded a scholarship and
+        // pays only the registration fee. The answers are still recorded
+        // (for the admin), they just no longer change the outcome.
+        return ['approved', 100.0, 'Scholarship awarded — pays the registration fee only.'];
     }
 }
