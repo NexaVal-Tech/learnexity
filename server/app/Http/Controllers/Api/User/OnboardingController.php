@@ -58,6 +58,9 @@ class OnboardingController extends Controller
                     'course_id'    => $course->course_id,
                     'title'        => $course->title,
                     'is_deep_tech' => $isDeepTech,
+                    // The track this course is normally taken on, so the
+                    // dashboard enrolls at the right fee category.
+                    'default_track' => \App\Services\ScholarshipAwardService::defaultTrack($course),
                 ];
 
                 $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)

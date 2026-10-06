@@ -23,6 +23,8 @@ import {
 import { CatalogTheme } from "@/components/catalog/CatalogTheme";
 import { CmsImage, SOCIAL_ICONS } from "@/components/cms/ui";
 import { formatMoney } from "@/lib/format";
+import { useCmsGlobals } from "@/contexts/CmsGlobalsContext";
+import { fillCopy } from "@/lib/cms/globalDefaults";
 
 const HERO_BG = "#140c3d";
 
@@ -79,6 +81,8 @@ export default function CoursePage() {
     enrollment: any;
   } | null>(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  const [scholarshipChoice, setScholarshipChoice] = useState(false);
+  const scholarshipCopy = useCmsGlobals().scholarship;
   const [fetchError, setFetchError] = useState(false);
 
   const [currency, setCurrency] = useState<"USD" | "NGN">("USD");
@@ -156,41 +160,27 @@ export default function CoursePage() {
     return first ?? "self_paced";
   };
 
-  const handleEnrollClick = async () => {
-    if (!user) {
-      sessionStorage.setItem("intended_course", id as string);
-      sessionStorage.setItem("intended_course_name", course?.title || "");
-      router.push("/user/auth/register");
-      return;
-    }
-
-    // Give a returning/logged-in user the same scholarship-screening
-    // opportunity a new signup gets, instead of jumping straight to
-    // payment. Mirrors the logged-out path above and the redirect logic
-    // in AuthContext/callback.tsx — the dashboard modal decides what to
-    // show based on server-computed screening status.
-    try {
-      const onboardingStatus = await api.onboarding.getStatus();
-      if (onboardingStatus.show_modal) {
-        await api.onboarding.setIntendedCourse(id as string);
-        router.push("/user/dashboard");
-        return;
-      }
-    } catch {
-      // if the status check fails, don't block enrollment — fall through
-    }
-
+  /** Create (or reuse) the enrollment for THIS course and open its payment page. */
+  const doEnroll = async () => {
     try {
       setEnrolling(true);
       setError(null);
-      const response = await api.enrollment.enroll(id as string, enrollTrack(), "onetime");
+      setScholarshipChoice(false);
+      const response: any = await api.enrollment.enroll(id as string, enrollTrack(), "onetime");
+      if (response?.is_free) {
+        // Free courses unlock straight away — no payment step.
+        router.push({ pathname: "/user/resource", query: { courseId: id as string } });
+        return;
+      }
       router.push(`/user/payment/${response.enrollment_id}`);
     } catch (error: any) {
-      if (error.response?.status === 409) {
-        alert("You are already enrolled in this course!");
-        router.push("/user/dashboard?tab=your-course");
-      } else if (error.response?.data?.enrollment_id) {
-        router.push(`/user/payment/${error.response.data.enrollment_id}`);
+      const status = error.response?.status;
+      const existingId = error.response?.data?.enrollment_id;
+      if (status === 409) {
+        // Already enrolled AND paid for this course.
+        router.push({ pathname: "/user/resource", query: { courseId: id as string } });
+      } else if (existingId) {
+        router.push(`/user/payment/${existingId}`);
       } else {
         const errorMessage = handleApiError(error);
         setError(errorMessage || "Failed to enroll. Please try again.");
@@ -198,6 +188,60 @@ export default function CoursePage() {
     } finally {
       setEnrolling(false);
     }
+  };
+
+  /**
+   * "Apply Now". Always enrolls in the course on THIS page.
+   *
+   * It used to send every logged-in student whose onboarding wasn't
+   * "finished" (no scholarship yet, or an unused one for another course)
+   * to the dashboard — which only showed their earlier pending
+   * enrollment, so they could never start a new course from here.
+   */
+  const handleEnrollClick = async () => {
+    if (!user) {
+      sessionStorage.setItem("intended_course", id as string);
+      sessionStorage.setItem("intended_course_name", course?.title || "");
+      router.push("/user/auth/register");
+      return;
+    }
+    if (enrolling) return;
+    setError(null);
+
+    // Already started this course but not paid → straight to its payment page.
+    if (enrollmentStatus?.isEnrolled && enrollmentStatus.enrollment?.id && !hasPaidAccess) {
+      router.push(`/user/payment/${enrollmentStatus.enrollment.id}`);
+      return;
+    }
+
+    // Never applied for a scholarship → offer it once, right here (no detour
+    // to the dashboard). An awarded scholarship for this course is applied
+    // automatically at checkout; one for another course doesn't block this.
+    if (!course?.is_free) {
+      try {
+        setEnrolling(true);
+        const st = await api.onboarding.getStatus();
+        if (st?.screening_status === "not_started") {
+          setScholarshipChoice(true);
+          return;
+        }
+      } catch {
+        // status check failing must never block enrolling
+      } finally {
+        setEnrolling(false);
+      }
+    }
+
+    await doEnroll();
+  };
+
+  const applyForScholarship = async () => {
+    try {
+      await api.onboarding.setIntendedCourse(id as string);
+    } catch {
+      // non-critical
+    }
+    router.push(`/scholarships/${id}`);
   };
 
   /** Lowest price across every track the course offers (previous behaviour). */
@@ -789,6 +833,32 @@ export default function CoursePage() {
             </div>
           </div>
         </div>
+
+        {scholarshipChoice && (
+          <div
+            className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setScholarshipChoice(false)}
+          >
+            <div className="lx-card w-full max-w-md p-6 sm:p-8 bg-[var(--surface)]" onClick={(e) => e.stopPropagation()}>
+              <p className="lx-label mb-2">🎓 {scholarshipCopy.awardBadge.replace(/awarded/i, "available")}</p>
+              <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-3">{scholarshipCopy.welcomeTitle}</h3>
+              <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
+                {fillCopy(scholarshipCopy.welcomeText, { course: course.title })}
+              </p>
+              <button onClick={applyForScholarship} className="lx-btn w-full py-3.5">
+                {scholarshipCopy.applyButton}
+              </button>
+              <button onClick={doEnroll} disabled={enrolling} className="lx-btn-outline w-full py-3 mt-3 text-sm">
+                {enrolling ? "Preparing payment…" : scholarshipCopy.skipButton}
+              </button>
+              <button onClick={() => setScholarshipChoice(false)} className="w-full mt-3 text-sm text-[var(--text-muted)] hover:underline">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         <Footer />
       </div>

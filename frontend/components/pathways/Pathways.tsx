@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { FadeUpOnScroll } from "../animations/Animation";
 import { CmsText, CmsLink } from "@/components/cms/ui";
-import { CmsButton, buttonFields, type CmsButtonData } from "@/components/cms/CmsButton";
+import { type CmsButtonData } from "@/components/cms/CmsButton";
 import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
 import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
@@ -25,14 +25,14 @@ export interface PathwayCard {
 export interface PathwaysData {
   heading: string;
   intro: string;
-  button: CmsButtonData;
+  /** No longer shown (the Sign Up button moved to "Why Choose Learnexity"); kept so saved content still loads. */
+  button?: CmsButtonData;
   cards: PathwayCard[];
 }
 
 export const PATHWAYS_DEFAULTS: PathwaysData = {
   heading: "Our Pathways",
   intro: "Flexible delivery designed to suit your needs, plus access to remote opportunities,\ncommunity support, and job search assistance.",
-  button: { label: "Sign Up", href: "/user/auth/register", style: "primary" },
   cards: [
     {
       number: "[ 01 ]",
@@ -147,18 +147,14 @@ export default function Pathways({ data = PATHWAYS_DEFAULTS }: { data?: Pathways
       <div className="max-w-screen-xl mx-auto px-6">
         <FadeUpOnScroll>
           {/* Header */}
-          <div className="mb-10 flex flex-col gap-6 text-center md:text-left lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-4xl font-semibold text-[var(--text-primary)] mb-4 component-headers">
-                <CmsText text={data.heading} />
-              </h2>
-              <p className="w-full text-xl text-[var(--text-secondary)] text-center md:text-left">
-                <CmsText text={data.intro} />
-              </p>
-            </div>
-            <div className="flex justify-center md:justify-start lg:justify-end">
-              <CmsButton button={data.button} />
-            </div>
+          {/* Centered, like "Why Choose Learnexity". The Sign Up button moved there. */}
+          <div className="mb-10 max-w-3xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-semibold text-[var(--text-primary)] mb-4 component-headers">
+              <CmsText text={data.heading} />
+            </h2>
+            <p className="text-xl text-[var(--text-secondary)]">
+              <CmsText text={data.intro} />
+            </p>
           </div>
         </FadeUpOnScroll>
 
@@ -211,11 +207,10 @@ export const block: BlockDefinition<PathwaysData> = {
   type: "home.pathways",
   label: "Our pathways",
   category: "Homepage",
-  description: "Heading with a button, then numbered pathway cards in a row that scrolls left and right. Each card can link to a page.",
+  description: "Centered heading, then numbered pathway cards (swipe on mobile). Each card can link to a page.",
   fields: [
     f.textarea("heading", "Heading", { rows: 2, help: EMPHASIS_HELP }),
     f.textarea("intro", "Intro", { rows: 3, help: EMPHASIS_HELP }),
-    f.group("button", "Button", buttonFields),
     f.list(
       "cards",
       "Pathway cards",

@@ -1,5 +1,6 @@
-import SafeVideoFrame, { toVideoEmbedUrl } from './SafeVideoFrame';
-import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
+import { toVideoEmbedUrl } from './SafeVideoFrame';
+import VideoTheater, { buildVideoPlaylist } from './VideoTheater';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import {
   X, ChevronDown, Play, FileX, ExternalLink, Check,
   Clock, CheckCircle, Loader2,
@@ -98,49 +99,39 @@ const READING_TIME_MS = 30_000;
 const SCROLL_KEY = 'rp_modal_scroll';
 
 // ─── Video Block ──────────────────────────────────────────────────────────────
+// Videos open in the focused player (VideoTheater) — large, fitted to the
+// screen, with Previous / Next through every video in the course.
 
-const VideoBlock = memo(function VideoBlock({
-  url, title, isCompleted, onComplete,
+const TheaterContext = createContext<{ open: (key: string) => void } | null>(null);
+
+const VideoPoster = memo(function VideoPoster({
+  playKey, title, isCompleted, label,
 }: {
-  url: string;
+  playKey: string;
   title?: string;
   isCompleted?: boolean;
-  onComplete?: () => void;
+  label?: string;
 }) {
-  const embedUrl = toEmbedUrl(url);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  // FIX: use ref for completion guard so it never triggers re-render
-  const hasCompleted = useRef(isCompleted || false);
-  // FIX: stable callback ref so the message listener doesn't re-register on every parent render
-  const onCompleteRef = useRef(onComplete);
-  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
-
-  useEffect(() => {
-    if (!/youtube(-nocookie)?\.com\/embed/.test(embedUrl ?? '') || hasCompleted.current) return;
-    const handler = (e: MessageEvent) => {
-      try {
-        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-        if (data?.event === 'onStateChange' && data?.info === 0 && !hasCompleted.current) {
-          hasCompleted.current = true;
-          onCompleteRef.current?.();
-        }
-      } catch {}
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-    // FIX: only re-register when the embed URL actually changes, not on every render
-  }, [embedUrl]);
-
+  const theater = useContext(TheaterContext);
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-100 bg-black">
-      <SafeVideoFrame ref={iframeRef} url={url} title={title} />
-      {!isCompleted && (
-        <div className="px-3 py-2 bg-gray-950 flex items-center gap-2">
-          <Play size={12} className="text-violet-400 flex-shrink-0" />
-          <span className="text-xs text-gray-400">Watch to completion to auto-mark as done</span>
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={() => theater?.open(playKey)}
+      className="group relative w-full rounded-xl overflow-hidden bg-[#0b0b12] border border-gray-200 text-left"
+      style={{ aspectRatio: '16 / 9' }}
+      aria-label={`Play ${title || 'video'}`}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2e1065] via-[#140c3d] to-black opacity-90" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/95 text-[#4A3AFF] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+          <Play size={30} className="ml-1" fill="currentColor" />
+        </span>
+      </div>
+      <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <p className="text-white text-sm font-semibold truncate">{title || 'Video'}</p>
+        <p className="text-xs text-gray-300">{label || (isCompleted ? 'Watched · tap to watch again' : 'Tap to watch')}</p>
+      </div>
+    </button>
   );
 });
 
@@ -439,20 +430,24 @@ const TopicContent = memo(function TopicContent({
     );
   }
 
+  let videoIdx = -1;
   return (
     <div className="space-y-4">
       {blocks.map((block, i) => {
         if (block.type === 'text') return <TextBlock key={i} html={block.content} />;
         if (block.type === 'image') return <ImageBlock key={i} url={block.content} />;
-        if (block.type === 'video') return (
-          <VideoBlock
-            key={i}
-            url={block.content}
-            title={item.title}
-            isCompleted={item.is_completed}
-            onComplete={handleVideoComplete}
-          />
-        );
+        if (block.type === 'video') {
+          if (!String(block.content || '').trim()) return null;
+          videoIdx += 1;
+          return (
+            <VideoPoster
+              key={i}
+              playKey={`item-${item.id}-${videoIdx}`}
+              title={item.title}
+              isCompleted={item.is_completed}
+            />
+          );
+        }
         return null;
       })}
       <div ref={sentinelRef} className="h-1" aria-hidden />
@@ -645,6 +640,19 @@ export default function ResourcePreviewModal({
   url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos,
 }: ResourcePreviewModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Focused video player: every video in the course, in order.
+  const playlist = useMemo(() => buildVideoPlaylist(sprints as any, externalVideos), [sprints, externalVideos]);
+  const [theaterIndex, setTheaterIndex] = useState<number | null>(null);
+  const theaterCtx = useMemo(
+    () => ({
+      open: (key: string) => {
+        const i = playlist.findIndex((v) => v.key === key);
+        if (i >= 0) setTheaterIndex(i);
+      },
+    }),
+    [playlist]
+  );
   // FIX: track whether this is the first mount so we only restore scroll once
   const scrollRestored = useRef(false);
 
@@ -672,9 +680,12 @@ export default function ResourcePreviewModal({
   const stableOnAutoComplete = useCallback(async (itemId: number) => {
     await onMarkCompleteRef.current?.(itemId, false);
   }, []);
+  const theaterOpenRef = useRef(false);
+  theaterOpenRef.current = theaterIndex !== null;
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
+    // Esc closes the modal — unless the video player is open (it handles Esc itself).
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape' && !theaterOpenRef.current) onCloseRef.current(); };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []); // FIX: empty deps — uses ref, never re-registers
@@ -734,6 +745,16 @@ export default function ResourcePreviewModal({
 
   // ── Full sprints modal ───────────────────────────────────────────────────
   return (
+    <TheaterContext.Provider value={theaterCtx}>
+    {theaterIndex !== null && (
+      <VideoTheater
+        playlist={playlist}
+        index={theaterIndex}
+        onIndexChange={setTheaterIndex}
+        onClose={() => setTheaterIndex(null)}
+        onWatched={(itemId) => { stableOnAutoComplete(itemId); }}
+      />
+    )}
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
@@ -777,13 +798,12 @@ export default function ResourcePreviewModal({
               <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-4">External Resources</p>
               <div className="space-y-3">
                 {externalVideos.map(v => (
-                  <div key={v.id} className="rounded-xl overflow-hidden border border-gray-100">
-                    <SafeVideoFrame url={v.url} title={v.title} />
-                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-                      <p className="text-sm font-medium text-gray-800">{v.title}</p>
-                      {v.source && <p className="text-xs text-gray-400">{v.source}{v.duration ? ` · ${v.duration}` : ''}</p>}
-                    </div>
-                  </div>
+                  <VideoPoster
+                    key={v.id}
+                    playKey={`ext-${v.id}`}
+                    title={v.title}
+                    label={[v.source, v.duration].filter(Boolean).join(' · ') || 'Tap to watch'}
+                  />
                 ))}
               </div>
             </div>
@@ -793,5 +813,6 @@ export default function ResourcePreviewModal({
         </div>
       </div>
     </div>
+    </TheaterContext.Provider>
   );
 }

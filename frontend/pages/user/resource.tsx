@@ -8,8 +8,8 @@ import type { CourseEnrollment } from '@/lib/types';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
-import SafeVideoFrame from '@/components/resources/SafeVideoFrame';
-import { Play, X } from 'lucide-react';
+import VideoTheater, { buildVideoPlaylist } from '@/components/resources/VideoTheater';
+import { Play } from 'lucide-react';
 import { AccessBlockedBanner, PaymentWarningBanner } from '@/components/user/AccessBlockedBanner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export default function ResourcesPage() {
   // FIX: track modal open state AND which item (if any) was clicked to open it
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   // External video tutorials play here, never in a new tab.
-  const [playingVideo, setPlayingVideo] = useState<{ title: string; url: string; source?: string } | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<{ id: number } | null>(null);
   const [initialItemId, setInitialItemId] = useState<number | undefined>(undefined);
 
   const completingRef = useRef<Set<number>>(new Set());
@@ -684,7 +684,7 @@ export default function ResourcesPage() {
                           <button
                             key={r.id}
                             type="button"
-                            onClick={() => setPlayingVideo({ title: r.title, url: r.url, source: r.source })}
+                            onClick={() => setPlayingVideo({ id: r.id })}
                             className="w-full text-left block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
                           >
                             <div className="flex items-start justify-between">
@@ -808,22 +808,33 @@ onPreviewFile={async (itemId, title) => {
           />
         )}
       </div>
-      {playingVideo && (
-        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={() => setPlayingVideo(null)}>
-          <div className="w-full max-w-4xl bg-white dark:bg-[#0f0f14] rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-white/10">
-              <div className="min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{playingVideo.title}</p>
-                {playingVideo.source && <p className="text-xs text-gray-500">{playingVideo.source}</p>}
-              </div>
-              <button onClick={() => setPlayingVideo(null)} className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white" aria-label="Close video">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <SafeVideoFrame url={playingVideo.url} title={playingVideo.title} />
-          </div>
-        </div>
-      )}
+      {playingVideo && data && (() => {
+        // Same focused player as the materials modal: Previous / Next through
+        // every video in the course (sprint videos, then video tutorials).
+        const playlist = buildVideoPlaylist(data.materials as any, data.external_resources?.video_tutorials);
+        const start = playlist.findIndex((v) => v.key === `ext-${playingVideo.id}`);
+        return start >= 0 ? (
+          <VideoTheaterHost
+            playlist={playlist}
+            start={start}
+            onClose={() => setPlayingVideo(null)}
+            onWatched={(itemId) => { handleAutoComplete(itemId); }}
+          />
+        ) : null;
+      })()}
     </UserDashboardLayout>
   );
+}
+
+/** Keeps the player's current position while it's open. */
+function VideoTheaterHost({
+  playlist, start, onClose, onWatched,
+}: {
+  playlist: ReturnType<typeof buildVideoPlaylist>;
+  start: number;
+  onClose: () => void;
+  onWatched: (itemId: number) => void;
+}) {
+  const [index, setIndex] = useState(start);
+  return <VideoTheater playlist={playlist} index={index} onIndexChange={setIndex} onClose={onClose} onWatched={onWatched} />;
 }

@@ -36,6 +36,9 @@ function useReveal(amount: number, once: boolean) {
     const r = el.getBoundingClientRect();
     const onScreen = r.top < window.innerHeight && r.bottom > 0;
     if (onScreen && once) return;
+    // Tall blocks (whole sections, the footer) never hide — a big blank
+    // area while scrolling looks like the page broke.
+    if (r.height > window.innerHeight * 0.8) return;
     if (!onScreen) setPhase("hidden");
 
     // A section taller than the screen could never reach e.g. 30% visible,
@@ -90,7 +93,11 @@ export const FadeInCard = ({ children }: { children: ReactNode }) => {
 };
 
 export const FadeUpOnScroll = ({ children }: { children: ReactNode }) => {
-  const { ref, phase } = useReveal(0.3, false);
+  // Reveal once and stay visible. It used to fade OUT again whenever less
+  // than 30% of a section was on screen — so while scrolling, whole
+  // homepage sections (courses, pathways, testimonials…) vanished and
+  // re-appeared, which looked like the page was reloading.
+  const { ref, phase } = useReveal(0.15, true);
   return (
     <div ref={ref} style={styleFor(phase, 0.5, 0)} className="fade-up-item">
       {children}

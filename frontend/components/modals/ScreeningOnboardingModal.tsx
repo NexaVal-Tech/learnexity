@@ -47,7 +47,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
   const targetCourseId = status.intended_course?.course_id || status.scholarship?.course_id;
   const targetIsDeepTech = !!status.intended_course?.is_deep_tech;
 
-  const enrollAndPay = async (learningTrack: 'self_paced' | 'group_mentorship') => {
+  const enrollAndPay = async (learningTrack: 'self_paced' | 'group_mentorship' | 'one_on_one' | 'intermediate') => {
     if (!targetCourseId) return;
     setEnrollError(null);
     setPayingNow(true);
@@ -89,14 +89,19 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
     // the payment page, not here, so every enrollment path funnels through
     // one consistent screening point.
     if (isApproved && targetCourseId) {
-      await enrollAndPay(targetIsDeepTech ? 'group_mentorship' : 'self_paced');
+      const track = (status.intended_course as any)?.default_track as 'self_paced' | 'group_mentorship' | 'one_on_one' | 'intermediate' | undefined;
+      await enrollAndPay(track ?? (targetIsDeepTech ? 'group_mentorship' : 'self_paced'));
       return;
     }
 
+    // "Skip — pay full price": enroll in the chosen course and go straight
+    // to its payment page (it used to bounce back to the course page, which
+    // then asked about the scholarship again).
     if (targetCourseId) {
-      router.push(`/courses/${targetCourseId}`);
+      const track = (status.intended_course as any)?.default_track as 'self_paced' | 'group_mentorship' | 'one_on_one' | 'intermediate' | undefined;
+      await enrollAndPay(track ?? (targetIsDeepTech ? 'group_mentorship' : 'self_paced'));
     } else {
-      router.push('/courses/courses');
+      router.push('/courses');
     }
   };
 

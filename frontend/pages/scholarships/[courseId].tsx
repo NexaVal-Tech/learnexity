@@ -585,10 +585,11 @@ export default function ScholarshipPage() {
                       // registration-fee price, since the scholarship is
                       // already approved) instead of dead-ending on the
                       // course page. Mirrors ScreeningOnboardingModal's fix.
-                      const enrollRes = await api.enrollment.enroll(courseId as string, 'self_paced', 'onetime');
-                      router.push(`/user/payment/${enrollRes.enrollment_id}`);
+                      // The payment-start page enrolls on the course's own
+                      // track (right registration-fee category) and opens checkout.
+                      router.push(`/user/payment/start?course=${encodeURIComponent(courseId as string)}`);
                     } catch {
-                      router.push(`/courses/${courseId}`);
+                      router.push(`/user/payment/start?course=${encodeURIComponent(courseId as string)}`);
                     }
                   } else {
                     router.push(`/courses/${courseId}`);

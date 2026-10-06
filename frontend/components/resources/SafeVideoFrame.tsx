@@ -41,40 +41,61 @@ type Props = {
   url: string;
   title?: string;
   className?: string;
+  /**
+   * "ratio" (default): a 16:9 box that sizes itself from its width.
+   * "fill": fills a parent that already has a size (the focused player).
+   */
+  layout?: "ratio" | "fill";
+  autoPlay?: boolean;
+  /** Direct video files only: fired when playback ends. */
+  onEnded?: () => void;
 };
 
-/** 16:9 player. Use the ref to reach the iframe (e.g. YouTube completion tracking). */
-const SafeVideoFrame = forwardRef<HTMLIFrameElement, Props>(function SafeVideoFrame({ url, title, className = "" }, ref) {
+/** Video player. Use the ref to reach the iframe (e.g. YouTube completion tracking). */
+const SafeVideoFrame = forwardRef<HTMLIFrameElement, Props>(function SafeVideoFrame(
+  { url, title, className = "", layout = "ratio", autoPlay = false, onEnded },
+  ref
+) {
+  const boxStyle: React.CSSProperties | undefined = layout === "ratio" ? { paddingBottom: "56.25%" } : undefined;
+  const boxClass = layout === "ratio" ? "relative" : "relative w-full h-full";
+
   if (isDirectVideoFile(url)) {
     return (
-      <div className={`relative bg-black ${className}`} style={{ paddingBottom: "56.25%" }}>
+      <div className={`${boxClass} bg-black ${className}`} style={boxStyle}>
         <video
+          key={url}
           src={url}
           controls
           controlsList="nodownload"
           playsInline
+          autoPlay={autoPlay}
           preload="metadata"
-          className="absolute inset-0 w-full h-full"
+          // object-contain: the whole picture is always visible (landscape or phone-recorded)
+          className="absolute inset-0 w-full h-full object-contain"
           onContextMenu={(e) => e.preventDefault()}
+          onEnded={onEnded}
         />
       </div>
     );
   }
 
-  const embed = toVideoEmbedUrl(url);
-  if (!embed) {
+  const baseEmbed = toVideoEmbedUrl(url);
+  if (!baseEmbed) {
     return (
-      <div className={`relative bg-gray-900 text-gray-300 text-sm flex items-center justify-center ${className}`} style={{ aspectRatio: "16 / 9" }}>
+      <div className={`relative bg-gray-900 text-gray-300 text-sm flex items-center justify-center p-6 text-center ${className}`} style={layout === "ratio" ? { aspectRatio: "16 / 9" } : { width: "100%", height: "100%" }}>
         This video link can&apos;t be played here. Please ask your instructor to share it as a Google Drive file, YouTube, Vimeo or Loom link.
       </div>
     );
   }
 
   const drive = isDriveUrl(url);
+  // Start playing straight away in the focused player (YouTube / Vimeo / Loom honour this).
+  const embed = autoPlay && !drive ? `${baseEmbed}${baseEmbed.includes("?") ? "&" : "?"}autoplay=1` : baseEmbed;
 
   return (
-    <div className={`relative bg-black ${className}`} style={{ paddingBottom: "56.25%" }} onContextMenu={(e) => e.preventDefault()}>
+    <div className={`${boxClass} bg-black ${className}`} style={boxStyle} onContextMenu={(e) => e.preventDefault()}>
       <iframe
+        key={embed}
         ref={ref}
         src={embed}
         title={title || "Video"}

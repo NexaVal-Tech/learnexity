@@ -2,6 +2,7 @@
 
 import { ScrollFadeIn } from "@/components/animations/Animation";
 import { CmsIcon, CmsText } from "@/components/cms/ui";
+import { CmsButton, buttonFields, type CmsButtonData } from "@/components/cms/CmsButton";
 import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
 import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
@@ -10,12 +11,15 @@ const BRAND = "#4A3AFF";
 export interface MethodData {
   heading: string;
   intro: string;
+  /** Button under the intro (moved here from "Our Pathways"). Empty label = hidden. */
+  button?: CmsButtonData;
   cards: { title: string; description: string; icon: string }[];
 }
 
 export const METHOD_DEFAULTS: MethodData = {
   heading: "Why Choose Learnexity",
   intro: "We help you move from learning, ** to earning, ** to real opportunity, without quitting your job.",
+  button: { label: "Sign Up", href: "/user/auth/register", style: "primary" },
   cards: [
     { title: "Turn Your Skills Into Income", description: "We do not just teach tech skills; we help you start earning with them.", icon: "" },
     { title: "Get Job Placement", description: "Get matched with our local and international partners for your dream job.", icon: "" },
@@ -63,6 +67,11 @@ export default function Method({ data = METHOD_DEFAULTS }: { data?: MethodData }
             <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto">
               <CmsText text={data.intro} />
             </p>
+            {data.button?.label && data.button?.href && (
+              <div className="mt-6 flex justify-center">
+                <CmsButton button={data.button} />
+              </div>
+            )}
           </div>
         </ScrollFadeIn>
 
@@ -106,6 +115,7 @@ export const block: BlockDefinition<MethodData> = {
   fields: [
     f.textarea("heading", "Heading", { rows: 2, help: EMPHASIS_HELP }),
     f.textarea("intro", "Intro", { rows: 3, help: EMPHASIS_HELP }),
+    f.group("button", "Button (leave the text empty to hide it)", buttonFields),
     f.list(
       "cards",
       "Cards",
