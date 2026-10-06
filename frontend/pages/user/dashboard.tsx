@@ -111,12 +111,17 @@ export default function UserDashboardPage() {
     });
   };
 
-  // ── Helper: is a catalogue course already enrolled & paid? ─────────────
+  // ── Can the student open this course right now? ──────────────────────
+  // Paid in full, OR access granted (an admin's manual grant, or an
+  // installment plan that's up to date). Admin-granted courses used to
+  // keep showing "Complete Payment" because only payment_status was checked.
+  const canLearn = (e: { payment_status?: string; has_access?: boolean | null }) =>
+    e.payment_status === "completed" || e.has_access === true;
+
+  // ── Helper: is a catalogue course already enrolled with access? ─────────
   const getEnrollmentForCourse = (courseId: number | string) => {
     return enrollments.find(
-      (e) =>
-        String(e.course_id) === String(courseId) &&
-        e.payment_status === "completed"
+      (e) => String(e.course_id) === String(courseId) && canLearn(e)
     ) ?? null;
   };
 
@@ -124,9 +129,7 @@ export default function UserDashboardPage() {
 
   // ── Payment summary for hero section ───────────────────────────────────
   // ── Payment summary for hero section ───────────────────────────────────
-  const pendingEnrollments = enrollments.filter(
-    (e) => e.payment_status !== "completed"
-  );
+  const pendingEnrollments = enrollments.filter((e) => !canLearn(e));
 
   const installmentEnrollments = enrollments.filter(
     (e) =>
@@ -507,7 +510,7 @@ export default function UserDashboardPage() {
                             })`,
                           }}
                         >
-                          {enrollment.payment_status === "completed" ? (
+                          {canLearn(enrollment) ? (
                             <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -533,7 +536,7 @@ export default function UserDashboardPage() {
                           </p>
 
                           <div className="mb-4">
-                            {enrollment.payment_status === "completed" ? (
+                            {canLearn(enrollment) ? (
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500 dark:text-gray-400">
                                   Enrolled:{" "}
@@ -542,7 +545,11 @@ export default function UserDashboardPage() {
                                   ).toLocaleDateString()}
                                 </span>
                                 <span className="text-green-600 dark:text-green-400 font-semibold">
-                                  ✓ Paid
+                                  {enrollment.payment_status === "completed"
+                                    ? "✓ Paid"
+                                    : (enrollment as any).access_manually_granted
+                                    ? "✓ Access granted"
+                                    : "✓ Access active"}
                                 </span>
                               </div>
                             ) : (
@@ -566,7 +573,7 @@ export default function UserDashboardPage() {
                             )}
                           </div>
 
-                          {enrollment.payment_status === "completed" ? (
+                          {canLearn(enrollment) ? (
                             <button
                               onClick={() =>
                                 router.push({
@@ -576,7 +583,7 @@ export default function UserDashboardPage() {
                               }
                               className="w-full bg-white dark:bg-white/5 border-2 border-blue-600 dark:border-blue-400 p-2 hover:bg-indigo-200 dark:hover:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 py-2 px-4 rounded-3xl font-medium transition-colors"
                             >
-                              Continue Learning
+                              {(enrollment as any).has_started ? "Continue Learning" : "Start Learning"}
                             </button>
                           ) : (
                             <button

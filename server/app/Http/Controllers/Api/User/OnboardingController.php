@@ -66,6 +66,8 @@ class OnboardingController extends Controller
                 $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)
                     ->where('course_id', $course->course_id)
                     ->where('payment_status', '!=', 'completed')
+                    // Admin-granted access counts as "in" — not pending payment.
+                    ->where(fn ($q) => $q->whereNull('access_manually_granted')->orWhere('access_manually_granted', false))
                     ->latest()
                     ->first();
 

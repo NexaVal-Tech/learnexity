@@ -87,23 +87,35 @@ export default function ScholarshipCountdownBanner({ onHeightChange }: Scholarsh
 
   // Report height (0 when nothing to show) so AppLayout can offset the
   // navbar/content to sit below this banner instead of behind it.
+  //
+  // Only re-run when the banner appears/disappears — NOT on every one-second
+  // tick. It used to re-measure every second and alternate between the
+  // border-box height (53px) and the content-box height (52px), nudging the
+  // page's top padding up and down each second. The browser's scroll
+  // anchoring "corrected" for every nudge, so after you scrolled the page
+  // crept downward on its own until it reached the footer.
+  const visible = !!timeLeft;
   useEffect(() => {
     if (!onHeightChange) return;
-    if (!timeLeft) {
+    if (!visible) {
       onHeightChange(0);
       return;
     }
     const el = bannerRef.current;
     if (!el) return;
-    onHeightChange(el.getBoundingClientRect().height);
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) onHeightChange(entry.contentRect.height);
-    });
+    let last = -1;
+    const report = () => {
+      const h = Math.round(el.getBoundingClientRect().height); // always border-box
+      if (h !== last) {
+        last = h;
+        onHeightChange(h);
+      }
+    };
+    report();
+    const observer = new ResizeObserver(report);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [timeLeft, onHeightChange]);
+  }, [visible, onHeightChange]);
 
   if (!timeLeft) return null;
 

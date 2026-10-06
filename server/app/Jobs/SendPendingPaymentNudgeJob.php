@@ -37,6 +37,8 @@ class SendPendingPaymentNudgeJob implements ShouldQueue
         Log::info('💳 [PendingNudge] Starting pending payment nudge dispatch');
 
         $enrollments = CourseEnrollment::where('payment_status', 'pending')
+            // An admin already granted access → no "complete your payment" nags.
+            ->where(fn ($q) => $q->whereNull('access_manually_granted')->orWhere('access_manually_granted', false))
             ->where('enrollment_date', '<=', now()->subDay())       // at least 1 day old
             ->where('enrollment_date', '>=', now()->subDays(14))    // stop after 14 days
             ->get();

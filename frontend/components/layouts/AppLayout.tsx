@@ -53,7 +53,12 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children, topBanner }: AppLayoutProps) {
   const [bannerHeight, setBannerHeight] = useState(0);
-  const handleBannerHeightChange = useCallback((height: number) => setBannerHeight(height), []);
+  // Ignore sub-pixel / 1px jitter: every change re-pads the page, and the
+  // browser's scroll anchoring then shifts the scroll position.
+  const handleBannerHeightChange = useCallback(
+    (height: number) => setBannerHeight((prev) => (Math.abs(prev - height) <= 1 && height !== 0 ? prev : Math.round(height))),
+    []
+  );
   const showParticles = useAfterLoadIdle();
 
   return (

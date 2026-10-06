@@ -462,8 +462,22 @@ class CourseEnrollmentController extends Controller
 
         Log::info('Enrollments retrieved', ['count' => $enrollments->count()]);
 
+        // has_started: lets the dashboard say "Start Learning" vs "Continue Learning".
+        $startedCourses = \App\Models\SprintProgress::where('user_id', $user->id)
+            ->where('completed_items', '>', 0)
+            ->pluck('course_id')
+            ->map(fn ($c) => (string) $c)
+            ->unique()
+            ->all();
+
+        $list = $enrollments->fresh()->map(function ($e) use ($startedCourses) {
+            $row = $e->toArray();
+            $row['has_started'] = in_array((string) $e->course_id, $startedCourses, true);
+            return $row;
+        })->values();
+
         return response()->json([
-            'enrollments' => $enrollments->fresh(),
+            'enrollments' => $list,
         ]);
     }
 

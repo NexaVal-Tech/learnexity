@@ -120,6 +120,18 @@ class EmailTemplateRegistry
                 ],
             ],
 
+            'course_access_granted' => [
+                'label' => 'Course access granted', 'group' => $student,
+                'description' => 'Sent when an admin grants a student access to a course.',
+                'placeholders' => ['name' => ['Student name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'course' => ['Course', 'AI Automation']],
+                'defaults' => [
+                    'subject' => '🎉 You now have access to {course}',
+                    'heading' => 'Your course is unlocked!',
+                    'body' => "Hi {first_name},\n\nGood news — you now have full access to **{course}**. All the course materials are ready for you, so you can start learning right away.",
+                    'button' => 'Start Learning',
+                ],
+            ],
+
             // ── Payments ────────────────────────────────────────────────
             'payment_confirmation' => [
                 'label' => 'Payment confirmation', 'group' => $payments,

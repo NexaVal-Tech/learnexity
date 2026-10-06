@@ -610,8 +610,22 @@ class AdminStudentController extends Controller
         try {
             $enrollment = CourseEnrollment::findOrFail($enrollmentId);
             $admin = $request->user('admin');
+            $hadAccess = (bool) $enrollment->has_access;
 
             $enrollment->adminGrantAccess($admin?->id);
+
+            // Let the student know (only when this actually unlocked the course).
+            if (!$hadAccess) {
+                try {
+                    $student = \App\Models\User::find($enrollment->user_id);
+                    if ($student?->email) {
+                        \Illuminate\Support\Facades\Mail::to($student->email)
+                            ->queue(new \App\Mail\CourseAccessGrantedMail($student, $enrollment->fresh()));
+                    }
+                } catch (\Throwable $mailError) {
+                    Log::error('❌ [grantAccess] Failed to queue access email', ['error' => $mailError->getMessage()]);
+                }
+            }
 
             ActivityLogger::log(
                 'course_access_granted',
