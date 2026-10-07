@@ -67,11 +67,6 @@ export default function Method({ data = METHOD_DEFAULTS }: { data?: MethodData }
             <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto">
               <CmsText text={data.intro} />
             </p>
-            {data.button?.label && data.button?.href && (
-              <div className="mt-6 flex justify-center">
-                <CmsButton button={data.button} />
-              </div>
-            )}
           </div>
         </ScrollFadeIn>
 
@@ -102,6 +97,12 @@ export default function Method({ data = METHOD_DEFAULTS }: { data?: MethodData }
             </ScrollFadeIn>
           ))}
         </div>
+
+        {data.button?.label && data.button?.href && (
+          <div className="mt-10 flex justify-center">
+            <CmsButton button={data.button} />
+          </div>
+        )}
       </div>
     </section>
   );

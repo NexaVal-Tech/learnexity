@@ -102,6 +102,7 @@ class CourseResourcesController extends Controller
                                 'download_url' => null,
                                 'text_content' => null,
                                 'is_completed' => false,
+                                'task' => $item->isTask() ? ['locked' => true] : null,
                             ];
                         }
 
@@ -130,6 +131,8 @@ class CourseResourcesController extends Controller
                             'download_url' => $downloadUrl,
                             'text_content' => $item->text_content ?? null,
                             'is_completed' => $itemProgress ? $itemProgress->is_completed : false,
+                            // Sprint task (requirements + this student's attempts), null for normal items.
+                            'task' => $item->isTask() ? app(\App\Services\TaskSubmissionService::class)->studentView($item, $userId) : null,
                         ];
                     }),
                 ];
@@ -359,6 +362,12 @@ public function previewMaterial(Request $request, int $itemId): mixed
             return response()->json(['message' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
         }
 
+        // Tasks are completed by submitting (and passing, when a pass mark
+        // is set) — never by just opening them.
+        if ($materialItem->isTask()) {
+            return response()->json(['message' => 'Submit your response to complete this task.', 'is_task' => true], 409);
+        }
+
         // Mark item as completed
         MaterialItemProgress::updateOrCreate(
             ['user_id' => $userId, 'material_item_id' => $itemId],
@@ -461,6 +470,10 @@ public function previewMaterial(Request $request, int $itemId): mixed
 
         if ($this->freemiumLockForItem($itemId, $userId)) {
             return response()->json(['message' => 'This sprint is locked. Enroll and pay to unlock it.'], 403);
+        }
+
+        if ($materialItem->isTask()) {
+            return response()->json(['message' => 'Task progress follows your submission.', 'is_task' => true], 409);
         }
 
         // Mark item as incomplete
@@ -571,6 +584,44 @@ public function previewMaterial(Request $request, int $itemId): mixed
             'type'  => $materialItem->type,
             'title' => $materialItem->title,
         ]);
+    }
+
+    /**
+     * Set a task item's completion from its latest submission (called by the
+     * task submission + grading endpoints). Runs the same progress, badge and
+     * sprint-completed-email logic as the normal "complete" endpoint.
+     */
+    public function syncTaskCompletion(int $userId, MaterialItem $item, bool $completed): void
+    {
+        $current = MaterialItemProgress::where('user_id', $userId)->where('material_item_id', $item->id)->first();
+        if ($current && (bool) $current->is_completed === $completed) {
+            return;
+        }
+
+        MaterialItemProgress::updateOrCreate(
+            ['user_id' => $userId, 'material_item_id' => $item->id],
+            ['is_completed' => $completed, 'completed_at' => $completed ? now() : null]
+        );
+
+        $this->updateSprintProgress($userId, $item->course_material_id);
+        $courseMaterial = CourseMaterial::with('items')->find($item->course_material_id);
+        if (!$courseMaterial) return;
+
+        $this->updateCourseStatistics($userId, $courseMaterial->course_id);
+
+        if ($completed) {
+            $this->checkAndUnlockBadges($userId, $courseMaterial->course_id);
+            $sprintProgress = SprintProgress::where('user_id', $userId)
+                ->where('course_material_id', $item->course_material_id)
+                ->first();
+            if ($sprintProgress && $sprintProgress->progress_percentage >= 100) {
+                try {
+                    $this->firSprintCompletedEmail($userId, $courseMaterial->course_id, $courseMaterial);
+                } catch (\Throwable $e) {
+                    Log::warning('Sprint completed email failed after task', ['error' => $e->getMessage()]);
+                }
+            }
+        }
     }
 
     /**

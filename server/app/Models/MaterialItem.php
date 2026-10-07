@@ -18,9 +18,25 @@ class MaterialItem extends Model
         'file_size',
         'text_content',
         'order',
+        'task_config',
+    ];
+
+    protected $casts = [
+        'task_config' => 'array',
     ];
 
     protected $appends = ['download_url'];
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(MaterialItemSubmission::class);
+    }
+
+    /** True when an admin/instructor has turned this item into a task. */
+    public function isTask(): bool
+    {
+        return is_array($this->task_config) && !empty($this->task_config['enabled']);
+    }
 
     public function courseMaterial(): BelongsTo
     {

@@ -8,8 +8,10 @@ import {
   ArrowLeft, Plus, Edit, Trash, GripVertical, X, Upload,
   Loader2, AlertCircle, Bold, Italic, List, Heading2,
   Heading3, Image as ImageIcon, Video, Type, AlignLeft,
-  MoveUp, MoveDown, ListOrdered, FileText, File,
+  MoveUp, MoveDown, ListOrdered, FileText, File, ClipboardCheck,
 } from 'lucide-react';
+import TaskSettingsModal from '@/components/tasks/TaskSettingsModal';
+import TaskSubmissionsReview from '@/components/tasks/TaskSubmissionsReview';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell,
@@ -388,6 +390,7 @@ const CourseDetail = () => {
   const { id } = router.query;
   const [activeTab, setActiveTab] = useState('Sprints');
   const [reordering, setReordering] = useState(false);
+  const [taskTopic, setTaskTopic] = useState<any>(null);
   const [courseData, setCourseData] = useState<AdminCourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -682,7 +685,7 @@ const CourseDetail = () => {
 
           {/* Tabs */}
           <div className="flex items-center gap-8 border-b border-gray-200 dark:border-white/10 mb-8 overflow-x-auto">
-            {['Sprints', 'Course Materials', 'External Resources', 'Course Details'].map(tab => (
+            {['Sprints', 'Task Submissions', 'Course Materials', 'External Resources', 'Course Details'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -758,6 +761,11 @@ const CourseDetail = () => {
                             <div className="p-1.5 bg-gray-50 dark:bg-white/5 rounded text-gray-400 dark:text-gray-500"><GripVertical size={14} /></div>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-white/20" />
                             <span className="text-sm text-gray-700 dark:text-gray-300">{topic.title}</span>
+                            {topic.task_config?.enabled && (
+                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-[#4A3AFF]/10 text-[#4A3AFF] dark:text-[#a59dff]">
+                                <ClipboardCheck size={11} /> Task
+                              </span>
+                            )}
                             <span className={`text-xs px-2 py-0.5 rounded ${
                               topic.type === 'pdf' ? 'bg-red-50 dark:bg-red-500/15 text-red-500 dark:text-red-400' :
                               topic.type === 'document' ? 'bg-orange-50 dark:bg-orange-500/15 text-orange-500 dark:text-orange-400' :
@@ -766,7 +774,12 @@ const CourseDetail = () => {
                               {getTopicTypeLabel(topic.type)}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => setTaskTopic(topic)}
+                              title="Task requirements (students submit a response)"
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-[#4A3AFF] hover:bg-[#4A3AFF]/5 rounded"
+                            ><ClipboardCheck size={14} /> Task</button>
                             <button
                               onClick={() => {
                                 setSelectedTopic(topic);
@@ -804,6 +817,15 @@ const CourseDetail = () => {
                 ))
               )}
             </div>
+          )}
+
+          {/* ─── TASK SUBMISSIONS TAB ──────────────────────────────────────────── */}
+          {activeTab === 'Task Submissions' && (
+            <TaskSubmissionsReview
+              load={(p) => api.adminResources.listTaskSubmissions(id as string, p)}
+              grade={(sid, p) => api.adminResources.gradeTaskSubmission(sid, p)}
+              download={(sid) => api.adminResources.downloadTaskFile(sid)}
+            />
           )}
 
           {/* ─── COURSE MATERIALS TAB ──────────────────────────────────────────── */}
@@ -1220,6 +1242,17 @@ const CourseDetail = () => {
               </div>
             </div>
           )}
+
+          <TaskSettingsModal
+            open={!!taskTopic}
+            itemTitle={taskTopic?.title ?? ''}
+            initial={taskTopic?.task_config ?? null}
+            onClose={() => setTaskTopic(null)}
+            onSave={async (cfg) => {
+              await api.adminResources.saveTaskConfig(id as string, taskTopic.id, cfg);
+              await fetchCourseDetails();
+            }}
+          />
 
           <ComposeMessageModal
             isOpen={isMessageModalOpen}

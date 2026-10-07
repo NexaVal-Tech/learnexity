@@ -11,6 +11,8 @@ import ResourcePreviewModal from '@/components/resources/ResourcePreviewModal';
 import VideoTheater, { buildVideoPlaylist } from '@/components/resources/VideoTheater';
 import { Play } from 'lucide-react';
 import { AccessBlockedBanner, PaymentWarningBanner } from '@/components/user/AccessBlockedBanner';
+import { TaskStatusPill } from '@/components/tasks/TaskSubmissionPanel';
+import type { StudentTask } from '@/components/tasks/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,7 @@ interface CourseResourceItem {
   is_completed?: boolean;
   text_content?: string | null;
   locked?: boolean;
+  task?: StudentTask | null;
 }
 
 interface Sprint {
@@ -293,6 +296,22 @@ export default function ResourcesPage() {
     }
   }, [courseId, currentEnrollment, silentRefresh]);
 
+  // A task was submitted inside the materials modal — reflect it straight
+  // away, then pull fresh progress (completion depends on the result).
+  const handleTaskUpdated = useCallback((itemId: number, task: StudentTask) => {
+    setData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        materials: prev.materials.map(sprint => ({
+          ...sprint,
+          items: sprint.items.map(item => (item.id === itemId ? { ...item, task } : item)),
+        })),
+      };
+    });
+    setTimeout(silentRefresh, 800);
+  }, [silentRefresh]);
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   const toggleSprint = (sprintId: number) => {
@@ -547,7 +566,8 @@ export default function ResourcesPage() {
                             const isPdf = item.type === 'pdf' && !!item.download_url;
                             const isDoc = item.type === 'document' && !!item.download_url;
                             const hasText = !!item.text_content;
-                            const isClickable = !item.locked && (isPdf || isDoc || hasText);
+                            const isTask = !!item.task && !item.task.locked;
+                            const isClickable = !item.locked && (isPdf || isDoc || hasText || isTask);
 
                             return (
                               <div
@@ -579,6 +599,8 @@ export default function ResourcesPage() {
                                     <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/15 px-2 py-1 rounded-full">
                                       <Lock size={11} /> Pay to unlock
                                     </span>
+                                  ) : isTask ? (
+                                    <TaskStatusPill task={item.task} />
                                   ) : item.is_completed ? (
                                     <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-500/15 px-2 py-1 rounded-full">
                                       <CheckCircle size={11} /> Completed
@@ -793,6 +815,7 @@ export default function ResourcesPage() {
             initialItemId={initialItemId}
             externalVideos={data?.external_resources?.video_tutorials}
             onMarkComplete={handleAutoComplete}
+            onTaskUpdated={handleTaskUpdated}
             onDownload={handleDownload}
 onPreviewFile={async (itemId, title) => {
   // Both docs and PDFs now resolve to a real, publicly-fetchable URL rather

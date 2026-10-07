@@ -1,6 +1,7 @@
 // lib/instructorApi.ts
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
+import type { TaskConfig, TaskListParams, TaskSubmissionList, GradePayload, GraderSubmission } from '@/components/tasks/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -206,6 +207,26 @@ export const instructorApi = {
         `/api/instructor/courses/${courseId}/topics/${itemId}/upload`,
         formData
       );
+      return res.data;
+    },
+  },
+
+  // ── Sprint tasks (own courses only) ──
+  tasks: {
+    saveConfig: async (courseId: string, itemId: number, task_config: TaskConfig) => {
+      const res = await instructorApiClient.put(`/api/instructor/courses/${courseId}/topics/${itemId}/task`, { task_config });
+      return res.data as { message: string; task_config: TaskConfig };
+    },
+    list: async (courseId: string, params: TaskListParams = {}): Promise<TaskSubmissionList> => {
+      const res = await instructorApiClient.get(`/api/instructor/courses/${courseId}/task-submissions`, { params });
+      return res.data;
+    },
+    grade: async (submissionId: number, payload: GradePayload) => {
+      const res = await instructorApiClient.post(`/api/instructor/task-submissions/${submissionId}/grade`, payload);
+      return res.data as { message: string; submission: GraderSubmission };
+    },
+    downloadFile: async (submissionId: number): Promise<Blob> => {
+      const res = await instructorApiClient.get(`/api/instructor/task-submissions/${submissionId}/file`, { responseType: 'blob', timeout: 120000 });
       return res.data;
     },
   },

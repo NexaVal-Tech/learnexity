@@ -76,7 +76,7 @@ export const TESTIMONIALS_DEFAULTS: TestimonialsData = {
 const CARD_W = "w-[82vw] max-w-[20rem] sm:w-[22rem] sm:max-w-none lg:w-[26rem]";
 // One height for every card, sized so the heading, cards and buttons fit on
 // one screen.
-const CARD_H = "clamp(21rem, 54vh, 25rem)";
+const CARD_H = "clamp(22rem, 56vh, 26rem)";
 
 /** "in LinkedIn" style labels on the photo. */
 function SocialLinks({ socials }: { socials: Social[] }) {
@@ -145,7 +145,7 @@ function StoryCard({ t }: { t: Testimonial }) {
   if (t.type === "image") {
     return (
       <div className={`snap-start flex-shrink-0 ${CARD_W}`}>
-        <div className="relative overflow-hidden bg-black border border-[var(--border-subtle)]" style={{ borderRadius: RADIUS, height: CARD_H }}>
+        <div className="relative w-full overflow-hidden bg-gradient-to-b from-gray-400 via-gray-500 to-gray-600 border border-[var(--border-subtle)]" style={{ borderRadius: RADIUS, height: CARD_H }}>
           {t.thumbnail && <CmsImage src={t.thumbnail} alt={t.name} fill className="object-contain" sizes="(min-width:1024px) 26rem, 82vw" />}
           {(socials.length > 0 || t.storyUrl) && (
             <div className="absolute top-0 inset-x-0 p-4 flex items-start justify-between gap-3 bg-gradient-to-b from-black/50 to-transparent">
@@ -170,19 +170,81 @@ function StoryCard({ t }: { t: Testimonial }) {
   return (
     <div className={`snap-start flex-shrink-0 ${CARD_W}`}>
       <div
-        className="relative overflow-hidden h-full flex flex-col border border-[var(--border-subtle)] bg-gradient-to-b from-gray-500 to-gray-700"
+        className="relative overflow-hidden flex flex-col border border-[var(--border-subtle)] bg-gradient-to-b from-gray-400 via-gray-500 to-gray-600"
         style={{ borderRadius: RADIUS, height: CARD_H }}
       >
-        {/* Photo */}
-        {t.thumbnail && (
-          <CmsImage src={t.thumbnail} alt={t.name} fill className="object-cover object-top" sizes="(min-width:1024px) 26rem, 82vw" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45 pointer-events-none" />
+        {/* Top row: socials + read story */}
+        <div className="absolute inset-x-0 top-0 z-20 p-3.5 sm:p-4 flex items-start justify-between gap-3">
+          <SocialLinks socials={socials} />
+          {t.storyUrl && <ReadStory href={t.storyUrl} />}
+        </div>
+
+        {/* Photo — sits in the top part of the card, ABOVE the info card,
+            and is never cropped (object-contain), so faces are always fully
+            visible whatever image is uploaded. The ash background fills any
+            space around it. */}
+        <div className="relative flex-1 min-h-0">
+          {t.thumbnail && (
+            <CmsImage
+              src={t.thumbnail}
+              alt={t.name}
+              fill
+              className="object-contain object-bottom"
+              sizes="(min-width:1024px) 26rem, 82vw"
+            />
+          )}
+
+          {/* Play button */}
+          {isVideo && !playing && (
+            <button
+              type="button"
+              onClick={play}
+              aria-label={`Play ${t.name}'s video`}
+              className="absolute z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 group"
+            >
+              <span
+                className="w-14 h-14 rounded-full flex items-center justify-center border border-white/30 backdrop-blur-sm group-hover:scale-110 transition"
+                style={{ background: `${BRAND}cc` }}
+              >
+                <Play size={24} fill="white" className="text-white ml-1" />
+              </span>
+            </button>
+          )}
+
+          {/* Company logo + stat in the bottom corners of the photo area */}
+          {(t.companyLogo || t.statValue) && (
+            <div className="absolute inset-x-0 bottom-0 z-10 px-3.5 sm:px-4 pb-2 flex items-end justify-between gap-4 pointer-events-none">
+              {t.companyLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={t.companyLogo}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-6 sm:h-8 w-auto max-w-[30%] object-contain object-left drop-shadow"
+                />
+              ) : (
+                <span />
+              )}
+              {t.statValue && (
+                <div className="text-right text-white drop-shadow">
+                  <p className="text-2xl sm:text-3xl font-light leading-none tracking-tight">{t.statValue}</p>
+                  {t.statLabel && <p className="text-xs mt-1">{t.statLabel}</p>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Info card — white card at the bottom with space around it */}
+        <div className="relative z-10 flex-shrink-0 px-2.5 sm:px-3 pb-2.5 sm:pb-3">
+          <InfoCard t={t} />
+        </div>
 
         {/* Video (plays over the whole card) */}
         {isVideo && playing && (
-          <div className="absolute inset-0 z-30 bg-black">
-            <video ref={videoRef} src={t.video} className="w-full h-full object-cover" controls playsInline preload="none" onEnded={stop} />
+          <div className="absolute inset-0 z-30 bg-gray-700">
+            <video ref={videoRef} src={t.video} className="w-full h-full object-contain" controls playsInline preload="none" onEnded={stop} />
             <button
               type="button"
               onClick={stop}
@@ -193,53 +255,6 @@ function StoryCard({ t }: { t: Testimonial }) {
             </button>
           </div>
         )}
-
-        {/* Top row: socials + read story */}
-        <div className="relative z-10 p-3.5 sm:p-4 flex items-start justify-between gap-3">
-          <SocialLinks socials={socials} />
-          {t.storyUrl && <ReadStory href={t.storyUrl} />}
-        </div>
-
-        {/* Play button */}
-        {isVideo && !playing && (
-          <button type="button" onClick={play} aria-label={`Play ${t.name}'s video`} className="relative z-10 mx-auto my-auto group">
-            <span
-              className="w-14 h-14 rounded-full flex items-center justify-center border border-white/30 backdrop-blur-sm group-hover:scale-110 transition"
-              style={{ background: `${BRAND}cc` }}
-            >
-              <Play size={24} fill="white" className="text-white ml-1" />
-            </span>
-          </button>
-        )}
-
-        {/* Bottom of the photo: company logo + stat, then the info card */}
-        <div className="relative z-10 mt-auto">
-          {(t.companyLogo || t.statValue) && (
-            <div className="px-3.5 sm:px-4 pb-2 flex items-end justify-between gap-4">
-              {t.companyLogo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={t.companyLogo}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="h-6 sm:h-8 w-auto max-w-[45%] object-contain object-left drop-shadow"
-                />
-              ) : (
-                <span />
-              )}
-              {t.statValue && (
-                <div className="text-right text-white drop-shadow">
-                  <p className="text-3xl sm:text-4xl font-light leading-none tracking-tight">{t.statValue}</p>
-                  {t.statLabel && <p className="text-xs sm:text-sm mt-1">{t.statLabel}</p>}
-                </div>
-              )}
-            </div>
-          )}
-          <div className="px-2.5 sm:px-3 pb-2.5 sm:pb-3">
-            <InfoCard t={t} />
-          </div>
-        </div>
       </div>
     </div>
   );

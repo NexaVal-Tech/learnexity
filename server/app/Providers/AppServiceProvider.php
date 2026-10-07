@@ -75,6 +75,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(600)->by($request->ip());
         });
 
+        // Sprint task submissions — a handful per minute / per hour is plenty
+        // for a real student; anything more is abuse (upload flooding).
+        RateLimiter::for('task-submit', function (Request $request) {
+            $key = optional($request->user())->id ?: $request->ip();
+            $msg = fn () => response()->json([
+                'message' => 'You are submitting too quickly. Please wait a moment and try again.',
+            ], 429);
+            return [
+                Limit::perMinute(5)->by('task-submit-m:' . $key)->response($msg),
+                Limit::perHour(40)->by('task-submit-h:' . $key)->response($msg),
+            ];
+        });
+
         // Webhooks — Paystack/Stripe; don't throttle by user IP
         RateLimiter::for('webhooks', function (Request $request) {
             return Limit::perMinute(60)->by('webhook');

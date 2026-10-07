@@ -264,6 +264,12 @@ Route::middleware(['jwt.auth', 'throttle:api'])->group(function () {
         Route::get('/{itemId}/download',    [CourseResourcesController::class, 'downloadMaterial']);
         Route::get('/{itemId}/preview-url', [CourseResourcesController::class, 'getPreviewUrl']);
         Route::get('/{itemId}/preview',     [CourseResourcesController::class, 'previewMaterial']);
+
+        // Sprint tasks — student responses (heavy validation in TaskSubmissionService)
+        Route::get('/{itemId}/task', [\App\Http\Controllers\Api\TaskSubmissionController::class, 'show'])->whereNumber('itemId');
+        Route::post('/{itemId}/task', [\App\Http\Controllers\Api\TaskSubmissionController::class, 'submit'])
+            ->whereNumber('itemId')->middleware('throttle:task-submit');
+        Route::get('/task-submissions/{submissionId}/file', [\App\Http\Controllers\Api\TaskSubmissionController::class, 'downloadOwn'])->whereNumber('submissionId');
     });
 
     Route::prefix('scholarships')->group(function () {
@@ -351,6 +357,12 @@ Route::middleware(['auth:instructor', 'throttle:api'])->prefix('instructor')->gr
     // Submissions
     Route::get ('/projects/{projectId}/submissions',  [InstructorCourseController::class, 'getSubmissions']);
     Route::post('/submissions/{submissionId}/review', [InstructorCourseController::class, 'reviewSubmission']);
+
+    // Sprint tasks — requirements + reviewing submissions (own courses only)
+    Route::put ('/courses/{courseId}/topics/{itemId}/task',      [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorSaveConfig'])->whereNumber('itemId');
+    Route::get ('/courses/{courseId}/task-submissions',          [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorList']);
+    Route::post('/task-submissions/{submissionId}/grade',        [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorGrade'])->whereNumber('submissionId');
+    Route::get ('/task-submissions/{submissionId}/file',         [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorFile'])->whereNumber('submissionId');
 });
 
 // =================== PUBLIC COURSE ROUTES (throttle:api) =================== //
@@ -563,6 +575,12 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
 
     // Courses
     Route::prefix('courses')->middleware('admin.permission:courses')->group(function () {
+        // Sprint tasks — requirements + reviewing submissions
+        Route::post('/task-submissions/{submissionId}/grade', [\App\Http\Controllers\Api\TaskReviewController::class, 'adminGrade'])->whereNumber('submissionId');
+        Route::get('/task-submissions/{submissionId}/file',   [\App\Http\Controllers\Api\TaskReviewController::class, 'adminFile'])->whereNumber('submissionId');
+        Route::put('/{courseId}/resources/items/{itemId}/task', [\App\Http\Controllers\Api\TaskReviewController::class, 'adminSaveConfig'])->whereNumber('itemId');
+        Route::get('/{courseId}/task-submissions',            [\App\Http\Controllers\Api\TaskReviewController::class, 'adminList']);
+
         Route::get('/',              [AdminCourseController::class, 'index']);
         Route::get('/statistics',    [AdminCourseController::class, 'getStatistics']);
         Route::post('/',             [AdminCourseController::class, 'store']);

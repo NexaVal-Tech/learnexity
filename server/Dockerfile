@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev sqlite3 libsqlite3-dev \
     && docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd zip
 
+# PHP upload limits (task submissions up to 20 MB, instructor photos, etc.)
+RUN printf "upload_max_filesize=20M\npost_max_size=25M\nmemory_limit=256M\n" > /usr/local/etc/php/conf.d/uploads.ini
+
 # Set working directory
 WORKDIR /var/www
 

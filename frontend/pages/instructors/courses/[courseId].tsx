@@ -9,8 +9,10 @@ import { handleInstructorApiError } from '@/lib/instructorApi';
 import {
   ArrowLeft, Plus, Edit, Trash, GripVertical, X, Upload,
   Loader2, Users, FolderKanban, ChevronRight, Check, Clock,
-  FileText, File as FileIcon, Type, CheckCircle, AlertCircle,
+  FileText, File as FileIcon, Type, CheckCircle, AlertCircle, ClipboardCheck,
 } from 'lucide-react';
+import TaskSettingsModal from '@/components/tasks/TaskSettingsModal';
+import TaskSubmissionsReview from '@/components/tasks/TaskSubmissionsReview';
 
 // ── Phase badge helper ────────────────────────────────────────────────────────
 
@@ -31,7 +33,8 @@ export default function InstructorCourseDetail() {
   const router = useRouter();
   const { courseId } = router.query as { courseId: string };
 
-  const [activeTab, setActiveTab] = useState<'sprints' | 'students' | 'projects'>('sprints');
+  const [activeTab, setActiveTab] = useState<'sprints' | 'tasks' | 'students' | 'projects'>('sprints');
+  const [taskTopic, setTaskTopic] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
@@ -253,6 +256,7 @@ export default function InstructorCourseDetail() {
           <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10">
             {[
               { key: 'sprints',  label: 'Sprints & Materials' },
+              { key: 'tasks',    label: 'Task Submissions' },
               { key: 'students', label: `Students (${students?.length ?? 0})` },
               { key: 'projects', label: 'Projects' },
             ].map((tab) => (
@@ -316,13 +320,27 @@ export default function InstructorCourseDetail() {
                             {topic.type.toUpperCase().slice(0, 3)}
                           </div>
                           <span className="text-sm text-gray-700 dark:text-gray-300">{topic.title}</span>
+                          {topic.task_config?.enabled && (
+                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+                              <ClipboardCheck size={11} /> Task
+                            </span>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handleDeleteTopic(topic.id)}
-                          className="p-1.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity rounded"
-                        >
-                          <Trash size={14} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setTaskTopic(topic)}
+                            title="Task requirements (students submit a response)"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded"
+                          >
+                            <ClipboardCheck size={14} /> Task
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTopic(topic.id)}
+                            className="p-1.5 text-red-400 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity rounded"
+                          >
+                            <Trash size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))}
 
@@ -337,6 +355,26 @@ export default function InstructorCourseDetail() {
               ))}
             </div>
           )}
+
+          {/* ── TASK SUBMISSIONS TAB ─────────────────────────────────────────── */}
+          {activeTab === 'tasks' && (
+            <TaskSubmissionsReview
+              load={(p) => instructorApi.tasks.list(courseId, p)}
+              grade={(sid, p) => instructorApi.tasks.grade(sid, p)}
+              download={(sid) => instructorApi.tasks.downloadFile(sid)}
+            />
+          )}
+
+          <TaskSettingsModal
+            open={!!taskTopic}
+            itemTitle={taskTopic?.title ?? ''}
+            initial={taskTopic?.task_config ?? null}
+            onClose={() => setTaskTopic(null)}
+            onSave={async (cfg) => {
+              await instructorApi.tasks.saveConfig(courseId, taskTopic.id, cfg);
+              await fetchData();
+            }}
+          />
 
           {/* ── STUDENTS TAB ─────────────────────────────────────────────────── */}
           {activeTab === 'students' && (

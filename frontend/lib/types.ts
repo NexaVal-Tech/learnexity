@@ -592,6 +592,8 @@ export interface AdminCourseTopic {
   order: number;
   text_content?: string | null; 
   file_url?: string;
+  /** Sprint task requirements (null/disabled = normal material). */
+  task_config?: import('@/components/tasks/types').TaskConfig | null;
 }
 
 export interface AdminCourseMaterial {

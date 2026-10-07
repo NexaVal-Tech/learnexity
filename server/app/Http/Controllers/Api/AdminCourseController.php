@@ -88,6 +88,8 @@ class AdminCourseController extends Controller
                             'type'         => $item->type,
                             'text_content' => $item->text_content,
                             'file_url'     => $item->file_url,
+                            'order'        => $item->order,
+                            'task_config'  => $item->task_config,
                         ];
                     }),
                 ];

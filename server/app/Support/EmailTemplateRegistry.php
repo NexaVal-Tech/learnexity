@@ -132,6 +132,21 @@ class EmailTemplateRegistry
                 ],
             ],
 
+            'task_reviewed' => [
+                'label' => 'Task reviewed', 'group' => $student,
+                'description' => 'Sent when an admin or instructor grades a student\'s sprint task or asks them to resubmit.',
+                'placeholders' => [
+                    'name' => ['Student name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'task' => ['Task', 'Sprint 1 task'],
+                    'status' => ['Result', 'Passed'], 'score' => ['Score', '85%'], 'feedback' => ['Feedback', 'Great work!'],
+                ],
+                'defaults' => [
+                    'subject' => 'Your task "{task}" has been reviewed',
+                    'heading' => 'Your task has been reviewed',
+                    'body' => "Hi {first_name},\n\nYour submission for **{task}** has been reviewed.\n\nResult: **{status}** · Score: **{score}**\n\n{feedback}",
+                    'button' => 'View Feedback',
+                ],
+            ],
+
             // ── Payments ────────────────────────────────────────────────
             'payment_confirmation' => [
                 'label' => 'Payment confirmation', 'group' => $payments,

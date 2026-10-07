@@ -104,6 +104,7 @@ class InstructorCourseController extends Controller
                     'text_content' => $i->text_content,
                     'file_url'     => $i->file_url,
                     'order'        => $i->order,
+                    'task_config'  => $i->task_config,
                 ])->sortBy('order')->values(),
             ]);
 

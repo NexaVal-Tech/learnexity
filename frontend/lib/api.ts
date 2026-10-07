@@ -1,5 +1,6 @@
 // lib/api.ts
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
+import type { StudentTask, TaskConfig, TaskListParams, TaskSubmissionList, GradePayload, GraderSubmission } from '@/components/tasks/types';
 import { adminApi } from './adminApi';
 
 if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
@@ -580,6 +581,36 @@ settings: {
       return response.data;
     },
 
+    // ── Sprint tasks ──
+    getTask: async (itemId: number): Promise<{ task: StudentTask | null }> => {
+      const response = await apiClient.get(`/api/materials/${itemId}/task`);
+      return response.data;
+    },
+
+    submitTask: async (
+      itemId: number,
+      data: { text?: string; link?: string; file?: File | null },
+      onProgress?: (pct: number) => void
+    ): Promise<{ message: string; task: StudentTask }> => {
+      const form = new FormData();
+      if (data.text) form.append('text', data.text);
+      if (data.link) form.append('link', data.link);
+      if (data.file) form.append('file', data.file);
+      const response = await apiClient.post(`/api/materials/${itemId}/task`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      });
+      return response.data;
+    },
+
+    downloadTaskFile: async (submissionId: number): Promise<Blob> => {
+      const response = await apiClient.get(`/api/materials/task-submissions/${submissionId}/file`, { responseType: 'blob', timeout: 120000 });
+      return response.data;
+    },
+
     getPreviewUrl: async (itemId: number) => {
         const response = await apiClient.get(`/api/materials/${itemId}/preview-url`);
         return response.data;
@@ -727,6 +758,29 @@ settings: {
     deleteMaterialItem: async (itemId: number) => {
       const response = await apiClient.delete(`/api/admin/courses/resources/items/${itemId}`);
       return response.data;
+    },
+
+    // ── Sprint tasks (admin) ──
+    saveTaskConfig: async (courseId: string, itemId: number, task_config: TaskConfig) => {
+      return await adminApi.put<{ message: string; task_config: TaskConfig }>(
+        `/api/admin/courses/${courseId}/resources/items/${itemId}/task`,
+        { task_config }
+      );
+    },
+
+    listTaskSubmissions: async (courseId: string, params: TaskListParams = {}): Promise<TaskSubmissionList> => {
+      return await adminApi.get(`/api/admin/courses/${courseId}/task-submissions`, { params });
+    },
+
+    gradeTaskSubmission: async (submissionId: number, payload: GradePayload) => {
+      return await adminApi.post<{ message: string; submission: GraderSubmission }>(
+        `/api/admin/courses/task-submissions/${submissionId}/grade`,
+        payload
+      );
+    },
+
+    downloadTaskFile: async (submissionId: number): Promise<Blob> => {
+      return await adminApi.get(`/api/admin/courses/task-submissions/${submissionId}/file`, { responseType: 'blob', timeout: 120000 });
     },
 
     uploadMaterialFile: async (courseId: string, itemId: number, file: File) => {

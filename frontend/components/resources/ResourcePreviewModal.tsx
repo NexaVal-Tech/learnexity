@@ -6,6 +6,8 @@ import {
   Clock, CheckCircle, Loader2,
 } from 'lucide-react';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import TaskSubmissionPanel, { TaskStatusPill } from '@/components/tasks/TaskSubmissionPanel';
+import type { StudentTask } from '@/components/tasks/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,7 @@ interface CourseResourceItem {
   is_completed?: boolean;
   video_url?: string | null;
   text_content?: string | null;
+  task?: StudentTask | null;
 }
 
 interface Sprint {
@@ -54,7 +57,12 @@ interface ResourcePreviewModalProps {
   onDownload?: (itemId: number, title: string) => Promise<void>;
   onPreviewFile?: (itemId: number, title: string) => Promise<string>;
   externalVideos?: ExternalVideoResource[];
+  /** Called after a student submits a task, with the updated task state. */
+  onTaskUpdated?: (itemId: number, task: StudentTask) => void;
 }
+
+const TaskUpdateContext = createContext<((itemId: number, task: StudentTask) => void) | null>(null);
+const noop = () => {};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -468,6 +476,8 @@ const MaterialCard = memo(function MaterialCard({
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const cardRef = useRef<HTMLDivElement>(null);
   const typeInfo = getFileTypeLabel(item.type);
+  const onTaskUpdated = useContext(TaskUpdateContext);
+  const isTask = !!item.task && !item.task.locked && !!item.task.config;
 
 // AFTER — gate on download_url so items with no file are never expandable
 const hasFile = !!item.download_url;
@@ -475,7 +485,9 @@ const isPdf = item.type === 'pdf' && hasFile;
 const isDoc = item.type === 'document' && hasFile;
   // FIX: memoize block check — avoid re-parsing on every render
   const hasBlocks = useMemo(() => parseBlocks(item.text_content).length > 0, [item.text_content]);
-  const isExpandable = hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
+  const isExpandable = isTask || hasBlocks || ((isPdf || isDoc) && !!onPreviewFile);
+  // Task items are completed by submitting, not by reading/opening.
+  const completeHandler = isTask ? noop : onComplete;
 
   useEffect(() => {
     if (initiallyExpanded && cardRef.current) {
@@ -510,12 +522,14 @@ const isDoc = item.type === 'document' && hasFile;
           {item.file_size && <p className="text-xs text-gray-400 mt-0.5">{item.file_size}</p>}
           {!item.is_completed && isExpandable && (
             <p className="text-xs text-gray-400 mt-0.5">
-              {isPdf ? 'Click to read PDF' : isDoc ? 'Click to view document' : 'Click to read'}
+              {isTask ? 'Click to open the task and submit your response' : isPdf ? 'Click to read PDF' : isDoc ? 'Click to view document' : 'Click to read'}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {item.is_completed ? (
+          {isTask ? (
+            <TaskStatusPill task={item.task} />
+          ) : item.is_completed ? (
             <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
               <CheckCircle size={11} /> Done
             </span>
@@ -540,7 +554,7 @@ const isDoc = item.type === 'document' && hasFile;
               itemId={item.id}
               title={item.title}
               isCompleted={item.is_completed}
-              onComplete={onComplete}
+              onComplete={completeHandler}
               onPreviewFile={onPreviewFile}
             />
           )}
@@ -549,13 +563,22 @@ const isDoc = item.type === 'document' && hasFile;
               itemId={item.id}
               title={item.title}
               isCompleted={item.is_completed}
-              onComplete={onComplete}
+              onComplete={completeHandler}
               onPreviewFile={onPreviewFile}
             />
           )}
           {!isPdf && !isDoc && hasBlocks && (
             <div className="px-4 pb-4 pt-4">
-              <TopicContent item={item} onComplete={onComplete} />
+              <TopicContent item={item} onComplete={completeHandler} />
+            </div>
+          )}
+          {isTask && item.task && (
+            <div className={`px-4 pb-4 ${hasBlocks && !isPdf && !isDoc ? 'pt-0' : 'pt-4'}`}>
+              <TaskSubmissionPanel
+                itemId={item.id}
+                task={item.task}
+                onUpdated={(t) => onTaskUpdated?.(item.id, t)}
+              />
             </div>
           )}
         </div>
@@ -637,8 +660,11 @@ const SprintSection = memo(function SprintSection({
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function ResourcePreviewModal({
-  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos,
+  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos, onTaskUpdated,
 }: ResourcePreviewModalProps) {
+  const onTaskUpdatedRef = useRef(onTaskUpdated);
+  useEffect(() => { onTaskUpdatedRef.current = onTaskUpdated; }, [onTaskUpdated]);
+  const stableOnTaskUpdated = useCallback((itemId: number, task: StudentTask) => onTaskUpdatedRef.current?.(itemId, task), []);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Focused video player: every video in the course, in order.
@@ -746,6 +772,7 @@ export default function ResourcePreviewModal({
   // ── Full sprints modal ───────────────────────────────────────────────────
   return (
     <TheaterContext.Provider value={theaterCtx}>
+    <TaskUpdateContext.Provider value={stableOnTaskUpdated}>
     {theaterIndex !== null && (
       <VideoTheater
         playlist={playlist}
@@ -813,6 +840,7 @@ export default function ResourcePreviewModal({
         </div>
       </div>
     </div>
+    </TaskUpdateContext.Provider>
     </TheaterContext.Provider>
   );
 }

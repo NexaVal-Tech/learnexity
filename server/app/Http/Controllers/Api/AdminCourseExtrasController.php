@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Course editor extras: the course's own instructors and the optional
@@ -25,6 +29,11 @@ class AdminCourseExtrasController extends Controller
     {
         $course = Course::where('course_id', $courseId)->firstOrFail();
 
+        // NOTE: photos are validated by hand below (extension whitelist +
+        // getimagesize) instead of Laravel's `image|mimes` rules. Those rules
+        // need PHP's fileinfo extension, which many production PHP builds
+        // don't ship — when it's missing they throw a LogicException and the
+        // whole request 500s, which is what "Server error" was.
         $request->validate([
             'instructors'                      => 'nullable|array|max:12',
             'instructors.*.name'               => 'nullable|string|max:120',
@@ -35,46 +44,100 @@ class AdminCourseExtrasController extends Controller
             'instructors.*.socials.*.platform' => 'nullable|string|max:30',
             'instructors.*.socials.*.url'      => 'nullable|string|max:500',
             'instructor_photos'                => 'nullable|array',
-            'instructor_photos.*'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        $photos = $request->file('instructor_photos') ?? [];
-        $list = [];
+        try {
+            $photos = $request->file('instructor_photos') ?? [];
+            if (!is_array($photos)) $photos = [];
+            $list = [];
+            $rows = $request->input('instructors');
+            if (!is_array($rows)) $rows = [];
 
-        foreach (($request->input('instructors') ?: []) as $i => $row) {
-            $name = trim((string) ($row['name'] ?? ''));
-            if ($name === '') {
-                continue;
-            }
-
-            $photo = null;
-            if (isset($photos[$i]) && $photos[$i]) {
-                $photo = $photos[$i]->store('course-instructors', 'public');
-            } elseif (!empty($row['photo_url'])) {
-                $photo = $this->keepStoragePath((string) $row['photo_url']);
-            }
-
-            $socials = [];
-            foreach (($row['socials'] ?? []) as $social) {
-                $url = $this->safeUrl($social['url'] ?? null);
-                $platform = strtolower(trim((string) ($social['platform'] ?? 'website')));
-                if ($url && in_array($platform, self::PLATFORMS, true)) {
-                    $socials[] = ['platform' => $platform, 'url' => $url];
+            foreach ($rows as $i => $row) {
+                if (!is_array($row)) continue;
+                $name = trim(strip_tags((string) ($row['name'] ?? '')));
+                if ($name === '') {
+                    continue;
                 }
+
+                $photo = null;
+                $file = $photos[$i] ?? null;
+                if ($file instanceof UploadedFile) {
+                    $photo = $this->storeInstructorPhoto($file, $name);
+                } elseif (!empty($row['photo_url'])) {
+                    $photo = $this->keepStoragePath((string) $row['photo_url']);
+                }
+
+                $socials = [];
+                foreach ((is_array($row['socials'] ?? null) ? $row['socials'] : []) as $social) {
+                    if (!is_array($social)) continue;
+                    $url = $this->safeUrl($social['url'] ?? null);
+                    $platform = strtolower(trim((string) ($social['platform'] ?? 'website')));
+                    if ($url && in_array($platform, self::PLATFORMS, true)) {
+                        $socials[] = ['platform' => $platform, 'url' => $url];
+                    }
+                }
+
+                $list[] = [
+                    'name'    => $name,
+                    'role'    => trim(strip_tags((string) ($row['role'] ?? ''))),
+                    'photo'   => $photo,
+                    'website' => $this->safeUrl($row['website'] ?? null),
+                    'socials' => $socials,
+                ];
             }
 
-            $list[] = [
-                'name'    => $name,
-                'role'    => trim((string) ($row['role'] ?? '')),
-                'photo'   => $photo,
-                'website' => $this->safeUrl($row['website'] ?? null),
-                'socials' => $socials,
-            ];
+            $course->course_instructors = $list;
+            $course->save();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Saving course instructors failed', [
+                'course_id' => $courseId,
+                'error'     => $e->getMessage(),
+                'file'      => $e->getFile() . ':' . $e->getLine(),
+            ]);
+            return response()->json([
+                'message' => 'Could not save instructors: ' . $e->getMessage(),
+            ], 500);
         }
 
-        $course->update(['course_instructors' => $list]);
-
         return response()->json(['message' => 'Instructors saved', 'instructors' => $list]);
+    }
+
+    /** Validate + store one instructor photo without relying on fileinfo. */
+    private function storeInstructorPhoto(UploadedFile $file, string $name): string
+    {
+        $label = "Photo for {$name}";
+        if (!$file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'instructor_photos' => ["{$label} failed to upload (" . $file->getErrorMessage() . ')'],
+            ]);
+        }
+        if ($file->getSize() > 4 * 1024 * 1024) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'instructor_photos' => ["{$label} must be 4 MB or smaller."],
+            ]);
+        }
+        $ext = strtolower($file->getClientOriginalExtension());
+        $info = @getimagesize($file->getRealPath());
+        $allowed = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true) || !$info || !isset($allowed[$info[2]])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'instructor_photos' => ["{$label} must be a JPG, PNG or WebP image."],
+            ]);
+        }
+
+        $disk = Storage::disk('public');
+        if (!$disk->exists('course-instructors')) {
+            $disk->makeDirectory('course-instructors');
+        }
+        $filename = Str::random(32) . '.' . $allowed[$info[2]];
+        $path = $disk->putFileAs('course-instructors', $file, $filename);
+        if (!$path) {
+            throw new \RuntimeException('the server could not write to storage/app/public/course-instructors (check folder permissions).');
+        }
+        return $path;
     }
 
     /**
