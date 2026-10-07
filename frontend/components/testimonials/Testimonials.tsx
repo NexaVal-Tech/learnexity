@@ -76,7 +76,7 @@ export const TESTIMONIALS_DEFAULTS: TestimonialsData = {
 const CARD_W = "w-[82vw] max-w-[20rem] sm:w-[22rem] sm:max-w-none lg:w-[26rem]";
 // One height for every card, sized so the heading, cards and buttons fit on
 // one screen.
-const CARD_H = "clamp(22rem, 56vh, 26rem)";
+const CARD_H = "22rem";
 
 /** "in LinkedIn" style labels on the photo. */
 function SocialLinks({ socials }: { socials: Social[] }) {
@@ -106,10 +106,13 @@ function SocialLinks({ socials }: { socials: Social[] }) {
 }
 
 /** Name, course and Now / Before roles. */
-function InfoCard({ t }: { t: Testimonial }) {
+function InfoCard({ t, flat = false }: { t: Testimonial; flat?: boolean }) {
   const hasRoles = t.nowRole || t.beforeRole;
   return (
-    <div className="bg-[var(--surface)] text-[var(--text-primary)] p-3.5 sm:p-4 shadow-lg" style={{ borderRadius: INNER_RADIUS }}>
+    <div
+      className={`bg-[var(--surface)] text-[var(--text-primary)] ${flat ? "h-full px-4 pt-4 pb-5 sm:px-5" : "p-3.5 sm:p-4 shadow-lg"}`}
+      style={flat ? undefined : { borderRadius: INNER_RADIUS }}
+    >
       <h3 className="text-xl sm:text-2xl font-semibold leading-tight">{t.name}</h3>
       {t.role && <p className="text-sm text-[var(--text-muted)] mt-0.5">{t.role}</p>}
 
@@ -144,8 +147,8 @@ function StoryCard({ t }: { t: Testimonial }) {
   // A designed picture that already contains the name and quote.
   if (t.type === "image") {
     return (
-      <div className={`snap-start flex-shrink-0 ${CARD_W}`}>
-        <div className="relative w-full overflow-hidden bg-[linear-gradient(to_bottom,#9ca3af_0%,#9ca3af_55%,#1f2937_100%)] border border-[var(--border-subtle)]" style={{ borderRadius: RADIUS, height: CARD_H }}>
+      <div className={`snap-start flex-shrink-0 flex ${CARD_W}`}>
+        <div className="relative w-full overflow-hidden bg-[#c7c9cc] shadow-[0_8px_24px_rgba(0,0,0,0.10)]" style={{ borderRadius: RADIUS, minHeight: CARD_H }}>
           {t.thumbnail && <CmsImage src={t.thumbnail} alt={t.name} fill className="object-contain" sizes="(min-width:1024px) 26rem, 82vw" />}
           {(socials.length > 0 || t.storyUrl) && (
             <div className="absolute top-0 inset-x-0 p-4 flex items-start justify-between gap-3 bg-gradient-to-b from-black/50 to-transparent">
@@ -168,32 +171,31 @@ function StoryCard({ t }: { t: Testimonial }) {
   };
 
   return (
-    <div className={`snap-start flex-shrink-0 ${CARD_W}`}>
+    <div className={`snap-start flex-shrink-0 flex ${CARD_W}`}>
       <div
-        className="relative overflow-hidden flex flex-col border border-[var(--border-subtle)] bg-[linear-gradient(to_bottom,#9ca3af_0%,#9ca3af_55%,#1f2937_100%)]"
-        style={{ borderRadius: RADIUS, height: CARD_H }}
+        className="relative w-full overflow-hidden flex flex-col bg-[linear-gradient(to_bottom,#9ca3af_0%,#6b7280_45%,#1f2937_100%)] shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
+        style={{ borderRadius: RADIUS, minHeight: CARD_H }}
       >
-        {/* Top row: socials + read story */}
-        <div className="absolute inset-x-0 top-0 z-20 p-3.5 sm:p-4 flex items-start justify-between gap-3">
-          <SocialLinks socials={socials} />
-          {t.storyUrl && <ReadStory href={t.storyUrl} />}
-        </div>
-
-        {/* Photo — always the full width of the card, anchored to the top so
-            heads/faces stay visible; its bottom tucks ~1rem under the white
-            info card (see -mt-4 below). Ash shows only around the info card. */}
-        <div className="relative flex-1 min-h-0 bg-[#c7c9cc]">
+        {/* Photo — full width of the card, fixed height, sits ABOVE the
+            name/quote (never behind it). No borders or gaps between them. */}
+        <div className="relative flex-shrink-0 h-[14rem] sm:h-[15.5rem] bg-[#c7c9cc]">
           {t.thumbnail && (
             <CmsImage
               src={t.thumbnail}
               alt={t.name}
               fill
-              className="object-cover object-top"
+              className="object-cover object-[center_22%]"
               sizes="(min-width:1024px) 26rem, 82vw"
             />
           )}
-          {/* Soft fade into the dark frame at the bottom of the photo */}
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-[#111827]/55 pointer-events-none" />
+          {/* Light shade at the top only, so "Read story" stays readable */}
+          <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
+
+          {/* Top row: socials + read story */}
+          <div className="absolute inset-x-0 top-0 z-20 p-3.5 sm:p-4 flex items-start justify-between gap-3">
+            <SocialLinks socials={socials} />
+            {t.storyUrl && <ReadStory href={t.storyUrl} />}
+          </div>
 
           {/* Play button */}
           {isVideo && !playing && (
@@ -212,9 +214,9 @@ function StoryCard({ t }: { t: Testimonial }) {
             </button>
           )}
 
-          {/* Company logo + stat in the bottom corners of the photo area */}
+          {/* Company logo + stat in the bottom corners of the photo */}
           {(t.companyLogo || t.statValue) && (
-            <div className="absolute inset-x-0 bottom-4 z-10 px-3.5 sm:px-4 pb-2 flex items-end justify-between gap-4 pointer-events-none">
+            <div className="absolute inset-x-0 bottom-0 z-10 px-3.5 sm:px-4 pb-2.5 flex items-end justify-between gap-4 pointer-events-none">
               {t.companyLogo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -235,27 +237,30 @@ function StoryCard({ t }: { t: Testimonial }) {
               )}
             </div>
           )}
+
+          {/* Video (plays over the photo) */}
+          {isVideo && playing && (
+            <div className="absolute inset-0 z-30 bg-black">
+              <video ref={videoRef} src={t.video} className="w-full h-full object-contain" controls playsInline preload="none" onEnded={stop} />
+              <button
+                type="button"
+                onClick={stop}
+                aria-label="Close video"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Info card — white card at the bottom with space around it */}
-        <div className="relative z-10 flex-shrink-0 -mt-4 px-2.5 sm:px-3 pb-2.5 sm:pb-3">
-          <InfoCard t={t} />
-        </div>
-
-        {/* Video (plays over the whole card) */}
-        {isVideo && playing && (
-          <div className="absolute inset-0 z-30 bg-[#1f2937]">
-            <video ref={videoRef} src={t.video} className="w-full h-full object-contain" controls playsInline preload="none" onEnded={stop} />
-            <button
-              type="button"
-              onClick={stop}
-              aria-label="Close video"
-              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
-            >
-              <X size={18} />
-            </button>
+        {/* Name + quote — white card with space around it, sitting on the
+            ash→dark frame below the photo */}
+        <div className="flex-1 flex flex-col p-2.5 sm:p-3">
+          <div className="flex-1 flex flex-col [&>div]:flex-1">
+            <InfoCard t={t} />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

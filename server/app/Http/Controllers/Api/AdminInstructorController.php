@@ -59,7 +59,7 @@ class AdminInstructorController extends Controller
             'bio'            => 'nullable|string|max:500',
             'specialisation' => 'nullable|string|max:255',
             'course_ids'     => 'nullable|array',
-            'course_ids.*'   => 'string',   // course_id strings
+            'course_ids.*'   => 'string|exists:courses,course_id',   // course_id strings
         ]);
 
         if ($validator->fails()) {
@@ -73,35 +73,50 @@ class AdminInstructorController extends Controller
         // Generate a random password
         $plainPassword = Str::random(10);
 
-        $instructor = Instructor::create([
-            'name'           => $request->name,
-            'email'          => $request->email,
-            'password'       => Hash::make($plainPassword),
-            'phone'          => $request->phone,
-            'bio'            => $request->bio,
-            'specialisation' => $request->specialisation,
-            'is_active'      => true,
-        ]);
+        try {
+            $instructor = DB::transaction(function () use ($request, $plainPassword) {
+                $instructor = Instructor::create([
+                    'name'           => $request->name,
+                    'email'          => $request->email,
+                    'password'       => Hash::make($plainPassword),
+                    'phone'          => $request->phone,
+                    'bio'            => $request->bio,
+                    'specialisation' => $request->specialisation,
+                    'is_active'      => true,
+                ]);
 
-        // Assign courses if provided
-        if ($request->filled('course_ids')) {
-            $rows = collect($request->course_ids)->map(fn ($cid) => [
-                'instructor_id' => $instructor->id,
-                'course_id'     => $cid,
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ])->toArray();
+                // Assign courses if provided
+                if ($request->filled('course_ids')) {
+                    $rows = collect($request->course_ids)->unique()->map(fn ($cid) => [
+                        'instructor_id' => $instructor->id,
+                        'course_id'     => $cid,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ])->values()->toArray();
 
-            DB::table('instructor_courses')->insert($rows);
+                    DB::table('instructor_courses')->insert($rows);
+                }
+
+                return $instructor;
+            });
+        } catch (\Throwable $e) {
+            Log::error('Creating instructor failed', ['error' => $e->getMessage(), 'at' => $e->getFile() . ':' . $e->getLine()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not create the instructor: ' . $e->getMessage(),
+            ], 500);
         }
 
-        // Send welcome email with credentials
+        // Send welcome email with credentials.
+        // QUEUED, not sent inline: a slow/unreachable SMTP server used to keep
+        // this request open until the web server timed out, which the browser
+        // reports as a CORS error (timeouts carry no CORS headers).
         $emailSent = false;
         try {
-            Mail::to($instructor->email)->send(new InstructorWelcomeMail($instructor, $plainPassword));
+            Mail::to($instructor->email)->queue(new InstructorWelcomeMail($instructor, $plainPassword));
             $emailSent = true;
-            Log::info('✅ Instructor welcome email sent', ['instructor_id' => $instructor->id]);
-        } catch (\Exception $e) {
+            Log::info('✅ Instructor welcome email queued', ['instructor_id' => $instructor->id]);
+        } catch (\Throwable $e) {
             Log::error('❌ Failed to send instructor welcome email', [
                 'instructor_id' => $instructor->id,
                 'error'         => $e->getMessage(),
@@ -201,8 +216,8 @@ class AdminInstructorController extends Controller
         $instructor->update(['password' => Hash::make($newPassword)]);
 
         try {
-            Mail::to($instructor->email)->send(new InstructorWelcomeMail($instructor, $newPassword, isReset: true));
-        } catch (\Exception $e) {
+            Mail::to($instructor->email)->queue(new InstructorWelcomeMail($instructor, $newPassword, isReset: true));
+        } catch (\Throwable $e) {
             Log::error('Failed to send instructor password reset email', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
