@@ -76,7 +76,7 @@ export const TESTIMONIALS_DEFAULTS: TestimonialsData = {
 const CARD_W = "w-[82vw] max-w-[20rem] sm:w-[22rem] sm:max-w-none lg:w-[26rem]";
 // One height for every card, sized so the heading, cards and buttons fit on
 // one screen.
-const CARD_H = "22rem";
+const CARD_H = "25rem";
 
 /** "in LinkedIn" style labels on the photo. */
 function SocialLinks({ socials }: { socials: Social[] }) {
@@ -176,18 +176,25 @@ function StoryCard({ t }: { t: Testimonial }) {
         className="relative w-full overflow-hidden flex flex-col bg-[linear-gradient(to_bottom,#9ca3af_0%,#6b7280_45%,#1f2937_100%)] shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
         style={{ borderRadius: RADIUS, minHeight: CARD_H }}
       >
-        {/* Photo — full width of the card, fixed height, sits ABOVE the
-            name/quote (never behind it). No borders or gaps between them. */}
-        <div className="relative flex-shrink-0 h-[14rem] sm:h-[15.5rem] bg-[#c7c9cc]">
-          {t.thumbnail && (
+        {/* Photo — fills the WHOLE card (full width and full height) as the
+            background; anchored to the top so heads/faces stay in view. The
+            white details card sits on top of its lower part. */}
+        {t.thumbnail && (
+          <div className="absolute inset-0 bg-[#c7c9cc]">
             <CmsImage
               src={t.thumbnail}
               alt={t.name}
               fill
-              className="object-cover object-[center_22%]"
+              className="object-cover object-top"
               sizes="(min-width:1024px) 26rem, 82vw"
             />
-          )}
+            {/* Soft dark fade at the bottom, behind the white card */}
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-transparent to-[#1f2937]/60 pointer-events-none" />
+          </div>
+        )}
+
+        {/* Top area of the card (over the photo): labels, play, logo/stat */}
+        <div className="relative flex-1 min-h-[14rem] sm:min-h-[15.5rem]">
           {/* Light shade at the top only, so "Read story" stays readable */}
           <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
 
@@ -254,12 +261,10 @@ function StoryCard({ t }: { t: Testimonial }) {
           )}
         </div>
 
-        {/* Name + quote — white card with space around it, sitting on the
-            ash→dark frame below the photo */}
-        <div className="flex-1 flex flex-col p-2.5 sm:p-3">
-          <div className="flex-1 flex flex-col [&>div]:flex-1">
-            <InfoCard t={t} />
-          </div>
+        {/* Name + quote — white card with space around it, on top of the
+            bottom of the photo */}
+        <div className="relative z-10 flex-shrink-0 p-2.5 sm:p-3">
+          <InfoCard t={t} />
         </div>
       </div>
     </div>
