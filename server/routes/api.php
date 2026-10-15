@@ -374,6 +374,7 @@ Route::middleware(['throttle:api', 'public.cache:30'])->prefix('courses')->group
     Route::get('/free',       [CourseController::class, 'free']);
     Route::get('/search',     [CourseController::class, 'search']);
     Route::get('/by-track',   [CourseController::class, 'byTrack']);
+    Route::get('/team-instructors', [\App\Http\Controllers\Api\TeamCoursesController::class, 'index']);
     Route::get('/{courseId}', [CourseController::class, 'show']);
 });
 
@@ -625,6 +626,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
             Route::put('/items/{itemId}',                    [AdminCourseResourcesController::class, 'updateMaterialItem']);
             Route::delete('/items/{itemId}',                 [AdminCourseResourcesController::class, 'deleteMaterialItem']);
             Route::post('/items/{itemId}/upload',            [AdminCourseResourcesController::class, 'uploadMaterialFile']);
+            Route::post('/external-resources/reorder',       [AdminCourseResourcesController::class, 'reorderExternalResources']);
             Route::post('/external-resources',               [AdminCourseResourcesController::class, 'createExternalResource']);
             Route::put('/external-resources/{resourceId}',  [AdminCourseResourcesController::class, 'updateExternalResource']);
             Route::delete('/external-resources/{resourceId}',[AdminCourseResourcesController::class, 'deleteExternalResource']);

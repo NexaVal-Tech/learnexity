@@ -96,6 +96,22 @@ class Course extends Model
     // Append learning tracks info to JSON responses
     protected $appends = ['available_tracks', 'track_pricing'];
 
+    /**
+     * Instructors, with any picked from "Meet Our Team" filled from the
+     * current team page (see App\Services\TeamDirectory). Saving still uses
+     * the 'array' cast.
+     */
+    public function getCourseInstructorsAttribute($value): array
+    {
+        $list = is_string($value) ? json_decode($value, true) : $value;
+        if (!is_array($list)) return [];
+        try {
+            return \App\Services\TeamDirectory::resolveInstructors($list);
+        } catch (\Throwable $e) {
+            return $list;
+        }
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(CourseEnrollment::class, 'course_id', 'course_id');

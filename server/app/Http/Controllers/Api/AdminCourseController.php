@@ -100,9 +100,19 @@ class AdminCourseController extends Controller
         })
         ->with('courseMaterial')
         ->get()
+        // Same order students see: sprint order, then the item order inside it.
+        ->sortBy(fn ($item) => [
+            (int) ($item->courseMaterial->order ?? 0),
+            (int) ($item->courseMaterial->sprint_number ?? 0),
+            (int) ($item->order ?? 0),
+            (int) $item->id,
+        ])
+        ->values()
         ->map(function($item) {
             return [
                 'id'           => $item->id,
+                'sprint_id'    => $item->course_material_id,
+                'order'        => (int) ($item->order ?? 0),
                 'name'         => $item->title,
                 'type'         => strtoupper($item->type),
                 'text_content' => $item->text_content,
@@ -115,10 +125,15 @@ class AdminCourseController extends Controller
 
         $externalResources = DB::table('external_resources')
             ->where('course_id', $courseId)
+            ->orderBy('order')
+            ->orderBy('id')
             ->get()
             ->map(function($resource) {
                 return [
                     'id'       => $resource->id,
+                    'category' => $resource->category,
+                    'order'    => (int) ($resource->order ?? 0),
+                    'source'   => $resource->source ?? null,
                     'title'    => $resource->title,
                     'type'     => strpos($resource->url, 'youtube') !== false || strpos($resource->url, 'vimeo') !== false ? 'video' : 'document',
                     'platform' => $this->extractPlatform($resource->url),

@@ -1,11 +1,73 @@
 // Our Team page sections (pages/our-team.tsx) — same design as the original
 // page; the member list, photos, bios and labels are editable in the CMS.
-import React, { useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import { CmsImage, CmsText } from "@/components/cms/ui";
 import { f, EMPHASIS_HELP } from "@/lib/cms/fields";
 import type { BlockDefinition } from "@/lib/cms/blockTypes";
 
 const BRAND = "#4A3AFF";
+const LINKEDIN_BLUE = "#0A66C2";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+/** Courses each person teaches (set in the course editor), keyed by lower-cased name. */
+type CourseRef = { course_id: string; title: string };
+const TeachesContext = createContext<Record<string, CourseRef[]>>({});
+const nameKey = (n: string) => n.trim().replace(/\s+/g, " ").toLowerCase();
+
+function useTeaches(member: TeamMember): CourseRef[] {
+  const map = useContext(TeachesContext);
+  const list = map[nameKey(member.name)] ?? [];
+  const seen = new Set<string>();
+  return list.filter((c) => (seen.has(c.course_id) ? false : (seen.add(c.course_id), true)));
+}
+
+/** "Teaches: Course A · Course B" — links to each course page. */
+function TeachesList({ member, compact = false }: { member: TeamMember; compact?: boolean }) {
+  const courses = useTeaches(member);
+  if (!courses.length) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.4rem", marginTop: compact ? "0.35rem" : "0.75rem" }}>
+      <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Teaches</span>
+      {courses.slice(0, compact ? 3 : 12).map((c) => (
+        <Link
+          key={c.course_id}
+          href={`/courses/${encodeURIComponent(c.course_id)}`}
+          onClick={(e) => e.stopPropagation()}
+          style={{ fontSize: "0.75rem", fontWeight: 600, color: BRAND, background: `${BRAND}14`, border: `1px solid ${BRAND}33`, padding: "0.2rem 0.6rem", borderRadius: "999px", textDecoration: "none" }}
+        >
+          {c.title}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/** Big, obvious LinkedIn badge for the top-left corner of a card photo. */
+function LinkedInBadge({ href }: { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      aria-label="LinkedIn profile"
+      className="linkedin-badge"
+      style={{
+        display: "inline-flex", alignItems: "center", gap: "0.45rem",
+        background: LINKEDIN_BLUE, color: "#fff", fontSize: "0.82rem", fontWeight: 700,
+        padding: "0.5rem 0.85rem 0.5rem 0.6rem", borderRadius: "0.75rem",
+        boxShadow: "0 6px 18px rgba(10,102,194,0.45)", border: "2px solid rgba(255,255,255,0.9)",
+        textDecoration: "none", lineHeight: 1,
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      </svg>
+      LinkedIn
+    </a>
+  );
+}
 
 interface TeamMember {
   name: string;
@@ -210,6 +272,7 @@ function BioModal({ member, onClose, comingSoonLabel }: { member: TeamMember; on
         ) : (
           <div>
             <BioParagraphs paragraphs={bioParagraphs(member.bio)} />
+            <TeachesList member={member} />
           </div>
         )}
 
@@ -276,10 +339,15 @@ function FeaturedCard({ member, badge }: { member: TeamMember; badge: string }) 
           </div>
         )}
 
-        {/* Leadership badge */}
-        {badge && (
-          <div style={{position: "absolute", top: "1.5rem", left: "1.5rem", background: BRAND, color: "white", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.35rem 0.85rem", borderRadius: "999px",}}>
-            {badge}
+        {/* Top-left: LinkedIn (when added) + leadership badge */}
+        {(member.linkedin || badge) && (
+          <div style={{ position: "absolute", top: "1.25rem", left: "1.25rem", zIndex: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.6rem" }}>
+            {member.linkedin && <LinkedInBadge href={member.linkedin} />}
+            {badge && (
+              <div style={{ background: BRAND, color: "white", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.35rem 0.85rem", borderRadius: "999px" }}>
+                {badge}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -299,6 +367,7 @@ function FeaturedCard({ member, badge }: { member: TeamMember; badge: string }) 
 
         <div>
           <BioParagraphs paragraphs={bioParagraphs(member.bio)} />
+          <TeachesList member={member} />
         </div>
 
         {/* Social links — LinkedIn (and Twitter, if provided) */}
@@ -341,6 +410,13 @@ function MemberCard({ member, onReadBio, learnMoreLabel }: { member: TeamMember;
           />
         )}
         <div style={{position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,28,32,0.9) 0%, transparent 55%)",}} />
+
+        {/* LinkedIn — top-left corner, only when a link is added */}
+        {member.linkedin && (
+          <div style={{ position: "absolute", top: "1rem", left: "1rem", zIndex: 2 }}>
+            <LinkedInBadge href={member.linkedin} />
+          </div>
+        )}
 
         {/* Placeholder — only shown when there is no image */}
         {!member.image && (
@@ -402,6 +478,7 @@ function MemberCard({ member, onReadBio, learnMoreLabel }: { member: TeamMember;
         >
           {member.name}
         </h3>
+        <TeachesList member={member} compact />
 
         {/* Bio is hidden by default — revealed via modal */}
         <button
@@ -503,9 +580,18 @@ export function TeamMembers({ data }: { data: TeamMembersData }) {
   const featured = members.find((m) => m.featured);
   const rest = members.filter((m) => m !== featured);
   const [activeMember, setActiveMember] = useState<TeamMember | null>(null);
+  const [teaches, setTeaches] = useState<Record<string, CourseRef[]>>({});
+  useEffect(() => {
+    let alive = true;
+    fetch(`${API_URL}/api/courses/team-instructors`, { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (alive && j?.courses_by_member) setTeaches(j.courses_by_member); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   return (
-    <>
+    <TeachesContext.Provider value={teaches}>
       <style>{`
         .member-card:hover {
           border-color: ${BRAND}55;
@@ -516,6 +602,8 @@ export function TeamMembers({ data }: { data: TeamMembersData }) {
           transform: scale(1.04);
           transition: transform 0.5s ease;
         }
+        .linkedin-badge { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .linkedin-badge:hover { transform: translateY(-1px) scale(1.04); box-shadow: 0 10px 24px rgba(10,102,194,0.6) !important; }
         .social-link:hover {
           border-color: ${BRAND} !important;
           color: ${BRAND} !important;
@@ -566,7 +654,7 @@ export function TeamMembers({ data }: { data: TeamMembersData }) {
       {activeMember && (
         <BioModal member={activeMember} onClose={() => setActiveMember(null)} comingSoonLabel={data.comingSoonLabel || "Bio coming soon"} />
       )}
-    </>
+    </TeachesContext.Provider>
   );
 }
 

@@ -76,7 +76,7 @@ export const TESTIMONIALS_DEFAULTS: TestimonialsData = {
 const CARD_W = "w-[82vw] max-w-[20rem] sm:w-[22rem] sm:max-w-none lg:w-[26rem]";
 // One height for every card, sized so the heading, cards and buttons fit on
 // one screen.
-const CARD_H = "25rem";
+const CARD_H = "26rem";
 
 /** "in LinkedIn" style labels on the photo. */
 function SocialLinks({ socials }: { socials: Social[] }) {
@@ -176,25 +176,29 @@ function StoryCard({ t }: { t: Testimonial }) {
         className="relative w-full overflow-hidden flex flex-col bg-[linear-gradient(to_bottom,#9ca3af_0%,#6b7280_45%,#1f2937_100%)] shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
         style={{ borderRadius: RADIUS, minHeight: CARD_H }}
       >
-        {/* Photo — fills the WHOLE card (full width and full height) as the
-            background; anchored to the top so heads/faces stay in view. The
-            white details card sits on top of its lower part. */}
-        {t.thumbnail && (
-          <div className="absolute inset-0 bg-[#c7c9cc]">
-            <CmsImage
-              src={t.thumbnail}
-              alt={t.name}
-              fill
-              className="object-cover object-top"
-              sizes="(min-width:1024px) 26rem, 82vw"
-            />
-            {/* Soft dark fade at the bottom, behind the white card */}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-transparent to-[#1f2937]/60 pointer-events-none" />
-          </div>
-        )}
-
-        {/* Top area of the card (over the photo): labels, play, logo/stat */}
-        <div className="relative flex-1 min-h-[14rem] sm:min-h-[15.5rem]">
+        {/* Photo — on top, same height on every card. The whole picture is
+            shown exactly as uploaded (never cropped or zoomed); a blurred copy
+            fills the width behind it so narrow photos have no empty bars. */}
+        <div className="relative flex-shrink-0 h-[17rem] sm:h-[18.5rem] overflow-hidden bg-[#c7c9cc]">
+          {t.thumbnail && (
+            <>
+              <CmsImage
+                src={t.thumbnail}
+                alt=""
+                aria-hidden
+                fill
+                className="object-cover scale-125 blur-2xl opacity-80"
+                sizes="(min-width:1024px) 26rem, 82vw"
+              />
+              <CmsImage
+                src={t.thumbnail}
+                alt={t.name}
+                fill
+                className="object-contain object-bottom"
+                sizes="(min-width:1024px) 26rem, 82vw"
+              />
+            </>
+          )}
           {/* Light shade at the top only, so "Read story" stays readable */}
           <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
 
@@ -261,10 +265,23 @@ function StoryCard({ t }: { t: Testimonial }) {
           )}
         </div>
 
-        {/* Name + quote — white card with space around it, on top of the
-            bottom of the photo */}
-        <div className="relative z-10 flex-shrink-0 p-2.5 sm:p-3">
-          <InfoCard t={t} />
+        {/* Name + quote — directly BELOW the photo (never on it), with space
+            around it. Clicking it opens this student's story (same tab). */}
+        <div className="relative z-10 flex-1 flex flex-col p-2.5 sm:p-3">
+          {t.storyUrl ? (
+            <CmsLink
+              href={t.storyUrl}
+              newTab={false}
+              aria-label={`Read ${t.name}'s story`}
+              className="group flex-1 flex flex-col [&>div]:flex-1 rounded-[inherit] transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4A3AFF]"
+            >
+              <InfoCard t={t} />
+            </CmsLink>
+          ) : (
+            <div className="flex-1 flex flex-col [&>div]:flex-1">
+              <InfoCard t={t} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -275,7 +292,7 @@ function ReadStory({ href }: { href: string }) {
   return (
     <CmsLink
       href={href}
-      newTab
+      newTab={false}
       className="inline-flex items-center gap-1 text-sm font-semibold text-white/95 hover:text-white whitespace-nowrap drop-shadow"
     >
       Read story <ArrowUpRight size={16} />
@@ -389,7 +406,7 @@ export const block: BlockDefinition<TestimonialsData> = {
           ],
           { itemLabelKey: "platform", addLabel: "Add social link", max: 4, itemDefaults: { platform: "linkedin", url: "" } }
         ),
-        f.url("storyUrl", "Read story link (optional)", "Shows “Read story ↗” on the card when filled in."),
+        f.url("storyUrl", "Story link on the blog (optional)", "e.g. /blog/lilian-anekwe. Shows “Read story ↗” and makes the name/quote box clickable — opens in the same tab."),
       ],
       {
         itemLabelKey: "name",

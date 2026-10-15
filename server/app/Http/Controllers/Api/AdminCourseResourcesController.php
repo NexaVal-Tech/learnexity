@@ -269,6 +269,43 @@ class AdminCourseResourcesController extends Controller
 
     // ===== EXTERNAL RESOURCES =====
     
+    /**
+     * POST /api/admin/courses/{courseId}/resources/external-resources/reorder
+     *   { category: video_tutorials|industry_articles|recommended_reading, ids: [..] }
+     * Saves the order of one group; students see this order on their
+     * Resources page and in the materials modal.
+     */
+    public function reorderExternalResources(Request $request, string $courseId): JsonResponse
+    {
+        $data = $request->validate([
+            'category' => 'required|in:video_tutorials,industry_articles,recommended_reading',
+            'ids'      => 'required|array|min:1|max:500',
+            'ids.*'    => 'integer|distinct',
+        ]);
+
+        $ids = array_map('intval', $data['ids']);
+        $owned = ExternalResource::where('course_id', $courseId)
+            ->where('category', $data['category'])
+            ->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+        if (array_diff($ids, $owned)) {
+            return response()->json(['message' => 'Some resources do not belong to this group.'], 422);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $owned) {
+            foreach ($ids as $pos => $id) {
+                ExternalResource::where('id', $id)->update(['order' => $pos]);
+            }
+            // Anything not sent (added meanwhile) goes to the end.
+            $pos = count($ids);
+            foreach (array_diff($owned, $ids) as $id) {
+                ExternalResource::where('id', $id)->update(['order' => $pos++]);
+            }
+        });
+
+        return response()->json(['message' => 'Order saved.']);
+    }
+
     public function createExternalResource(Request $request, string $courseId): JsonResponse
     {
         $validated = $request->validate([
@@ -284,7 +321,8 @@ class AdminCourseResourcesController extends Controller
         $resource = ExternalResource::create([
             'course_id' => $courseId,
             ...$validated,
-            'order' => $validated['order'] ?? 0,
+            'order' => $validated['order'] ?? ((int) ExternalResource::where('course_id', $courseId)
+                ->where('category', $validated['category'])->max('order') + 1),
         ]);
 
         return response()->json([

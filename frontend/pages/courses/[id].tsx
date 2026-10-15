@@ -617,48 +617,8 @@ export default function CoursePage() {
               {instructors.length > 0 && (
                 <div className={card}>
                   <h2 className={cardTitle}>{instructors.length === 1 ? "Your Instructor" : "Your Instructors"}</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {instructors.map((ins, i) => {
-                      const photo = ins.photo ? imageUrl(ins.photo, "") : "";
-                      const links = [
-                        ...(ins.socials ?? []),
-                        ...(ins.website ? [{ platform: "website", url: ins.website }] : []),
-                      ];
-                      return (
-                        <div key={i} className={`${inset} p-4 flex items-center gap-4`}>
-                          {photo ? (
-                            <CmsImage src={photo} alt={ins.name} width={128} height={128} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
-                          ) : (
-                            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
-                              {ins.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
-                            {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug">{ins.role}</p>}
-                            {links.length > 0 && (
-                              <div className="flex items-center gap-2 mt-2">
-                                {links.map((l, j) => {
-                                  const Icon = SOCIAL_ICONS[l.platform] ?? SOCIAL_ICONS.website;
-                                  return (
-                                    <a
-                                      key={j}
-                                      href={l.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      aria-label={l.platform}
-                                      className="w-8 h-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]"
-                                    >
-                                      <Icon size={15} />
-                                    </a>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-4">
+                    {instructors.map((ins, i) => <InstructorProfile key={i} ins={ins} inset={inset} />)}
                   </div>
                 </div>
               )}
@@ -863,5 +823,73 @@ export default function CoursePage() {
         <Footer />
       </div>
     </AppLayout>
+  );
+}
+
+// ─── Instructor profile (photo, name, role, links, full bio) ──────────────────
+function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_instructors"]>[number]; inset: string }) {
+  const [open, setOpen] = useState(false);
+  const photo = ins.photo ? imageUrl(ins.photo, "") : "";
+  const links = [
+    ...(ins.socials ?? []),
+    ...(ins.website ? [{ platform: "website", url: ins.website }] : []),
+  ].filter((l) => l && typeof l.url === "string" && /^https?:\/\//i.test(l.url));
+  const paragraphs = (ins.bio ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const long = (ins.bio ?? "").length > 360 || paragraphs.length > 2;
+  const shown = open || !long ? paragraphs : paragraphs.slice(0, 1);
+
+  return (
+    <div className={`${inset} p-4 sm:p-5`}>
+      <div className="flex items-start gap-4">
+        {photo ? (
+          <CmsImage src={photo} alt={ins.name} width={160} height={160} className="w-20 h-20 rounded-full object-cover object-top flex-shrink-0" />
+        ) : (
+          <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
+            {ins.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
+          {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug">{ins.role}</p>}
+          {links.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-2.5">
+              {links.map((l, j) => {
+                const Icon = SOCIAL_ICONS[l.platform] ?? SOCIAL_ICONS.website;
+                const isLinkedIn = l.platform === "linkedin";
+                return (
+                  <a
+                    key={j}
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={l.platform}
+                    className={
+                      isLinkedIn
+                        ? "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#0A66C2] text-white text-xs font-semibold hover:opacity-90"
+                        : "w-8 h-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]"
+                    }
+                  >
+                    <Icon size={15} />
+                    {isLinkedIn && "LinkedIn"}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+      {shown.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {shown.map((p, k) => (
+            <p key={k} className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-line">{p}</p>
+          ))}
+          {long && (
+            <button type="button" onClick={() => setOpen((v) => !v)} className="text-sm font-semibold" style={{ color: BRAND }}>
+              {open ? "Show less" : "Read full bio"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

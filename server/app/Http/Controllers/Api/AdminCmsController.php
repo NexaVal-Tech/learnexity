@@ -195,6 +195,9 @@ class AdminCmsController extends Controller
             ]);
         });
 
+        // Course instructors picked from Meet Our Team read this page live.
+        \App\Services\TeamDirectory::forget();
+
         return response()->json([
             'message'  => 'Saved.',
             'page'     => $this->presentPage($page),

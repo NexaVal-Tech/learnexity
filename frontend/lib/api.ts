@@ -793,6 +793,14 @@ settings: {
       return response.data;
     },
 
+    reorderExternalResources: async (
+      courseId: string,
+      category: 'video_tutorials' | 'industry_articles' | 'recommended_reading',
+      ids: number[]
+    ): Promise<{ message: string }> => {
+      return await adminApi.post(`/api/admin/courses/${courseId}/resources/external-resources/reorder`, { category, ids });
+    },
+
     createExternalResource: async (
       courseId: string,
       data: {

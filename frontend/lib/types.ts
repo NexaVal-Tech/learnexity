@@ -125,6 +125,11 @@ export interface CourseInstructor {
   photo: string | null;
   website: string | null;
   socials: { platform: string; url: string }[];
+  bio?: string | null;
+  /** Name on Meet Our Team when picked from there (details read live). */
+  team_member?: string | null;
+  /** True when the details came from the current Meet Our Team page. */
+  synced?: boolean;
 }
 
 export type ComparePriceTrack = 'self_paced' | 'group_mentorship' | 'one_on_one' | 'intermediate';
@@ -598,6 +603,8 @@ export interface AdminCourseTopic {
 
 export interface AdminCourseMaterial {
   id: number;
+  sprint_id?: number;
+  order?: number;
   name: string;
   type: string;
   sprint: string;
@@ -608,6 +615,9 @@ export interface AdminCourseMaterial {
 
 export interface AdminCourseExternalResource {
   id: number;
+  category?: 'video_tutorials' | 'industry_articles' | 'recommended_reading';
+  order?: number;
+  source?: string | null;
   title: string;
   type: string;
   platform: string | null;

@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import ComposeMessageModal from '@/components/admin/students/ComposeMessageModal';
 import SprintReorderBoard from '@/components/admin/courses/SprintReorderBoard';
+import SortableList from '@/components/admin/courses/SortableList';
 import { api, handleApiError } from '@/lib/api';
 import type { AdminCourseDetail, AdminCourseSprint } from '@/lib/types';
 
@@ -423,6 +424,14 @@ const CourseDetail = () => {
   useEffect(() => {
     if (id) fetchCourseDetails();
   }, [id]);
+
+  // Refresh without the full-page spinner (used after saving an order).
+  const refreshCourseDetails = async () => {
+    try {
+      const data = await api.admin.courses.getById(id as string);
+      setCourseData(data);
+    } catch { /* keep what's on screen */ }
+  };
 
   const fetchCourseDetails = async () => {
     try {
@@ -833,33 +842,52 @@ const CourseDetail = () => {
             <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden p-6">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Course Materials Management</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">View and manage all uploaded materials</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Drag a material (or use the arrows) to change its order inside its sprint, then click “Save order”.
+                  Students see materials in exactly this order. To move a material to another sprint or reorder sprints,
+                  use “Rearrange sprints &amp; materials” on the Sprints tab.
+                </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-100 dark:border-white/10">
-                      {['Material Name', 'Type', 'Sprint', 'Size', 'Access', 'Upload Date'].map(h => (
-                        <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                    {materials.length === 0 ? (
-                      <tr><td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">No materials uploaded yet</td></tr>
-                    ) : materials.map(material => (
-                      <tr key={material.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{material.name}</td>
-                        <td className="py-3 px-4"><span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">{material.type}</span></td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.sprint}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.size}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.access}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{material.upload_date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {materials.length === 0 ? (
+                <div className="py-8 text-center text-gray-500 dark:text-gray-400">No materials uploaded yet</div>
+              ) : (
+                <div className="space-y-6">
+                  {sprints.map((sp: any) => {
+                    const rows = materials.filter((m) => m.sprint_id === sp.id);
+                    if (rows.length === 0) return null;
+                    return (
+                      <div key={sp.id}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                          Sprint {sp.number} · {sp.title}
+                        </p>
+                        <SortableList
+                          items={rows}
+                          renderItem={(m) => (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{m.name}</span>
+                              <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-xs font-medium text-gray-600 dark:text-gray-300">{m.type}</span>
+                              <span className="text-xs text-gray-400">{m.size} · {m.access} · {m.upload_date}</span>
+                            </div>
+                          )}
+                          onSave={async (ids) => {
+                            // Keep every sprint (and every other sprint's items) exactly as they are.
+                            const order = sprints.map((s2: any) => ({
+                              id: s2.id,
+                              items: s2.id === sp.id
+                                ? ids
+                                : [...s2.topics]
+                                    .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+                                    .map((t: any) => t.id),
+                            }));
+                            await api.admin.courses.reorderMaterials(id as string, order);
+                            await refreshCourseDetails();
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -869,29 +897,57 @@ const CourseDetail = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">External Resources Management</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add external learning resources</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add external learning resources. Drag (or use the arrows) to reorder each group, then click “Save order” — students see them in this order.</p>
                 </div>
                 <button onClick={() => { setFormData({}); setIsAddResourceModalOpen(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
                   <Plus size={18} /> Add Resource
                 </button>
               </div>
-              <div className="space-y-4">
-                {external_resources.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">No external resources added yet</div>
-                ) : external_resources.map(resource => (
-                  <div key={resource.id} className="border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-gray-100 dark:bg-white/10 rounded-lg">{resource.type === 'video' ? '🎥' : '📄'}</div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{resource.title}</h3>
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">🔗 {resource.url}</a>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Added: {resource.date}</p>
+              {external_resources.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">No external resources added yet</div>
+              ) : (
+                <div className="space-y-8">
+                  {([
+                    ['video_tutorials', 'Video tutorials'],
+                    ['industry_articles', 'Industry articles'],
+                    ['recommended_reading', 'Recommended reading'],
+                  ] as const).map(([cat, label]) => {
+                    const rows = external_resources.filter((r) => (r.category ?? 'video_tutorials') === cat);
+                    return (
+                      <div key={cat}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                          {label} ({rows.length})
+                        </p>
+                        <SortableList
+                          items={rows}
+                          emptyText="None in this group."
+                          renderItem={(resource) => (
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{resource.title}</h3>
+                                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline break-all">{resource.url}</a>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                  {resource.source ? `${resource.source} · ` : ''}Added {resource.date}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteExternalResource(resource.id)}
+                                className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded flex-shrink-0"
+                                aria-label="Delete resource"
+                              ><Trash size={16} /></button>
+                            </div>
+                          )}
+                          onSave={async (ids) => {
+                            await api.adminResources.reorderExternalResources(id as string, cat, ids);
+                            await refreshCourseDetails();
+                          }}
+                        />
                       </div>
-                    </div>
-                    <button onClick={() => handleDeleteExternalResource(resource.id)} className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded self-end md:self-start"><Trash size={16} /></button>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

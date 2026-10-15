@@ -40,6 +40,8 @@ class AdminCourseExtrasController extends Controller
             'instructors.*.role'               => 'nullable|string|max:160',
             'instructors.*.website'            => 'nullable|string|max:500',
             'instructors.*.photo_url'          => 'nullable|string|max:500',
+            'instructors.*.team_member'        => 'nullable|string|max:160',
+            'instructors.*.bio'                => 'nullable|string|max:6000',
             'instructors.*.socials'            => 'nullable|array|max:8',
             'instructors.*.socials.*.platform' => 'nullable|string|max:30',
             'instructors.*.socials.*.url'      => 'nullable|string|max:500',
@@ -78,17 +80,26 @@ class AdminCourseExtrasController extends Controller
                     }
                 }
 
+                $teamMember = trim(strip_tags((string) ($row['team_member'] ?? '')));
+                if ($teamMember !== '' && !\App\Services\TeamDirectory::find($teamMember)) {
+                    $teamMember = ''; // not on the team page (any more) — keep as a typed instructor
+                }
+
                 $list[] = [
-                    'name'    => $name,
-                    'role'    => trim(strip_tags((string) ($row['role'] ?? ''))),
-                    'photo'   => $photo,
-                    'website' => $this->safeUrl($row['website'] ?? null),
-                    'socials' => $socials,
+                    'name'        => $name,
+                    'role'        => trim(strip_tags((string) ($row['role'] ?? ''))),
+                    'photo'       => $photo,
+                    'bio'         => trim(strip_tags((string) ($row['bio'] ?? ''))) ?: null,
+                    'website'     => $this->safeUrl($row['website'] ?? null),
+                    'socials'     => $socials,
+                    // Picked from Meet Our Team → details are read live from that page.
+                    'team_member' => $teamMember !== '' ? $teamMember : null,
                 ];
             }
 
             $course->course_instructors = $list;
             $course->save();
+            \Illuminate\Support\Facades\Cache::forget('team-directory:courses');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -102,7 +113,7 @@ class AdminCourseExtrasController extends Controller
             ], 500);
         }
 
-        return response()->json(['message' => 'Instructors saved', 'instructors' => $list]);
+        return response()->json(['message' => 'Instructors saved', 'instructors' => $course->fresh()->course_instructors]);
     }
 
     /** Validate + store one instructor photo without relying on fileinfo. */
@@ -182,6 +193,13 @@ class AdminCourseExtrasController extends Controller
     {
         if (preg_match('#/storage/(.+)$#', $value, $m)) {
             return $m[1];
+        }
+        // Website images (e.g. /images/jane.jpg from Meet Our Team) or full links.
+        if (preg_match('#^/images/[A-Za-z0-9_./-]+$#', $value) && !str_contains($value, '..')) {
+            return $value;
+        }
+        if (preg_match('#^https://#i', $value) && filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
         }
         return preg_match('#^[A-Za-z0-9_./-]+$#', $value) && !str_contains($value, '..') ? ltrim($value, '/') : null;
     }
