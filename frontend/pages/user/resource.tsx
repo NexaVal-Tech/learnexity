@@ -813,7 +813,7 @@ export default function ResourcesPage() {
             onClose={closeModal}
             sprints={data?.materials}
             initialItemId={initialItemId}
-            externalVideos={data?.external_resources?.video_tutorials}
+            externalVideos={data?.external_resources?.video_tutorials ? sortExternal(data.external_resources.video_tutorials) : undefined}
             onMarkComplete={handleAutoComplete}
             onTaskUpdated={handleTaskUpdated}
             onDownload={handleDownload}
@@ -834,7 +834,7 @@ onPreviewFile={async (itemId, title) => {
       {playingVideo && data && (() => {
         // Same focused player as the materials modal: Previous / Next through
         // every video in the course (sprint videos, then video tutorials).
-        const playlist = buildVideoPlaylist(data.materials as any, data.external_resources?.video_tutorials);
+        const playlist = buildVideoPlaylist(data.materials as any, sortExternal(data.external_resources?.video_tutorials ?? []));
         const start = playlist.findIndex((v) => v.key === `ext-${playingVideo.id}`);
         return start >= 0 ? (
           <VideoTheaterHost

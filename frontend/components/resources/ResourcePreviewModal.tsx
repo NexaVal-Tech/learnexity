@@ -45,6 +45,7 @@ interface ExternalVideoResource {
   url: string;
   source: string;
   duration?: string | null;
+  order?: number;
 }
 
 interface ResourcePreviewModalProps {
@@ -660,8 +661,13 @@ const SprintSection = memo(function SprintSection({
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
 export default function ResourcePreviewModal({
-  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos, onTaskUpdated,
+  url, title, onClose, sprints, initialItemId, onMarkComplete, onDownload, onPreviewFile, externalVideos: externalVideosRaw, onTaskUpdated,
 }: ResourcePreviewModalProps) {
+  // Same order as the admin list: saved order, then oldest first.
+  const externalVideos = useMemo(
+    () => (externalVideosRaw ? [...externalVideosRaw].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id) : externalVideosRaw),
+    [externalVideosRaw]
+  );
   const onTaskUpdatedRef = useRef(onTaskUpdated);
   useEffect(() => { onTaskUpdatedRef.current = onTaskUpdated; }, [onTaskUpdated]);
   const stableOnTaskUpdated = useCallback((itemId: number, task: StudentTask) => onTaskUpdatedRef.current?.(itemId, task), []);

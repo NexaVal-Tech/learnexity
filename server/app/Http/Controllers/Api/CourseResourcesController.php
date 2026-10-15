@@ -158,14 +158,17 @@ class CourseResourcesController extends Controller
             'video_tutorials' => ExternalResource::where('course_id', $courseId)
                 ->where('category', 'video_tutorials')
                 ->orderBy('order')
+                ->orderBy('id') // same order as the admin list (oldest first on ties)
                 ->get(),
             'industry_articles' => ExternalResource::where('course_id', $courseId)
                 ->where('category', 'industry_articles')
                 ->orderBy('order')
+                ->orderBy('id') // same order as the admin list (oldest first on ties)
                 ->get(),
             'recommended_reading' => ExternalResource::where('course_id', $courseId)
                 ->where('category', 'recommended_reading')
                 ->orderBy('order')
+                ->orderBy('id') // same order as the admin list (oldest first on ties)
                 ->get(),
         ];
 
