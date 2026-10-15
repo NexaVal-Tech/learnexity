@@ -176,28 +176,18 @@ function StoryCard({ t }: { t: Testimonial }) {
         className="relative w-full overflow-hidden flex flex-col bg-[linear-gradient(to_bottom,#9ca3af_0%,#6b7280_45%,#1f2937_100%)] shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
         style={{ borderRadius: RADIUS, minHeight: CARD_H }}
       >
-        {/* Photo — on top, same height on every card. The whole picture is
-            shown exactly as uploaded (never cropped or zoomed); a blurred copy
-            fills the width behind it so narrow photos have no empty bars. */}
+        {/* Photo — on top, full width of the card and the same fixed height on
+            every card (it does not follow the image's own ratio). It fills the
+            area and is positioned towards the top so faces always show. */}
         <div className="relative flex-shrink-0 h-[17rem] sm:h-[18.5rem] overflow-hidden bg-[#c7c9cc]">
           {t.thumbnail && (
-            <>
-              <CmsImage
-                src={t.thumbnail}
-                alt=""
-                aria-hidden
-                fill
-                className="object-cover scale-125 blur-2xl opacity-80"
-                sizes="(min-width:1024px) 26rem, 82vw"
-              />
-              <CmsImage
-                src={t.thumbnail}
-                alt={t.name}
-                fill
-                className="object-contain object-bottom"
-                sizes="(min-width:1024px) 26rem, 82vw"
-              />
-            </>
+            <CmsImage
+              src={t.thumbnail}
+              alt={t.name}
+              fill
+              className="object-cover object-[center_18%]"
+              sizes="(min-width:1024px) 26rem, 82vw"
+            />
           )}
           {/* Light shade at the top only, so "Read story" stays readable */}
           <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
