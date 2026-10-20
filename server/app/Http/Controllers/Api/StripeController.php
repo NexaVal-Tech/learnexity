@@ -162,6 +162,21 @@ class StripeController extends Controller
                 $session = $event->data->object;
                 $metadata = $session->metadata;
 
+                // ── Learnexity TV webinar (Premium Career Pass) ─────────
+                if (($metadata->type ?? null) === 'tv_webinar') {
+                    $regId = $metadata->tv_registration_id ?? null;
+                    $reg = $regId
+                        ? \App\Models\TvRegistration::find($regId)
+                        : \App\Models\TvRegistration::where('transaction_id', $session->id)->first();
+                    if ($reg && ($session->payment_status ?? 'paid') === 'paid') {
+                        \App\Services\TvWebinarService::markPaid($reg, $session->amount_total / 100, $session->payment_intent ?? $session->id, 'stripe', 'USD');
+                        Log::info('✅ TV webinar pass paid via Stripe webhook', ['registration_id' => $reg->id]);
+                    } else {
+                        Log::warning('⚠️ TV webinar webhook: registration not found or unpaid', ['session_id' => $session->id]);
+                    }
+                    return response()->json(['status' => 'success'], 200);
+                }
+
                 if (($metadata->type ?? null) === 'consultation') {
                     $consultationId = $metadata->consultation_id ?? null;
                     $consultation = $consultationId ? Consultation::find($consultationId) : null;

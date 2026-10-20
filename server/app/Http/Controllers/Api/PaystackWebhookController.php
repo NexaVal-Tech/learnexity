@@ -128,6 +128,21 @@ class PaystackWebhookController extends Controller
                 }
             }
 
+            // ── Learnexity TV webinar (Premium Career Pass) ─────────────
+            if (is_array($metadata) && ($metadata['type'] ?? null) === 'tv_webinar') {
+                $regId = $metadata['tv_registration_id'] ?? null;
+                $reg = $regId
+                    ? \App\Models\TvRegistration::find($regId)
+                    : \App\Models\TvRegistration::where('transaction_id', $reference)->first();
+                if ($reg) {
+                    \App\Services\TvWebinarService::markPaid($reg, (float) $amount, $reference, 'paystack', $currency);
+                    Log::info('✅ TV webinar pass paid via Paystack webhook', ['registration_id' => $reg->id]);
+                } else {
+                    Log::warning('⚠️ TV webinar webhook: registration not found', ['metadata' => $metadata]);
+                }
+                return response()->json(['status' => 'success'], 200);
+            }
+
             if (is_array($metadata) && ($metadata['type'] ?? null) === 'consultation') {
                 $consultationId = $metadata['consultation_id'] ?? null;
                 $consultation = $consultationId

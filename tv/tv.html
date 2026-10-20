@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superintelligence is Coming | Learnexity Career Webinar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0B1120',
+                            card: '#151E32',
+                            accent: '#6D28D9', /* Learnexity Brand Purple */
+                            hover: '#5B21B6',
+                            light: '#F8FAFC'
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styling for premium feel */
+        body {
+            background-color: #0B1120;
+            color: #F8FAFC;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .glass-panel {
+            background: rgba(21, 30, 50, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #ffffff, #94a3b8);
+        }
+
+        .text-gradient-gold {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #A78BFA, #6D28D9);
+        }
+
+        /* Input styling overrides */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.5);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden selection:bg-brand-accent selection:text-white">
+
+    <nav class="fixed w-full z-50 glass-panel border-b border-white/10 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="https://learnexity.org" aria-label="Learnexity home">
+                    <img src="assets/learnexity-logo.png" alt="Learnexity" class="h-9 w-auto" width="138" height="40">
+                </a>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                <a href="#the-shift" class="hover:text-white transition-colors">The Shift</a>
+                <a href="#speakers" class="hover:text-white transition-colors">Speakers</a>
+                <a href="#register" class="hover:text-white transition-colors">Register</a>
+            </div>
+            <a href="#register" class="px-5 py-2.5 bg-white text-brand-dark font-semibold rounded-full text-sm hover:bg-gray-100 transition-transform transform hover:scale-105">
+                Secure Your Spot
+            </a>
+        </div>
+    </nav>
+
+    <section class="relative pt-40 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden min-h-screen flex items-center">
+        <!-- Background subtle glow -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="inline-block px-4 py-1.5 rounded-full border border-brand-accent/30 bg-brand-accent/10 text-brand-accent text-xs font-semibold tracking-wider uppercase mb-8 animate-fade-in-up">
+                Learnexity TV Presents An Exclusive Webinar
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1] mb-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+                Superintelligence is Coming.<br>
+                <span class="text-gradient">Is Your Career Ready?</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed font-light animate-fade-in-up" style="animation-delay: 0.2s;">
+                Understand the shift. Recognize the risks. Discover the opportunities. 
+                A critical briefing for Professionals, Graduates, and Career Switchers in the U.S and beyond. positioning themselves for the next era of the digital economy.
+            </p>
+            
+            <p id="eventWhen" class="hidden mb-8 text-sm md:text-base text-white/90 font-medium animate-fade-in-up" style="animation-delay: 0.25s;">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                    <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span id="eventWhenText"></span>
+                </span>
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style="animation-delay: 0.3s;">
+                <a href="#register" class="w-full sm:w-auto px-8 py-4 bg-brand-accent text-white font-bold rounded-full text-lg hover:bg-brand-hover transition-all shadow-[0_0_20px_rgba(109,40,217,0.3)] hover:shadow-[0_0_30px_rgba(109,40,217,0.5)]">
+                    Register Now
+                </a>
+                <a href="#the-shift" class="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/20 text-white font-medium rounded-full text-lg hover:bg-white/5 transition-all">
+                    Explore the Agenda
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="the-shift" class="py-24 bg-brand-card/30 border-y border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold mb-6">The AI Paradigm Shift:<br><span class="text-brand-accent">Beyond Automation</span></h2>
+                    <p class="text-gray-400 text-lg mb-6 leading-relaxed">
+                        We are rapidly moving from narrow artificial intelligence to generalized and superintelligent systems. This is no longer just about software engineering; it is a fundamental transformation of every professional sector in the United States.
+                    </p>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        Those who understand this shift will uncover unprecedented opportunities for growth, monetization, and leadership. Those who ignore it risk rapid obsolescence.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-accent/20 flex items-center justify-center shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-semibold text-lg">Identify the Risks</h4>
+                                <p class="text-gray-400 text-sm">Understand which roles are vulnerable and how to pivot your existing expertise.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-accent/20 flex items-center justify-center shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-semibold text-lg">Seize the Opportunities</h4>
+                                <p class="text-gray-400 text-sm">Learn where the highest demand for human judgment and AI governance will be.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-accent/20 flex items-center justify-center shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-semibold text-lg">Strategic Positioning</h4>
+                                <p class="text-gray-400 text-sm">Actionable steps to safeguard and accelerate your career trajectory immediately.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-brand-accent to-blue-600 rounded-2xl blur opacity-20"></div>
+                    <div class="relative glass-panel p-8 rounded-2xl">
+                        <h3 class="text-2xl font-serif font-bold mb-4 text-white">Who Should Attend?</h3>
+                        <ul class="space-y-4 text-gray-300">
+                            <li class="flex items-center gap-3 border-b border-white/10 pb-4">
+                                <span class="text-2xl">🎓</span>
+                                <span><strong>Recent Graduates</strong> entering a hyper-competitive, AI-augmented job market.</span>
+                            </li>
+                            <li class="flex items-center gap-3 border-b border-white/10 pb-4">
+                                <span class="text-2xl">💼</span>
+                                <span><strong>Mid-Career Professionals</strong> looking to future-proof their income and relevance.</span>
+                            </li>
+                            <li class="flex items-center gap-3 border-b border-white/10 pb-4">
+                                <span class="text-2xl">🔄</span>
+                                <span><strong>Career Switchers</strong> aiming to transition safely into tech-adjacent roles.</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <span class="text-2xl">🚀</span>
+                                <span><strong>Aspiring Tech Professionals</strong> wanting to bypass outdated learning paths.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="speakers" class="py-24 px-6 relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-serif font-bold mb-4">World-Class <span class="text-gradient-gold">Insights</span></h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Learn directly from global leaders at the forefront of AI Engineering, Security, and Governance.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- Speaker 1: Mary Eze -->
+                <div class="glass-panel rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="h-64 overflow-hidden relative bg-brand-dark">
+                        <img src="assets/mary-eze.jpeg" loading="lazy" onerror="this.style.opacity=0" alt="Mary Eze" class="w-full h-full object-cover object-[center_20%] group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-90"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <h3 class="text-xl font-bold text-white font-serif">Mary Eze</h3>
+                            <p class="text-brand-accent text-sm font-medium">Founder, Learnexity | AI Governance Advocate</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            With 12+ years across tech, healthcare, and human development, Mary holds an MSN, MBA, and credentials in AI Governance & AWS Cloud. She champions responsible innovation and ensuring technological progress creates meaningful human opportunities.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Speaker 2: Daniel Adeboye -->
+                <div class="glass-panel rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="h-64 overflow-hidden relative bg-brand-dark">
+                        <img src="assets/daniel-adeboye.jpeg" loading="lazy" onerror="this.style.opacity=0" alt="Daniel Adeboye" class="w-full h-full object-cover object-[center_20%] group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-90"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <h3 class="text-xl font-bold text-white font-serif">Daniel Adeboye</h3>
+                            <p class="text-brand-accent text-sm font-medium">AI Engineer & Researcher</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            A First Class Honours graduate and PhD Researcher specializing in deep learning for cancer diagnostics. Daniel builds production AI systems—from climate-tech optimization engines to secure healthcare data infrastructures globally.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Speaker 3: Adewale Mustapha -->
+                <div class="glass-panel rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="h-64 overflow-hidden relative bg-brand-dark">
+                        <img src="assets/adewale-mustapha.jpeg" loading="lazy" onerror="this.style.opacity=0" alt="Adewale Mustapha" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-90"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <h3 class="text-xl font-bold text-white font-serif">Adewale Mustapha</h3>
+                            <p class="text-brand-accent text-sm font-medium">AI Cybersecurity Engineer</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            Lead Security Engineer in Fintech with extensive expertise in Cloud Security, Application Security, and DevSecOps. Adewale has mentored over 400 professionals, focusing on securing emerging tech like AI, Cloud, and Blockchain.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Speaker 4: Aminu Badawi -->
+                <div class="glass-panel rounded-2xl overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="h-64 overflow-hidden relative bg-brand-dark">
+                        <img src="assets/aminu-badawi.jpeg" loading="lazy" onerror="this.style.opacity=0" alt="Aminu Badawi" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-90"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <h3 class="text-xl font-bold text-white font-serif">Aminu Badawi</h3>
+                            <p class="text-brand-accent text-sm font-medium">AI & MLOps Engineer</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            Data Scientist and AI/ML Engineer creating predictive models and automation workflows across healthcare and business. Aminu builds sophisticated AI agents capable of handling complex business workflows with minimal human intervention.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="register" class="py-24 bg-brand-card/50 relative border-t border-white/5">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-serif font-bold mb-4">Choose Your Path</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Select the level of access that best aligns with your career goals.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                
+                <!-- Free Tier -->
+                <div class="glass-panel rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-colors flex flex-col h-full">
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-white mb-2">Live Access</h3>
+                        <div class="text-4xl font-serif font-bold text-white mb-4">Free</div>
+                        <p class="text-gray-400">Perfect for gaining foundational insights into the AI shift.</p>
+                    </div>
+                    <ul class="space-y-4 mb-10 flex-grow">
+                        <li class="flex items-center gap-3 text-gray-300">
+                            <svg class="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Live access to the webinar presentation
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-300">
+                            <svg class="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Join our WhatsApp community
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-600">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <span class="line-through">Access to event recordings</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-600">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <span class="line-through">Live Q&A with speakers</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-600">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <span class="line-through">1-Hour Career/Monetization Consultation</span>
+                        </li>
+                    </ul>
+                    <button id="freeBtn" onclick="openModal('freeModal')" class="w-full py-4 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-colors">
+                        Register for Free
+                    </button>
+                </div>
+
+                <!-- Premium Tier -->
+                <div class="glass-panel rounded-3xl p-8 border border-brand-accent relative flex flex-col h-full transform md:-translate-y-4 shadow-2xl shadow-brand-accent/10">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-accent text-brand-dark px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
+                        Recommended
+                    </div>
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-white mb-2">Premium Career Pass</h3>
+                        <div class="text-4xl font-serif font-bold text-brand-accent mb-4" data-price>$20</div>
+                        <p class="text-gray-400">The ultimate package for actionable career transformation.</p>
+                    </div>
+                    <ul class="space-y-4 mb-10 flex-grow">
+                        <li class="flex items-center gap-3 text-white">
+                            <svg class="w-5 h-5 text-brand-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Live access to the webinar presentation
+                        </li>
+                        <li class="flex items-center gap-3 text-white">
+                            <svg class="w-5 h-5 text-brand-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <strong>Lifetime access to event recordings</strong>
+                        </li>
+                        <li class="flex items-center gap-3 text-white">
+                            <svg class="w-5 h-5 text-brand-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <strong>Exclusive Live Q&A with speakers</strong>
+                        </li>
+                        <li class="flex items-start gap-3 text-white">
+                            <svg class="w-5 h-5 text-brand-accent shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span><strong>1-Hour Private Consultation</strong><br><span class="text-sm text-gray-400">(Career mapping or monetization strategy)</span></span>
+                        </li>
+                        <li class="flex items-center gap-3 text-white">
+                            <svg class="w-5 h-5 text-brand-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            VIP Community Access
+                        </li>
+                    </ul>
+                    <button id="premiumBtn" onclick="openModal('paidModal')" class="w-full py-4 rounded-xl bg-brand-accent text-white font-bold hover:bg-brand-hover transition-colors shadow-[0_0_15px_rgba(109,40,217,0.4)]">
+                        Upgrade & Secure Pass
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/10 bg-brand-dark py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-2xl font-serif font-bold text-white tracking-tight">Learnexity<span class="text-brand-accent">.</span></div>
+            <div class="flex flex-col items-center md:items-end text-sm text-gray-400">
+                <p>Learnexity.org</p>
+                <p>Email: <a href="mailto:info@learnexity.org" class="hover:text-brand-accent transition-colors">info@learnexity.org</a></p>
+                <p>WhatsApp: <a href="https://wa.me/12762528415" class="hover:text-brand-accent transition-colors">+1 (276) 252-8415</a></p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-8 pt-8 border-t border-white/5 text-center text-xs text-gray-600">
+            &copy; 2026 Learnexity. All rights reserved. Preparing workforce readiness for a digital economy.
+        </div>
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        
+        <!-- Free Registration Form -->
+        <div id="freeModal" class="hidden bg-brand-card border border-white/10 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative">
+            <button onclick="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-2xl font-serif font-bold text-white mb-2">Free Registration</h3>
+            <p class="text-gray-400 text-sm mb-6">Secure your live access. Please provide your details below.</p>
+            
+            <form id="freeForm" onsubmit="handleFreeSubmit(event)" class="space-y-4" novalidate>
+                <!-- Spam trap: hidden from people, bots fill it in -->
+                <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+                    <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Full Name</label>
+                    <input type="text" name="full_name" maxlength="120" autocomplete="name" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Email Address</label>
+                    <input type="email" name="email" maxlength="190" autocomplete="email" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="john@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">WhatsApp / Phone Number <span class="text-gray-500">(optional)</span></label>
+                    <input type="tel" name="phone" maxlength="30" autocomplete="tel" class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="+1 555 123 4567">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">What would you like to learn about AI?</label>
+                    <input type="text" name="learn_about" maxlength="500" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="e.g. Prompt engineering, AI tools">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">What is your biggest career concern right now?</label>
+                    <input type="text" name="career_concern" maxlength="500" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="e.g. Job replacement, staying relevant">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">How did you hear about us?</label>
+                    <select name="heard_from" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-accent transition-colors appearance-none">
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="email">Email</option>
+                        <option value="friend">Friend / Colleague</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <p data-error class="hidden text-sm text-red-400"></p>
+                <button type="submit" data-submit class="w-full py-4 mt-4 bg-white text-brand-dark font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                    Complete Registration
+                </button>
+            </form>
+        </div>
+
+        <!-- Paid Registration Form -->
+        <div id="paidModal" class="hidden bg-brand-card border border-brand-accent/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative">
+            <button onclick="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-2xl font-serif font-bold text-white mb-2">Premium Pass <span class="text-brand-accent">(<span data-price>$20</span>)</span></h3>
+            <p class="text-gray-400 text-sm mb-6">Includes recordings, Q&A, and a 1-hour private consultation.</p>
+            
+            <form id="paidForm" onsubmit="handlePaidSubmit(event)" class="space-y-4" novalidate>
+                <!-- Spam trap: hidden from people, bots fill it in -->
+                <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+                    <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Full Name</label>
+                    <input type="text" name="full_name" maxlength="120" autocomplete="name" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Email Address</label>
+                    <input type="email" name="email" maxlength="190" autocomplete="email" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="john@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">WhatsApp / Phone Number <span class="text-gray-500">(optional)</span></label>
+                    <input type="tel" name="phone" maxlength="30" autocomplete="tel" class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-brand-accent transition-colors" placeholder="+1 555 123 4567">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Consultation Preference</label>
+                    <select name="consultation_focus" required class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-accent transition-colors appearance-none">
+                        <option value="" disabled selected>Select your 1-hour session focus</option>
+                        <option value="career">Career Strategy & Mapping</option>
+                        <option value="monetization">Monetization & Business Strategy</option>
+                    </select>
+                </div>
+                <p data-error class="hidden text-sm text-red-400"></p>
+                <div class="pt-4">
+                    <button type="submit" data-submit class="disabled:opacity-60 disabled:cursor-not-allowed w-full py-4 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-hover transition-colors flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(109,40,217,0.4)]">
+                        <span data-submit-label>Proceed to Payment (<span data-price>$20</span>)</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+                <p class="text-xs text-center text-gray-500 mt-4" id="checkoutNote">Secure checkout powered by Stripe. You'll come back here after paying.</p>
+            </form>
+        </div>
+
+        <!-- Success/WhatsApp Modal -->
+        <div id="successModal" class="hidden bg-brand-card border border-green-500/50 rounded-2xl w-full max-w-md p-8 shadow-2xl relative text-center">
+            <button onclick="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 id="successTitle" class="text-2xl font-serif font-bold text-white mb-2">Registration Successful!</h3>
+            <p id="successText" class="text-gray-300 mb-8 leading-relaxed">
+                Thank you for reserving your spot.<br>
+                <strong>Important Next Step:</strong> Please chat with us on WhatsApp to join the official community and receive your joining link.
+            </p>
+            <a id="successWhatsapp" href="https://wa.me/12762528415" target="_blank" rel="noopener noreferrer" class="w-full py-4 bg-[#25D366] text-white font-bold rounded-lg hover:bg-[#1DA851] transition-colors flex justify-center items-center gap-2 shadow-lg shadow-green-500/20">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                Chat on WhatsApp Now
+            </a>
+            <p class="text-xs text-gray-500 mt-4">Number: <span data-wa-number>+1 (276) 252-8415</span></p>
+        </div>
+
+    </div>
+
+    <script>
+        /* ─────────────────────────────────────────────────────────────
+         * Connection to the Learnexity server.
+         * Live: https://api.learnexity.org — when this file is opened
+         * locally (localhost / file://) it talks to http://localhost:8000.
+         * ───────────────────────────────────────────────────────────── */
+        const API_BASE = (function () {
+            const h = window.location.hostname;
+            if (!h || h === 'localhost' || h === '127.0.0.1') return 'http://localhost:8000';
+            return 'https://api.learnexity.org';
+        })();
+
+        const overlay = document.getElementById('modalOverlay');
+        const freeModal = document.getElementById('freeModal');
+        const paidModal = document.getElementById('paidModal');
+        const successModal = document.getElementById('successModal');
+        let settings = null;
+
+        function openModal(modalId) {
+            freeModal.classList.add('hidden');
+            paidModal.classList.add('hidden');
+            successModal.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.getElementById(modalId).classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModals() {
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                freeModal.classList.add('hidden');
+                paidModal.classList.add('hidden');
+                successModal.classList.add('hidden');
+            }, 300);
+            document.body.style.overflow = 'auto';
+        }
+
+        /** Show the success / info modal with our own wording (text only — never HTML). */
+        function showResult(title, lines, whatsappUrl, showWhatsapp) {
+            document.getElementById('successTitle').textContent = title;
+            const p = document.getElementById('successText');
+            p.textContent = '';
+            lines.forEach((line, i) => {
+                if (i) p.appendChild(document.createElement('br'));
+                if (typeof line === 'object') {
+                    const b = document.createElement('strong');
+                    b.textContent = line.bold;
+                    p.appendChild(b);
+                    p.appendChild(document.createTextNode(' ' + (line.text || '')));
+                } else {
+                    p.appendChild(document.createTextNode(line));
+                }
+            });
+            const wa = document.getElementById('successWhatsapp');
+            if (whatsappUrl && /^https:\/\/wa\.me\/\d+$/.test(whatsappUrl)) wa.href = whatsappUrl;
+            wa.style.display = showWhatsapp === false ? 'none' : '';
+            openModal('successModal');
+        }
+
+        function formatPrice(amount, currency) {
+            const n = Number(amount) || 0;
+            const s = n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+            return (currency === 'NGN' ? '₦' : '$') + s;
+        }
+
+        function setError(form, message) {
+            const el = form.querySelector('[data-error]');
+            if (!el) return;
+            el.textContent = message || '';
+            el.classList.toggle('hidden', !message);
+        }
+
+        function setBusy(form, busy, label) {
+            const btn = form.querySelector('[data-submit]');
+            if (!btn) return;
+            btn.disabled = busy;
+            if (busy) {
+                btn.dataset.html = btn.dataset.html || btn.innerHTML;
+                btn.textContent = label || 'Please wait…';
+            } else if (btn.dataset.html) {
+                btn.innerHTML = btn.dataset.html;
+                applyPrice(); // the button contains the price
+            }
+        }
+
+        function formData(form) {
+            const data = {};
+            new FormData(form).forEach((v, k) => { data[k] = typeof v === 'string' ? v.trim() : v; });
+            return data;
+        }
+
+        function firstError(json) {
+            if (json && json.errors) {
+                const first = Object.values(json.errors)[0];
+                if (Array.isArray(first) && first.length) return first[0];
+            }
+            return (json && json.message) || 'Something went wrong. Please try again.';
+        }
+
+        async function postJson(path, body) {
+            const res = await fetch(API_BASE + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            let json = null;
+            try { json = await res.json(); } catch (e) { /* not JSON */ }
+            if (res.status === 429) throw new Error('Too many attempts. Please wait a minute and try again.');
+            if (!res.ok) throw new Error(firstError(json));
+            return json || {};
+        }
+
+        function validate(form) {
+            // Uses the browser's built-in checks (required, email format…)
+            const bad = Array.from(form.querySelectorAll('input, select')).find((el) => el.name !== 'website' && !el.checkValidity());
+            if (bad) {
+                bad.focus();
+                const label = bad.closest('div') && bad.closest('div').querySelector('label');
+                return (label ? label.textContent.replace('(optional)', '').trim() : 'This field') + ': ' + (bad.validationMessage || 'please check this field.');
+            }
+            return null;
+        }
+
+        async function handleFreeSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            setError(form, '');
+            const problem = validate(form);
+            if (problem) return setError(form, problem);
+
+            setBusy(form, true, 'Registering…');
+            try {
+                const json = await postJson('/api/tv/register', formData(form));
+                form.reset();
+                showResult(
+                    json.already ? "You're already registered!" : 'Registration Successful!',
+                    ['Thank you for reserving your spot. A confirmation email is on its way.', { bold: 'Important Next Step:', text: 'Please chat with us on WhatsApp to join the official community and receive your joining link.' }],
+                    json.whatsapp_url
+                );
+            } catch (err) {
+                setError(form, err.message);
+            } finally {
+                setBusy(form, false);
+            }
+        }
+
+        async function handlePaidSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            setError(form, '');
+            const problem = validate(form);
+            if (problem) return setError(form, problem);
+
+            setBusy(form, true, 'Taking you to secure checkout…');
+            try {
+                const json = await postJson('/api/tv/checkout', formData(form));
+                if (json.already_paid) {
+                    showResult('You already have a Premium pass', ['This email already has a paid Premium Career Pass — no need to pay again.', { bold: 'Next step:', text: 'Chat with us on WhatsApp to receive your joining link.' }], json.whatsapp_url);
+                    return;
+                }
+                if (json.checkout_url && /^https:\/\//.test(json.checkout_url)) {
+                    window.location.href = json.checkout_url; // Stripe / Paystack page
+                    return;
+                }
+                throw new Error('Could not start payment. Please try again.');
+            } catch (err) {
+                setError(form, err.message);
+                setBusy(form, false);
+            }
+        }
+
+        /* After returning from Stripe / Paystack */
+        async function handlePaymentReturn() {
+            const q = new URLSearchParams(window.location.search);
+            const status = q.get('payment');
+            if (!status) return;
+
+            const clean = () => history.replaceState(null, '', window.location.pathname + '#register');
+
+            if (status === 'cancelled') {
+                clean();
+                showResult('Payment cancelled', ['No payment was taken. You can try again any time, or register for free live access instead.'], null, false);
+                return;
+            }
+
+            const provider = q.get('provider');
+            const params = new URLSearchParams({ provider: provider || '' });
+            if (provider === 'stripe') params.set('session_id', q.get('session_id') || '');
+            if (provider === 'paystack') params.set('reference', q.get('reference') || q.get('trxref') || '');
+
+            showResult('Confirming your payment…', ['Please wait a moment while we confirm your payment.'], null, false);
+
+            // The payment provider can take a few seconds to notify us — retry a few times.
+            for (let i = 0; i < 6; i++) {
+                try {
+                    const res = await fetch(API_BASE + '/api/tv/verify?' + params.toString(), { headers: { Accept: 'application/json' } });
+                    const json = await res.json().catch(() => ({}));
+                    if (res.ok && json.paid) {
+                        clean();
+                        showResult('Payment Successful!', [
+                            'Welcome' + (json.first_name ? ', ' + json.first_name : '') + '! Your Premium Career Pass is confirmed and a receipt is on its way to your email.',
+                            { bold: 'Important Next Step:', text: 'Please chat with us on WhatsApp to join the VIP community and receive your joining link. Our team will contact you to book your 1-hour consultation.' },
+                        ], json.whatsapp_url);
+                        return;
+                    }
+                } catch (e) { /* retry */ }
+                await new Promise((r) => setTimeout(r, 2500));
+            }
+            clean();
+            showResult('Payment is being processed', ["We haven't received the confirmation yet. If you completed the payment, you'll get a confirmation email shortly. If not, please contact us on WhatsApp."], null);
+        }
+
+        /* Price, date and availability from the admin settings */
+        function applyPrice() {
+            if (!settings) return;
+            const label = formatPrice(settings.price, settings.currency);
+            document.querySelectorAll('[data-price]').forEach((el) => { el.textContent = label; });
+            const note = document.getElementById('checkoutNote');
+            if (note) note.textContent = 'Secure checkout powered by ' + (settings.provider === 'paystack' ? 'Paystack' : 'Stripe') + ". You'll come back here after paying.";
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(API_BASE + '/api/tv/settings', { headers: { Accept: 'application/json' } });
+                if (!res.ok) return;
+                settings = await res.json();
+            } catch (e) { return; }
+
+            applyPrice();
+
+            const when = settings.event_time_label || (settings.event_at
+                ? new Date(settings.event_at).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+                : '');
+            if (when) {
+                document.getElementById('eventWhenText').textContent = when;
+                document.getElementById('eventWhen').classList.remove('hidden');
+            }
+
+            if (settings.whatsapp_number) {
+                const digits = String(settings.whatsapp_number).replace(/\D+/g, '');
+                if (digits) {
+                    document.querySelectorAll('a[href^="https://wa.me/"]').forEach((a) => { a.href = 'https://wa.me/' + digits; });
+                }
+            }
+
+            const freeBtn = document.getElementById('freeBtn');
+            const premiumBtn = document.getElementById('premiumBtn');
+            if (!settings.registration_open) {
+                [freeBtn, premiumBtn].forEach((b) => { b.disabled = true; b.textContent = 'Registration closed'; b.classList.add('opacity-60', 'cursor-not-allowed'); });
+            } else if (!settings.premium_open) {
+                premiumBtn.disabled = true;
+                premiumBtn.textContent = settings.premium_seats_left === 0 ? 'Sold out' : 'Not available';
+                premiumBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            } else if (settings.premium_seats_left !== null && settings.premium_seats_left !== undefined && settings.premium_seats_left <= 20) {
+                premiumBtn.textContent = 'Upgrade & Secure Pass — only ' + settings.premium_seats_left + ' left';
+            }
+        }
+
+        // Close modal on outside click
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModals();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeModals(); });
+
+        // Navbar blur effect on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) nav.classList.add('bg-brand-dark/80');
+            else nav.classList.remove('bg-brand-dark/80');
+        });
+
+        loadSettings();
+        handlePaymentReturn();
+    </script>
+</body>
+</html>

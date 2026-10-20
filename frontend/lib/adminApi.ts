@@ -144,6 +144,7 @@ export const ADMIN_PERMISSIONS: Record<string, string> = {
   course_certificate_template: 'Course certificate design',
   course_badge_template: 'Course badge design',
   attending_flyer: '"I Will Be Attending" flyer',
+  tv: 'Learnexity TV webinar: registrations & payments',
   activity: 'Activity log & analytics',
   cms: 'Website content (CMS): pages, navbar, footer, media',
 };

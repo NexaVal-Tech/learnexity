@@ -9,6 +9,8 @@ return [
         'https://learnexity.org',
         'https://www.learnexity.org',
         'https://advisory.learnexity.org',
+        'https://tv.learnexity.org',
+        env('TV_URL', 'https://tv.learnexity.org'),
         env('FRONTEND_URL', 'http://localhost:3000'),
         env('ADVISORY_URL', 'http://localhost:3010'),
     ],

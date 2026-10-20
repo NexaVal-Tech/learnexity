@@ -324,6 +324,16 @@ Route::middleware('throttle:api')->prefix('consultations')->group(function () {
     Route::get('/verify',         [ConsultationPaymentController::class, 'verify']);
 });
 
+// =================== LEARNEXITY TV WEBINAR (tv.learnexity.org) =================== //
+Route::middleware('throttle:api')->prefix('tv')->group(function () {
+    Route::get('/settings', [\App\Http\Controllers\Api\TvWebinarController::class, 'settings']);
+    Route::get('/verify',   [\App\Http\Controllers\Api\TvWebinarController::class, 'verify']);
+});
+Route::middleware('throttle:payments')->prefix('tv')->group(function () {
+    Route::post('/register', [\App\Http\Controllers\Api\TvWebinarController::class, 'register']);
+    Route::post('/checkout', [\App\Http\Controllers\Api\TvWebinarController::class, 'checkout']);
+});
+
 Route::middleware('throttle:payments')->prefix('consultations')->group(function () {
     Route::post('/initiate', [ConsultationPaymentController::class, 'initiate']);
 });
@@ -527,6 +537,18 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     });
 
     // "I will be attending" flyer — standalone singleton settings, one-off feature
+    // Learnexity TV webinar — settings + registrations
+    Route::prefix('tv')->middleware('admin.permission:tv')->group(function () {
+        Route::get('/settings',                     [\App\Http\Controllers\Api\AdminTvController::class, 'getSettings']);
+        Route::put('/settings',                     [\App\Http\Controllers\Api\AdminTvController::class, 'updateSettings']);
+        Route::get('/registrations',                [\App\Http\Controllers\Api\AdminTvController::class, 'index']);
+        Route::get('/registrations/export',         [\App\Http\Controllers\Api\AdminTvController::class, 'export']);
+        Route::put('/registrations/{id}',           [\App\Http\Controllers\Api\AdminTvController::class, 'update'])->whereNumber('id');
+        Route::delete('/registrations/{id}',        [\App\Http\Controllers\Api\AdminTvController::class, 'destroy'])->whereNumber('id');
+        Route::post('/send-join-link',              [\App\Http\Controllers\Api\AdminTvController::class, 'sendJoinLink']);
+        Route::post('/send-recording',              [\App\Http\Controllers\Api\AdminTvController::class, 'sendRecording']);
+    });
+
     Route::prefix('attending-flyer')->middleware('admin.permission:attending_flyer')->group(function () {
         Route::get('/settings',  [AdminAttendingFlyerController::class, 'getSettings']);
         Route::post('/settings', [AdminAttendingFlyerController::class, 'updateSettings']);

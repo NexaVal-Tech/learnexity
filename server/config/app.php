@@ -37,6 +37,9 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', env('APP_URL')),
 
+    // Standalone Learnexity TV webinar page (tv/tv.html).
+    'tv_url' => env('TV_URL', 'https://tv.learnexity.org'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

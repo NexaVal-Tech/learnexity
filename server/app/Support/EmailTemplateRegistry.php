@@ -147,6 +147,52 @@ class EmailTemplateRegistry
                 ],
             ],
 
+            // ── Learnexity TV webinar ───────────────────────────────────
+            'tv_registered_free' => [
+                'label' => 'Webinar: free registration', 'group' => 'Learnexity TV',
+                'description' => 'Sent when someone registers for free live access on tv.learnexity.org.',
+                'placeholders' => ['name' => ['Registrant name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'webinar' => ['Webinar title', 'Superintelligence is Coming'], 'when' => ['Date & time', 'Saturday, Nov 8 · 12pm ET'], 'join_link' => ['Joining link', 'https://zoom.us/j/123'], 'recording_link' => ['Recording link', 'https://youtu.be/abc'], 'whatsapp' => ['WhatsApp link', 'https://wa.me/12762528415']],
+                'defaults' => [
+                    'subject' => "You're registered: {webinar}",
+                    'heading' => "You're registered!",
+                    'body' => "Hi {first_name},\n\nThank you for registering for **{webinar}** ({when}). Your free live access is reserved.\n\nNext step: chat with us on WhatsApp to join the official community and receive your joining link: {whatsapp}",
+                    'button' => 'Chat on WhatsApp',
+                ],
+            ],
+            'tv_registered_premium' => [
+                'label' => 'Webinar: Premium Career Pass paid', 'group' => 'Learnexity TV',
+                'description' => 'Sent after a Premium Career Pass payment succeeds.',
+                'placeholders' => ['name' => ['Registrant name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'webinar' => ['Webinar title', 'Superintelligence is Coming'], 'when' => ['Date & time', 'Saturday, Nov 8 · 12pm ET'], 'join_link' => ['Joining link', 'https://zoom.us/j/123'], 'recording_link' => ['Recording link', 'https://youtu.be/abc'], 'whatsapp' => ['WhatsApp link', 'https://wa.me/12762528415']],
+                'defaults' => [
+                    'subject' => 'Payment confirmed — your Premium Career Pass for "{webinar}"',
+                    'heading' => 'Your Premium Career Pass is confirmed',
+                    'body' => "Hi {first_name},\n\nThank you — your payment was successful and your **Premium Career Pass** for **{webinar}** ({when}) is active.\n\nIt includes live access, lifetime access to the recordings, the exclusive live Q&A, VIP community access and a 1-hour private consultation. Our team will contact you to schedule your consultation.\n\nNext step: chat with us on WhatsApp to join the community: {whatsapp}",
+                    'button' => 'Chat on WhatsApp',
+                ],
+            ],
+            'tv_join_link' => [
+                'label' => 'Webinar: joining link', 'group' => 'Learnexity TV',
+                'description' => 'Sent when an admin clicks “Send joining link” in Admin → Learnexity TV.',
+                'placeholders' => ['name' => ['Registrant name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'webinar' => ['Webinar title', 'Superintelligence is Coming'], 'when' => ['Date & time', 'Saturday, Nov 8 · 12pm ET'], 'join_link' => ['Joining link', 'https://zoom.us/j/123'], 'recording_link' => ['Recording link', 'https://youtu.be/abc'], 'whatsapp' => ['WhatsApp link', 'https://wa.me/12762528415']],
+                'defaults' => [
+                    'subject' => 'Your joining link: {webinar}',
+                    'heading' => 'Here is your joining link',
+                    'body' => "Hi {first_name},\n\nYou're registered for **{webinar}** ({when}). Use the button below to join when we go live — we recommend joining a few minutes early.",
+                    'button' => 'Join the webinar',
+                ],
+            ],
+            'tv_recording' => [
+                'label' => 'Webinar: recording (Premium)', 'group' => 'Learnexity TV',
+                'description' => 'Sent to paid Premium Career Pass holders when an admin clicks “Send recording”.',
+                'placeholders' => ['name' => ['Registrant name', 'Ada Obi'], 'first_name' => ['First name', 'Ada'], 'webinar' => ['Webinar title', 'Superintelligence is Coming'], 'when' => ['Date & time', 'Saturday, Nov 8 · 12pm ET'], 'join_link' => ['Joining link', 'https://zoom.us/j/123'], 'recording_link' => ['Recording link', 'https://youtu.be/abc'], 'whatsapp' => ['WhatsApp link', 'https://wa.me/12762528415']],
+                'defaults' => [
+                    'subject' => 'Your recording is ready: {webinar}',
+                    'heading' => 'Your recording is ready',
+                    'body' => "Hi {first_name},\n\nThank you for being part of **{webinar}**. As a Premium Career Pass holder you have lifetime access to the recording — watch it any time with the button below.",
+                    'button' => 'Watch the recording',
+                ],
+            ],
+
             // ── Payments ────────────────────────────────────────────────
             'payment_confirmation' => [
                 'label' => 'Payment confirmation', 'group' => $payments,
