@@ -14,6 +14,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 type CourseRef = { course_id: string; title: string };
 const TeachesContext = createContext<Record<string, CourseRef[]>>({});
 const nameKey = (n: string) => n.trim().replace(/\s+/g, " ").toLowerCase();
+/** URL anchor for a person, e.g. /our-team#daniel-adeboye (used by course pages). */
+export const memberSlug = (n: string) =>
+  n.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 function useTeaches(member: TeamMember): CourseRef[] {
   const map = useContext(TeachesContext);
@@ -298,7 +301,7 @@ function BioModal({ member, onClose, comingSoonLabel }: { member: TeamMember; on
 // ─── FEATURED CARD (CEO) ──────────────────────────────────────────────────────
 function FeaturedCard({ member, badge }: { member: TeamMember; badge: string }) {
   return (
-    <div className="featured-card" style={{borderRadius: "2.5rem 1rem 2.5rem 1rem", border: `1px solid ${BRAND}44`, background: "var(--surface-elevated)", backdropFilter: "blur(12px)", padding: "0", overflow: "hidden",
+    <div id={memberSlug(member.name)} className="featured-card" style={{scrollMarginTop: "7rem", borderRadius: "2.5rem 1rem 2.5rem 1rem", border: `1px solid ${BRAND}44`, background: "var(--surface-elevated)", backdropFilter: "blur(12px)", padding: "0", overflow: "hidden",
         display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, boxShadow: `0 0 60px ${BRAND}22, 0 30px 80px rgba(0,0,0,0.7)`, }}>
       {/* Photo side */}
       <div style={{position: "relative", minHeight: "460px", background: `linear-gradient(135deg, ${BRAND}18 0%, #1a1a22 100%)`, overflow: "hidden", }} >
@@ -393,7 +396,7 @@ function FeaturedCard({ member, badge }: { member: TeamMember; badge: string }) 
 // ─── REGULAR MEMBER CARD ──────────────────────────────────────────────────────
 function MemberCard({ member, onReadBio, learnMoreLabel }: { member: TeamMember; onReadBio: (member: TeamMember) => void; learnMoreLabel: string }) {
   return (
-    <div className="member-card" style={{borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", backdropFilter: "blur(8px)", overflow: "hidden",
+    <div id={memberSlug(member.name)} className="member-card" style={{scrollMarginTop: "7rem", borderRadius: "2rem 0.75rem 2rem 0.75rem", border: "1px solid var(--border-subtle)", background: "var(--surface-elevated)", backdropFilter: "blur(8px)", overflow: "hidden",
         display: "flex", flexDirection: "column", boxShadow: "0 25px 50px rgba(0,0,0,0.6)", transition: "all 0.35s ease",}}>
       {/* Photo */}
       <div style={{position: "relative", height: "320px", background: `linear-gradient(135deg, ${BRAND}14 0%, #18181f 100%)`, overflow: "hidden", flexShrink: 0,}} >
@@ -581,6 +584,30 @@ export function TeamMembers({ data }: { data: TeamMembersData }) {
   const rest = members.filter((m) => m !== featured);
   const [activeMember, setActiveMember] = useState<TeamMember | null>(null);
   const [teaches, setTeaches] = useState<Record<string, CourseRef[]>>({});
+
+  // Arriving from a course page (/our-team#jane-doe): scroll to that person,
+  // highlight their card and open their bio.
+  useEffect(() => {
+    const go = () => {
+      const slug = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+      if (!slug) return;
+      const person = members.find((m) => memberSlug(m.name) === slug);
+      if (!person) return;
+      const el = document.getElementById(slug);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("member-highlight");
+        window.setTimeout(() => el.classList.remove("member-highlight"), 2600);
+      }
+      if (person !== featured && !person.comingSoon) {
+        window.setTimeout(() => setActiveMember(person), 650);
+      }
+    };
+    const t = window.setTimeout(go, 300);
+    window.addEventListener("hashchange", go);
+    return () => { window.clearTimeout(t); window.removeEventListener("hashchange", go); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members.length]);
   useEffect(() => {
     let alive = true;
     fetch(`${API_URL}/api/courses/team-instructors`, { headers: { Accept: "application/json" } })
@@ -602,6 +629,7 @@ export function TeamMembers({ data }: { data: TeamMembersData }) {
           transform: scale(1.04);
           transition: transform 0.5s ease;
         }
+        .member-highlight { box-shadow: 0 0 0 3px ${BRAND}, 0 20px 60px ${BRAND}55 !important; transition: box-shadow 0.4s ease; }
         .linkedin-badge { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .linkedin-badge:hover { transform: translateY(-1px) scale(1.04); box-shadow: 0 10px 24px rgba(10,102,194,0.6) !important; }
         .social-link:hover {

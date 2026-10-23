@@ -552,12 +552,12 @@ export default function CoursePage() {
                 </div>
               )}
 
-              {/* Career path */}
+              {/* Job roles */}
               {careerPaths.length > 0 && (
                 <div className={card}>
-                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">Career Path &amp; Progression</h2>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-2">Job Roles</h2>
                   <p className="text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">
-                    We equip you with the skills and guidance to grow and succeed in your career.
+                    The roles this program prepares you for — from your first job to senior positions.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="space-y-3">
@@ -579,7 +579,7 @@ export default function CoursePage() {
                     </div>
                     <CmsImage
                       src="/images/career-path.png"
-                      alt="Career path"
+                      alt="Job roles"
                       width={596}
                       height={500}
                       sizes="(min-width: 1024px) 400px, 90vw"
@@ -654,6 +654,18 @@ export default function CoursePage() {
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-28 space-y-6">
                 <div className="lx-card p-6">
+                  {/* Program includes — first, same sizes as Program Structure */}
+                  <div className="mb-6 pb-6 border-b border-[var(--border-subtle)]">
+                    <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Program Includes</h3>
+                    <ul className="space-y-2.5">
+                      {INCLUDES.map((i) => (
+                        <li key={i} className="flex items-start text-sm text-[var(--text-secondary)]">
+                          <Check size={16} className="mr-2 mt-0.5 flex-shrink-0" style={{ color: BRAND }} /> {i}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
                   <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Program Structure</h3>
                   <ul className="space-y-4 mb-6">
                     {structure.filter((r) => r.value).map(({ icon: Icon, label, value }) => (
@@ -765,27 +777,17 @@ export default function CoursePage() {
                     </a>
                   )}
 
-                  <div className="mt-6 pt-4 border-t border-[var(--border-subtle)]">
-                    <p className="text-xs font-bold text-[var(--text-primary)] mb-2">Program Includes:</p>
-                    <ul className="text-xs text-[var(--text-muted)] space-y-1">
-                      {INCLUDES.map((i) => (
-                        <li key={i} className="flex items-center">
-                          <Check size={12} className="mr-1.5 flex-shrink-0" style={{ color: BRAND }} /> {i}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
 
                 <div className="text-white lx-r shadow-md p-6 border border-slate-800" style={{ background: `linear-gradient(135deg, #0f172a 0%, ${HERO_BG} 100%)` }}>
                   <div className="flex items-center mb-3">
                     <BadgeCheck size={24} className="text-emerald-400 mr-3" />
-                    <h4 className="font-semibold text-lg">Learnexity Validation</h4>
+                    <h4 className="text-2xl font-semibold">Learnexity Validation</h4>
                   </div>
-                  <p className="text-sm text-slate-300 mb-2">
+                  <p className="text-sm text-slate-200 mb-2">
                     Qualified individuals will get <strong>Learnexity Verified</strong>
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-sm text-slate-300 leading-relaxed">
                     Which allows you to join our verified talent pool for potential employment opportunities, projects, and employer partnerships.
                   </p>
                 </div>
@@ -837,6 +839,11 @@ function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_ins
   const paragraphs = (ins.bio ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const long = (ins.bio ?? "").length > 360 || paragraphs.length > 2;
   const shown = open || !long ? paragraphs : paragraphs.slice(0, 1);
+  // Instructors picked from Meet Our Team link to their card there.
+  const teamName = ins.team_member || (ins.synced ? ins.name : null);
+  const teamHref = teamName
+    ? `/our-team#${teamName.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`
+    : null;
 
   return (
     <div className={`${inset} p-4 sm:p-5`}>
@@ -849,7 +856,13 @@ function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_ins
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
+          {teamHref ? (
+            <Link href={teamHref} className="text-lg font-semibold text-[var(--text-primary)] leading-snug hover:underline">
+              {ins.name}
+            </Link>
+          ) : (
+            <p className="text-lg font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
+          )}
           {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug">{ins.role}</p>}
           {links.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 mt-2.5">
@@ -889,6 +902,11 @@ function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_ins
             </button>
           )}
         </div>
+      )}
+      {teamHref && (
+        <Link href={teamHref} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" style={{ color: BRAND }}>
+          View {ins.name.split(" ")[0]}&apos;s profile on Meet Our Team →
+        </Link>
       )}
     </div>
   );

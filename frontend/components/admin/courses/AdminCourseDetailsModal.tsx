@@ -284,7 +284,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
     { id: 'tools' as DetailSection, label: 'Tools', icon: Wrench },
     { id: 'learnings' as DetailSection, label: 'What You\'ll Learn', icon: BookOpen },
     { id: 'benefits' as DetailSection, label: 'Benefits', icon: Star },
-    { id: 'career_paths' as DetailSection, label: 'Career Paths', icon: Briefcase },
+    { id: 'career_paths' as DetailSection, label: 'Job Roles', icon: Briefcase },
     { id: 'industries' as DetailSection, label: 'Industries', icon: Building2 },
     { id: 'salary' as DetailSection, label: 'Salary Info', icon: DollarSign },
   ];
@@ -473,7 +473,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
               </div>
             )}
 
-            {/* Career Paths Section */}
+            {/* Job Roles Section */}
             {activeSection === 'career_paths' && (
               <div className="space-y-4">
                 {careerPaths.map((path, index) => (
@@ -490,7 +490,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                     </select>
                     <input
                       type="text"
-                      placeholder="Position (e.g., Junior Developer)"
+                      placeholder="Job role (e.g., Junior Developer)"
                       value={path.position}
                       onChange={(e) => updateCareerPath(index, 'position', e.target.value)}
                       className="flex-1 px-4 py-3 text-gray-700 dark:text-white border border-gray-200 dark:border-white/20 dark:bg-white/5 rounded-xl focus:ring-2 focus:ring-[#0F172A] focus:border-transparent"
@@ -510,7 +510,7 @@ const AddCourseDetailsModal: React.FC<AddCourseDetailsModalProps> = ({
                   className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Plus size={18} />
-                  Add Career Path
+                  Add Job Role
                 </button>
               </div>
             )}

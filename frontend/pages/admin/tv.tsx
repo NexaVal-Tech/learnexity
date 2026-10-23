@@ -423,7 +423,7 @@ export default function AdminTvPage() {
           <div className={`${CARD} p-6 space-y-3`}>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Send emails</h2>
             <div className="flex flex-wrap items-center gap-3">
-              <select className={`${INPUT} w-auto`} value={audience} onChange={(e) => setAudience(e.target.value as typeof audience)}>
+              <select className={`${INPUT.replace('w-full', '')} w-auto`} value={audience} onChange={(e) => setAudience(e.target.value as typeof audience)}>
                 <option value="all">Everyone (free + paid Premium)</option>
                 <option value="free">Free registrants only</option>
                 <option value="premium">Paid Premium only</option>

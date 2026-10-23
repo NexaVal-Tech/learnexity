@@ -291,7 +291,7 @@ export function InstructorsFields({ value, onChange }: { value: InstructorDraft[
                 {d.socials.map((s, j) => (
                   <div key={j} className="flex gap-2">
                     <select
-                      className={`${INPUT} w-40 flex-shrink-0`}
+                      className={`${INPUT.replace("w-full", "")} w-36 sm:w-40 flex-shrink-0`}
                       value={s.platform}
                       onChange={(e) => update(i, { ...d, socials: d.socials.map((x, k) => (k === j ? { ...x, platform: e.target.value } : x)) })}
                     >

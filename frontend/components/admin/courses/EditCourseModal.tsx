@@ -69,7 +69,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; disabled?: bool
   { id: 'tools',       label: 'Tools',          icon: Wrench     },
   { id: 'learnings',   label: 'Learnings',      icon: BookOpen   },
   { id: 'benefits',    label: 'Benefits',       icon: Star       },
-  { id: 'career_paths',label: 'Career Paths',   icon: Briefcase  },
+  { id: 'career_paths',label: 'Job Roles',   icon: Briefcase  },
   { id: 'industries',  label: 'Industries',     icon: Building2  },
   { id: 'salary',      label: 'Salary',         icon: DollarSign },
   { id: 'instructors', label: 'Instructors',    icon: Crown      },
@@ -778,27 +778,27 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                   </div>
                 )}
 
-                {/* ── CAREER PATHS ── */}
+                {/* ── JOB ROLES ── */}
                 {activeTab === 'career_paths' && (
                   <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Career Paths</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">Job Roles</h3>
                     {careerPaths.map((c, i) => (
-                      <div key={i} className="flex gap-3 items-center">
+                      <div key={i} className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
                         <select value={c.level}
                           onChange={e => {
                             const u = [...careerPaths]; u[i] = { ...u[i], level: e.target.value }; setCareerPaths(u);
                           }}
-                          className={`${INPUT} w-44 shrink-0`}>
+                          className={`${INPUT.replace('w-full', '')} w-full sm:w-44 sm:shrink-0`}>
                           <option value="entry">Entry Level</option>
                           <option value="mid">Mid Level</option>
                           <option value="advanced">Advanced</option>
                           <option value="specialized">Specialized</option>
                         </select>
-                        <input type="text" placeholder="Position (e.g. Junior Developer)" value={c.position}
+                        <input type="text" placeholder="Job role (e.g. Junior Developer)" value={c.position}
                           onChange={e => {
                             const u = [...careerPaths]; u[i] = { ...u[i], position: e.target.value }; setCareerPaths(u);
                           }}
-                          className={`${INPUT} flex-1`} />
+                          className={`${INPUT} sm:flex-1 min-w-0`} />
                         {careerPaths.length > 1 && (
                           <button onClick={() => setCareerPaths(careerPaths.filter((_, j) => j !== i))}
                             className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
@@ -809,7 +809,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({
                     ))}
                     <button onClick={() => setCareerPaths([...careerPaths, { level: 'entry', position: '' }])}
                       className="flex items-center gap-2 px-4 py-2 text-[#0F172A] dark:text-white border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-sm">
-                      <Plus size={16} /> Add Career Path
+                      <Plus size={16} /> Add Job Role
                     </button>
                   </div>
                 )}

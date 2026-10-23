@@ -857,7 +857,7 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({
 
               <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4">
                 <p className="text-sm text-amber-800 dark:text-amber-300">
-                  <strong>Tip:</strong> After creating the course, you can add tools, learnings, benefits, career paths, industries, and salary from the edit modal.
+                  <strong>Tip:</strong> After creating the course, you can add tools, learnings, benefits, job roles, industries, and salary from the edit modal.
                 </p>
               </div>
             </div>
