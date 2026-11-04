@@ -38,6 +38,17 @@ class EmailTemplateRegistry
                     'button' => 'Explore Courses',
                 ],
             ],
+            'registration_link' => [
+                'label' => 'Email verification link (sign-up)', 'group' => $student,
+                'description' => 'Sent when someone signs up with email. The button verifies their email and opens the create-password page (works for 24 hours).',
+                'placeholders' => ['link' => ['Verification link', 'https://learnexity.org/user/auth/verify-email?…']],
+                'defaults' => [
+                    'subject' => 'Verify your email to finish signing up',
+                    'heading' => 'Verify your email',
+                    'body' => "Thanks for joining Learnexity! Click the button below to verify your email and create your password.\n\nThis link works for 24 hours. If you didn't sign up, you can ignore this email.",
+                    'button' => 'Verify email',
+                ],
+            ],
             'registration_otp' => [
                 'label' => 'Email verification code', 'group' => $student,
                 'description' => 'One-time code sent during sign-up.',

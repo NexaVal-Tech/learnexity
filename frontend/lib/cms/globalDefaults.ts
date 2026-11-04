@@ -47,7 +47,7 @@ export const FOOTER_DEFAULTS: FooterData = {
   ctaHeading: 'Ready to Transform Your Career?',
   ctaText: 'Choose your path and secure your spot in the next cohort starting soon',
   ctaPrimary: { label: 'Explore Courses', href: '/courses/courses' },
-  ctaSecondary: { label: 'Book Free Consultation', href: '/consultation' },
+  ctaSecondary: { label: 'Talk to Expert', href: '/consultation' },
   logo: '',
   copyright: '© 2025 Learnexity. All rights reserved.',
   columns: [

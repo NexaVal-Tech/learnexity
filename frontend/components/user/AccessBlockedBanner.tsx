@@ -128,17 +128,17 @@ export const PaymentWarningBanner: React.FC<PaymentWarningBannerProps> = ({ enro
   if (!enrollment.access_blocked_reason || enrollment.has_access === false) return null;
 
   return (
-    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+    <div className="bg-[#4A3AFF]/[0.06] border-l-4 border-[#4A3AFF] p-4 mb-6 rounded-lg">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+        <AlertTriangle className="w-6 h-6 text-[#4A3AFF] flex-shrink-0" />
         <div className="flex-1">
-          <h3 className="font-semibold text-yellow-900 mb-1">Payment Due Soon</h3>
-          <p className="text-yellow-800 text-sm mb-3">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Payment Due Soon</h3>
+          <p className="text-gray-700 dark:text-gray-300 text-sm mb-3">
             {enrollment.access_blocked_reason}
           </p>
           <button
             onClick={() => router.push(`/user/payment/${enrollment.id}`)}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="bg-[#4A3AFF] hover:bg-[#3A2AFF] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             Make Payment Now
           </button>

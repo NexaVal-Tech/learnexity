@@ -33,10 +33,13 @@ export function CmsButton({
   button,
   className = '',
   size = 'md',
+  radius = 'rounded-full',
 }: {
   button?: CmsButtonData | null;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  /** Corner rounding class (default: pill). */
+  radius?: string;
 }) {
   if (!button || !button.label) return null;
   const style = STYLES[button.style ?? 'primary'] ?? STYLES.primary;
@@ -46,7 +49,7 @@ export function CmsButton({
     <CmsLink
       href={button.href}
       newTab={button.newTab}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors ${sizing} ${style} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 ${radius} font-semibold transition-colors ${sizing} ${style} ${className}`}
     >
       <span>{button.label}</span>
     </CmsLink>
@@ -58,19 +61,27 @@ export function CmsButtons({
   className = '',
   size,
   nowrap = false,
+  stackOnMobile = false,
+  radius,
 }: {
   buttons?: CmsButtonData[] | null;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   /** Keep buttons on one row (the homepage hero's original layout). */
   nowrap?: boolean;
+  /** One under the other, full width, on phones; in a row from `sm` up. */
+  stackOnMobile?: boolean;
+  radius?: string;
 }) {
   const list = (buttons ?? []).filter((b) => b && b.label);
   if (list.length === 0) return null;
+  const layout = stackOnMobile
+    ? 'flex-col items-stretch sm:flex-row sm:flex-wrap sm:items-center w-full sm:w-auto'
+    : `${nowrap ? 'flex-row' : 'flex-wrap'} items-center`;
   return (
-    <div className={`flex ${nowrap ? 'flex-row' : 'flex-wrap'} items-center gap-4 ${className}`}>
+    <div className={`flex ${layout} gap-3 sm:gap-4 ${className}`}>
       {list.map((b, i) => (
-        <CmsButton key={i} button={b} size={size} />
+        <CmsButton key={i} button={b} size={size} radius={radius} className={stackOnMobile ? 'w-full sm:w-auto' : ''} />
       ))}
     </div>
   );

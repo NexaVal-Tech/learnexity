@@ -221,6 +221,7 @@ export default function LoginPage() {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        /* Google is the primary way in — brand-filled */
         .google-btn {
           width: 100%;
           display: flex;
@@ -228,17 +229,33 @@ export default function LoginPage() {
           justify-content: center;
           gap: 0.75rem;
           padding: 0.75rem 1rem;
-          border: 1px solid var(--border-subtle);
+          border: 1px solid ${BRAND};
           border-radius: 2rem 0.75rem 2rem 0.75rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-          font-size: 0.875rem;
-          background: var(--surface-alt);
+          color: #fff;
+          font-weight: 600;
+          font-size: 0.9rem;
+          background: ${BRAND};
           transition: all 0.25s ease;
         }
         .google-btn:hover:not(:disabled) {
-          background: var(--border-subtle);
-          border-color: var(--border-strong);
+          background: #3628e0;
+          box-shadow: 0 0 28px ${BRAND}55;
+          transform: translateY(-1px);
+        }
+        .google-icon {
+          width: 26px; height: 26px; border-radius: 999px; background: #fff;
+          display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        /* Email log-in is secondary */
+        .auth-btn.secondary {
+          background: transparent;
+          color: var(--text-primary);
+          border: 1px solid var(--border-strong);
+        }
+        .auth-btn.secondary:hover:not(:disabled) {
+          background: var(--surface-alt);
+          border-color: ${BRAND};
+          box-shadow: none;
         }
         .google-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .divider-line {
@@ -346,6 +363,22 @@ export default function LoginPage() {
               </div>
             </form>
           ) : (
+          <>
+          {/* Google — the primary way to log in */}
+          <button type="button" onClick={() => loginWithGoogle()} disabled={loading} className="google-btn">
+            <span className="google-icon">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.6109C15.3727 13.3 14.6636 14.3591 13.6045 15.0682V17.5773H16.8273C18.7091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4" />
+                <path d="M10.2 20C12.9 20 15.1727 19.1045 16.8273 17.5773L13.6045 15.0682C12.7091 15.6682 11.5636 16.0227 10.2 16.0227C7.59545 16.0227 5.38182 14.2636 4.58636 11.9H1.25455V14.4909C2.90909 17.7591 6.29091 20 10.2 20Z" fill="#34A853" />
+                <path d="M4.58636 11.9C4.38636 11.3 4.27273 10.6591 4.27273 10C4.27273 9.34091 4.38636 8.7 4.58636 8.1V5.50909H1.25455C0.572727 6.85909 0.2 8.38636 0.2 10C0.2 11.6136 0.572727 13.1409 1.25455 14.4909L4.58636 11.9Z" fill="#FBBC04" />
+                <path d="M10.2 3.97727C11.6864 3.97727 13.0182 4.48182 14.0636 5.47273L16.9227 2.61364C15.1682 0.986364 12.8955 0 10.2 0C6.29091 0 2.90909 2.24091 1.25455 5.50909L4.58636 8.1C5.38182 5.73636 7.59545 3.97727 10.2 3.97727Z" fill="#EA4335" />
+              </svg>
+            </span>
+            Continue with Google
+          </button>
+
+          <div className="divider-line"><span>or log in with email</span></div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
@@ -406,24 +439,13 @@ export default function LoginPage() {
             </div>
 
             {/* Login Button */}
-            <button type="submit" disabled={loading} className="auth-btn">
-              {loading ? 'Logging in…' : 'Log In'}
+            <button type="submit" disabled={loading} className="auth-btn secondary">
+              {loading ? 'Logging in…' : 'Log In with Email'}
             </button>
 
-            {/* Divider */}
-            <div className="divider-line"><span>OR</span></div>
 
-            {/* Google */}
-            <button type="button" onClick={() => loginWithGoogle()} disabled={loading} className="google-btn">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.6109C15.3727 13.3 14.6636 14.3591 13.6045 15.0682V17.5773H16.8273C18.7091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4" />
-                <path d="M10.2 20C12.9 20 15.1727 19.1045 16.8273 17.5773L13.6045 15.0682C12.7091 15.6682 11.5636 16.0227 10.2 16.0227C7.59545 16.0227 5.38182 14.2636 4.58636 11.9H1.25455V14.4909C2.90909 17.7591 6.29091 20 10.2 20Z" fill="#34A853" />
-                <path d="M4.58636 11.9C4.38636 11.3 4.27273 10.6591 4.27273 10C4.27273 9.34091 4.38636 8.7 4.58636 8.1V5.50909H1.25455C0.572727 6.85909 0.2 8.38636 0.2 10C0.2 11.6136 0.572727 13.1409 1.25455 14.4909L4.58636 11.9Z" fill="#FBBC04" />
-                <path d="M10.2 3.97727C11.6864 3.97727 13.0182 4.48182 14.0636 5.47273L16.9227 2.61364C15.1682 0.986364 12.8955 0 10.2 0C6.29091 0 2.90909 2.24091 1.25455 5.50909L4.58636 8.1C5.38182 5.73636 7.59545 3.97727 10.2 3.97727Z" fill="#EA4335" />
-              </svg>
-              Sign in with Google
-            </button>
           </form>
+          </>
           )}
         </div>
       </div>

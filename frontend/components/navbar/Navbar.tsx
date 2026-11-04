@@ -406,7 +406,7 @@ function MobileCoursesAccordion({
             ))}
           </>
         ) : courses.length === 0 ? (
-          <p className="text-xs text-gray-400 py-2 px-2">No courses found</p>
+          <p className="text-sm text-gray-400 py-2 px-2">No courses found</p>
         ) : (
           courses.map((course, i) => (
             <Link
@@ -415,7 +415,7 @@ function MobileCoursesAccordion({
               onClick={onLinkClick}
               style={{ transitionDelay: isOpen ? `${i * 35}ms` : "0ms" }}
               className={`
-                flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px]
+                flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15.5px]
                 font-medium text-gray-600 hover:text-[#6C63FF] hover:bg-indigo-50
                 transition-all duration-200
                 ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
@@ -431,7 +431,7 @@ function MobileCoursesAccordion({
         <Link
           href={browseHref}
           onClick={onLinkClick}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#6C63FF] hover:bg-indigo-50 transition-colors mt-1"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[15.5px] font-semibold text-[#6C63FF] hover:bg-indigo-50 transition-colors mt-1"
         >
           {browseAllLabel}
         </Link>
@@ -822,7 +822,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                     onClick={() => setExpandedMobile(isExpanded ? null : entry.label)}
                     className={`
                       w-full flex items-center justify-between px-4 py-3.5 rounded-xl
-                      text-[14px] font-semibold transition-all duration-150
+                      text-[17px] font-semibold transition-all duration-150
                       ${active ? "text-[#6C63FF] bg-indigo-50" : "text-gray-700 hover:bg-gray-50"}
                     `}
                   >
@@ -862,7 +862,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                                 }
                                 style={{ transitionDelay: isExpanded ? `${i * 50}ms` : "0ms" }}
                                 className={`
-                                  w-full flex items-center justify-between px-3 py-3 rounded-xl text-[13px]
+                                  w-full flex items-center justify-between px-3 py-3 rounded-xl text-[15.5px]
                                   transition-all duration-200
                                   ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
                                   ${isSubExpanded
@@ -872,7 +872,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                                 `}
                               >
                                 <div className="flex flex-col gap-0.5 text-left">
-                                  <p className="font-semibold text-[13px] leading-none mb-0.5">
+                                  <p className="font-semibold text-[15.5px] leading-none mb-0.5">
                                     {item.label}
                                   </p>
                                 </div>
@@ -900,7 +900,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                             onClick={() => setIsMobileOpen(false)}
                             style={{ transitionDelay: isExpanded ? `${i * 50}ms` : "0ms" }}
                             className={`
-                              flex items-center justify-between px-3 py-3 rounded-xl text-[13px] font-medium
+                              flex items-center justify-between px-3 py-3 rounded-xl text-[15.5px] font-medium
                               transition-all duration-200
                               ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}
                               ${pathname === item.href
@@ -910,7 +910,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                             `}
                           >
                             <div>
-                              <p className="font-semibold text-[13px] leading-none mb-0.5">{item.label}</p>
+                              <p className="font-semibold text-[15.5px] leading-none mb-0.5">{item.label}</p>
                             </div>
                             <ChevronRight className="flex-shrink-0 text-gray-300" />
                           </Link>
@@ -931,7 +931,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
                 onClick={() => setIsMobileOpen(false)}
                 className={`
                   flex items-center gap-2 px-4 py-3.5 rounded-xl
-                  text-[14px] font-semibold transition-all duration-150
+                  text-[17px] font-semibold transition-all duration-150
                   ${isActive
                     ? "text-[#6C63FF] bg-indigo-50"
                     : "text-gray-700 hover:bg-gray-50"
@@ -950,7 +950,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
             <Link
               href="/user/dashboard"
               onClick={() => setIsMobileOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold text-[#6C63FF] border border-indigo-200 bg-indigo-50/50 mt-1 hover:bg-indigo-100 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl text-[17px] font-semibold text-[#6C63FF] border border-indigo-200 bg-indigo-50/50 mt-1 hover:bg-indigo-100 transition-colors"
             >
               <DashboardIcon />
               {nav.dashboardLabel || "Dashboard"}
@@ -964,7 +964,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
             {!user ? (
               <Link
                 href={safeHref(nav.loginHref || "/user/auth/login")}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[15.5px] font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-150"
               >
                 <UserIcon />
                 {nav.loginLabel || "Log in"}
@@ -981,7 +981,7 @@ export default function Navbar({ topOffsetPx = 0, data, preview = false }: Navba
             className="
               block w-full text-center
               bg-[#6C63FF] text-white py-3.5 rounded-xl
-              text-[13.5px] font-semibold
+              text-[16px] font-semibold
               hover:bg-[#5753E6] transition-all duration-200
               shadow-[0_2px_12px_rgba(108,99,255,0.35)]
             "

@@ -1,14 +1,15 @@
 // components/catalog/PathwaySection.tsx
 //
 // One pathway block on the courses pages: icon + heading, a card with the
-// audience line, course tiles (icon + name, as in the design file) and
-// the "Outcome" box. Course pictures appear only on each course's page.
+// audience line, course cards (picture, name, description, length/level)
+// and the "Outcome" box. Brand purple only.
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Gift, Layers, Cpu, Rocket, type LucideIcon } from "lucide-react";
 import type { Course } from "@/lib/api";
 import { API_URL, BRAND, PATHWAYS, courseHref, type PathwayKey } from "./pathways";
-import { CourseIcon } from "./CourseIcon";
+import { CmsImage } from "@/components/cms/ui";
+import { imageUrl } from "./pathways";
 import { RADIUS, RADIUS_SM } from "./CatalogTheme";
 
 // ── Data ──────────────────────────────────────────────────────────────
@@ -42,88 +43,87 @@ export function usePathwayCourses(key: PathwayKey) {
 
 // ── Look per pathway ──────────────────────────────────────────────────
 
-const PURPLE = "#9333ea";
-const EMERALD = "#059669";
-const DT_BG = "#0f172a";
+const DT_BG = "#0d0b1f"; // deep brand-purple black
 
 export const PATHWAY_STYLE: Record<PathwayKey, { icon: LucideIcon; accent: string }> = {
   flex: { icon: Layers, accent: BRAND },
-  accelerator: { icon: Rocket, accent: PURPLE },
+  accelerator: { icon: Rocket, accent: BRAND },
   deeptech: { icon: Cpu, accent: BRAND },
-  free: { icon: Gift, accent: EMERALD },
+  free: { icon: Gift, accent: BRAND },
 };
 
 // ── Pieces ────────────────────────────────────────────────────────────
 
-function FreeTag({ dark = false }: { dark?: boolean }) {
+function Badge({ children }: { children: ReactNode }) {
   return (
-    <span
-      className="ml-auto pl-2 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0"
-      style={dark ? { background: "rgba(16,185,129,0.15)", color: "#6ee7b7", border: "1px solid rgba(16,185,129,0.35)" } : { background: `${EMERALD}1f`, color: EMERALD, border: `1px solid ${EMERALD}40` }}
-    >
-      Free
+    <span className="text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-md text-white shadow" style={{ background: BRAND }}>
+      {children}
     </span>
   );
 }
 
-/** Course tile, as in the design file: icon + course name. */
-function CourseTile({ course, pathway, accent }: { course: Course; pathway: PathwayKey; accent: string }) {
+function metaLine(course: Course): string {
+  return [course.duration, course.level].filter((v) => v && String(v).trim()).map((v) => String(v)).join(" · ");
+}
+
+/** Course card: picture, name, short description, length/level, "View course". */
+function CourseCard({ course, pathway, dark = false, popular = false }: { course: Course; pathway: PathwayKey; dark?: boolean; popular?: boolean }) {
+  const img = course.hero_image ? imageUrl(course.hero_image, "") : "";
+  const meta = metaLine(course);
   return (
     <Link
       href={courseHref(course, pathway)}
-      className="lx-tile group p-4 flex items-center lx-inset hover:-translate-y-0.5"
-      style={{ ["--lx-accent" as any]: accent }}
-    >
-      <CourseIcon title={course.title} size={18} className="mr-3 flex-shrink-0 group-hover:scale-110 transition" />
-      <span className="font-medium text-[var(--text-primary)]">{course.title}</span>
-      {course.is_free && pathway !== "free" && <FreeTag />}
-    </Link>
-  );
-}
-
-/** DeepTech tile on the dark card. */
-function DeepTechTile({ course, pathway }: { course: Course; pathway: PathwayKey }) {
-  return (
-    <Link href={courseHref(course, pathway)} className="lx-dt-card group p-6 block" style={{ borderRadius: RADIUS_SM }}>
-      <CourseIcon title={course.title} size={26} className="mb-3 block text-indigo-300 group-hover:scale-110 transition" />
-      <div className="flex items-start gap-2">
-        <h4 className="font-semibold text-lg text-white leading-snug">{course.title}</h4>
-        {course.is_free && <FreeTag dark />}
-      </div>
-    </Link>
-  );
-}
-
-/** Accelerator's highlighted course. */
-function FeaturedCard({ course, pathway }: { course: Course; pathway: PathwayKey }) {
-  return (
-    <Link
-      href={courseHref(course, pathway)}
-      className="group block text-white p-6 relative overflow-hidden border transition duration-300 hover:-translate-y-1"
-      style={{ borderRadius: RADIUS, background: "linear-gradient(135deg, #2e1065 0%, #3b1a8a 100%)", borderColor: "#4c1d95", boxShadow: "0 20px 50px rgba(46,16,101,0.35)" }}
-    >
-      <div className="absolute top-0 right-0 text-xs font-bold px-3 py-1" style={{ background: "#8b5cf6", borderBottomLeftRadius: "0.75rem" }}>
-        POPULAR
-      </div>
-      <CourseIcon title={course.title} size={30} className="text-violet-300 mb-4 block" />
-      <h3 className="text-xl font-semibold mb-2 group-hover:text-violet-200 transition pr-16">{course.title}</h3>
-      {course.description && <p className="text-slate-300 text-sm mb-4 line-clamp-2">{course.description}</p>}
-      <span className="inline-flex items-center text-violet-200 text-sm font-semibold group-hover:translate-x-1 transition-transform">
-        View Program <ArrowRight size={15} className="ml-2" />
-      </span>
-    </Link>
-  );
-}
-
-function TileSkeleton({ dark = false }: { dark?: boolean }) {
-  const block = dark ? "bg-slate-700" : "bg-[var(--border-strong)]";
-  return (
-    <div
-      className={`p-4 animate-pulse flex items-center border ${dark ? "bg-slate-800 border-slate-700" : "bg-[var(--surface-alt)] border-[var(--border-subtle)]"}`}
+      className={`group flex flex-col overflow-hidden border transition duration-300 hover:-translate-y-1 ${dark ? "lx-course-card-dark" : "lx-course-card"}`}
       style={{ borderRadius: RADIUS_SM }}
     >
-      <div className={`w-5 h-5 rounded mr-3 ${block}`} />
-      <div className={`h-4 rounded-full w-2/3 ${block}`} />
+      <div className="relative w-full aspect-[16/10] overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #1a1446 100%)` }}>
+        {img ? (
+          <CmsImage
+            src={img}
+            alt={course.title}
+            fill
+            sizes="(min-width: 1024px) 380px, (min-width: 768px) 45vw, 92vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white/90 font-semibold text-lg leading-snug">
+            {course.title}
+          </div>
+        )}
+        {(popular || (course.is_free && pathway !== "free")) && (
+          <div className="absolute top-3 left-3 flex gap-2">
+            {popular && <Badge>Popular</Badge>}
+            {course.is_free && pathway !== "free" && <Badge>Free</Badge>}
+          </div>
+        )}
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col">
+        <h3 className={`text-lg font-semibold leading-snug line-clamp-2 ${dark ? "text-white" : "text-[var(--text-primary)]"}`}>{course.title}</h3>
+        {course.description && (
+          <p className={`mt-2 text-sm leading-relaxed line-clamp-3 ${dark ? "text-white/70" : "text-[var(--text-secondary)]"}`}>{course.description}</p>
+        )}
+        <div className={`mt-auto pt-4 flex items-center justify-between gap-3 border-t ${dark ? "border-white/10" : "border-[var(--border-subtle)]"}`} style={{ marginTop: "auto" }}>
+          <span className={`text-xs capitalize ${dark ? "text-white/60" : "text-[var(--text-muted)]"}`}>{meta || (pathway === "free" || course.is_free ? "Free course" : "")}</span>
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:gap-2.5 transition-all" style={{ color: dark ? "#c9c3ff" : BRAND }}>
+            View course <ArrowRight size={15} />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function CardSkeleton({ dark = false }: { dark?: boolean }) {
+  const block = dark ? "bg-white/10" : "bg-[var(--border-strong)]";
+  return (
+    <div className={`overflow-hidden border animate-pulse ${dark ? "border-white/10" : "border-[var(--border-subtle)] bg-[var(--surface-alt)]"}`} style={{ borderRadius: RADIUS_SM }}>
+      <div className={`aspect-[16/10] ${block}`} />
+      <div className="p-5 space-y-3">
+        <div className={`h-4 rounded-full w-3/4 ${block}`} />
+        <div className={`h-3 rounded-full w-full ${block}`} />
+        <div className={`h-3 rounded-full w-2/3 ${block}`} />
+      </div>
     </div>
   );
 }
@@ -137,16 +137,16 @@ function StateMessage({ error, onRetry, emptyText, dark = false }: { error: stri
       </div>
     );
   }
-  return <p className={`text-center py-8 text-lg ${dark ? "text-slate-400" : "text-[var(--text-muted)]"}`}>{emptyText}</p>;
+  return <p className={`text-center py-8 text-lg ${dark ? "text-white/60" : "text-[var(--text-muted)]"}`}>{emptyText}</p>;
 }
 
 function Outcome({ pathway, accent, dark = false }: { pathway: PathwayKey; accent: string; dark?: boolean }) {
   const p = PATHWAYS[pathway];
   if (dark) {
     return (
-      <div className="p-5 border border-slate-700 relative z-10 text-slate-200" style={{ borderRadius: RADIUS_SM, background: "rgba(30,41,59,0.6)" }}>
+      <div className="p-5 border border-white/10 relative z-10 text-white/85" style={{ borderRadius: RADIUS_SM, background: "rgba(255,255,255,0.05)" }}>
         <strong className="text-white">Outcome:</strong> {p.outcome}
-        {p.outcomeNote && <span className="font-semibold ml-2" style={{ color: "#a5b4fc" }}>{p.outcomeNote}</span>}
+        {p.outcomeNote && <span className="font-semibold ml-2" style={{ color: "#c9c3ff" }}>{p.outcomeNote}</span>}
       </div>
     );
   }
@@ -186,7 +186,7 @@ function ViewAll({ href, label, dark = false }: { href: string; label: string; d
     <div className="mt-6 flex justify-center sm:justify-end relative z-10">
       <Link
         href={href}
-        className={dark ? "inline-flex items-center gap-2 px-6 py-3 font-semibold text-white border border-slate-600 hover:border-indigo-400 hover:gap-3 transition-all" : "lx-btn-outline px-6 py-3"}
+        className={dark ? "inline-flex items-center gap-2 px-6 py-3 font-semibold text-white border border-white/30 hover:border-[#8b80ff] hover:gap-3 transition-all" : "lx-btn-outline px-6 py-3"}
         style={dark ? { borderRadius: RADIUS } : undefined}
       >
         {label} <ArrowRight size={16} />
@@ -219,25 +219,28 @@ export default function PathwaySection({
   const empty = !loading && !error && shown.length === 0;
   const emptyText = pathway === "free" ? "No free courses available yet." : "New courses in this pathway are coming soon.";
   const viewAllLabel = courses.length > shown.length ? `View all ${courses.length} courses` : `Explore ${p.title}`;
+  const grid = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6";
+
   // ── DeepTech: dark flagship card ────────────────────────────────────
   if (pathway === "deeptech") {
-    const grid = "grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 mb-8";
     return (
       <div id={pathway} className={`scroll-mt-28 ${className}`}>
         <PathwayHeader pathway={pathway} flagship />
-        <div className="text-white p-6 md:p-8 shadow-xl relative overflow-hidden border border-slate-800" style={{ borderRadius: RADIUS, background: DT_BG }}>
+        <div className="text-white p-6 md:p-8 shadow-xl relative overflow-hidden border border-white/10" style={{ borderRadius: RADIUS, background: DT_BG }}>
           <div className="absolute top-0 right-0 w-72 h-72 blur-[90px] rounded-full pointer-events-none" style={{ background: `${BRAND}40` }} />
-          <p className="text-lg text-slate-300 mb-8 max-w-3xl relative z-10">{p.audience}</p>
+          <p className="text-lg text-white/75 mb-8 max-w-3xl relative z-10">{p.audience}</p>
 
-          {loading ? (
-            <div className={grid}>{[1, 2, 3].map((i) => <TileSkeleton key={i} dark />)}</div>
-          ) : error || empty ? (
-            <div className="relative z-10 mb-8"><StateMessage error={error} onRetry={onRetry} emptyText={emptyText} dark /></div>
-          ) : (
-            <div className={grid}>
-              {shown.map((course) => <DeepTechTile key={course.id} course={course} pathway={pathway} />)}
-            </div>
-          )}
+          <div className="relative z-10 mb-8">
+            {loading ? (
+              <div className={grid}>{[1, 2, 3].map((i) => <CardSkeleton key={i} dark />)}</div>
+            ) : error || empty ? (
+              <StateMessage error={error} onRetry={onRetry} emptyText={emptyText} dark />
+            ) : (
+              <div className={grid}>
+                {shown.map((course) => <CourseCard key={course.id} course={course} pathway={pathway} dark />)}
+              </div>
+            )}
+          </div>
 
           <Outcome pathway={pathway} accent={accent} dark />
           {viewAllHref && <ViewAll href={viewAllHref} label={viewAllLabel} dark />}
@@ -246,43 +249,10 @@ export default function PathwaySection({
     );
   }
 
-  // ── Accelerator: tiles + highlighted "Popular" course ───────────────
-  if (pathway === "accelerator") {
-    const featured = shown.find((c) => /automation|agent/i.test(c.title)) ?? shown[0];
-    const rest = shown.filter((c) => c !== featured);
-    return (
-      <div id={pathway} className={`scroll-mt-28 ${className}`}>
-        <PathwayHeader pathway={pathway} />
-        <div className="lx-card p-6 md:p-8">
-          <p className="text-lg text-[var(--text-secondary)] mb-8">{p.audience}</p>
-
-          {loading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">{[1, 2, 3].map((i) => <TileSkeleton key={i} />)}</div>
-              <div className="animate-pulse min-h-[180px]" style={{ borderRadius: RADIUS, background: `${PURPLE}22` }} />
-            </div>
-          ) : error || empty ? (
-            <StateMessage error={error} onRetry={onRetry} emptyText={emptyText} />
-          ) : (
-            <div className={`grid grid-cols-1 ${rest.length ? "lg:grid-cols-2" : ""} gap-6 items-start`}>
-              {rest.length > 0 && (
-                <div className="space-y-4">
-                  {rest.map((course) => <CourseTile key={course.id} course={course} pathway={pathway} accent={accent} />)}
-                </div>
-              )}
-              {featured && <FeaturedCard course={featured} pathway={pathway} />}
-            </div>
-          )}
-
-          <Outcome pathway={pathway} accent={accent} />
-          {viewAllHref && <ViewAll href={viewAllHref} label={viewAllLabel} />}
-        </div>
-      </div>
-    );
-  }
-
-  // ── Foundation / Flex and Free: tiles grid ──────────────────────────
-  const grid = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+  // ── Flex, Career Accelerator and Free: course cards grid ───────────
+  const popularId = pathway === "accelerator"
+    ? (shown.find((c) => /automation|agent/i.test(c.title)) ?? shown[0])?.id
+    : undefined;
   return (
     <div id={pathway} className={`scroll-mt-28 ${className}`}>
       <PathwayHeader pathway={pathway} />
@@ -290,12 +260,14 @@ export default function PathwaySection({
         <p className="text-lg text-[var(--text-secondary)] mb-8">{p.audience}</p>
 
         {loading ? (
-          <div className={grid}>{[1, 2, 3, 4, 5, 6].map((i) => <TileSkeleton key={i} />)}</div>
+          <div className={grid}>{[1, 2, 3].map((i) => <CardSkeleton key={i} />)}</div>
         ) : error || empty ? (
           <StateMessage error={error} onRetry={onRetry} emptyText={emptyText} />
         ) : (
           <div className={grid}>
-            {shown.map((course) => <CourseTile key={course.id} course={course} pathway={pathway} accent={accent} />)}
+            {shown.map((course) => (
+              <CourseCard key={course.id} course={course} pathway={pathway} popular={course.id === popularId} />
+            ))}
           </div>
         )}
 
@@ -310,18 +282,22 @@ export default function PathwaySection({
 export function PathwayStyles() {
   return (
     <style>{`
-      .lx-dt-card {
-        background: #1e293b;
-        border: 1px solid #334155;
-        transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      .lx-course-card {
+        background: var(--surface-elevated, var(--surface));
+        border-color: var(--border-subtle);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       }
-      .lx-tile { transition: border-color 0.25s, background 0.25s, transform 0.25s, box-shadow 0.25s; }
-      .lx-tile svg { color: var(--lx-accent); }
-      .lx-tile:hover { border-color: var(--lx-accent); box-shadow: 0 8px 24px var(--lx-glow, rgba(74,58,255,0.15)); }
-      .lx-dt-card:hover {
+      .lx-course-card:hover {
+        border-color: ${BRAND}66;
+        box-shadow: 0 18px 40px rgba(74,58,255,0.14);
+      }
+      .lx-course-card-dark {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.10);
+      }
+      .lx-course-card-dark:hover {
         border-color: ${BRAND};
         box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px ${BRAND}40;
-        transform: translateY(-4px);
       }
     `}</style>
   );

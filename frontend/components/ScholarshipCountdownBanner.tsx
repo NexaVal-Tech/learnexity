@@ -124,8 +124,8 @@ export default function ScholarshipCountdownBanner({ onHeightChange }: Scholarsh
       ref={bannerRef}
       className="fixed top-0 left-0 w-full z-[60] bg-white dark:bg-[#0a0a0f] border-b border-gray-100 dark:border-white/10"
     >
-      <div className="max-w-screen-xl mx-auto px-6 h-[52px] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm font-medium text-center text-gray-700 dark:text-gray-300">
-        <span>Scholarship applications close soon —</span>
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 min-h-[52px] py-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:text-sm font-medium text-center text-gray-700 dark:text-gray-300">
+        <span>Limited scholarship available — take the screening for eligibility</span>
         <span className="font-mono font-semibold tabular-nums text-[#6C63FF]">
           {timeLeft.days}d {pad(timeLeft.hours)}h {pad(timeLeft.minutes)}m {pad(timeLeft.seconds)}s
         </span>
@@ -133,7 +133,7 @@ export default function ScholarshipCountdownBanner({ onHeightChange }: Scholarsh
           onClick={handleApply}
           className="px-3 py-1 rounded-full bg-[#6C63FF] text-white font-semibold whitespace-nowrap hover:bg-[#5750d6] transition-colors"
         >
-          Apply now
+          Take screening
         </button>
       </div>
     </div>

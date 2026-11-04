@@ -257,7 +257,7 @@ export default function UserDashboardPage() {
                   </p>
                   {nextInstallment ? (
                     <>
-                      <p className="text-4xl font-bold text-amber-500">
+                      <p className="text-4xl font-bold text-[#4A3AFF] dark:text-[#a59dff]">
                         {daysUntilNext !== null && daysUntilNext <= 0
                           ? "Due"
                           : daysUntilNext === 1
@@ -272,7 +272,7 @@ export default function UserDashboardPage() {
                     </>
                   ) : hasPendingPayments ? (  /* ✅ catch pending one-time payments too */
                     <>
-                      <p className="text-4xl font-bold text-yellow-500">!</p>
+                      <p className="text-4xl font-bold text-[#4A3AFF] dark:text-[#a59dff]">!</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">
                         {pendingEnrollments.length} payment{pendingEnrollments.length > 1 ? "s" : ""} required
                       </p>
@@ -293,7 +293,7 @@ export default function UserDashboardPage() {
                   {installmentEnrollments.length > 0 ? (
                     <>
                       <div className="flex items-center gap-1 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                        <span className="w-2 h-2 rounded-full bg-[#4A3AFF] inline-block"></span>
                         <p className="text-base font-bold text-gray-800 dark:text-white">Installment</p>
                       </div>
                       <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -304,7 +304,7 @@ export default function UserDashboardPage() {
                   ) : (
                     <>
                       <div className="flex items-center gap-1 mt-1">
-                        <span className={`w-2 h-2 rounded-full ${hasPendingPayments ? "bg-yellow-400" : "bg-green-400"} inline-block`}></span>
+                        <span className={`w-2 h-2 rounded-full ${hasPendingPayments ? "bg-[#4A3AFF]" : "bg-green-400"} inline-block`}></span>
                         <p className="text-base font-bold text-gray-800 dark:text-white">One-time</p>
                       </div>
                       {/* ✅ Only say "Fully paid" when there are truly no pending payments */}
@@ -334,7 +334,7 @@ export default function UserDashboardPage() {
                       onClick={() =>
                         router.push(`/user/payment/${nextInstallment.id}`)
                       }
-                      className="mt-2 text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-full font-semibold transition-colors"
+                      className="mt-2 text-xs bg-[#4A3AFF] hover:bg-[#3A2AFF] text-white px-3 py-1.5 rounded-full font-semibold transition-colors"
                     >
                       Pay Now
                     </button>
@@ -518,7 +518,7 @@ export default function UserDashboardPage() {
                               Enrolled
                             </div>
                           ) : (
-                            <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                            <div className="absolute top-2 right-2 bg-[#4A3AFF] text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                               </svg>
@@ -556,7 +556,7 @@ export default function UserDashboardPage() {
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                                  <span className="text-yellow-600 dark:text-yellow-400 font-semibold">
+                                  <span className="text-[#4A3AFF] dark:text-[#a59dff] font-semibold">
                                     Payment Required
                                   </span>
                                 </div>
@@ -590,7 +590,7 @@ export default function UserDashboardPage() {
                               onClick={() =>
                                 router.push(`/user/payment/${enrollment.id}`)
                               }
-                              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-3xl font-medium transition-colors"
+                              className="w-full bg-[#4A3AFF] hover:bg-[#3A2AFF] text-white py-2 px-4 rounded-3xl font-medium transition-colors"
                             >
                               Complete Payment
                             </button>

@@ -10,9 +10,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  sendRegistrationOtp: (email: string, referralCode?: string) => Promise<void>;
-  resendRegistrationOtp: (email: string) => Promise<void>;
-  verifyRegistrationOtp: (email: string, otp: string) => Promise<string>; // returns registration_token
+  sendRegistrationLink: (email: string, referralCode?: string) => Promise<{ resumed?: boolean }>;
+  verifyRegistrationLink: (email: string, token: string) => Promise<{ email: string; registration_token: string }>;
   completeRegistration: (
     email: string,
     registrationToken: string,
@@ -161,11 +160,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── STEP 1: send OTP to email ─────────────────────────────────────────
-  const sendRegistrationOtp = async (email: string, referralCode?: string) => {
+  // ── STEP 1: email a "Verify email" link (valid 24 hours) ─────────────
+  const sendRegistrationLink = async (email: string, referralCode?: string) => {
     try {
       setError(null);
-      await api.auth.sendRegistrationOtp({ email, referral_code: referralCode });
+      const res = await api.auth.sendRegistrationLink({ email, referral_code: referralCode });
+      return { resumed: res.resumed };
     } catch (error) {
       const err = handleApiError(error);
       setError(err);
@@ -173,23 +173,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const resendRegistrationOtp = async (email: string) => {
+  // ── STEP 2: the link was clicked -> get the create-password token ─────
+  const verifyRegistrationLink = async (email: string, token: string) => {
     try {
       setError(null);
-      await api.auth.resendRegistrationOtp(email);
-    } catch (error) {
-      const err = handleApiError(error);
-      setError(err);
-      throw new Error(err);
-    }
-  };
-
-  // ── STEP 2: verify OTP -> get short-lived registration_token ──────────
-  const verifyRegistrationOtp = async (email: string, otp: string): Promise<string> => {
-    try {
-      setError(null);
-      const res = await api.auth.verifyRegistrationOtp({ email, otp });
-      return res.registration_token;
+      const res = await api.auth.verifyRegistrationLink({ email, token });
+      return { email: res.email, registration_token: res.registration_token };
     } catch (error) {
       const err = handleApiError(error);
       setError(err);
@@ -279,7 +268,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user, loading, error, login,
-      sendRegistrationOtp, resendRegistrationOtp, verifyRegistrationOtp, completeRegistration,
+      sendRegistrationLink, verifyRegistrationLink, completeRegistration,
       loginWithVerificationCode,
       logout, refreshUser, loginWithGoogle, clearError, setUserFromToken,
     }}>

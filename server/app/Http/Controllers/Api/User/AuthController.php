@@ -23,6 +23,7 @@ use App\Models\CourseMaterial;
 use App\Mail\LoginWelcomeBackMail;
 use App\Mail\AdminNewStudentMail;
 use App\Mail\RegistrationOtpMail;
+use App\Mail\RegistrationLinkMail;
 use App\Services\UserPerformanceTracker;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -34,6 +35,139 @@ class AuthController extends Controller
     private const MAX_OTP_ATTEMPTS  = 5;
     private const RESEND_COOLDOWN_S = 45;
     private const MAX_RESENDS       = 6;
+    private const LINK_TTL_HOURS    = 24;   // sign-up verify link
+    private const PASSWORD_STEP_TTL = 24 * 60; // minutes the create-password page stays usable
+
+    // ════════════════════════════════════════════════════════════════════
+    // EMAIL SIGN-UP BY LINK
+    //   1. POST /register/send-link   {email, referral_code?}
+    //        → email with a "Verify email" button (valid 24 hours)
+    //   2. Button → /user/auth/verify-email?email=…&token=…
+    //      POST /register/verify-link {email, token}
+    //        → marks the email verified, returns registration_token
+    //   3. POST /register/complete    {email, registration_token, password…}
+    //
+    // Unfinished sign-ups: the same link keeps working for 24 hours, and
+    // entering the email again simply sends a fresh link.
+    // ════════════════════════════════════════════════════════════════════
+
+    public function sendRegistrationLink(Request $req)
+    {
+        $v = Validator::make($req->all(), [
+            'email'         => 'required|email|max:255',
+            'referral_code' => [
+                'nullable', 'string', 'max:100',
+                function ($attribute, $value, $fail) {
+                    if ($value && !ReferralCode::where('referral_code', $value)->exists()
+                        && !PublicReferrer::where('referral_code', $value)->exists()) {
+                        $fail('Invalid referral code. Please check and try again.');
+                    }
+                },
+            ],
+        ]);
+        if ($v->fails()) {
+            return response()->json(['message' => $v->errors()->first(), 'errors' => $v->errors()], 422);
+        }
+
+        $email = mb_strtolower(trim($req->email));
+
+        if (User::whereRaw('LOWER(email) = ?', [$email])->exists()) {
+            return response()->json([
+                'message' => 'This email is already registered. Please log in instead.',
+                'errors'  => ['email' => ['This email is already registered.']],
+            ], 422);
+        }
+
+        $record = RegistrationOtp::where('email', $email)->first();
+
+        // Fresh 24-hour window → reset the resend counter.
+        if ($record && $record->last_sent_at && $record->last_sent_at->lt(now()->subHours(self::LINK_TTL_HOURS))) {
+            $record->resend_count = 0;
+        }
+        if ($record && $record->last_sent_at && $record->last_sent_at->addSeconds(self::RESEND_COOLDOWN_S)->isFuture()) {
+            $wait = now()->diffInSeconds($record->last_sent_at->addSeconds(self::RESEND_COOLDOWN_S));
+            return response()->json(['message' => "Please wait {$wait}s before requesting another link.", 'retry_after' => $wait], 429);
+        }
+        if ($record && $record->resend_count >= self::MAX_RESENDS) {
+            return response()->json(['message' => 'Too many link requests. Please try again later.'], 429);
+        }
+
+        $token = Str::random(64);
+        RegistrationOtp::updateOrCreate(
+            ['email' => $email],
+            [
+                'referral_code'    => $req->referral_code ?: ($record->referral_code ?? null),
+                'otp_hash'         => Hash::make($token),   // link token
+                'attempts'         => 0,
+                'expires_at'       => now()->addHours(self::LINK_TTL_HOURS),
+                'verified_at'      => null,
+                'token_hash'       => null,
+                'token_expires_at' => null,
+                'resend_count'     => $record ? $record->resend_count + 1 : 0,
+                'last_sent_at'     => now(),
+            ]
+        );
+
+        $url = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/')
+            . '/user/auth/verify-email?' . http_build_query(['email' => $email, 'token' => $token]);
+
+        try {
+            Mail::to($email)->queue(new RegistrationLinkMail($url));
+        } catch (\Throwable $e) {
+            Log::error('❌ [REGISTER-LINK] Failed to send email', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Could not send the verification email. Please try again.'], 500);
+        }
+
+        Log::info('✅ [REGISTER-LINK] Link sent', ['email' => $email, 'resume' => (bool) $record]);
+
+        return response()->json([
+            'message' => 'Check your email — we sent you a link to verify your email and create your password.',
+            'resumed' => (bool) ($record && $record->verified_at),
+        ]);
+    }
+
+    public function verifyRegistrationLink(Request $req)
+    {
+        $req->validate([
+            'email' => 'required|email|max:255',
+            'token' => 'required|string|size:64',
+        ]);
+
+        $email  = mb_strtolower(trim($req->email));
+        $record = RegistrationOtp::where('email', $email)->first();
+
+        if (User::whereRaw('LOWER(email) = ?', [$email])->exists()) {
+            optional($record)->delete();
+            return response()->json(['message' => 'Your account is already set up. Please log in.', 'already_registered' => true], 409);
+        }
+
+        if (!$record || !$record->expires_at || $record->expires_at->isPast()) {
+            return response()->json(['message' => 'This link has expired. Enter your email again and we will send you a new one.', 'expired' => true], 422);
+        }
+        if ($record->attempts >= 10) {
+            return response()->json(['message' => 'This link is no longer valid. Please request a new one.', 'expired' => true], 422);
+        }
+        if (!Hash::check($req->token, $record->otp_hash)) {
+            $record->increment('attempts');
+            return response()->json(['message' => 'This link is not valid. Please use the latest email we sent you.', 'expired' => true], 422);
+        }
+
+        // The same link can be opened again within its 24 hours (e.g. they
+        // left before creating a password) — each time issues a new
+        // password-step token.
+        $registrationToken = Str::random(64);
+        $record->update([
+            'verified_at'      => $record->verified_at ?: now(),
+            'token_hash'       => Hash::make($registrationToken),
+            'token_expires_at' => now()->addMinutes(min(self::PASSWORD_STEP_TTL, (int) ceil(now()->diffInMinutes($record->expires_at, false)) + 60)),
+        ]);
+
+        return response()->json([
+            'message'            => 'Email verified. Now create your password.',
+            'email'              => $email,
+            'registration_token' => $registrationToken,
+        ]);
+    }
 
     /**
      * STEP 1 — person submits only their email (+ optional referral code).

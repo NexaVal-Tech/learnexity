@@ -150,23 +150,18 @@ export const api = {
 
   // ── AUTH ────────────────────────────────────────────────────────────────────
   auth: {
-    // ── Registration (OTP-based) ──────────────────────────────────────────
-    sendRegistrationOtp: async (data: {
+    // ── Registration (email verification link, valid 24h) ─────────────────
+    sendRegistrationLink: async (data: {
       email: string; referral_code?: string;
-    }): Promise<{ message: string }> => {
-      const response = await apiClient.post('/api/register/send-otp', data);
+    }): Promise<{ message: string; resumed?: boolean; retry_after?: number }> => {
+      const response = await apiClient.post('/api/register/send-link', data);
       return response.data;
     },
 
-    resendRegistrationOtp: async (email: string): Promise<{ message: string; retry_after?: number }> => {
-      const response = await apiClient.post('/api/register/resend-otp', { email });
-      return response.data;
-    },
-
-    verifyRegistrationOtp: async (data: {
-      email: string; otp: string;
-    }): Promise<{ message: string; registration_token: string }> => {
-      const response = await apiClient.post('/api/register/verify-otp', data);
+    verifyRegistrationLink: async (data: {
+      email: string; token: string;
+    }): Promise<{ message: string; email: string; registration_token: string }> => {
+      const response = await apiClient.post('/api/register/verify-link', data);
       return response.data;
     },
 

@@ -1,54 +1,54 @@
 'use client';
 
+// Sign up — Google first, email as the alternative.
+//
+// Email route: enter email → we email a "Verify email" button (valid 24
+// hours) → clicking it opens /user/auth/verify-email where the person
+// creates their password. If they stop halfway, the same link keeps
+// working for 24 hours, and entering the email here again simply sends a
+// fresh link.
+
 import Head from "next/head";
-import React, { useState, useEffect, useRef } from 'react';
-import { Eye, EyeOff, CheckCircle, XCircle, Check, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, ArrowLeft, Mail } from 'lucide-react';
 import AppLayout from "@/components/layouts/AppLayout";
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
+import { authCss } from '@/components/auth/authCss';
+import GoogleIcon from '@/components/auth/GoogleIcon';
 
-const BRAND = "#4A3AFF";
-type Step = 'email' | 'otp' | 'password';
+type Step = 'start' | 'email' | 'sent';
 
 export default function RegisterPage() {
-  const [step, setStep] = useState<Step>('email');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [step, setStep] = useState<Step>('start');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [leaving, setLeaving] = useState(false);
 
-  // Step 1
   const [email, setEmail] = useState('');
+  const [resumed, setResumed] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralValidated, setReferralValidated] = useState(false);
   const [validatingReferral, setValidatingReferral] = useState(false);
 
-  // Step 2 (OTP)
-  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [registrationToken, setRegistrationToken] = useState('');
-  const [resendCooldown, setResendCooldown] = useState(0);
-
-  // Step 3 (password)
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showTerms, setShowTerms] = useState(false);
-
   const router = useRouter();
-  const {
-    sendRegistrationOtp, resendRegistrationOtp, verifyRegistrationOtp,
-    completeRegistration, loginWithGoogle,
-  } = useAuth();
+  const { sendRegistrationLink, loginWithGoogle } = useAuth();
 
   useEffect(() => {
-    const { ref } = router.query;
+    const { ref, email: qEmail } = router.query;
     if (ref && typeof ref === 'string') {
       setReferralCode(ref);
       sessionStorage.setItem('pending_referral_code', ref);
       validateReferralCode(ref);
     }
+    // Coming back from an expired link: jump straight to the email step.
+    if (qEmail && typeof qEmail === 'string') {
+      setEmail(qEmail);
+      setStep('email');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query]);
 
   useEffect(() => {
@@ -87,134 +87,48 @@ export default function RegisterPage() {
     }
   };
 
-  // ── Step 1: send OTP to email ─────────────────────────────────────
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!email.trim()) {
-      setError('Please enter your email address');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-    setLoading(true);
-    try {
-      await sendRegistrationOtp(email, referralCode || undefined);
-      setSuccess(`Code sent to ${email}`);
-      setStep('otp');
-      setResendCooldown(45);
-    } catch (err: any) {
-      setError(err.message || 'Could not send verification code.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleSignup = () => {
-    if (referralCode && referralValidated) {
-      sessionStorage.setItem('pending_referral_code', referralCode);
-    }
+    if (referralCode && referralValidated) sessionStorage.setItem('pending_referral_code', referralCode);
     loginWithGoogle();
   };
 
-  // ── Step 2: verify OTP ────────────────────────────────────────────
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
-    const next = [...otpDigits];
-    next[index] = value.slice(-1);
-    setOtpDigits(next);
-    if (value && index < 5) otpRefs.current[index + 1]?.focus();
-    if (next.every((d) => d) && next.join('').length === 6) {
-      submitOtp(next.join(''));
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (!pasted) return;
-    e.preventDefault();
-    const next = pasted.split('');
-    while (next.length < 6) next.push('');
-    setOtpDigits(next);
-    if (pasted.length === 6) submitOtp(pasted);
-    else otpRefs.current[pasted.length]?.focus();
-  };
-
-  const submitOtp = async (code: string) => {
+  const sendLink = async () => {
     setError('');
+    const clean = email.trim().toLowerCase();
+    if (!clean) return setError('Please enter your email address');
+    if (!/^\S+@\S+\.\S+$/.test(clean)) return setError('Please enter a valid email address');
+
     setLoading(true);
     try {
-      const token = await verifyRegistrationOtp(email, code);
-      setRegistrationToken(token);
-      setSuccess('Email verified!');
-      setStep('password');
+      // The link may be opened in a new tab, which has its own
+      // sessionStorage — keep the course they picked in localStorage.
+      const intended = sessionStorage.getItem('intended_course');
+      if (intended) {
+        localStorage.setItem('pending_intended_course', intended);
+        const nm = sessionStorage.getItem('intended_course_name');
+        if (nm) localStorage.setItem('pending_intended_course_name', nm);
+      }
+      const res = await sendRegistrationLink(clean, referralValidated && referralCode ? referralCode : undefined);
+      setEmail(clean);
+      setResumed(!!res.resumed);
+      setStep('sent');
+      setResendCooldown(45);
     } catch (err: any) {
-      setError(err.message || 'Invalid code.');
-      setOtpDigits(['', '', '', '', '', '']);
-      otpRefs.current[0]?.focus();
+      setError(err.message || 'Could not send the verification email.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendLink();
   };
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
-    setError('');
-    try {
-      await resendRegistrationOtp(email);
-      setSuccess('New code sent.');
-      setResendCooldown(45);
-    } catch (err: any) {
-      setError(err.message || 'Could not resend code.');
-    }
-  };
-
-  const handleChangeEmail = () => {
-    setStep('email');
-    setOtpDigits(['', '', '', '', '', '']);
-    setError('');
-  };
-
-  // ── Step 3: password → terms modal → complete ────────────────────
-  const passwordRules = {
-    length: password.length >= 8,
-    letter: /[A-Za-z]/.test(password),
-    number: /[0-9]/.test(password),
-    match: password.length > 0 && password === confirmPassword,
-  };
-  const passwordValid = passwordRules.length && passwordRules.letter && passwordRules.number && passwordRules.match;
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!passwordValid) {
-      setError('Please meet all password requirements.');
-      return;
-    }
-    setShowTerms(true);
-  };
-
-  const handleConfirmTerms = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await completeRegistration(email, registrationToken, password, confirmPassword, true);
-      sessionStorage.removeItem('pending_referral_code');
-      // completeRegistration redirects to /user/dashboard?welcome=1
-    } catch (err: any) {
-      setShowTerms(false);
-      setError(err.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    await sendLink();
+    setSuccess('A new link is on its way.');
   };
 
   const handleGoToLogin = (e: React.MouseEvent) => {
@@ -231,101 +145,11 @@ export default function RegisterPage() {
         <link rel="canonical" href="https://learnexity.org/register" />
       </Head>
       <AppLayout>
-        <style>{`
-          @keyframes pageEnterReverse {
-            from { opacity: 0; transform: perspective(1200px) rotateY(12deg) translateX(60px); }
-            to   { opacity: 1; transform: perspective(1200px) rotateY(0deg) translateX(0); }
-          }
-          @keyframes pageLeaveReverse {
-            from { opacity: 1; transform: perspective(1200px) rotateY(0deg) translateX(0); }
-            to   { opacity: 0; transform: perspective(1200px) rotateY(-12deg) translateX(-60px); }
-          }
-          .auth-card {
-            animation: pageEnterReverse 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
-            border-radius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid var(--border-subtle);
-            background: var(--surface-elevated);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
-            transform-origin: right center;
-          }
-          .auth-card.leaving { animation: pageLeaveReverse 0.48s cubic-bezier(0.22, 1, 0.36, 1) both; }
-          .underline-input {
-            background: transparent; border: none; border-bottom: 3px solid var(--border-strong);
-            border-radius: 0; width: 100%; padding: 0.5rem 0; color: var(--text-primary); font-size: 0.95rem;
-            outline: none; transition: border-color 0.25s ease; caret-color: ${BRAND};
-          }
-          .underline-input::placeholder { color: var(--text-muted); font-size: 0.875rem; }
-          .underline-input:focus { border-bottom-color: ${BRAND}; }
-          .underline-input:disabled { opacity: 0.4; cursor: not-allowed; }
-          .field-label {
-            font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
-            color: var(--text-secondary); margin-bottom: 0.35rem; display: block;
-          }
-          .auth-btn {
-            width: 100%; margin-top: 20px; background-color: ${BRAND}; color: white; font-weight: 600;
-            padding: 0.8rem 1rem; border-radius: 2rem 0.75rem 2rem 0.75rem; transition: all 0.3s ease;
-            letter-spacing: 0.02em; font-size: 0.9rem;
-          }
-          .auth-btn:hover:not(:disabled) {
-            background-color: #3628e0; box-shadow: 0 0 28px ${BRAND}55; transform: translateY(-1px);
-          }
-          .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-          .auth-btn-ghost {
-            width: 100%; margin-top: 12px; background: transparent; color: var(--text-secondary);
-            font-weight: 500; padding: 0.6rem 1rem; border-radius: 2rem 0.75rem 2rem 0.75rem;
-            border: 1px solid var(--border-subtle); font-size: 0.85rem; transition: all 0.25s ease;
-          }
-          .auth-btn-ghost:hover:not(:disabled) { background: var(--border-subtle); }
-          .auth-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
-          .google-btn {
-            width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-            padding: 0.75rem 1rem; border: 1px solid var(--border-subtle); border-radius: 2rem 0.75rem 2rem 0.75rem;
-            color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; background: var(--surface-alt);
-            transition: all 0.25s ease;
-          }
-          .google-btn:hover:not(:disabled) { background: var(--border-subtle); border-color: var(--border-strong); }
-          .google-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-          .divider-line { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; }
-          .divider-line::before, .divider-line::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-          .divider-line span { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.05em; }
-          .page-switch-link { color: ${BRAND}; font-weight: 600; text-decoration: none; transition: opacity 0.2s; }
-          .page-switch-link:hover { opacity: 0.75; }
-          .toast-wrap {
-            position: fixed; top: 5.5rem; right: 1rem; z-index: 60; max-width: 22rem; width: 90%;
-            animation: slideIn 0.3s ease both;
-          }
-          @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-          .otp-row { display: flex; gap: 0.6rem; justify-content: center; margin: 1.5rem 0 0.5rem; }
-          .otp-box {
-            width: 3rem; height: 3.25rem; text-align: center; font-size: 1.4rem; font-weight: 600;
-            background: var(--surface-alt); border: 1px solid var(--border-strong);
-            border-radius: 0.75rem; color: var(--text-primary); outline: none; transition: border-color 0.2s ease;
-          }
-          .otp-box:focus { border-color: ${BRAND}; box-shadow: 0 0 0 3px ${BRAND}33; }
-          .rule-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }
-          .rule-item.met { color: #16a34a; }
-          [data-theme="dark"] .rule-item.met { color: #4ade80; }
-          .back-link {
-            display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;
-            color: var(--text-muted); background: none; border: none; cursor: pointer; margin-bottom: 1rem;
-          }
-          .back-link:hover { color: var(--text-primary); }
-          .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 70;
-            display: flex; align-items: center; justify-content: center; padding: 1rem;
-            animation: fadeIn 0.2s ease both;
-          }
-          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-          .modal-box {
-            background: var(--surface-elevated); border: 1px solid var(--border-subtle); border-radius: 1.5rem;
-            padding: 2rem; max-width: 26rem; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.8);
-          }
-        `}</style>
+        <style>{authCss}</style>
 
         {(error || success) && (
           <div className="toast-wrap">
-            <div className={`flex items-center gap-3 p-4 rounded-xl shadow-2xl ${error ? 'bg-red-600' : 'bg-green-600'} text-white`}>
+            <div className={`flex items-center gap-3 p-4 rounded-xl shadow-2xl ${error ? 'bg-red-600' : 'bg-[#4A3AFF]'} text-white`}>
               {error ? <XCircle size={20} /> : <CheckCircle size={20} />}
               <span className="text-sm font-medium">{error || success}</span>
             </div>
@@ -345,158 +169,79 @@ export default function RegisterPage() {
             </div>
 
             {validatingReferral && (
-              <div className="mb-5 p-3 rounded-lg text-xs text-blue-700 dark:text-blue-300" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                ⏳ Validating referral code…
+              <div className="mb-5 p-3 rounded-lg text-xs text-[#4A3AFF]" style={{ background: 'rgba(74,58,255,0.08)', border: '1px solid rgba(74,58,255,0.2)' }}>
+                Validating referral code…
               </div>
             )}
             {referralCode && referralValidated && !validatingReferral && (
-              <div className="mb-5 p-3 rounded-lg text-xs text-green-700 dark:text-green-300" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <div className="mb-5 p-3 rounded-lg text-xs text-[#4A3AFF]" style={{ background: 'rgba(74,58,255,0.08)', border: '1px solid rgba(74,58,255,0.2)' }}>
                 ✓ Referral code <strong>{referralCode}</strong> applied!
               </div>
             )}
 
-            {/* STEP 1 — email only */}
+            {/* STEP 1 — Google first, email as the alternative */}
+            {step === 'start' && (
+              <>
+                <button type="button" onClick={handleGoogleSignup} disabled={loading} className="google-btn">
+                  <GoogleIcon />
+                  Continue with Google
+                </button>
+
+                <div className="divider-line"><span>OR</span></div>
+
+                <button type="button" onClick={() => setStep('email')} disabled={loading} className="auth-btn-ghost" style={{ marginTop: 0 }}>
+                  <span className="inline-flex items-center justify-center gap-2"><Mail size={16} /> Continue with email</span>
+                </button>
+              </>
+            )}
+
+            {/* STEP 2 — email address */}
             {step === 'email' && (
               <>
+                <button type="button" className="back-link" onClick={() => setStep('start')}>
+                  <ArrowLeft size={14} /> Other sign-up options
+                </button>
                 <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
                   <div>
                     <label className="field-label">Email</label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                      placeholder="johndoe@gmail.com" required disabled={loading} className="underline-input" />
+                      placeholder="johndoe@gmail.com" required disabled={loading} className="underline-input" autoFocus />
                   </div>
                   <button type="submit" disabled={loading} className="auth-btn">
-                    {loading ? 'Sending code…' : 'Continue'}
+                    {loading ? 'Sending link…' : 'Send verification link'}
                   </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center -mt-2">
+                    We&apos;ll email you a link to verify your email and create your password.
+                  </p>
                 </form>
-
-                <div className="divider-line"><span>OR</span></div>
-
-                <button type="button" onClick={handleGoogleSignup} disabled={loading} className="google-btn">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.6109C15.3727 13.3 14.6636 14.3591 13.6045 15.0682V17.5773H16.8273C18.7091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4" />
-                    <path d="M10.2 20C12.9 20 15.1727 19.1045 16.8273 17.5773L13.6045 15.0682C12.7091 15.6682 11.5636 16.0227 10.2 16.0227C7.59545 16.0227 5.38182 14.2636 4.58636 11.9H1.25455V14.4909C2.90909 17.7591 6.29091 20 10.2 20Z" fill="#34A853" />
-                    <path d="M4.58636 11.9C4.38636 11.3 4.27273 10.6591 4.27273 10C4.27273 9.34091 4.38636 8.7 4.58636 8.1V5.50909H1.25455C0.572727 6.85909 0.2 8.38636 0.2 10C0.2 11.6136 0.572727 13.1409 1.25455 14.4909L4.58636 11.9Z" fill="#FBBC04" />
-                    <path d="M10.2 3.97727C11.6864 3.97727 13.0182 4.48182 14.0636 5.47273L16.9227 2.61364C15.1682 0.986364 12.8955 0 10.2 0C6.29091 0 2.90909 2.24091 1.25455 5.50909L4.58636 8.1C5.38182 5.73636 7.59545 3.97727 10.2 3.97727Z" fill="#EA4335" />
-                  </svg>
-                  Sign up with Google
-                </button>
               </>
             )}
 
-            {/* STEP 2 — OTP */}
-            {step === 'otp' && (
-              <>
-                <button type="button" className="back-link" onClick={handleChangeEmail}>
-                  <ArrowLeft size={14} /> Change email
-                </button>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-2">
-                  Enter the 6-digit code sent to<br /><strong className="text-gray-900 dark:text-white">{email}</strong>
+            {/* STEP 3 — check your inbox */}
+            {step === 'sent' && (
+              <div className="text-center">
+                <div className="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(74,58,255,0.12)', color: '#4A3AFF' }}>
+                  <Mail size={26} />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Check your email</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  {resumed ? 'Welcome back! ' : ''}We sent a <strong>Verify email</strong> link to<br />
+                  <strong className="text-gray-900 dark:text-white">{email}</strong>
                 </p>
-                <div className="otp-row">
-                  {otpDigits.map((digit, i) => (
-                    <input
-                      key={i}
-                      ref={(el) => { otpRefs.current[i] = el; }}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      disabled={loading}
-                      onChange={(e) => handleOtpChange(i, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      onPaste={i === 0 ? handleOtpPaste : undefined}
-                      className="otp-box"
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => submitOtp(otpDigits.join(''))}
-                  disabled={loading || otpDigits.some((d) => !d)}
-                  className="auth-btn"
-                >
-                  {loading ? 'Verifying…' : 'Verify'}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+                  Click it to verify your email and create your password. The link works for 24 hours — if you
+                  don&apos;t finish now, just open it again later. Can&apos;t find it? Check your spam folder.
+                </p>
+                <button type="button" onClick={handleResend} disabled={resendCooldown > 0 || loading} className="auth-btn">
+                  {resendCooldown > 0 ? `Resend link in ${resendCooldown}s` : loading ? 'Sending…' : 'Resend link'}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={resendCooldown > 0 || loading}
-                  className="auth-btn-ghost"
-                >
-                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+                <button type="button" onClick={() => setStep('email')} disabled={loading} className="auth-btn-ghost">
+                  Use a different email
                 </button>
-              </>
-            )}
-
-            {/* STEP 3 — password */}
-            {step === 'password' && (
-              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-5">
-                <div>
-                  <label className="field-label">Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} value={password}
-                      onChange={(e) => setPassword(e.target.value)} placeholder="Min. 8 characters" required
-                      disabled={loading} className="underline-input pr-10" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={loading}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-40">
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="field-label">Confirm Password</label>
-                  <div className="relative">
-                    <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" required
-                      disabled={loading} className="underline-input pr-10" />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={loading}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-40">
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5 mt-1">
-                  <div className={`rule-item ${passwordRules.length ? 'met' : ''}`}><Check size={12} /> At least 8 characters</div>
-                  <div className={`rule-item ${passwordRules.letter ? 'met' : ''}`}><Check size={12} /> At least 1 letter</div>
-                  <div className={`rule-item ${passwordRules.number ? 'met' : ''}`}><Check size={12} /> At least 1 number</div>
-                  <div className={`rule-item ${passwordRules.match ? 'met' : ''}`}><Check size={12} /> Passwords match</div>
-                </div>
-
-                <button type="submit" disabled={loading || !passwordValid} className="auth-btn">
-                  {loading ? 'Please wait…' : 'Continue'}
-                </button>
-              </form>
+              </div>
             )}
           </div>
         </div>
-
-        {/* Terms modal */}
-        {showTerms && (
-          <div className="modal-overlay" onClick={() => !loading && setShowTerms(false)}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">One last step</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                By signing up, you agree to our{' '}
-                <a href="/terms-of-services" target="_blank" rel="noopener noreferrer" className="page-switch-link">Terms & Conditions</a>{' '}
-                and{' '}
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="page-switch-link">Privacy Policy</a>.
-              </p>
-              <button onClick={handleConfirmTerms} disabled={loading} className="auth-btn">
-                {loading ? 'Creating account…' : 'I Agree — Create Account'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowTerms(false)}
-                disabled={loading}
-                className="auth-btn-ghost"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </AppLayout>
     </>
   );

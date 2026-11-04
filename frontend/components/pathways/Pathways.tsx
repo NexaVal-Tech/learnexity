@@ -82,9 +82,13 @@ function CardBody({ card }: { card: PathwayCard }) {
         <CmsText text={card.description} accentColor={g ? "#fde68a" : undefined} />
       </p>
       {card.href && (
+        // Same look as "See grads' achievements" (outlined button with arrow)
         <span
-          className="mt-8 inline-flex items-center gap-2 font-semibold group-hover:gap-3 transition-all"
-          style={{ color: g ? "#fff" : BRAND }}
+          className={`mt-8 self-start inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border font-semibold group-hover:gap-3 transition-all ${
+            g
+              ? "border-white text-white group-hover:bg-white/10"
+              : "border-[var(--text-primary)] text-[var(--text-primary)] group-hover:border-[#4A3AFF] group-hover:text-[#4A3AFF]"
+          }`}
         >
           {card.linkLabel || "Learn more"} <ArrowRight size={18} />
         </span>

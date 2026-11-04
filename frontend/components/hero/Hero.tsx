@@ -22,8 +22,9 @@ export const HOME_HERO_DEFAULTS: HomeHeroData = {
   backgroundVideo: "/videos/landing_video.mp4",
   backgroundImage: "",
   buttons: [
-    { label: "Sign Up", href: "/user/auth/register", style: "primary" },
-    { label: "Explore courses", href: "/courses/courses", style: "light" },
+    { label: "Explore Courses", href: "/courses", style: "primary" },
+    { label: "Take Eligibility Test", href: "/user/auth/register", style: "light" },
+    { label: "Talk to Expert", href: "/consultation", style: "ghost" },
   ],
 };
 
@@ -100,7 +101,7 @@ export default function Hero({ data = HOME_HERO_DEFAULTS }: { data?: HomeHeroDat
           </p>
 
           {/* Buttons */}
-          <CmsButtons buttons={data.buttons} nowrap className="items-start mt-10" />
+          <CmsButtons buttons={data.buttons} stackOnMobile radius="rounded-lg" className="mt-10 max-w-sm sm:max-w-none" />
         </div>
       </div>
     </section>

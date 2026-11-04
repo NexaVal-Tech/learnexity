@@ -136,11 +136,10 @@ Route::post('/email/verification-notification', function (Request $request) {
 Route::middleware('throttle:auth')->group(function () {
     // Route::post('/register', [AuthController::class, 'register']); ← REMOVE
 
-    // ── OTP-based registration ──────────────────────────────────
-    Route::post('/register/send-otp',   [AuthController::class, 'sendRegistrationOtp']);
-    Route::post('/register/resend-otp', [AuthController::class, 'resendRegistrationOtp']);
-    Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp']);
-    Route::post('/register/complete',   [AuthController::class, 'completeRegistration']);
+    // ── Email sign-up by verification link (valid 24h) ──────────
+    Route::post('/register/send-link',   [AuthController::class, 'sendRegistrationLink']);
+    Route::post('/register/verify-link', [AuthController::class, 'verifyRegistrationLink']);
+    Route::post('/register/complete',    [AuthController::class, 'completeRegistration']);
 
     Route::post('/login',                     [AuthController::class, 'login']);
     Route::post('/password/email',            [AuthController::class, 'sendResetLink']);

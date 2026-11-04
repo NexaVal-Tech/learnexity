@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layouts/AppLayout";
 import Footer from "@/components/footer/Footer";
 import {
-  ArrowLeft, BadgeCheck, CalendarDays, Check, CircleCheck, ClipboardCheck, Clock,
+  ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, Check, CircleCheck, ClipboardCheck, Clock,
   Flame, Gauge, Headset, Monitor, Quote, Star, Briefcase, Factory, PlayCircle,
 } from "lucide-react";
 import {
@@ -27,12 +27,15 @@ import { useCmsGlobals } from "@/contexts/CmsGlobalsContext";
 import { fillCopy } from "@/lib/cms/globalDefaults";
 
 const HERO_BG = "#140c3d";
+const TALK_TO_EXPERT = "/consultation";
 
+// Brand purple only (one style for every pathway tag).
+const BRAND_TAG = { bg: "rgba(74,58,255,0.3)", border: "#7c70ff", color: "#e0dcff" };
 const PATHWAY_TAG: Record<PathwayKey, { bg: string; border: string; color: string }> = {
-  flex: { bg: "rgba(59,130,246,0.25)", border: "#3b82f6", color: "#bfdbfe" },
-  accelerator: { bg: "rgba(147,51,234,0.3)", border: "#a855f7", color: "#e9d5ff" },
-  deeptech: { bg: "rgba(74,58,255,0.3)", border: "#6d5dff", color: "#c7d2fe" },
-  free: { bg: "rgba(5,150,105,0.3)", border: "#10b981", color: "#a7f3d0" },
+  flex: BRAND_TAG,
+  accelerator: BRAND_TAG,
+  deeptech: BRAND_TAG,
+  free: BRAND_TAG,
 };
 
 const NEXT_STEPS = ["Employment", "Freelance Projects", "Consulting", "Internships", "Entrepreneurship", "Further Specialization"];
@@ -364,6 +367,32 @@ export default function CoursePage() {
     { icon: Headset, label: "Support", value: p.structure.support },
   ];
 
+  // Main call to action (also used in the sidebar): continue / pay / apply.
+  const renderPrimaryCta = (extra = "") => {
+    if (hasPaidAccess) {
+      return (
+        <button
+          onClick={() => router.push({ pathname: "/user/resource", query: { courseId: course.course_id } })}
+          className={`lx-btn inline-flex items-center justify-center gap-2 ${extra}`}
+        >
+          <PlayCircle size={18} /> Continue Learning
+        </button>
+      );
+    }
+    if (enrollmentStatus?.isEnrolled) {
+      return (
+        <button onClick={() => router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)} className={`lx-btn ${extra}`}>
+          Complete Payment
+        </button>
+      );
+    }
+    return (
+      <button onClick={handleEnrollClick} disabled={checkingEnrollment || enrolling} className={`lx-btn ${extra}`}>
+        {enrolling ? "Enrolling…" : isFree ? "Enroll for Free" : "Apply Now"}
+      </button>
+    );
+  };
+
   const card = "lx-card p-6 md:p-8";
   const cardTitle = "text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-4 border-b border-[var(--border-subtle)] pb-4";
   const inset = "lx-inset lx-inset-hover";
@@ -403,11 +432,11 @@ export default function CoursePage() {
                       Free
                     </span>
                   )}
-                  <span className="px-3 py-1 bg-emerald-600/30 border border-emerald-500 text-emerald-200 text-xs font-bold rounded-full uppercase inline-flex items-center">
+                  <span className="px-3 py-1 bg-[#4A3AFF]/30 border border-[#7c70ff] text-[#d9d5ff] text-xs font-bold rounded-full uppercase inline-flex items-center">
                     <Flame size={12} className="mr-1" /> In-Demand
                   </span>
                   {hasPaidAccess && (
-                    <span className="px-3 py-1 bg-green-600/30 border border-green-500 text-green-200 text-xs font-bold rounded-full uppercase inline-flex items-center">
+                    <span className="px-3 py-1 bg-white/15 border border-white/40 text-white text-xs font-bold rounded-full uppercase inline-flex items-center">
                       <Check size={12} className="mr-1" /> You're enrolled
                     </span>
                   )}
@@ -416,6 +445,14 @@ export default function CoursePage() {
                 {course.description && (
                   <p className="text-lg md:text-2xl text-slate-300 max-w-3xl font-light leading-relaxed">{course.description}</p>
                 )}
+                <div className="mt-8 flex flex-col sm:flex-row gap-3 max-w-sm sm:max-w-none">
+                  {renderPrimaryCta("px-8 py-3.5 text-base sm:w-auto")}
+                  {!hasPaidAccess && (
+                    <a href={TALK_TO_EXPERT} className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg border border-white/50 text-white font-semibold hover:bg-white/10 transition">
+                      Talk to Expert
+                    </a>
+                  )}
+                </div>
               </div>
 
               {heroImg && (
@@ -538,7 +575,7 @@ export default function CoursePage() {
                         <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] pt-2">Key Benefits</p>
                         {benefits.map((b, i) => (
                           <div key={b.id} className={`${inset} p-6 relative overflow-hidden`}>
-                            <div className="absolute top-0 left-0 w-1 h-full" style={{ background: i % 2 ? "#a855f7" : BRAND }} />
+                            <div className="absolute top-0 left-0 w-1 h-full" style={{ background: i % 2 ? "#7c70ff" : BRAND }} />
                             <h3 className="font-semibold text-lg text-[var(--text-primary)] mb-2 flex items-center">
                               <Star size={16} className="mr-2 flex-shrink-0" style={{ color: BRAND }} fill="currentColor" />
                               {b.title}
@@ -617,7 +654,7 @@ export default function CoursePage() {
               {instructors.length > 0 && (
                 <div className={card}>
                   <h2 className={cardTitle}>{instructors.length === 1 ? "Your Instructor" : "Your Instructors"}</h2>
-                  <div className="space-y-4">
+                  <div className={`grid gap-5 ${instructors.length > 1 ? "sm:grid-cols-2" : "max-w-md"}`}>
                     {instructors.map((ins, i) => <InstructorProfile key={i} ins={ins} inset={inset} />)}
                   </div>
                 </div>
@@ -631,6 +668,12 @@ export default function CoursePage() {
                   {NEXT_STEPS.map((s) => (
                     <span key={s} className="bg-[var(--surface-alt)] text-[var(--text-secondary)] px-4 py-2 lx-r-sm text-sm font-medium border border-[var(--border-subtle)]">{s}</span>
                   ))}
+                </div>
+                <div className="mt-8 pt-6 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <p className="text-[var(--text-primary)] font-semibold text-lg">
+                    {hasPaidAccess ? "Pick up where you left off." : "Ready to start your journey?"}
+                  </p>
+                  {renderPrimaryCta("px-8 py-3.5 text-base sm:w-auto")}
                 </div>
               </div>
 
@@ -689,7 +732,7 @@ export default function CoursePage() {
                         ].filter((r) => r.value).map((r) => (
                           <div key={r.label} className="flex justify-between items-baseline gap-3">
                             <span className="text-xs text-[var(--text-muted)]">{r.label}</span>
-                            <span className="font-bold text-emerald-600 text-right">{r.value}</span>
+                            <span className="font-bold text-[#4A3AFF] dark:text-[#a59dff] text-right">{r.value}</span>
                           </div>
                         ))}
                       </div>
@@ -701,7 +744,7 @@ export default function CoursePage() {
                     <div className="mb-6">
                       <p className="text-sm text-[var(--text-muted)] mb-1">Program Investment</p>
                       {isFree ? (
-                        <p className="text-3xl font-bold text-emerald-600">
+                        <p className="text-3xl font-bold text-[#4A3AFF] dark:text-[#a59dff]">
                           Free
                           {listPrice > 0 && (
                             <span className="ml-2 text-base font-medium text-[var(--text-muted)] line-through">
@@ -736,14 +779,14 @@ export default function CoursePage() {
                   {hasPaidAccess ? (
                     <button
                       onClick={() => router.push({ pathname: "/user/resource", query: { courseId: course.course_id } })}
-                      className="w-full py-4 lx-r bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-md transition transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2"
+                      className="lx-btn w-full py-4 text-lg inline-flex items-center justify-center gap-2"
                     >
                       <PlayCircle size={20} /> Continue Learning
                     </button>
                   ) : enrollmentStatus?.isEnrolled ? (
                     <button
                       onClick={() => router.push(`/user/payment/${enrollmentStatus.enrollment?.id}`)}
-                      className="w-full py-4 lx-r bg-amber-600 hover:bg-amber-700 text-white font-semibold text-lg shadow-md transition transform hover:-translate-y-0.5"
+                      className="lx-btn w-full py-4 text-lg"
                     >
                       Complete Payment
                     </button>
@@ -768,9 +811,7 @@ export default function CoursePage() {
 
                   {!hasPaidAccess && (
                     <a
-                      href="https://calendly.com/nexavaltech/30min"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={TALK_TO_EXPERT}
                       className="lx-btn-outline mt-3 w-full py-3 text-sm"
                     >
                       Talk to an expert
@@ -779,9 +820,9 @@ export default function CoursePage() {
 
                 </div>
 
-                <div className="text-white lx-r shadow-md p-6 border border-slate-800" style={{ background: `linear-gradient(135deg, #0f172a 0%, ${HERO_BG} 100%)` }}>
+                <div className="text-white lx-r shadow-md p-6 border border-white/10" style={{ background: `linear-gradient(135deg, #0b0b14 0%, ${HERO_BG} 100%)` }}>
                   <div className="flex items-center mb-3">
-                    <BadgeCheck size={24} className="text-emerald-400 mr-3" />
+                    <BadgeCheck size={24} className="text-[#a59dff] mr-3" />
                     <h4 className="text-2xl font-semibold">Learnexity Validation</h4>
                   </div>
                   <p className="text-sm text-slate-200 mb-2">
@@ -829,6 +870,10 @@ export default function CoursePage() {
 }
 
 // ─── Instructor profile (photo, name, role, links, full bio) ──────────────────
+/** Same look as "See grads' achievements" on the testimonials section. */
+const PILL_BTN =
+  "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--text-primary)] text-[var(--text-primary)] font-semibold text-sm hover:border-[#4A3AFF] hover:text-[#4A3AFF] hover:gap-3 transition-all";
+
 function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_instructors"]>[number]; inset: string }) {
   const [open, setOpen] = useState(false);
   const photo = ins.photo ? imageUrl(ins.photo, "") : "";
@@ -846,68 +891,77 @@ function InstructorProfile({ ins, inset }: { ins: NonNullable<Course["course_ins
     : null;
 
   return (
-    <div className={`${inset} p-4 sm:p-5`}>
-      <div className="flex items-start gap-4">
+    <div className={`${inset} overflow-hidden flex flex-col`}>
+      {/* Full-width photo */}
+      <div className="relative w-full aspect-[4/3] bg-[var(--surface-alt)]">
         {photo ? (
-          <CmsImage src={photo} alt={ins.name} width={160} height={160} className="w-20 h-20 rounded-full object-cover object-top flex-shrink-0" />
+          <CmsImage
+            src={photo}
+            alt={ins.name}
+            fill
+            sizes="(min-width: 1024px) 420px, (min-width: 640px) 45vw, 92vw"
+            className="object-cover object-[center_20%]"
+          />
         ) : (
-          <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0" style={{ background: `${BRAND}1a`, color: BRAND }}>
+          <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold" style={{ background: `${BRAND}14`, color: BRAND }}>
             {ins.name.charAt(0).toUpperCase()}
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          {teamHref ? (
-            <Link href={teamHref} className="text-lg font-semibold text-[var(--text-primary)] leading-snug hover:underline">
-              {ins.name}
-            </Link>
-          ) : (
-            <p className="text-lg font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
-          )}
-          {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug">{ins.role}</p>}
-          {links.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mt-2.5">
-              {links.map((l, j) => {
-                const Icon = SOCIAL_ICONS[l.platform] ?? SOCIAL_ICONS.website;
-                const isLinkedIn = l.platform === "linkedin";
-                return (
-                  <a
-                    key={j}
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={l.platform}
-                    className={
-                      isLinkedIn
-                        ? "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#0A66C2] text-white text-xs font-semibold hover:opacity-90"
-                        : "w-8 h-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]"
-                    }
-                  >
-                    <Icon size={15} />
-                    {isLinkedIn && "LinkedIn"}
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
-      {shown.length > 0 && (
-        <div className="mt-4 space-y-3">
-          {shown.map((p, k) => (
-            <p key={k} className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-line">{p}</p>
-          ))}
-          {long && (
-            <button type="button" onClick={() => setOpen((v) => !v)} className="text-sm font-semibold" style={{ color: BRAND }}>
-              {open ? "Show less" : "Read full bio"}
-            </button>
-          )}
-        </div>
-      )}
-      {teamHref && (
-        <Link href={teamHref} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" style={{ color: BRAND }}>
-          View {ins.name.split(" ")[0]}&apos;s profile on Meet Our Team →
-        </Link>
-      )}
+
+      <div className="p-5 flex-1 flex flex-col">
+        <p className="text-xl font-semibold text-[var(--text-primary)] leading-snug">{ins.name}</p>
+        {ins.role && <p className="text-sm text-[var(--text-secondary)] leading-snug mt-0.5">{ins.role}</p>}
+        {links.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {links.map((l, j) => {
+              const Icon = SOCIAL_ICONS[l.platform] ?? SOCIAL_ICONS.website;
+              const isLinkedIn = l.platform === "linkedin";
+              return (
+                <a
+                  key={j}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={l.platform}
+                  className={
+                    isLinkedIn
+                      ? "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-xs font-semibold hover:opacity-90"
+                      : "w-8 h-8 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]"
+                  }
+                  style={isLinkedIn ? { background: BRAND } : undefined}
+                >
+                  <Icon size={15} />
+                  {isLinkedIn && "LinkedIn"}
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        {shown.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {shown.map((p, k) => (
+              <p key={k} className="text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-line">{p}</p>
+            ))}
+          </div>
+        )}
+
+        {(long || teamHref) && (
+          <div className="mt-5 flex flex-wrap gap-3">
+            {long && (
+              <button type="button" onClick={() => setOpen((v) => !v)} className={PILL_BTN}>
+                {open ? "Show less" : "Read full bio"} <ArrowRight size={16} className={open ? "-rotate-90" : ""} />
+              </button>
+            )}
+            {teamHref && (
+              <Link href={teamHref} className={PILL_BTN}>
+                View profile on Meet Our Team <ArrowRight size={16} />
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
