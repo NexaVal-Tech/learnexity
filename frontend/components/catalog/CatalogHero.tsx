@@ -77,7 +77,7 @@ export function PathwayCards({
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${keys.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6`}>
         {keys.map((k) => {
           const p = PATHWAYS[k];
-          const { icon: Icon, accent } = PATHWAY_STYLE[k];
+          const { accent } = PATHWAY_STYLE[k];
           const dark = k === "deeptech";
           const count = counts?.[k];
           return (
@@ -87,26 +87,20 @@ export function PathwayCards({
               className={`group p-7 flex flex-col h-full ${dark ? "lx-dt-card text-white" : "lx-card lx-hover"}`}
               style={dark ? { borderRadius: RADIUS } : undefined}
             >
-              <div
-                className="w-12 h-12 flex items-center justify-center mb-6"
-                style={{ borderRadius: RADIUS_SM, ...(dark ? { background: "#334155", color: "#fff" } : { background: `${accent}1a`, color: accent }) }}
-              >
-                <Icon size={22} />
-              </div>
-              {dark && <p className="lx-label mb-1" style={{ color: "#a5b4fc" }}>Flagship</p>}
+              {dark && <p className="lx-label mb-1" style={{ color: "#c9c3ff" }}>Flagship</p>}
               <h3 className={`text-2xl font-semibold mb-2 ${dark ? "text-white" : "text-[var(--text-primary)]"}`}>{p.title}</h3>
-              <p className={`mb-6 flex-1 ${dark ? "text-slate-400" : "text-[var(--text-secondary)]"}`}>{p.tagline}</p>
+              <p className={`mb-6 flex-1 ${dark ? "text-white/70" : "text-[var(--text-secondary)]"}`}>{p.tagline}</p>
               <div className="flex items-center justify-between gap-3">
                 <span
                   className="font-semibold inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform"
-                  style={{ color: dark ? "#a5b4fc" : accent }}
+                  style={{ color: dark ? "#c9c3ff" : accent }}
                 >
                   Explore Pathway <ArrowRight size={16} />
                 </span>
                 {typeof count === "number" && count > 0 && (
                   <span
                     className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={dark ? { background: "#334155", color: "#e2e8f0" } : { background: `${accent}14`, color: accent }}
+                    style={dark ? { background: "rgba(255,255,255,0.12)", color: "#fff" } : { background: `${accent}14`, color: accent }}
                   >
                     {count} {count === 1 ? "course" : "courses"}
                   </span>

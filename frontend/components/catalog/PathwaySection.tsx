@@ -163,20 +163,11 @@ function Outcome({ pathway, accent, dark = false }: { pathway: PathwayKey; accen
 
 function PathwayHeader({ pathway, flagship = false }: { pathway: PathwayKey; flagship?: boolean }) {
   const p = PATHWAYS[pathway];
-  const { icon: Icon, accent } = PATHWAY_STYLE[pathway];
   return (
-    <div className="flex items-center mb-8">
-      <div
-        className="w-14 h-14 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm"
-        style={{ borderRadius: RADIUS_SM, ...(pathway === "deeptech" ? { background: DT_BG, color: "#fff" } : { background: `${accent}1a`, color: accent }) }}
-      >
-        <Icon size={24} />
-      </div>
-      <div>
-        {flagship && <p className="lx-label mb-1">Flagship Pathway</p>}
-        <h2 className="text-3xl md:text-4xl font-semibold text-[var(--text-primary)]">{p.title}</h2>
-        <p className="text-lg text-[var(--text-secondary)] mt-1">{p.tagline}</p>
-      </div>
+    <div className="mb-8">
+      {flagship && <p className="lx-label mb-1">Flagship Pathway</p>}
+      <h2 className="text-3xl md:text-4xl font-semibold text-[var(--text-primary)]">{p.title}</h2>
+      <p className="text-lg text-[var(--text-secondary)] mt-1">{p.tagline}</p>
     </div>
   );
 }
@@ -290,6 +281,16 @@ export function PathwayStyles() {
       .lx-course-card:hover {
         border-color: ${BRAND}66;
         box-shadow: 0 18px 40px rgba(74,58,255,0.14);
+      }
+      .lx-dt-card {
+        background: #0d0b1f;
+        border: 1px solid rgba(255,255,255,0.10);
+        transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      }
+      .lx-dt-card:hover {
+        border-color: ${BRAND};
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px ${BRAND}40;
+        transform: translateY(-4px);
       }
       .lx-course-card-dark {
         background: rgba(255,255,255,0.04);
