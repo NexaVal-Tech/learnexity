@@ -40,6 +40,9 @@ return [
     // Standalone Learnexity TV webinar page (tv/tv.html).
     'tv_url' => env('TV_URL', 'https://tv.learnexity.org'),
 
+    // Marketing landing page (landing/index.html) — set when the subdomain is chosen.
+    'landing_url' => env('LANDING_URL', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

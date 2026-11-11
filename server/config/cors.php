@@ -14,7 +14,8 @@ return [
         env('FRONTEND_URL', 'http://localhost:3000'),
         env('ADVISORY_URL', 'http://localhost:3010'),
     ],
-    'allowed_origins_patterns' => [],
+    // Any https://<sub>.learnexity.org page (e.g. the marketing landing page).
+    'allowed_origins_patterns' => ['#^https://[a-z0-9-]+\.learnexity\.org$#'],
     'allowed_headers' => ['*'],
     'exposed_headers' => ['Authorization'],
     'max_age' => 0,

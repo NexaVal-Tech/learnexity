@@ -323,6 +323,9 @@ Route::middleware('throttle:api')->prefix('consultations')->group(function () {
     Route::get('/verify',         [ConsultationPaymentController::class, 'verify']);
 });
 
+// =================== MARKETING LANDING PAGE =================== //
+Route::middleware(['throttle:cms-read', 'public.cache:0'])->get('/landing', [\App\Http\Controllers\Api\LandingPageController::class, 'show']);
+
 // =================== LEARNEXITY TV WEBINAR (tv.learnexity.org) =================== //
 Route::middleware('throttle:api')->prefix('tv')->group(function () {
     Route::get('/settings', [\App\Http\Controllers\Api\TvWebinarController::class, 'settings']);
@@ -536,6 +539,14 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     });
 
     // "I will be attending" flyer — standalone singleton settings, one-off feature
+    // Marketing landing page
+    Route::prefix('landing')->middleware('admin.permission:landing')->group(function () {
+        Route::get('/',       [\App\Http\Controllers\Api\AdminLandingController::class, 'show']);
+        Route::put('/',       [\App\Http\Controllers\Api\AdminLandingController::class, 'update']);
+        Route::post('/image', [\App\Http\Controllers\Api\AdminLandingController::class, 'uploadImage']);
+        Route::post('/reset', [\App\Http\Controllers\Api\AdminLandingController::class, 'reset']);
+    });
+
     // Learnexity TV webinar — settings + registrations
     Route::prefix('tv')->middleware('admin.permission:tv')->group(function () {
         Route::get('/settings',                     [\App\Http\Controllers\Api\AdminTvController::class, 'getSettings']);

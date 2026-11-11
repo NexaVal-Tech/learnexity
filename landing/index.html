@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prepare for Remote Opportunities in the US and Beyond | Learnexity</title>
+  <meta name="description" content="Build high-demand tech skills, understand the US and global job markets, and position yourself for greater opportunities with Learnexity.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Prepare for Remote Opportunities in the US and Beyond | Learnexity">
+  <meta property="og:description" content="Build high-demand tech skills, understand the US and global job markets, and position yourself for greater opportunities.">
+  <meta property="og:image" content="assets/hero.jpg">
+  <meta name="theme-color" content="#4A3AFF">
+  <link rel="icon" href="favicon.ico">
+  <link rel="preload" as="image" href="assets/hero.jpg">
+  <style>
+    /* ───────────────────────────────────────────────────────────────
+       Same design tokens as learnexity.org (frontend/styles/globals.css):
+       system font stack, light/dark colours that follow the visitor's
+       system setting, max-w-screen-xl (1280px) + 24px gutters, Tailwind
+       type scale (text-xl = 20px, text-4xl/5xl/6xl = 36/48/60px), brand
+       #4A3AFF, cards with the 2rem/0.75rem asymmetric corners.
+       ─────────────────────────────────────────────────────────────── */
+    :root {
+      --brand: #4A3AFF;
+      --brand-hover: #3A2AFF;
+      --brand-nav: #6C63FF;
+      --text-primary: #0f0f14;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
+      --surface: #fff;
+      --surface-elevated: #fff;
+      --surface-alt: #f3f4f6;
+      --border-subtle: #0f0f141a;
+      --border-strong: #0f0f142e;
+      --page-bg: #fff;
+      --body-text: #171717;
+      --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --r: 2rem 0.75rem 2rem 0.75rem;
+      --r-sm: 1.25rem 0.5rem 1.25rem 0.5rem;
+      --font: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #fff;
+        --text-secondary: #c7c9d1;
+        --text-muted: #9098a8;
+        --surface: #0f0f0f;
+        --surface-elevated: #0f0f0fe6;
+        --surface-alt: #15151f;
+        --border-subtle: #ffffff1a;
+        --border-strong: #ffffff2e;
+        --page-bg: #0a0a0f;
+        --body-text: #ededed;
+        --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: var(--font); font-size: 16px; line-height: 1.5;
+      color: var(--body-text); background: var(--page-bg); -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    [hidden] { display: none !important; }
+    .wrap { max-width: 1280px; margin-inline: auto; padding-inline: 24px; }
+    section { padding: 64px 0; }
+    @media (min-width: 768px) { section { padding: 80px 0; } }
+
+    /* Section header — same as Pathways / "Meet our grads" */
+    .label { font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand); margin-bottom: 8px; }
+    .h2 { font-size: 36px; line-height: 1.25; font-weight: 600; color: var(--text-primary); }
+    @media (min-width: 768px) { .h2 { font-size: 48px; } }
+    .lead { margin-top: 16px; font-size: 20px; line-height: 1.625; color: var(--text-secondary); }
+    .head { margin-bottom: 40px; }
+    .head.center { text-align: center; max-width: 48rem; margin-inline: auto; }
+
+    /* Buttons — same as the site's CMS buttons */
+    .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 40px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 8px 20px; min-height: 44px; border-radius: 9999px; font-family: inherit;
+      font-size: 16px; line-height: 24px; font-weight: 600; text-decoration: none;
+      border: 2px solid transparent; transition: background-color .15s, color .15s, border-color .15s; cursor: pointer;
+    }
+    @media (min-width: 768px) { .btn { font-size: 18px; line-height: 28px; } }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-hover); }
+    .btn-light { background: #fff; color: var(--brand-nav); }
+    .btn-light:hover { background: #f9fafb; }
+    .btn-outline { border-color: currentColor; color: var(--text-primary); }
+    .btn-outline:hover { background: var(--surface-alt); }
+    .btn-ghost { border-color: rgba(255,255,255,.7); color: var(--text-primary); border-color: var(--border-strong); }
+    .btn-ghost:hover { background: var(--surface-alt); }
+    .on-dark .btn-outline, .on-dark .btn-ghost { border-color: rgba(255,255,255,.7); color: #fff; }
+    .on-dark .btn-outline:hover, .on-dark .btn-ghost:hover { background: rgba(255,255,255,.1); }
+    .hero .btn { border-radius: 8px; }
+    @media (max-width: 639px) {
+      .ctas.stack { flex-direction: column; align-items: stretch; max-width: 24rem; gap: 12px; }
+      .ctas.stack .btn { width: 100%; }
+    }
+
+    /* Navbar — white bar like learnexity.org */
+    header.top { position: fixed; inset: 0 0 auto 0; z-index: 50; background: #fff; border-bottom: 1px solid #f3f4f6; transition: box-shadow .3s; }
+    header.top.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+    header.top .bar { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    header.top .logo img { max-height: 38px; width: auto; }
+    header.top .nav-btn {
+      background: var(--brand-nav); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px;
+      border-radius: 12px; text-decoration: none; transition: background .2s; white-space: nowrap;
+    }
+    header.top .nav-btn:hover { background: #5753E6; }
+
+    /* Hero — same as the homepage hero */
+    .hero { position: relative; overflow: hidden; background: #000; padding: 126px 0 64px; min-height: 60vh; display: flex; align-items: center; color: #fff; }
+    @media (min-width: 768px) { .hero { min-height: 80vh; } }
+    .hero .bg { position: absolute; inset: 0; z-index: 0; }
+    .hero .bg img { width: 100%; height: 100%; object-fit: cover; }
+    .hero .overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%); }
+    .hero .inner { position: relative; z-index: 10; width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 20px; }
+    @media (min-width: 640px) { .hero .inner { padding-inline: 32px; } }
+    .hero .content { max-width: 64rem; }
+    .pill {
+      display: inline-flex; align-items: center; padding: 8px 16px; margin-bottom: 20px; border-radius: 9999px;
+      background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(71, 85, 105, 0.7); color: #e0e7ff;
+      font-size: 14px; font-weight: 500; backdrop-filter: blur(4px);
+    }
+    .pill .dot { width: 8px; height: 8px; border-radius: 9999px; margin-right: 8px; background: #8b7cff; flex-shrink: 0; animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+    @keyframes pulse { 50% { opacity: .5; } }
+    @media (min-width: 768px) { .pill { padding: 12px 32px; font-size: 20px; margin-bottom: 28px; } .pill .dot { width: 12px; height: 12px; margin-right: 12px; } }
+    @media (min-width: 1024px) { .pill { padding: 16px 48px; font-size: 28px; letter-spacing: .025em; } .pill .dot { margin-right: 16px; } }
+    .hero h1 { font-size: 36px; line-height: 1.25; font-weight: 700; color: #fff; }
+    @media (min-width: 640px) { .hero h1 { font-size: 48px; } }
+    @media (min-width: 1024px) { .hero h1 { font-size: 60px; } }
+    .hero h1 .hl { color: #a5b4fc; }
+    .hero .sub { margin-top: 16px; max-width: 42rem; font-size: 18px; line-height: 1.625; color: #e5e7eb; }
+    @media (min-width: 640px) { .hero .sub { font-size: 20px; } }
+    @media (min-width: 768px) { .hero .sub { font-size: 24px; } }
+
+    /* Cards — same as "Why choose Learnexity" cards */
+    .card {
+      background: var(--surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r);
+      box-shadow: var(--card-shadow); padding: 32px 24px; transition: transform .3s;
+    }
+    .card:hover { transform: translateY(-8px); }
+    .card h3 { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .card p { font-size: 20px; line-height: 28px; color: var(--text-secondary); }
+    .num { font-size: 14px; font-weight: 600; letter-spacing: .1em; color: #4A3AFF99; margin-bottom: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .media { border-radius: var(--r); overflow: hidden; background: var(--surface-alt); border: 1px solid var(--border-subtle); box-shadow: var(--card-shadow); }
+    .media img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Intro */
+    .intro .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .intro .media { aspect-ratio: 4 / 3; }
+    .intro .copy p { font-size: 20px; line-height: 1.625; color: var(--text-secondary); }
+    .intro .copy p + p { margin-top: 24px; color: var(--text-primary); }
+    @media (max-width: 899px) { .intro .grid { grid-template-columns: 1fr; gap: 40px; } }
+
+    /* What you will gain */
+    .gain .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .gain .media { grid-row: span var(--rows, 2); min-height: 100%; }
+    @media (min-width: 640px) { .gain .card.wide { grid-column: span 2; } }
+    @media (max-width: 1023px) { .gain .grid { grid-template-columns: 1fr 1fr; } .gain .media { grid-column: span 2; grid-row: auto; aspect-ratio: 16 / 9; } }
+    @media (max-width: 639px) { .gain .grid { grid-template-columns: 1fr; } .gain .media { grid-column: auto; } }
+
+    /* Image + text sections */
+    .split .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .split.reverse .media { order: 2; }
+    .split .media { aspect-ratio: 4 / 3; }
+    @media (max-width: 899px) { .split .grid { grid-template-columns: 1fr; gap: 40px; } .split.reverse .media { order: 0; } }
+
+    /* How it works */
+    .how .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: start; }
+    .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+    .steps li { display: grid; grid-template-columns: 56px 1fr; gap: 20px; align-items: start; padding: 24px; }
+    .steps .n { width: 56px; height: 56px; border-radius: 1rem 0.4rem 1rem 0.4rem; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 18px; }
+    .steps h3 { margin-bottom: 4px; }
+    .how .media { position: sticky; top: 92px; aspect-ratio: 4 / 4.6; }
+    @media (max-width: 899px) { .how .grid { grid-template-columns: 1fr; } .how .media { position: static; aspect-ratio: 16 / 10; } }
+
+    /* Offer */
+    .panel { background: var(--surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r); box-shadow: var(--card-shadow); padding: 32px 24px; }
+    @media (min-width: 768px) { .panel { padding: 40px; } }
+    .offer .top-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 32px; }
+    .countdown { display: flex; gap: 8px; }
+    .countdown div { min-width: 72px; text-align: center; padding: 10px 8px; background: var(--surface-alt); border: 1px solid var(--border-subtle); border-radius: 1rem 0.4rem 1rem 0.4rem; }
+    .countdown b { display: block; font-size: 28px; line-height: 1.1; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
+    .countdown span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+    .table { border: 1px solid var(--border-subtle); border-radius: 1.25rem 0.5rem 1.25rem 0.5rem; overflow: hidden; }
+    .tr { display: grid; grid-template-columns: 1.3fr 1fr 1.2fr auto; gap: 16px; align-items: center; padding: 20px 24px; border-top: 1px solid var(--border-subtle); }
+    .tr.th { border-top: 0; background: var(--surface-alt); font-size: 14px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); padding-block: 14px; }
+    .tr .prog { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--text-primary); }
+    .tr .reg { font-size: 20px; color: var(--text-muted); text-decoration: line-through; }
+    .tr .fee { font-size: 30px; line-height: 36px; font-weight: 700; color: var(--brand); }
+    .tr .go { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; min-height: 44px; border-radius: 9999px; background: var(--brand); color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; white-space: nowrap; }
+    .tr .go:hover { background: var(--brand-hover); }
+    .tr .go svg { width: 16px; height: 16px; }
+    .cell-label { display: none; }
+    .offer .foot { margin-top: 20px; font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    .ended { padding: 32px; border: 1px dashed var(--border-strong); border-radius: 1.25rem 0.5rem 1.25rem 0.5rem; background: var(--surface-alt); }
+    .ended h3 { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--text-primary); }
+    .ended p { margin-top: 8px; font-size: 20px; line-height: 1.625; color: var(--text-secondary); }
+    @media (max-width: 767px) {
+      .tr.th { display: none; }
+      .tr { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+      .tr .prog, .tr .go { grid-column: 1 / -1; }
+      .tr .go { justify-content: center; }
+      .cell-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+      .countdown div { min-width: 62px; }
+    }
+
+    /* Discover */
+    .events { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .event { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .event .pic { position: relative; aspect-ratio: 16 / 9; background: var(--surface-alt); }
+    .event .pic img { width: 100%; height: 100%; object-fit: cover; }
+    .event .badge { position: absolute; left: 16px; top: 16px; background: var(--brand); color: #fff; font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 9999px; }
+    .event .body { padding: 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .event .body p { flex: 1; }
+    .event .btn { align-self: flex-start; margin-top: 16px; }
+
+    /* Instructors — like the Meet Our Team cards */
+    .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 28px; }
+    .person { padding: 0; overflow: hidden; position: relative; }
+    .person .ph { position: relative; height: 320px; background: linear-gradient(135deg, rgba(74,58,255,.08), #18181f); }
+    .person .ph img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+    .person .ph .ini { width: 100%; height: 100%; display: grid; place-items: center; color: #fff; font-size: 48px; font-weight: 700; }
+    .person .in { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 12px; background: #0A66C2; color: #fff; display: grid; place-items: center; box-shadow: 0 6px 18px rgba(10,102,194,.45); border: 2px solid rgba(255,255,255,.9); }
+    .person .in svg { width: 22px; height: 22px; }
+    .person .meta { padding: 24px 28px 28px; }
+    .person .role { font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); }
+    .person h3 { font-size: 19px; line-height: 1.2; font-weight: 700; color: var(--text-primary); margin-top: 8px; }
+    .more-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 40px; padding: 10px 20px; border-radius: 12px; border: 1px solid var(--text-primary); color: var(--text-primary); font-weight: 600; text-decoration: none; transition: all .2s; }
+    .more-link:hover { border-color: var(--brand); color: var(--brand); gap: 12px; }
+    .more-link svg { width: 18px; height: 18px; }
+
+    /* Closing + footer — same purple band as the site footer */
+    .site-footer { background: #5B1EF6; color: #fff; padding: 56px 0 24px; }
+    .site-footer h2 { font-size: 36px; line-height: 1.25; font-weight: 600; text-align: center; margin-bottom: 16px; }
+    @media (min-width: 768px) { .site-footer h2 { font-size: 48px; } }
+    .site-footer .ctas { justify-content: center; margin-top: 24px; }
+    .site-footer .btn-primary { background: #fff; color: #6D4AFF; }
+    .site-footer .btn-primary:hover { background: #f3f4f6; }
+    .site-footer .learn { display: block; width: max-content; margin: 24px auto 0; color: #fff; font-size: 18px; text-decoration: underline; text-underline-offset: 4px; opacity: .9; }
+    .site-footer .disclaimer { max-width: 56rem; margin: 32px auto 0; text-align: center; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.75); }
+    .site-footer .bottom { margin-top: 40px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.15); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; color: rgba(255,255,255,.7); }
+    .site-footer .bottom img { height: 36px; width: auto; }
+
+    /* Reveal on scroll (like the site's fade-up) */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .pill .dot { animation: none; } html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+
+  <header class="top" id="top">
+    <div class="wrap bar">
+      <a class="logo" href="https://learnexity.org" aria-label="Learnexity home">
+        <img src="assets/learnexity-logo-dark.png" alt="Learnexity" width="136" height="38">
+      </a>
+      <a class="nav-btn" id="headerCta" href="https://learnexity.org/user/auth/register">Check Your Eligibility</a>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="site-footer" id="siteFooter">
+    <div class="wrap">
+      <div id="closing"></div>
+      <div class="bottom">
+        <a href="https://learnexity.org" aria-label="Learnexity home"><img src="assets/learnexity-logo-white.png" alt="Learnexity" width="138" height="40"></a>
+        <span>&copy; <span id="year"></span> Learnexity. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Where the server is ─────────────────────────────────────────── */
+    var host = window.location.hostname;
+    var API = (!host || host === 'localhost' || host === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.learnexity.org';
+    var MAIN = 'https://learnexity.org';
+
+    /* ── Default content (same as the server defaults) ───────────────── */
+    var DEFAULTS = {
+      seo: { title: 'Prepare for Remote Opportunities in the US and Beyond | Learnexity', description: 'Build high-demand tech skills, understand the US and global job markets, and position yourself for greater opportunities with Learnexity.' },
+      ctas: [
+        { label: 'Explore Courses', href: MAIN + '/courses', style: 'primary' },
+        { label: 'Check Your Eligibility', href: MAIN + '/user/auth/register', style: 'outline' },
+        { label: 'Get Expert Guidance', href: MAIN + '/consultation', style: 'ghost' }
+      ],
+      hero: { show: true, eyebrow: 'US-based EdTech · Remote-ready careers', heading: 'Prepare for remote opportunities in the US and beyond.', subheading: 'Build high-demand tech skills. Understand the US and global job markets. Position yourself for greater opportunities.', image: 'assets/hero.jpg', show_ctas: true },
+      intro: { show: true, paragraphs: [
+        'The technology job market is evolving. Employers are looking for people who can demonstrate relevant skills, practical experience, and an understanding of workplace expectations.',
+        'Learnexity is a US-based EdTech institution preparing young professionals for the AI-driven economy through relevant technology education, practical experience, and career development.'
+      ], image: 'assets/intro.jpg' },
+      gain: { show: true, eyebrow: 'What you will gain', heading: 'Everything you need to compete for global roles', image: 'assets/gain.jpg', items: [
+        { title: 'In-Demand Technical Skills', text: 'Develop practical, market-relevant skills aligned with the evolving technology landscape.' },
+        { title: 'USA Job Market Readiness', text: 'Understand employer expectations, professional standards, and how to position your skills for US-based opportunities.' },
+        { title: 'Remote Career and Freelance Preparation', text: 'Learn how to identify opportunities, strengthen your professional profile, and position yourself for remote roles, freelance projects, and global clients.' },
+        { title: 'USA Workplace Culture and Professional Etiquette', text: 'Understand US workplace culture, communication, professional etiquette, and expectations.' },
+        { title: 'Microsoft/AWS Certification Guidance', text: 'Get guidance toward relevant Microsoft and AWS certifications for eligible programs.' }
+      ] },
+      who: { show: true, eyebrow: 'Who should apply?', heading: 'Built for ambitious, globally-minded professionals', text: 'Technology professionals, aspiring tech talent, career changers, and global professionals targeting US-based or international opportunities.', image: 'assets/who.jpg', show_ctas: true },
+      how: { show: true, eyebrow: 'How it works', heading: 'Your path from screening to the right program', image: 'assets/mentoring.jpg', steps: [
+        { title: 'Take the Screening', text: 'Complete our screening assessment to check your eligibility.' },
+        { title: 'Get Your Program Recommendation', text: 'Receive expert guidance on the program best aligned with your background, experience, and career goals.' },
+        { title: 'Complete Your Registration', text: 'Confirm your recommended program, pay the applicable registration fee, and receive your onboarding details.' },
+        { title: 'Understand the Shift and Opportunities', text: 'Participate in our two-week Digital Economy and Career Transition Orientation to explore how AI and technology are changing industries, careers, and skill opportunities.' },
+        { title: 'Reassess Your Pathway', text: 'Use the insights gained during orientation to review your initial program choice and make adjustments if necessary.' }
+      ] },
+      offer: { show: true, eyebrow: 'Limited-time offer', heading: 'Learnexity Black Friday Offer', text: 'For a limited time, pay only the discounted registration fee to access selected programs.', ends_at: '2026-11-15T23:59:59-05:00', ends_label: 'Offer ends November 15, 2026.', ended_heading: 'Offer ended', ended_text: 'Our Black Friday offer has ended. Stay tuned — new offers are coming soon. You can still explore our programs today.', col_program: 'Program', col_regular: 'Regular Tuition', col_fee: 'Black Friday Registration Fee', row_button: 'View programs', rows: [
+        { pathway: 'deeptech', label: 'DeepTech', regular: 1170, fee: 149, href: MAIN + '/courses/courses' },
+        { pathway: 'accelerator', label: 'Career Accelerators', regular: 487, fee: 99, href: MAIN + '/intermediate' },
+        { pathway: 'flex', label: 'Flex Programs', regular: 99, fee: 29, href: MAIN + '/flex' }
+      ] },
+      pathway: { show: true, eyebrow: 'Find your Learnexity pathway', heading: 'Not every learner needs the same skills or learning pathway.', text: 'Take our screening assessment to help determine your eligibility and identify a suitable program.', image: 'assets/screening.jpg', show_ctas: true },
+      discover: { show: true, eyebrow: 'Discover more', heading: 'Discover More Learnexity Opportunities', items: [
+        { badge: 'December 14', title: 'Free Launch Webinar', text: 'Explore opportunities in the evolving digital economy and learn how to position yourself to take advantage of them.', button: 'Learn more', href: '', image: 'assets/webinar.jpg' },
+        { badge: 'November 14', title: 'Learnexity TV', text: 'Discover emerging opportunities in technology and the global digital economy.', button: 'Register', href: 'https://tv.learnexity.org', image: 'assets/tv.jpg' }
+      ] },
+      instructors: { show: true, eyebrow: 'Learn from practitioners', heading: 'Meet Your Instructors', link_label: 'Meet the full team', link_href: MAIN + '/our-team' },
+      closing: { show: true, heading: 'Ready to take the next step?', learn_more_label: 'Learn more: Learnexity.org', learn_more_href: MAIN, disclaimer: 'Program admission and eligibility are subject to screening. Training and career preparation do not guarantee employment, relocation, or a job offer.', show_ctas: true }
+    };
+
+    /* ── Small safe-DOM helpers (all text via textContent) ───────────── */
+    function el(tag, attrs, children) {
+      var n = document.createElement(tag);
+      if (attrs) Object.keys(attrs).forEach(function (k) {
+        var v = attrs[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === 'class') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else n.setAttribute(k, v === true ? '' : v);
+      });
+      (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+      return n;
+    }
+    var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    var LINKEDIN = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>';
+    function icon(svg) { var s = document.createElement('span'); s.innerHTML = svg; return s.firstChild; }
+
+    /** Only http(s), mailto/tel and page anchors; site paths point at learnexity.org. */
+    function href(u) {
+      u = String(u || '').trim();
+      if (!u) return '';
+      if (/^#[\w-]+$/.test(u)) return u;
+      if (/^(mailto|tel):/i.test(u)) return u;
+      if (u.charAt(0) === '/' && u.charAt(1) !== '/') return MAIN + u;
+      if (/^https?:\/\//i.test(u)) return u;
+      return '';
+    }
+    function img(u) {
+      u = String(u || '').trim();
+      if (/^assets\/[\w.-]+$/.test(u)) return u;
+      if (/^\/storage\//.test(u)) return API + u;
+      if (/^https:\/\//i.test(u)) return u;
+      return '';
+    }
+    function isExternal(u) { return /^https?:\/\//i.test(u) && !/^https?:\/\/([\w-]+\.)?learnexity\.org/i.test(u); }
+
+    function button(b, extraClass) {
+      var url = href(b.href);
+      if (!b || !b.label || !url) return null;
+      var style = ['primary', 'outline', 'ghost', 'light'].indexOf(b.style) >= 0 ? b.style : 'primary';
+      var a = el('a', { class: 'btn btn-' + style + (extraClass ? ' ' + extraClass : ''), href: url }, [b.label]);
+      if (isExternal(url)) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+      if (style === 'primary') a.appendChild(icon(ARROW));
+      return a;
+    }
+    function ctaRow(ctas, stack) {
+      var row = el('div', { class: 'ctas' + (stack ? ' stack' : '') });
+      (ctas || []).forEach(function (b) { var x = button(b); if (x) row.appendChild(x); });
+      return row.childNodes.length ? row : null;
+    }
+    function picture(src, alt, cls) {
+      var s = img(src);
+      var box = el('div', { class: cls || 'media reveal' });
+      if (s) box.appendChild(safeImg(s, alt));
+      return box;
+    }
+    /** <img> that quietly hides itself if the file is missing. */
+    function safeImg(src, alt) {
+      var i = el('img', { src: src, alt: alt || '', loading: 'lazy', decoding: 'async' });
+      i.addEventListener('error', function () { i.style.visibility = 'hidden'; });
+      return i;
+    }
+    var GLOBE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>';
+    var SPARK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>';
+    function dot(svg) { var d = el('span', { class: 'dot' }); d.appendChild(icon(svg)); return d; }
+
+    function eyebrow(t) { return t ? el('p', { class: 'label', text: t }) : null; }
+    function h2(t) { return el('h2', { class: 'h2', text: t }); }
+    function money(n, cur) {
+      if (n === null || n === undefined || n === '') return '';
+      var v = Number(n); if (!isFinite(v)) return '';
+      var s = v.toLocaleString('en-US', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 });
+      return (cur === 'NGN' ? '₦' : '$') + s;
+    }
+
+    /* ── Sections ────────────────────────────────────────────────────── */
+    function hero(c, ctas) {
+      var s = el('section', { class: 'hero on-dark' });
+      var bg = el('div', { class: 'bg' });
+      var src = img(c.image);
+      if (src) { var i = safeImg(src, ''); i.loading = 'eager'; i.setAttribute('fetchpriority', 'high'); bg.appendChild(i); }
+      var h1 = el('h1');
+      var words = String(c.heading || '');
+      var m = words.match(/^(.*?)(\b[\w’'-]+(?:\s+[\w’'-]+){1,3}[.!?]?)$/);
+      if (m && m[1]) { h1.appendChild(document.createTextNode(m[1])); h1.appendChild(el('span', { class: 'hl', text: m[2] })); }
+      else h1.textContent = words;
+      var pill = c.eyebrow ? el('div', { class: 'pill' }, [el('span', { class: 'dot' }), c.eyebrow]) : null;
+      s.appendChild(bg);
+      s.appendChild(el('div', { class: 'overlay' }));
+      s.appendChild(el('div', { class: 'inner' }, [el('div', { class: 'content' }, [
+        pill, h1, c.subheading ? el('p', { class: 'sub', text: c.subheading }) : null, c.show_ctas ? ctaRow(ctas, true) : null
+      ])]));
+      return s;
+    }
+
+    function intro(c) {
+      var copy = el('div', { class: 'copy reveal' });
+      (c.paragraphs || []).forEach(function (p) { if (p) copy.appendChild(el('p', { text: p })); });
+      return el('section', { class: 'intro' }, [el('div', { class: 'wrap grid' }, [picture(c.image, 'Team collaborating in a modern office'), copy])]);
+    }
+
+    function gain(c) {
+      var grid = el('div', { class: 'grid' });
+      var items = c.items || [];
+      items.forEach(function (it, i) {
+        if (i === 2 && c.image) {
+          var pic = picture(c.image, 'Learner studying cloud computing');
+          pic.style.setProperty('--rows', String(Math.max(2, Math.ceil(items.length / 2))));
+          grid.appendChild(pic);
+        }
+        var wide = items.length > 2 && items.length % 2 === 1 && i === items.length - 1;
+        grid.appendChild(el('div', { class: 'card reveal' + (wide ? ' wide' : '') }, [
+          el('div', { class: 'num', text: '[ ' + String(i + 1).padStart(2, '0') + ' ]' }),
+          el('h3', { text: it.title }), el('p', { text: it.text })
+        ]));
+      });
+      if (items.length < 3 && c.image) grid.appendChild(picture(c.image, ''));
+      return el('section', { class: 'gain', id: 'gain' }, [el('div', { class: 'wrap' }, [
+        el('div', { class: 'head center reveal' }, [eyebrow(c.eyebrow), h2(c.heading)]), grid
+      ])]);
+    }
+
+    function split(c, ctas, reverse, id, alt) {
+      return el('section', { class: 'split' + (reverse ? ' reverse' : ''), id: id }, [el('div', { class: 'wrap grid' }, [
+        picture(c.image, alt),
+        el('div', { class: 'reveal' }, [eyebrow(c.eyebrow), h2(c.heading), c.text ? el('p', { class: 'lead', text: c.text }) : null, c.show_ctas ? ctaRow(ctas, true) : null])
+      ])]);
+    }
+
+    function how(c) {
+      var ol = el('ol', { class: 'steps' });
+      (c.steps || []).forEach(function (st, i) {
+        ol.appendChild(el('li', { class: 'card reveal' }, [el('span', { class: 'n', text: String(i + 1).padStart(2, '0') }), el('div', {}, [el('h3', { text: st.title }), el('p', { text: st.text })])]));
+      });
+      return el('section', { class: 'how', id: 'how' }, [el('div', { class: 'wrap' }, [
+        el('div', { class: 'head center reveal' }, [eyebrow(c.eyebrow), h2(c.heading)]),
+        el('div', { class: 'grid' }, [ol, picture(c.image, 'Online mentoring session')])
+      ])]);
+    }
+
+    var countdownTimer = null;
+    function offer(c, currency, offsetMs) {
+      var end = c.ends_at ? new Date(c.ends_at).getTime() : NaN;
+      var ended = isFinite(end) && end <= Date.now() + offsetMs;
+      var panel = el('div', { class: 'panel reveal' });
+
+      var cd = el('div', { class: 'countdown', 'aria-label': 'Time left in the offer' });
+      ['Days', 'Hours', 'Mins', 'Secs'].forEach(function (l) { cd.appendChild(el('div', {}, [el('b', { text: '00' }), el('span', { text: l })])); });
+      panel.appendChild(el('div', { class: 'top-row' }, [
+        el('div', {}, [eyebrow(c.eyebrow), h2(c.heading), !ended && c.text ? el('p', { class: 'lead', text: c.text }) : null]),
+        !ended && isFinite(end) ? cd : null
+      ]));
+
+      if (ended) {
+        panel.appendChild(el('div', { class: 'ended' }, [el('h3', { text: c.ended_heading }), el('p', { text: c.ended_text })]));
+      } else {
+        var table = el('div', { class: 'table', role: 'table' });
+        table.appendChild(el('div', { class: 'tr th', role: 'row' }, [el('span', { text: c.col_program }), el('span', { text: c.col_regular }), el('span', { text: c.col_fee }), el('span', { text: '' })]));
+        (c.rows || []).forEach(function (r) {
+          var go = href(r.href);
+          var link = go ? el('a', { class: 'go', href: go }, [c.row_button || 'View programs']) : el('span');
+          if (go) link.appendChild(icon(ARROW));
+          table.appendChild(el('div', { class: 'tr', role: 'row' }, [
+            el('span', { class: 'prog', text: r.label }),
+            el('span', {}, [el('span', { class: 'cell-label', text: c.col_regular }), el('span', { class: 'reg', text: money(r.regular, currency) })]),
+            el('span', {}, [el('span', { class: 'cell-label', text: c.col_fee }), el('span', { class: 'fee', text: money(r.fee, currency) })]),
+            link
+          ]));
+        });
+        panel.appendChild(table);
+        if (c.ends_label) panel.appendChild(el('p', { class: 'foot', text: c.ends_label }));
+      }
+
+      if (!ended && isFinite(end)) {
+        var tick = function () {
+          var left = end - (Date.now() + offsetMs);
+          if (left <= 0) { clearInterval(countdownTimer); render(lastData); return; }
+          var t = Math.floor(left / 1000), vals = [Math.floor(t / 86400), Math.floor(t % 86400 / 3600), Math.floor(t % 3600 / 60), t % 60];
+          cd.querySelectorAll('b').forEach(function (b, i) { b.textContent = String(vals[i]).padStart(2, '0'); });
+        };
+        if (countdownTimer) clearInterval(countdownTimer);
+        tick(); countdownTimer = setInterval(tick, 1000);
+      }
+      return el('section', { class: 'offer', id: 'offer' }, [el('div', { class: 'wrap' }, [panel])]);
+    }
+
+    function discover(c) {
+      var cards = el('div', { class: 'events' });
+      (c.items || []).forEach(function (it) {
+        var pic = el('div', { class: 'pic' }, [img(it.image) ? safeImg(img(it.image), it.title) : null, it.badge ? el('span', { class: 'badge', text: it.badge }) : null]);
+        var b = button({ label: it.button || 'Learn more', href: it.href, style: 'primary' });
+        cards.appendChild(el('article', { class: 'card event reveal' }, [pic, el('div', { class: 'body' }, [el('h3', { text: it.title }), el('p', { text: it.text }), b])]));
+      });
+      return el('section', { class: 'discover', id: 'discover' }, [el('div', { class: 'wrap' }, [el('div', { class: 'head center reveal' }, [eyebrow(c.eyebrow), h2(c.heading)]), cards])]);
+    }
+
+    function instructors(c, people) {
+      if (!people || !people.length) return null;
+      var grid = el('div', { class: 'people' });
+      people.forEach(function (p) {
+        var src = img(p.image);
+        var ph = el('div', { class: 'ph' }, [src ? safeImg(src, p.name) : el('div', { class: 'ini', text: (p.name || '?').charAt(0) })]);
+        var li = href(p.linkedin);
+        if (li) { var a = el('a', { class: 'in', href: li, target: '_blank', rel: 'noopener noreferrer', 'aria-label': p.name + ' on LinkedIn' }); a.appendChild(icon(LINKEDIN)); ph.appendChild(a); }
+        grid.appendChild(el('div', { class: 'card person reveal' }, [ph, el('div', { class: 'meta' }, [p.role ? el('p', { class: 'role', text: p.role }) : null, el('h3', { text: p.name })])]));
+      });
+      var more = null;
+      if (c.link_label && href(c.link_href)) { more = el('a', { class: 'more-link', href: href(c.link_href) }, [c.link_label]); more.appendChild(icon(ARROW)); }
+      return el('section', { class: 'instructors', id: 'instructors' }, [el('div', { class: 'wrap' }, [el('div', { class: 'head center reveal' }, [eyebrow(c.eyebrow), h2(c.heading)]), grid, more ? el('div', { style: 'text-align:center' }, [more]) : null])]);
+    }
+
+    /** Closing call to action — lives in the purple footer, like the main site. */
+    function closing(c, ctas) {
+      var box = document.getElementById('closing');
+      box.textContent = '';
+      if (!c.show) return;
+      var learn = href(c.learn_more_href);
+      box.appendChild(el('h2', { text: c.heading }));
+      if (c.show_ctas) {
+        var row = ctaRow(ctas.map(function (b) { return { label: b.label, href: b.href, style: b.style === 'primary' ? 'primary' : 'outline' }; }));
+        if (row) { row.classList.add('on-dark'); box.appendChild(row); }
+      }
+      if (learn && c.learn_more_label) box.appendChild(el('a', { class: 'learn', href: learn, text: c.learn_more_label }));
+      if (c.disclaimer) box.appendChild(el('p', { class: 'disclaimer', text: c.disclaimer }));
+    }
+
+    /* ── Render ─────────────────────────────────────────────────────── */
+    var lastData = null;
+    function render(data) {
+      lastData = data;
+      var c = data.content, ctas = c.ctas || [];
+      var offset = data.server_time ? (new Date(data.server_time).getTime() - Date.now()) : 0;
+      var app = document.getElementById('app');
+      app.textContent = '';
+      var parts = [
+        c.hero.show && hero(c.hero, ctas),
+        c.intro.show && intro(c.intro),
+        c.gain.show && gain(c.gain),
+        c.who.show && split(c.who, ctas, false, 'who', 'Adult learners in a training session'),
+        c.how.show && how(c.how),
+        c.offer.show && offer(c.offer, data.currency || 'USD', offset),
+        c.pathway.show && split(c.pathway, ctas, true, 'pathway', 'Learner taking an online assessment'),
+        c.discover.show && discover(c.discover),
+        c.instructors.show && instructors(c.instructors, data.instructors)
+      ];
+      closing(c.closing, ctas);
+      parts.forEach(function (p) { if (p) app.appendChild(p); });
+
+      if (c.seo) {
+        if (c.seo.title) document.title = c.seo.title;
+        var d = document.querySelector('meta[name="description"]'); if (d && c.seo.description) d.setAttribute('content', c.seo.description);
+      }
+      // Header button = the "eligibility" CTA if present, else the first one.
+      var hb = document.getElementById('headerCta');
+      var pick = ctas.filter(function (b) { return /eligib|screen/i.test(b.label || ''); })[0] || ctas[0];
+      if (pick && href(pick.href)) { hb.textContent = pick.label; hb.href = href(pick.href); hb.hidden = false; } else hb.hidden = true;
+      observeReveal();
+    }
+
+    function observeReveal() {
+      var els = document.querySelectorAll('.reveal:not(.in)');
+      if (typeof window.IntersectionObserver !== 'function') { els.forEach(function (e) { e.classList.add('in'); }); return; }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      els.forEach(function (e) { io.observe(e); });
+    }
+
+    function metaPixel(id) {
+      if (!/^\d{5,25}$/.test(String(id || '')) || window.fbq) return;
+      /* Standard Meta Pixel base code */
+      !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', String(id));
+      window.fbq('track', 'PageView');
+    }
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    window.addEventListener('scroll', function () {
+      document.getElementById('top').classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // Show the built-in content immediately, then the live version.
+    render({ content: DEFAULTS, currency: 'USD', instructors: [] });
+    fetch(API + '/api/landing', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.content) return;
+        render(data);
+        metaPixel(data.meta_pixel_id);
+      })
+      .catch(function () { /* keep the built-in content */ });
+  })();
+  </script>
+</body>
+</html>

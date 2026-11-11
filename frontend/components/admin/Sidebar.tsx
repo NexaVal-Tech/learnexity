@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   Tv,
+  Megaphone,
   Home,
   GraduationCap,
   BookCopy,
@@ -55,6 +56,7 @@ const Sidebar = () => {
     { icon: Stamp, label: 'Certificate/Badge Generators', href: '/admin/generators', permission: 'certificate_badge_generators' },
     { icon: ImagePlus, label: '"I Will Be Attending" Flyer', href: '/admin/attending-flyer', permission: 'attending_flyer' },
     { icon: Tv, label: 'Learnexity TV Webinar', href: '/admin/tv', permission: 'tv' },
+    { icon: Megaphone, label: 'Landing Page', href: '/admin/landing', permission: 'landing' },
     { icon: BarChart3, label: 'Analytics & Reports', href: '/admin/analytics', permission: 'activity' },
     { icon: Globe, label: 'Website CMS', href: '/admin/cms', permission: 'cms' },
   ];
