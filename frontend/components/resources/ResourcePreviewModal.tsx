@@ -93,8 +93,8 @@ function getFileTypeLabel(type: string) {
   const map: Record<string, { label: string; bg: string; text: string }> = {
     pdf:      { label: 'PDF', bg: 'bg-red-50',     text: 'text-red-500' },
     document: { label: 'DOC', bg: 'bg-orange-50',  text: 'text-orange-500' },
-    video:    { label: 'VID', bg: 'bg-violet-50',  text: 'text-violet-500' },
-    link:     { label: 'LNK', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    video:    { label: 'VID', bg: 'bg-[#4A3AFF]/10',  text: 'text-[#4A3AFF]' },
+    link:     { label: 'LNK', bg: 'bg-[#4A3AFF]/10', text: 'text-[#4A3AFF]' },
     text:     { label: 'TXT', bg: 'bg-blue-50',    text: 'text-blue-500' },
   };
   return map[type] ?? { label: type.slice(0, 3).toUpperCase(), bg: 'bg-gray-100', text: 'text-gray-500' };
@@ -244,7 +244,7 @@ const PdfViewer = memo(function PdfViewer({
   if (fetching) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
-        <Loader2 size={24} className="animate-spin text-violet-500" />
+        <Loader2 size={24} className="animate-spin text-[#4A3AFF]" />
         <p className="text-sm text-gray-500">Loading PDF…</p>
       </div>
     );
@@ -255,7 +255,7 @@ const PdfViewer = memo(function PdfViewer({
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
         <FileX size={24} className="text-red-400" />
         <p className="text-sm text-red-500">Failed to load PDF. Please try again.</p>
-        <button onClick={doFetch} className="text-xs text-violet-600 hover:underline">Retry</button>
+        <button onClick={doFetch} className="text-xs text-[#4A3AFF] hover:underline">Retry</button>
       </div>
     );
   }
@@ -264,7 +264,7 @@ const PdfViewer = memo(function PdfViewer({
 
   return (
     <div className="flex flex-col">
-      <div style={{ height: '500px' }} className="bg-gray-100">
+      <div className="bg-gray-100 h-[68dvh] min-h-[320px] sm:h-[72vh] max-h-[900px]">
         <iframe src={viewerUrl} className="w-full h-full border-0" title={title} />
       </div>
       <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-100">
@@ -273,11 +273,11 @@ const PdfViewer = memo(function PdfViewer({
           {isCompleted ? 'Completed' : 'Marked complete after 60s of reading'}
         </span>
         <div className="flex items-center gap-3">
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-600 hover:underline">
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[#4A3AFF] hover:underline">
             Open in new tab
           </a>
           {isCompleted && (
-            <span className="flex items-center gap-1 text-xs text-emerald-600">
+            <span className="flex items-center gap-1 text-xs text-[#4A3AFF]">
               <CheckCircle size={11} /> Completed
             </span>
           )}
@@ -335,7 +335,7 @@ const finalUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURI
   if (fetching) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 bg-gray-50">
-        <Loader2 size={24} className="animate-spin text-violet-500" />
+        <Loader2 size={24} className="animate-spin text-[#4A3AFF]" />
         <p className="text-sm text-gray-500">Loading document…</p>
       </div>
     );
@@ -352,7 +352,7 @@ const finalUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURI
 
   return (
     <div className="flex flex-col">
-      <div style={{ height: '500px' }} className="bg-gray-100">
+      <div className="bg-gray-100 h-[68dvh] min-h-[320px] sm:h-[72vh] max-h-[900px]">
         <iframe src={viewUrl} className="w-full h-full border-0" title={title} allow="autoplay" />
       </div>
       <div className="flex items-center px-4 py-2.5 bg-gray-50 border-t border-gray-100">
@@ -361,7 +361,7 @@ const finalUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURI
           {isCompleted ? 'Completed' : 'Marked complete when opened'}
         </span>
         {isCompleted && (
-          <span className="flex items-center gap-1 text-xs text-emerald-600 ml-auto">
+          <span className="flex items-center gap-1 text-xs text-[#4A3AFF] ml-auto">
             <CheckCircle size={11} /> Completed
           </span>
         )}
@@ -503,11 +503,11 @@ const isDoc = item.type === 'document' && hasFile;
     <div
       ref={cardRef}
       className={`rounded-xl border mb-2 overflow-hidden transition-colors ${
-        item.is_completed ? 'border-emerald-100 bg-emerald-50/20' : 'border-gray-100 bg-white'
+        item.is_completed ? 'border-[#4A3AFF]/20 bg-[#4A3AFF]/[0.03]' : 'border-gray-100 bg-white'
       }`}
     >
       <button
-        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
+        className={`w-full flex items-center gap-3 px-3 sm:px-4 py-3.5 min-h-[56px] text-left transition ${
           isExpandable ? 'hover:bg-gray-50/70 cursor-pointer' : 'cursor-default'
         }`}
         onClick={() => isExpandable && setExpanded(e => !e)}
@@ -531,7 +531,7 @@ const isDoc = item.type === 'document' && hasFile;
           {isTask ? (
             <TaskStatusPill task={item.task} />
           ) : item.is_completed ? (
-            <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+            <span className="flex items-center gap-1 text-xs text-[#4A3AFF] bg-[#4A3AFF]/10 px-2 py-1 rounded-full">
               <CheckCircle size={11} /> Done
             </span>
           ) : (
@@ -613,7 +613,7 @@ const SprintSection = memo(function SprintSection({
       >
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-            sprint.progress_percentage === 100 ? 'bg-emerald-500 text-white' : 'bg-violet-100 text-violet-600'
+            sprint.progress_percentage === 100 ? 'bg-[#4A3AFF] text-white' : 'bg-[#4A3AFF]/10 text-[#4A3AFF]'
           }`}>
             {sprint.progress_percentage === 100 ? <Check className="w-4 h-4" /> : `S${sprint.sprint_number}`}
           </div>
@@ -627,7 +627,7 @@ const SprintSection = memo(function SprintSection({
         <div className="flex items-center gap-3">
           <div className="hidden sm:block w-20 bg-gray-200 rounded-full h-1">
             <div
-              className={`h-1 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-emerald-500' : 'bg-violet-400'}`}
+              className={`h-1 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-[#4A3AFF]' : 'bg-[#4A3AFF]/60'}`}
               style={{ width: `${sprint.progress_percentage}%` }}
             />
           </div>
@@ -761,12 +761,12 @@ export default function ResourcePreviewModal({
   // ── Simple single-file fallback ──────────────────────────────────────────
   if (!sprints && url) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-xl flex flex-col" style={{ height: '90vh' }}>
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-0 sm:p-4">
+        <div className="bg-white w-full max-w-5xl sm:rounded-2xl overflow-hidden shadow-xl flex flex-col h-[100dvh] sm:h-[90vh]">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900 text-sm truncate">{title || 'Preview'}</h3>
-            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-400">
-              <X className="w-4 h-4" />
+            <button onClick={onClose} className="p-2.5 hover:bg-gray-100 rounded-lg transition text-gray-500" aria-label="Close">
+              <X className="w-5 h-5" />
             </button>
           </div>
           <iframe src={url} className="flex-1 w-full border-0" title={title || 'Preview'} />
@@ -790,20 +790,26 @@ export default function ResourcePreviewModal({
     )}
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
-        className="bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{ height: '95vh' }}
+        className="bg-white w-full sm:max-w-3xl lg:max-w-4xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden h-[100dvh] sm:h-[92vh]"
       >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 flex-shrink-0 bg-white">
+        <div
+          className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-gray-100 flex-shrink-0 bg-white"
+          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+        >
           <div>
             <h2 className="font-semibold text-gray-900 text-sm">Course Materials</h2>
             <p className="text-xs text-gray-400 mt-0.5">Progress tracked automatically as you read & watch</p>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-400 flex-shrink-0">
-            <X className="w-4 h-4" />
+          <button onClick={onClose} className="p-2.5 -mr-1 hover:bg-gray-100 rounded-lg transition text-gray-500 flex-shrink-0" aria-label="Close">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 px-4 sm:px-5 py-5">
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto overscroll-contain min-h-0 px-3 sm:px-5 py-4 sm:py-5"
+          style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))', WebkitOverflowScrolling: 'touch' }}
+        >
 
           {(!sprints || sprints.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-400">

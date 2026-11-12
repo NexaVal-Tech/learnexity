@@ -7,8 +7,11 @@ import { adminApi } from '@/lib/adminApi';
 import { handleAdminApiError } from '@/lib/adminApi';
 import {
   Plus, Search, Edit, Trash, Loader2, X, Mail, Phone,
-  GraduationCap, CheckCircle, XCircle, RefreshCw,
+  GraduationCap, CheckCircle, XCircle, RefreshCw, Copy, KeyRound,
 } from 'lucide-react';
+
+interface Credentials { email: string; password: string; login_url: string }
+interface CredentialsNotice { title: string; note: string; emailSent: boolean; credentials: Credentials }
 
 interface Instructor {
   id: number;
@@ -31,6 +34,12 @@ export default function AdminInstructorsPage() {
   const [search, setSearch]           = useState('');
   const [submitting, setSubmitting]   = useState(false);
   const [toast, setToast]             = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [creds, setCreds]             = useState<CredentialsNotice | null>(null);
+  const [copied, setCopied]           = useState<string | null>(null);
+
+  const copy = async (label: string, text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(null), 1500); } catch { /* clipboard blocked */ }
+  };
 
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -80,9 +89,20 @@ export default function AdminInstructorsPage() {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await adminApi.post('/api/admin/instructors', createForm);
-      showToast('Instructor created and welcome email sent!');
+      const res: any = await adminApi.post('/api/admin/instructors', createForm);
       setCreateOpen(false);
+      if (res?.credentials) {
+        setCreds({
+          title: 'Instructor created',
+          emailSent: !!res.email_sent,
+          note: res.email_sent
+            ? 'A welcome email with these login details is on its way. If it doesn’t arrive in a few minutes (check spam), share them directly.'
+            : 'The welcome email could not be sent — please share these login details with the instructor.',
+          credentials: res.credentials,
+        });
+      } else {
+        showToast('Instructor created.');
+      }
       setCreateForm({ name: '', email: '', phone: '', bio: '', specialisation: '', course_ids: [] });
       fetchData();
     } catch (e) {
@@ -139,10 +159,19 @@ export default function AdminInstructorsPage() {
   // ── Reset password ────────────────────────────────────────────────────────
 
   const handleResetPassword = async (id: number, name: string) => {
-    if (!confirm(`Reset password for "${name}"? A new password will be emailed to them.`)) return;
+    if (!confirm(`Resend login details to "${name}"? A new temporary password will be created and emailed to them (the old one stops working).`)) return;
     try {
-      await adminApi.post(`/api/admin/instructors/${id}/reset-password`);
-      showToast('New password sent to instructor email.');
+      const res: any = await adminApi.post(`/api/admin/instructors/${id}/reset-password`);
+      if (res?.credentials) {
+        setCreds({
+          title: `New login details for ${name}`,
+          emailSent: !!res.email_sent,
+          note: res.message || 'New login details emailed to the instructor.',
+          credentials: res.credentials,
+        });
+      } else {
+        showToast(res?.message || 'New login details emailed to the instructor.');
+      }
     } catch (e) {
       showToast(handleAdminApiError(e), 'error');
     }
@@ -245,7 +274,7 @@ export default function AdminInstructorsPage() {
                             <button onClick={() => openEdit(instructor)} title="Edit" className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg">
                               <Edit size={15} />
                             </button>
-                            <button onClick={() => handleResetPassword(instructor.id, instructor.name)} title="Reset Password" className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/15 rounded-lg">
+                            <button onClick={() => handleResetPassword(instructor.id, instructor.name)} title="Resend login email (new password)" aria-label="Resend login email" className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#4A3AFF] hover:bg-[#F5F3FF] dark:hover:bg-indigo-500/15 rounded-lg">
                               <RefreshCw size={15} />
                             </button>
                             <button onClick={() => handleDelete(instructor.id, instructor.name)} title="Delete" className="p-1.5 text-red-400 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg">
@@ -316,7 +345,7 @@ export default function AdminInstructorsPage() {
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
-                  <strong>Note:</strong> A random password will be generated and emailed to the instructor automatically.
+                  <strong>Note:</strong> A temporary password will be created and emailed to the instructor. You&apos;ll also see it on screen after saving, so you can share it if the email is slow.
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
@@ -385,6 +414,46 @@ export default function AdminInstructorsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ══ LOGIN DETAILS (shown once) ═══════════════════════════════════ */}
+        {creds && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-[#0f0f14] rounded-2xl w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2"><KeyRound size={18} className="text-[#4A3AFF]" /> {creds.title}</h2>
+                <button onClick={() => setCreds(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close"><X size={20} /></button>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                <p className={`text-sm rounded-lg p-3 border ${creds.emailSent ? 'bg-[#F5F3FF] border-[#E0D9FE] text-[#4A3AFF] dark:bg-indigo-500/10 dark:border-indigo-500/25 dark:text-indigo-300' : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300'}`}>
+                  {creds.note}
+                </p>
+                {([
+                  ['Email', creds.credentials.email],
+                  ['Temporary password', creds.credentials.password],
+                  ['Login page', creds.credentials.login_url],
+                ] as const).map(([label, value]) => (
+                  <div key={label}>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 min-w-0 truncate px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white">{value}</code>
+                      <button type="button" onClick={() => copy(label, value)} className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10">
+                        <Copy size={13} /> {copied === label ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => copy('all', `Your Learnexity instructor account\nLogin: ${creds.credentials.login_url}\nEmail: ${creds.credentials.email}\nTemporary password: ${creds.credentials.password}`)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#4A3AFF] text-white text-sm font-semibold hover:bg-[#3b2de0]"
+                >
+                  <Copy size={15} /> {copied === 'all' ? 'Copied — paste it in WhatsApp or email' : 'Copy all as a message'}
+                </button>
+                <p className="text-[11px] text-gray-400">For security this password is shown only now. Use “Resend login email” (↻) later to create a new one.</p>
+              </div>
             </div>
           </div>
         )}

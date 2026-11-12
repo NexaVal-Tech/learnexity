@@ -126,6 +126,7 @@ class TaskSubmissionService
             'auto_grade'   => array_key_exists('auto_grade', $in) ? (bool) $in['auto_grade'] : true,
             'pass_mark'    => $int($in['pass_mark'] ?? null, 0, 100),
             'max_attempts' => $int($in['max_attempts'] ?? null, 1, 20),
+            'due_at'       => $this->cleanDate($in['due_at'] ?? null),
         ];
 
         if ($cfg['text']['keyword_min'] && $cfg['text']['keyword_min'] > count($cfg['text']['keywords'])) {
@@ -165,7 +166,33 @@ class TaskSubmissionService
             'auto_grade'   => (bool) ($cfg['auto_grade'] ?? false),
             'pass_mark'    => $cfg['pass_mark'] ?? null,
             'max_attempts' => $cfg['max_attempts'] ?? null,
+            'due_at'       => $cfg['due_at'] ?? null,
         ];
+    }
+
+    /** ISO-8601 deadline or null (anything unparseable is dropped). */
+    private function cleanDate($v): ?string
+    {
+        if ($v === null || $v === '' || !is_scalar($v)) return null;
+        try {
+            $d = \Carbon\Carbon::parse((string) $v);
+        } catch (\Throwable $e) {
+            return null;
+        }
+        // Sanity window: no deadlines far in the past or future.
+        if ($d->year < 2020 || $d->year > 2100) return null;
+        return $d->toIso8601String();
+    }
+
+    /** True when the attempt was handed in after the deadline. */
+    public function isLate(MaterialItemSubmission $s, ?string $dueAt): bool
+    {
+        if (!$dueAt || !$s->created_at) return false;
+        try {
+            return $s->created_at->gt(\Carbon\Carbon::parse($dueAt));
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /** Task block for the student resources payload. */
@@ -182,13 +209,14 @@ class TaskSubmissionService
 
         $latest = $subs->first();
         $max = $public['max_attempts'];
+        $due = $public['due_at'] ?? null;
 
         return [
             'config'       => $public,
             'attempts'     => $subs->count(),
             'can_submit'   => $this->canSubmit($item, $latest, $subs->count()),
-            'latest'       => $latest ? $this->presentForStudent($latest) : null,
-            'history'      => $subs->slice(1)->map(fn ($s) => $this->presentForStudent($s))->values(),
+            'latest'       => $latest ? $this->presentForStudent($latest, $due) : null,
+            'history'      => $subs->slice(1)->map(fn ($s) => $this->presentForStudent($s, $due))->values(),
             'attempts_left' => $max ? max(0, $max - $subs->count()) : null,
         ];
     }
@@ -205,9 +233,10 @@ class TaskSubmissionService
         return true;
     }
 
-    public function presentForStudent(MaterialItemSubmission $s): array
+    public function presentForStudent(MaterialItemSubmission $s, ?string $dueAt = null): array
     {
         return [
+            'late'          => $this->isLate($s, $dueAt),
             'id'            => $s->id,
             'attempt'       => $s->attempt,
             'status'        => $s->status,
@@ -233,7 +262,8 @@ class TaskSubmissionService
 
     public function presentForGrader(MaterialItemSubmission $s): array
     {
-        return array_merge($this->presentForStudent($s), [
+        $due = $s->relationLoaded('item') && $s->item ? ($s->item->task_config['due_at'] ?? null) : null;
+        return array_merge($this->presentForStudent($s, $due), [
             'checks'       => collect($s->auto_checks ?? [])->map(fn ($c) => [
                 'label'  => $c['label'] ?? '',
                 'passed' => (bool) ($c['passed'] ?? false),
@@ -248,6 +278,7 @@ class TaskSubmissionService
                 'title'  => $s->item->title,
                 'sprint' => optional($s->item->courseMaterial)->sprint_name,
                 'pass_mark' => $s->item->task_config['pass_mark'] ?? null,
+                'due_at'    => $due,
             ] : null,
         ]);
     }

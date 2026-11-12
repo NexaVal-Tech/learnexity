@@ -28,6 +28,14 @@ function ModeSelect({ value, onChange }: { value: ResponseMode; onChange: (v: Re
   );
 }
 
+function toLocalInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 const numOrNull = (v: string): number | null => (v.trim() === "" ? null : Math.max(0, Math.floor(Number(v)) || 0));
 
 /**
@@ -40,14 +48,19 @@ export default function TaskSettingsModal({
   initial,
   onClose,
   onSave,
+  createMode = false,
 }: {
   open: boolean;
   itemTitle: string;
   initial: unknown;
   onClose: () => void;
-  onSave: (cfg: TaskConfig) => Promise<void>;
+  /** title is only passed in createMode. */
+  onSave: (cfg: TaskConfig, title?: string) => Promise<void>;
+  /** Creating a brand-new task item: also asks for its title. */
+  createMode?: boolean;
 }) {
   const [cfg, setCfg] = useState<TaskConfig>(DEFAULT_TASK_CONFIG);
+  const [title, setTitle] = useState("");
   const [keywords, setKeywords] = useState("");
   const [domains, setDomains] = useState("");
   const [saving, setSaving] = useState(false);
@@ -61,6 +74,7 @@ export default function TaskSettingsModal({
     setCfg(c);
     setKeywords(c.text.keywords.join(", "));
     setDomains(c.link.allowed_domains.join(", "));
+    setTitle("");
     setError(null);
   }, [open, initial]);
 
@@ -71,6 +85,10 @@ export default function TaskSettingsModal({
 
   const save = async (enabled: boolean) => {
     setError(null);
+    if (createMode && !title.trim()) {
+      setError("Give the task a title.");
+      return;
+    }
     const next: TaskConfig = {
       ...cfg,
       enabled,
@@ -87,7 +105,7 @@ export default function TaskSettingsModal({
     }
     try {
       setSaving(true);
-      await onSave(next);
+      await onSave(next, createMode ? title.trim() : undefined);
       onClose();
     } catch (e: any) {
       const data = e?.response?.data;
@@ -110,7 +128,7 @@ export default function TaskSettingsModal({
         <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <ClipboardCheck size={18} className="text-[#4A3AFF]" /> Task requirements
+              <ClipboardCheck size={18} className="text-[#4A3AFF]" /> {createMode ? "New task" : "Task requirements"}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-md">{itemTitle}</p>
           </div>
@@ -128,9 +146,27 @@ export default function TaskSettingsModal({
             </span>
           </div>
 
+          {createMode && (
+            <div>
+              <label className={labelCls}>Task title *</label>
+              <input autoFocus maxLength={255} value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="e.g. Build a simple REST API" />
+            </div>
+          )}
+
           <div>
             <label className={labelCls}>Instructions for students (optional — shown above the response form)</label>
             <textarea rows={3} maxLength={5000} value={cfg.instructions} onChange={(e) => set("instructions", e.target.value)} className={inputCls} placeholder="e.g. Write a short reflection on what you built this sprint and share your GitHub repo." />
+          </div>
+
+          <div className="max-w-xs">
+            <label className={labelCls}>Due date (optional, your local time)</label>
+            <input
+              type="datetime-local"
+              value={toLocalInput(cfg.due_at)}
+              onChange={(e) => set("due_at", e.target.value ? new Date(e.target.value).toISOString() : null)}
+              className={inputCls}
+            />
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Students see the deadline. Work handed in after it is still accepted but marked “Late”.</p>
           </div>
 
           {/* Written answer */}
@@ -244,7 +280,7 @@ export default function TaskSettingsModal({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-t border-gray-100 dark:border-white/10">
-          {initial && typeof initial === "object" && (initial as any).enabled ? (
+          {!createMode && initial && typeof initial === "object" && (initial as any).enabled ? (
             <button type="button" disabled={saving} onClick={() => save(false)} className="text-sm text-red-600 hover:underline disabled:opacity-50">
               Turn off task
             </button>
@@ -252,7 +288,7 @@ export default function TaskSettingsModal({
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200">Cancel</button>
             <button type="button" disabled={saving} onClick={() => save(true)} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[#4A3AFF] text-white disabled:opacity-60">
-              {saving && <Loader2 size={14} className="animate-spin" />} Save task
+              {saving && <Loader2 size={14} className="animate-spin" />} {createMode ? "Create task" : "Save task"}
             </button>
           </div>
         </div>

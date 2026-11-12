@@ -1140,6 +1140,20 @@ settings: {
         return await adminApi.post('/api/admin/students/send-message', formData);
       },
 
+      /** Server-rendered preview of the email (exactly what students get). */
+      previewMessage: async (data: { subject: string; message: string; sample_name?: string }): Promise<{ subject: string; html: string }> => {
+        return await adminApi.post('/api/admin/students/send-message/preview', data);
+      },
+
+      /** Sends the email only to the signed-in admin. */
+      sendTestMessage: async (data: { subject: string; message: string; attachment?: File }): Promise<{ message: string }> => {
+        const formData = new FormData();
+        formData.append('subject', data.subject);
+        formData.append('message', data.message);
+        if (data.attachment) formData.append('attachment', data.attachment);
+        return await adminApi.post('/api/admin/students/send-message/test', formData);
+      },
+
       grantAccess: async (enrollmentId: number): Promise<{
         message: string;
         enrollment: { enrollment_id: number; has_access: boolean; access_manually_granted: boolean; access_blocked_reason: string | null };

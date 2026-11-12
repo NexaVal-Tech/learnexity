@@ -113,7 +113,8 @@ class AdminInstructorController extends Controller
         // reports as a CORS error (timeouts carry no CORS headers).
         $emailSent = false;
         try {
-            Mail::to($instructor->email)->queue(new InstructorWelcomeMail($instructor, $plainPassword));
+            // Same queue as the student emails (the worker always processes it).
+            Mail::to($instructor->email)->queue((new InstructorWelcomeMail($instructor, $plainPassword))->onQueue('emails'));
             $emailSent = true;
             Log::info('✅ Instructor welcome email queued', ['instructor_id' => $instructor->id]);
         } catch (\Throwable $e) {
@@ -130,6 +131,12 @@ class AdminInstructorController extends Controller
                 : 'Instructor created. Note: welcome email could not be sent — please share login credentials manually.',
             'instructor' => $instructor,
             'email_sent' => $emailSent,
+            // Shown once to the admin, so they can share it if the email is slow or lands in spam.
+            'credentials' => [
+                'email'     => $instructor->email,
+                'password'  => $plainPassword,
+                'login_url' => $this->loginUrl(),
+            ],
         ], 201);
     }
 
@@ -215,16 +222,30 @@ class AdminInstructorController extends Controller
         $newPassword = Str::random(10);
         $instructor->update(['password' => Hash::make($newPassword)]);
 
+        $credentials = ['email' => $instructor->email, 'password' => $newPassword, 'login_url' => $this->loginUrl()];
+
         try {
-            Mail::to($instructor->email)->queue(new InstructorWelcomeMail($instructor, $newPassword, isReset: true));
+            Mail::to($instructor->email)->queue((new InstructorWelcomeMail($instructor, $newPassword, isReset: true))->onQueue('emails'));
         } catch (\Throwable $e) {
             Log::error('Failed to send instructor password reset email', ['error' => $e->getMessage()]);
             return response()->json([
-                'success' => false,
-                'message' => 'Password reset but email delivery failed. New password: ' . $newPassword,
+                'success'     => true,
+                'email_sent'  => false,
+                'message'     => 'New password created, but the email could not be sent — share the login details below.',
+                'credentials' => $credentials,
             ]);
         }
 
-        return response()->json(['success' => true, 'message' => 'New password sent to instructor email.']);
+        return response()->json([
+            'success'     => true,
+            'email_sent'  => true,
+            'message'     => 'New login details emailed to the instructor.',
+            'credentials' => $credentials,
+        ]);
+    }
+
+    private function loginUrl(): string
+    {
+        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/instructors/auth/login';
     }
 }

@@ -70,6 +70,7 @@ function ReviewCard({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {cur.score != null && <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatScore(cur.score)}</span>}
+          {cur.late && <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-white/15">Late</span>}
           <span className={`text-xs px-2 py-1 rounded-full ${badge(cur.status)}`}>{STATUS_LABEL[cur.status]}</span>
           <ChevronDown size={16} className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
         </div>

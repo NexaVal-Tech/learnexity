@@ -417,7 +417,7 @@ export default function ResourcesPage() {
         />
       )}
 
-      <div className="max-w-[1541px] mx-auto px-6 py-8 pt-25">
+      <div className="max-w-[1541px] mx-auto px-3 sm:px-6 py-6 sm:py-8 pt-25">
         {currentEnrollment?.has_access && currentEnrollment?.access_blocked_reason && (
           <PaymentWarningBanner enrollment={currentEnrollment} />
         )}
@@ -445,13 +445,13 @@ export default function ResourcesPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6 inline-block">
-          <div className="inline-flex border-b border-gray-200 dark:border-white/10">
+        <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6 max-w-full overflow-x-auto sm:inline-block">
+          <div className="flex sm:inline-flex border-b border-gray-200 dark:border-white/10 min-w-max">
             {['all-resources', 'progress-ranking', 'certificates'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 text-sm font-medium transition capitalize ${
+                className={`px-4 sm:px-6 py-3 text-sm font-medium transition capitalize whitespace-nowrap ${
                   activeTab === tab ? 'text-gray-900 border-b-2 border-gray-900 dark:text-white dark:border-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
@@ -489,7 +489,7 @@ export default function ResourcesPage() {
           <div>
             {/* Course Materials */}
             <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6">
-              <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Course Materials</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Click any item to view or download</p>
@@ -497,7 +497,7 @@ export default function ResourcesPage() {
                 {/* FIX: Learning View button opens modal at top with no specific target */}
                 <button
                   onClick={openModalAtTop}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+                  className="flex items-center justify-center gap-2 px-4 min-h-[44px] bg-[#4A3AFF] text-white rounded-lg text-sm font-semibold hover:bg-[#3b2de0] transition w-full sm:w-auto"
                 >
                   <BookOpen size={15} /> Learning View
                 </button>
@@ -514,22 +514,22 @@ export default function ResourcesPage() {
                   </div>
                 </div>
               ) : (
-                <div className="p-6 space-y-4">
+                <div className="p-3 sm:p-6 space-y-3 sm:space-y-4">
                   {data.materials.map(sprint => (
                     <div key={sprint.id} className={`border rounded-lg overflow-hidden ${sprint.locked ? 'border-gray-200 dark:border-white/10 opacity-75' : 'border-gray-200 dark:border-white/10'}`}>
                       {/* Sprint header */}
                       <button
                         onClick={() => toggleSprint(sprint.id)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition"
+                        className="w-full flex items-center justify-between gap-2 p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded flex items-center justify-center text-sm font-bold ${
-                            sprint.locked ? 'bg-gray-300 text-gray-500 dark:bg-white/10 dark:text-gray-400' : sprint.progress_percentage === 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-gray-300'
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-10 h-10 flex-shrink-0 rounded flex items-center justify-center text-sm font-bold ${
+                            sprint.locked ? 'bg-gray-300 text-gray-500 dark:bg-white/10 dark:text-gray-400' : sprint.progress_percentage === 100 ? 'bg-[#4A3AFF] text-white' : 'bg-gray-200 text-gray-600 dark:bg-white/10 dark:text-gray-300'
                           }`}>
                             {sprint.locked ? <Lock className="w-4 h-4" /> : sprint.progress_percentage === 100 ? <Check className="w-6 h-6" /> : `S${sprint.sprint_number}`}
                           </div>
-                          <div className="text-left">
-                            <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                          <div className="text-left min-w-0">
+                            <div className="font-medium text-gray-900 dark:text-white flex flex-wrap items-center gap-2">
                               {sprint.sprint_name}
                               {sprint.locked && (
                                 <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Locked</span>
@@ -544,9 +544,9 @@ export default function ResourcesPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           {!sprint.locked && (
-                            <div className="w-32 bg-gray-200 dark:bg-white/10 rounded-full h-2">
+                            <div className="hidden sm:block w-32 bg-gray-200 dark:bg-white/10 rounded-full h-2">
                               <div
-                                className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-green-500' : 'bg-purple-600'}`}
+                                className={`h-2 rounded-full transition-all ${sprint.progress_percentage === 100 ? 'bg-[#4A3AFF]' : 'bg-[#4A3AFF]/70'}`}
                                 style={{ width: `${sprint.progress_percentage}%` }}
                               />
                             </div>
@@ -572,21 +572,21 @@ export default function ResourcesPage() {
                             return (
                               <div
                                 key={item.id}
-                                className={`flex items-center justify-between p-4 transition ${
-                                  item.is_completed ? 'bg-green-50/30 dark:bg-green-500/10' : ''
+                                className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-3.5 min-h-[56px] transition ${
+                                  item.is_completed ? 'bg-[#4A3AFF]/[0.03] dark:bg-indigo-500/10' : ''
                                 } ${item.locked ? 'opacity-60' : ''} ${isClickable ? 'hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer' : ''}`}
                                 // FIX: open modal targeting this specific item
                                 onClick={() => isClickable && openModalAtItem(item.id)}
                               >
-                                <div className="flex items-center gap-3 flex-1">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
                                   {/* Type badge */}
-                                  <div className={`w-8 h-8 rounded flex items-center justify-center ${colors.bg}`}>
+                                  <div className={`w-8 h-8 flex-shrink-0 rounded flex items-center justify-center ${colors.bg}`}>
                                     {item.locked ? <Lock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" /> : <span className={`text-xs font-bold ${colors.text}`}>{colors.label}</span>}
                                   </div>
 
                                   {/* Title */}
-                                  <div className="flex-1">
-                                    <p className={`text-sm font-medium ${isClickable ? 'text-gray-800 hover:text-purple-700 dark:text-gray-200 dark:hover:text-purple-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-medium break-words ${isClickable ? 'text-gray-800 hover:text-purple-700 dark:text-gray-200 dark:hover:text-purple-400' : 'text-gray-800 dark:text-gray-200'}`}>
                                       {item.title}
                                     </p>
                                     {item.file_size && <div className="text-xs text-gray-500 dark:text-gray-400">{item.file_size}</div>}
@@ -602,12 +602,12 @@ export default function ResourcesPage() {
                                   ) : isTask ? (
                                     <TaskStatusPill task={item.task} />
                                   ) : item.is_completed ? (
-                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-500/15 px-2 py-1 rounded-full">
-                                      <CheckCircle size={11} /> Completed
+                                    <span className="flex items-center gap-1 text-xs text-[#4A3AFF] bg-[#4A3AFF]/10 dark:text-indigo-300 dark:bg-indigo-500/15 px-2 py-1 rounded-full whitespace-nowrap">
+                                      <CheckCircle size={11} /> <span className="hidden sm:inline">Completed</span><span className="sm:hidden">Done</span>
                                     </span>
                                   ) : (
                                     <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 dark:text-gray-500 dark:bg-white/5 px-2 py-1 rounded-full">
-                                      <Clock size={11} /> Auto-tracks
+                                      <Clock size={11} /> <span className="hidden sm:inline">Auto-tracks</span>
                                     </span>
                                   )}
                                 </div>
@@ -625,14 +625,14 @@ export default function ResourcesPage() {
             {/* Leaderboard */}
             {data.leaderboard && (
               <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10 mb-6">
-                <div className="p-6 border-b border-gray-200 dark:border-white/10">
+                <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-white/10">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     Evaluation & Leaderboard
                   </h2>
                 </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-3 gap-6 mb-6">
+                <div className="p-4 sm:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
                     <div>
                       <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Your Average Score</div>
                       <div className="text-3xl font-bold text-gray-900 dark:text-white">{data.statistics.overall_progress}%</div>
@@ -643,16 +643,16 @@ export default function ResourcesPage() {
                     </div>
                     <div>
                       <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Difference</div>
-                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                        +{(data.statistics.overall_progress - data.course_average).toFixed(1)}%
+                      <div className="text-3xl font-bold text-[#4A3AFF] dark:text-indigo-300">
+                        {data.statistics.overall_progress - data.course_average >= 0 ? '+' : ''}{(data.statistics.overall_progress - data.course_average).toFixed(1)}%
                       </div>
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2 mb-6">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${data.statistics.overall_progress}%` }} />
+                    <div className="bg-[#4A3AFF] h-2 rounded-full" style={{ width: `${data.statistics.overall_progress}%` }} />
                   </div>
                   <div className="overflow-x-auto border-t border-gray-200 dark:border-white/10 pt-6">
-                    <table className="w-full">
+                    <table className="w-full min-w-[560px]">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-white/10">
                           {['Rank', 'Student Name', 'Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Overall'].map(h => (
@@ -662,7 +662,7 @@ export default function ResourcesPage() {
                       </thead>
                       <tbody>
                         {data.leaderboard.participants.map((p, idx) => (
-                          <tr key={p.user_id} className={`border-b border-gray-100 dark:border-white/10 ${p.is_current_user ? 'bg-green-50 dark:bg-green-500/10' : ''}`}>
+                          <tr key={p.user_id} className={`border-b border-gray-100 dark:border-white/10 ${p.is_current_user ? 'bg-[#4A3AFF]/5 dark:bg-indigo-500/10' : ''}`}>
                             <td className="py-3 px-2">
                               {idx === 0
                                 ? <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-500/15 rounded-full flex items-center justify-center"><Trophy className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></div>
@@ -685,14 +685,14 @@ export default function ResourcesPage() {
 
             {/* External Resources */}
             <div className="bg-white dark:bg-[#0f0f14] rounded-lg border border-gray-200 dark:border-white/10">
-              <div className="p-6 border-b border-gray-200 dark:border-white/10">
+              <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-white/10">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <ExternalLink className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   External Learning Resources
                 </h2>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-8">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   {[
                     { label: 'Video Tutorials', items: sortExternal(data.external_resources.video_tutorials) },
                     { label: 'Industry Articles', items: sortExternal(data.external_resources.industry_articles) },
@@ -732,7 +732,7 @@ export default function ResourcesPage() {
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-8 mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                       <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full" /> Tool Guides
@@ -800,7 +800,7 @@ export default function ResourcesPage() {
 
         {/* Toast */}
         {toast && (
-          <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+          <div className={`fixed bottom-4 left-4 right-4 sm:left-auto px-6 py-3 rounded-lg shadow-lg z-50 text-white ${toast.type === 'success' ? 'bg-[#4A3AFF]' : 'bg-red-500'}`}>
             {toast.message}
           </div>
         )}

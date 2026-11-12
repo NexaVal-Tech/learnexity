@@ -325,6 +325,8 @@ Route::middleware('throttle:api')->prefix('consultations')->group(function () {
 
 // =================== MARKETING LANDING PAGE =================== //
 Route::middleware(['throttle:cms-read', 'public.cache:0'])->get('/landing', [\App\Http\Controllers\Api\LandingPageController::class, 'show']);
+// Free webinar registration form (5 per minute per IP).
+Route::middleware('throttle:5,1')->post('/landing/webinar-register', [\App\Http\Controllers\Api\LandingWebinarController::class, 'register']);
 
 // =================== LEARNEXITY TV WEBINAR (tv.learnexity.org) =================== //
 Route::middleware('throttle:api')->prefix('tv')->group(function () {
@@ -372,6 +374,7 @@ Route::middleware(['auth:instructor', 'throttle:api'])->prefix('instructor')->gr
 
     // Sprint tasks — requirements + reviewing submissions (own courses only)
     Route::put ('/courses/{courseId}/topics/{itemId}/task',      [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorSaveConfig'])->whereNumber('itemId');
+    Route::post('/courses/{courseId}/sprints/{sprintId}/tasks',  [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorCreateTask'])->whereNumber('sprintId');
     Route::get ('/courses/{courseId}/task-submissions',          [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorList']);
     Route::post('/task-submissions/{submissionId}/grade',        [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorGrade'])->whereNumber('submissionId');
     Route::get ('/task-submissions/{submissionId}/file',         [\App\Http\Controllers\Api\TaskReviewController::class, 'instructorFile'])->whereNumber('submissionId');
@@ -427,6 +430,10 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         });
         Route::post('/send-message', [AdminStudentController::class, 'sendMessage'])
             ->middleware('admin.permission:send_emails');
+        Route::post('/send-message/preview', [AdminStudentController::class, 'previewMessage'])
+            ->middleware(['admin.permission:send_emails', 'throttle:60,1']);
+        Route::post('/send-message/test', [AdminStudentController::class, 'sendTestMessage'])
+            ->middleware(['admin.permission:send_emails', 'throttle:10,1']);
         Route::post('/enrollments/{enrollmentId}/grant-access', [AdminStudentController::class, 'grantAccess'])
             ->middleware('admin.permission:grant_course_access');
         Route::post('/enrollments/{enrollmentId}/revoke-access', [AdminStudentController::class, 'revokeAccess'])
@@ -542,6 +549,9 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
     // Marketing landing page
     Route::prefix('landing')->middleware('admin.permission:landing')->group(function () {
         Route::get('/',       [\App\Http\Controllers\Api\AdminLandingController::class, 'show']);
+        Route::get('/registrations',        [\App\Http\Controllers\Api\LandingWebinarController::class, 'index']);
+        Route::get('/registrations/export', [\App\Http\Controllers\Api\LandingWebinarController::class, 'export']);
+        Route::delete('/registrations/{id}', [\App\Http\Controllers\Api\LandingWebinarController::class, 'destroy'])->whereNumber('id');
         Route::put('/',       [\App\Http\Controllers\Api\AdminLandingController::class, 'update']);
         Route::post('/image', [\App\Http\Controllers\Api\AdminLandingController::class, 'uploadImage']);
         Route::post('/reset', [\App\Http\Controllers\Api\AdminLandingController::class, 'reset']);

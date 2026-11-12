@@ -13,6 +13,8 @@ export interface TaskConfig {
   auto_grade: boolean;
   pass_mark: number | null;
   max_attempts: number | null;
+  /** ISO date-time deadline (optional). Late attempts are accepted but marked late. */
+  due_at?: string | null;
 }
 
 /** What students see (keywords hidden). */
@@ -24,6 +26,7 @@ export interface PublicTaskConfig {
   auto_grade: boolean;
   pass_mark: number | null;
   max_attempts: number | null;
+  due_at?: string | null;
 }
 
 export interface TaskCheck {
@@ -34,6 +37,8 @@ export interface TaskCheck {
 
 export interface TaskSubmission {
   id: number;
+  /** Handed in after the task's deadline. */
+  late?: boolean;
   attempt: number;
   status: SubmissionStatus;
   text_response: string | null;
@@ -53,7 +58,7 @@ export interface TaskSubmission {
 export interface GraderSubmission extends TaskSubmission {
   graded_by_name?: string | null;
   student: { id: number; name: string; email: string } | null;
-  item: { id: number; title: string; sprint: string | null; pass_mark: number | null } | null;
+  item: { id: number; title: string; sprint: string | null; pass_mark: number | null; due_at?: string | null } | null;
 }
 
 export interface StudentTask {
@@ -111,6 +116,7 @@ export const DEFAULT_TASK_CONFIG: TaskConfig = {
   auto_grade: true,
   pass_mark: null,
   max_attempts: null,
+  due_at: null,
 };
 
 export function normalizeTaskConfig(raw: unknown): TaskConfig {
@@ -125,7 +131,22 @@ export function normalizeTaskConfig(raw: unknown): TaskConfig {
     auto_grade: c.auto_grade ?? true,
     pass_mark: c.pass_mark ?? null,
     max_attempts: c.max_attempts ?? null,
+    due_at: c.due_at ?? null,
   };
+}
+
+/** "Fri, Nov 21, 11:59 PM" in the viewer's own time zone. */
+export function formatDue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+export function isPastDue(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) && t < Date.now();
 }
 
 export const STATUS_LABEL: Record<SubmissionStatus, string> = {

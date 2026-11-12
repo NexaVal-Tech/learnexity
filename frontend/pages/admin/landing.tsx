@@ -11,7 +11,7 @@ import AdminRouteGuard from '@/components/admin/AdminRouteGuard';
 import { adminApi, handleAdminApiError } from '@/lib/adminApi';
 import { formatMoney } from '@/lib/format';
 import {
-  Loader2, Save, ChevronDown, Plus, Trash2, ArrowUp, ArrowDown, Upload, ExternalLink, RotateCcw, Eye, EyeOff, Info,
+  Loader2, Save, ChevronDown, Plus, Trash2, ArrowUp, ArrowDown, Upload, ExternalLink, RotateCcw, Eye, EyeOff, Info, Download, Search, Users,
 } from 'lucide-react';
 
 type Json = any;
@@ -29,6 +29,7 @@ const SECTIONS: { key: string; title: string; hint?: string }[] = [
   { key: 'who', title: 'Who should apply?' },
   { key: 'how', title: 'How it works', hint: 'Steps are numbered automatically in the order shown.' },
   { key: 'offer', title: 'Black Friday offer', hint: 'Registration fees come from Course Settings → Registration fee (same as checkout). After the end date the page shows the “offer ended” text until you set a new date.' },
+  { key: 'webinar_form', title: 'Webinar registration form', hint: '“Register free” under the offer opens this form. Registrations are saved below (with CSV export); each person gets a confirmation email and your team gets a notice. The success screen shows the WhatsApp “Get Expert Guidance” button.' },
   { key: 'pathway', title: 'Find your pathway' },
   { key: 'discover', title: 'Discover more (webinars)' },
   { key: 'instructors', title: 'Meet your instructors', hint: 'Photos, names, roles and LinkedIn come from the Meet Our Team page.' },
@@ -40,13 +41,18 @@ const LABELS: Record<string, string> = {
   ctas: 'Buttons', eyebrow: 'Small label above the heading', heading: 'Heading', subheading: 'Text under the heading', text: 'Text',
   image: 'Image', show_ctas: 'Show the main buttons here', paragraphs: 'Paragraphs', items: 'Items', steps: 'Steps',
   title: 'Title', label: 'Button text', href: 'Link', style: 'Style', ends_at: 'Offer ends (your local time)',
-  ends_label: 'Line under the table', ended_heading: 'Heading when the offer has ended', ended_text: 'Text when the offer has ended',
+  ends_label: 'Line under the table',
+  webinar_text: 'Webinar line (under the offer — leave empty to hide)', webinar_label: 'Webinar button text (opens the registration form)',
+  webinar_title: 'Webinar name', webinar_when: 'Date & time (shown on the form and in the email, e.g. “Dec 14, 2026 · 3:00 PM ET”)', join_href: 'Joining link (optional — sent in the confirmation email)',
+  label_name: 'Field label: name', label_email: 'Field label: email', label_country: 'Field label: location', label_learn: 'Field label: what to learn', label_heard: 'Field label: how they heard',
+  submit_label: 'Submit button text', success_heading: 'Success heading', success_text: 'Success message', whatsapp_label: 'WhatsApp button text',
+  whatsapp_number: 'WhatsApp number (with country code, numbers only)', whatsapp_message: 'WhatsApp pre-filled message', notify_email: 'Send new-registration emails to (leave empty for the default admin email)', ended_heading: 'Heading when the offer has ended', ended_text: 'Text when the offer has ended',
   col_program: 'Column: program', col_regular: 'Column: regular tuition', col_fee: 'Column: registration fee', row_button: 'Button in each row',
   rows: 'Programs', pathway: 'Pathway (sets the live fee)', regular_usd: 'Regular tuition (USD)', regular_ngn: 'Regular tuition (NGN, optional)',
   badge: 'Date badge', button: 'Button text', names: 'Instructors to show', link_label: 'Link text', link_href: 'Link',
   learn_more_label: '“Learn more” text', learn_more_href: '“Learn more” link', disclaimer: 'Disclaimer', description: 'Description',
 };
-const LONG = new Set(['text', 'subheading', 'disclaimer', 'ended_text', 'description']);
+const LONG = new Set(['text', 'subheading', 'disclaimer', 'ended_text', 'description', 'webinar_text', 'success_text', 'whatsapp_message']);
 const PATHWAY_LABEL: Record<string, string> = { deeptech: 'DeepTech', accelerator: 'Career Accelerator', flex: 'Flex' };
 
 function imgSrc(v: string): string {
@@ -266,6 +272,127 @@ interface LoadResponse {
   updated_at: string | null;
 }
 
+interface Registration {
+  id: number; name: string; email: string; country: string | null; interest: string | null; heard_from: string | null; webinar_title: string | null; created_at: string;
+}
+
+/** Free webinar registrations from the landing page form. */
+function WebinarRegistrations() {
+  const [rows, setRows] = useState<Registration[]>([]);
+  const [webinars, setWebinars] = useState<string[]>([]);
+  const [webinar, setWebinar] = useState('');
+  const [search, setSearch] = useState('');
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => { const t = setTimeout(() => { setQ(search.trim()); setPage(1); }, 350); return () => clearTimeout(t); }, [search]);
+
+  const load = async () => {
+    try {
+      setLoading(true); setErr(null);
+      const r = await adminApi.get<{ registrations: Registration[]; pagination: { current_page: number; last_page: number; total: number }; webinars: string[] }>(
+        '/api/admin/landing/registrations', { params: { search: q || undefined, webinar: webinar || undefined, page } }
+      );
+      setRows(r.registrations); setPages(r.pagination.last_page); setTotal(r.pagination.total); setWebinars(r.webinars || []);
+    } catch (e) {
+      setErr(handleAdminApiError(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [q, webinar, page]);
+
+  const exportCsv = async () => {
+    try {
+      setExporting(true);
+      const blob = await adminApi.get<Blob>('/api/admin/landing/registrations/export', { params: { search: q || undefined, webinar: webinar || undefined }, responseType: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `webinar-registrations-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setErr(handleAdminApiError(e));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const remove = async (r: Registration) => {
+    if (!confirm(`Delete the registration from ${r.name} (${r.email})? This can't be undone.`)) return;
+    try { await adminApi.delete(`/api/admin/landing/registrations/${r.id}`); load(); } catch (e) { setErr(handleAdminApiError(e)); }
+  };
+
+  return (
+    <div className={`${CARD} overflow-hidden`}>
+      <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-white/10">
+        <div className="flex items-center gap-2">
+          <Users size={18} className="text-[#4A3AFF]" />
+          <p className="font-semibold text-gray-900 dark:text-white">Webinar registrations</p>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#4A3AFF]/10 text-[#4A3AFF]">{total}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, email, country…" className={`${INPUT} pl-8 w-56`} />
+          </div>
+          {webinars.length > 1 && (
+            <select value={webinar} onChange={(e) => { setWebinar(e.target.value); setPage(1); }} className={`${INPUT} w-auto`}>
+              <option value="">All webinars</option>
+              {webinars.map((w) => <option key={w} value={w}>{w}</option>)}
+            </select>
+          )}
+          <button type="button" onClick={exportCsv} disabled={exporting || total === 0} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg bg-[#4A3AFF] text-white font-semibold disabled:opacity-50">
+            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
+          </button>
+        </div>
+      </div>
+      {err && <p className="px-4 pt-3 text-sm text-red-600">{err}</p>}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[860px]">
+          <thead>
+            <tr className="bg-gray-50 dark:bg-white/5 text-xs uppercase text-gray-500 dark:text-gray-400">
+              {['Registered', 'Name', 'Email', 'Location', 'Wants to learn', 'Heard about us', ''].map((h) => <th key={h} className="px-4 py-2.5 font-semibold">{h}</th>)}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+            {loading ? (
+              <tr><td colSpan={7} className="px-4 py-8 text-center"><Loader2 className="inline animate-spin text-gray-400" /></td></tr>
+            ) : rows.length === 0 ? (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No registrations yet.</td></tr>
+            ) : rows.map((r) => (
+              <tr key={r.id} className="align-top text-gray-700 dark:text-gray-200">
+                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">{new Date(r.created_at).toLocaleString()}</td>
+                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{r.name}</td>
+                <td className="px-4 py-3"><a href={`mailto:${r.email}`} className="text-[#4A3AFF] hover:underline break-all">{r.email}</a></td>
+                <td className="px-4 py-3">{r.country || '—'}</td>
+                <td className="px-4 py-3 max-w-[240px] break-words">{r.interest || '—'}</td>
+                <td className="px-4 py-3 max-w-[200px] break-words">{r.heard_from || '—'}</td>
+                <td className="px-4 py-3 text-right">
+                  <button type="button" onClick={() => remove(r)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15" aria-label="Delete registration"><Trash2 size={14} /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {pages > 1 && (
+        <div className="flex items-center justify-between p-3 border-t border-gray-100 dark:border-white/10 text-sm">
+          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/15 disabled:opacity-40">Previous</button>
+          <span className="text-gray-500">Page {page} of {pages}</span>
+          <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/15 disabled:opacity-40">Next</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminLandingPage() {
   const [data, setData] = useState<LoadResponse | null>(null);
   const [content, setContent] = useState<Json>(null);
@@ -384,6 +511,8 @@ export default function AdminLandingPage() {
                 <p className="text-xs text-gray-500">Optional. Paste the Pixel ID from Meta Events Manager (numbers only) to track visits from your ads.</p>
                 <input className={`${INPUT} max-w-xs`} value={pixel} onChange={(e) => { setPixel(e.target.value.replace(/\D/g, '')); setDirty(true); }} placeholder="e.g. 123456789012345" inputMode="numeric" />
               </div>
+
+              <WebinarRegistrations />
             </>
           )}
 
@@ -394,7 +523,7 @@ export default function AdminLandingPage() {
                 {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Save landing page
               </button>
               {dirty && !msg && <span className="text-sm text-gray-500">Unsaved changes</span>}
-              {msg && <span className={`text-sm ${msg.ok ? 'text-emerald-600' : 'text-red-600'}`}>{msg.text}</span>}
+              {msg && <span className={`text-sm ${msg.ok ? 'text-[#4A3AFF]' : 'text-red-600'}`}>{msg.text}</span>}
             </div>
           )}
         </div>

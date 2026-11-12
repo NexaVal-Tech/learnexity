@@ -468,136 +468,147 @@ class AdminStudentController extends Controller
     }
 
     /**
-     * Send message to student(s)
-     */
-    /**
-     * Send message to student(s)
+     * Send an email to the selected students (queued).
+     * The body comes from the Compose editor (rich text) or plain text;
+     * it is cleaned to a short allowlist before anything is queued.
      */
     public function sendMessage(Request $request): JsonResponse
     {
-        Log::info('=== MESSAGE SEND REQUEST STARTED ===');
-        Log::info('Request Method: ' . $request->method());
-        Log::info('All Request Data:', $request->all());
-        
-        Log::info('Raw student_ids:', [
-            'value' => $request->input('student_ids'),
-            'type' => gettype($request->input('student_ids'))
+        $request->validate([
+            'student_ids' => 'required|string|max:20000',
+            'subject'     => 'required|string|max:255',
+            'message'     => 'required|string|max:' . \App\Services\StudentEmailContent::MAX_LENGTH,
+            'attachment'  => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
         ]);
 
+        $studentIds = json_decode($request->input('student_ids'), true);
+        if (!is_array($studentIds) || empty($studentIds)) {
+            return response()->json(['error' => 'Invalid student IDs format'], 422);
+        }
+        $studentIds = array_values(array_unique(array_filter(array_map('intval', $studentIds), fn ($id) => $id > 0)));
+        if (empty($studentIds)) {
+            return response()->json(['error' => 'Invalid student IDs format'], 422);
+        }
+        if (count($studentIds) > 1000) {
+            return response()->json(['error' => 'Cannot send to more than 1000 students at once'], 422);
+        }
+
+        $validStudentIds = User::whereIn('id', $studentIds)->pluck('id')->all();
+        $invalidIds = array_diff($studentIds, $validStudentIds);
+        if (!empty($invalidIds)) {
+            return response()->json(['error' => 'Some student IDs are invalid: ' . implode(', ', array_slice($invalidIds, 0, 20))], 422);
+        }
+
+        [$subject, $html, $error] = $this->composeFromRequest($request);
+        if ($error) return response()->json(['error' => $error], 422);
+
         try {
-            // Validate the request
-            $request->validate([
-                'student_ids' => 'required|string',
-                'subject' => 'required|string|max:255',
-                'message' => 'required|string',
-                'attachment' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
-            ]);
-
-            // Decode student IDs
-            $studentIds = json_decode($request->input('student_ids'), true);
-            
-            Log::info('Decoded student IDs:', [
-                'value' => $studentIds,
-                'type' => gettype($studentIds),
-                'is_array' => is_array($studentIds),
-                'count' => is_array($studentIds) ? count($studentIds) : 0
-            ]);
-
-            // Validate it's a proper array
-            if (!is_array($studentIds) || empty($studentIds)) {
-                Log::error('Invalid student_ids format');
-                return response()->json([
-                    'error' => 'Invalid student IDs format'
-                ], 422);
-            }
-
-            // Validate student count (optional: set a max limit)
-            if (count($studentIds) > 1000) {
-                return response()->json([
-                    'error' => 'Cannot send to more than 1000 students at once'
-                ], 422);
-            }
-
-            // Verify all students exist
-            $validStudentIds = User::whereIn('id', $studentIds)->pluck('id')->toArray();
-            $invalidIds = array_diff($studentIds, $validStudentIds);
-
-            if (!empty($invalidIds)) {
-                Log::warning('Some student IDs are invalid', ['invalid_ids' => $invalidIds]);
-                return response()->json([
-                    'error' => 'Some student IDs are invalid: ' . implode(', ', $invalidIds)
-                ], 422);
-            }
-
-            Log::info('All student IDs validated successfully');
-            
-            // Handle file attachment
-            $attachmentPath = null;
-            if ($request->hasFile('attachment')) {
-                Log::info('Processing attachment file...');
-                $file = $request->file('attachment');
-                
-                // Generate unique filename
-                $filename = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-                $attachmentPath = $file->storeAs('message-attachments', $filename, 'public');
-                
-                Log::info('Attachment stored at: ' . $attachmentPath, [
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
-            }
-
-            // Get admin name
+            $attachmentPath = $this->storeAttachment($request);
             $adminName = auth()->user()->name ?? 'Admin Team';
 
-            // Dispatch job to queue
-            \App\Jobs\SendBulkStudentMessages::dispatch(
-                $validStudentIds,
-                $request->input('subject'),
-                $request->input('message'),
-                $attachmentPath,
-                $adminName
-            );
+            \App\Jobs\SendBulkStudentMessages::dispatch($validStudentIds, $subject, $html, $attachmentPath, $adminName);
 
-            Log::info('Bulk email job dispatched successfully', [
-                'total_recipients' => count($validStudentIds),
-                'subject' => $request->input('subject'),
-                'has_attachment' => $attachmentPath !== null,
+            Log::info('Bulk email queued', [
+                'admin_id'   => auth()->id(),
+                'recipients' => count($validStudentIds),
+                'subject'    => $subject,
+                'attachment' => $attachmentPath !== null,
             ]);
-
-            Log::info('=== MESSAGE SEND REQUEST COMPLETED SUCCESSFULLY ===');
 
             return response()->json([
                 'message' => "Message queued successfully! " . count($validStudentIds) . " student(s) will receive the email shortly.",
                 'details' => [
-                    'total' => count($validStudentIds),
+                    'total'  => count($validStudentIds),
                     'queued' => count($validStudentIds),
                     'status' => 'processing',
-                ]
+                ],
             ]);
-
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed:', [
-                'errors' => $e->errors(),
-                'message' => $e->getMessage(),
-            ]);
-            throw $e;
-            
-        } catch (\Exception $e) {
-            Log::error('Error in sendMessage:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            
-            return response()->json([
-                'error' => 'Failed to send message',
-                'message' => $e->getMessage()
-            ], 500);
+        } catch (\Throwable $e) {
+            Log::error('Error in sendMessage: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to send message'], 500);
         }
+    }
+
+    /**
+     * Exactly how the email will look (rendered by the server with the real
+     * template), for the preview in the Compose window.
+     */
+    public function previewMessage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'subject'     => 'nullable|string|max:255',
+            'message'     => 'nullable|string|max:' . \App\Services\StudentEmailContent::MAX_LENGTH,
+            'sample_name' => 'nullable|string|max:80',
+        ]);
+
+        $content = app(\App\Services\StudentEmailContent::class);
+        $html = $content->toHtml((string) $request->input('message', ''));
+        $name = trim(strip_tags((string) $request->input('sample_name', ''))) ?: 'Mary Johnson';
+        $data = \App\Notifications\StudentMessageNotification::viewData((string) $request->input('subject', ''), $html, $name);
+
+        return response()->json([
+            'subject' => $data['subject'],
+            'html'    => view('emails.student.broadcast', $data)->render(),
+        ]);
+    }
+
+    /**
+     * Send the email only to the signed-in admin, to check it first.
+     */
+    public function sendTestMessage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'subject'    => 'required|string|max:255',
+            'message'    => 'required|string|max:' . \App\Services\StudentEmailContent::MAX_LENGTH,
+            'attachment' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
+        ]);
+
+        $admin = auth()->user();
+        $email = $admin->email ?? null;
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['error' => 'Your admin account has no valid email address.'], 422);
+        }
+
+        [$subject, $html, $error] = $this->composeFromRequest($request);
+        if ($error) return response()->json(['error' => $error], 422);
+
+        try {
+            $attachmentPath = $this->storeAttachment($request);
+            \Illuminate\Support\Facades\Notification::route('mail', $email)->notify(
+                new \App\Notifications\StudentMessageNotification(
+                    '[Test] ' . $subject, $html, $attachmentPath, $admin->name ?? 'Admin', $admin->name ?? null
+                )
+            );
+            return response()->json(['message' => "Test email sent to {$email}. It should arrive in a minute."]);
+        } catch (\Throwable $e) {
+            Log::error('Test email failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not send the test email.'], 500);
+        }
+    }
+
+    /** @return array{0:string,1:string,2:?string} subject, clean HTML, error */
+    private function composeFromRequest(Request $request): array
+    {
+        $content = app(\App\Services\StudentEmailContent::class);
+        $subject = trim(preg_replace('/[\r\n\t]+/', ' ', strip_tags((string) $request->input('subject'))) ?? '');
+        $html = $content->toHtml((string) $request->input('message'));
+
+        if ($subject === '') return ['', '', 'Please add a subject.'];
+        if (!$content->hasText($html)) return ['', '', 'Please write a message.'];
+        return [$subject, $html, null];
+    }
+
+    /** Stores an optional attachment under a safe file name. */
+    private function storeAttachment(Request $request): ?string
+    {
+        if (!$request->hasFile('attachment')) return null;
+        $file = $request->file('attachment');
+        $base = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $base = trim(preg_replace('/[^A-Za-z0-9._-]+/', '_', $base) ?? '', '._-');
+        $base = mb_substr($base !== '' ? $base : 'attachment', 0, 80);
+        $ext = strtolower($file->guessExtension() ?: $file->getClientOriginalExtension());
+        if (!in_array($ext, ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'], true)) $ext = 'bin';
+        return $file->storeAs('message-attachments', time() . '_' . $base . '.' . $ext, 'public');
     }
 
     /**

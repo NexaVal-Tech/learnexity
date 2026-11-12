@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import TaskSettingsModal from '@/components/tasks/TaskSettingsModal';
 import TaskSubmissionsReview from '@/components/tasks/TaskSubmissionsReview';
+import { formatDue, isPastDue } from '@/components/tasks/types';
 
 // ── Phase badge helper ────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ export default function InstructorCourseDetail() {
 
   const [activeTab, setActiveTab] = useState<'sprints' | 'tasks' | 'students' | 'projects'>('sprints');
   const [taskTopic, setTaskTopic] = useState<any>(null);
+  const [newTaskSprint, setNewTaskSprint] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
@@ -253,7 +255,7 @@ export default function InstructorCourseDetail() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10">
+          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10 overflow-x-auto">
             {[
               { key: 'sprints',  label: 'Sprints & Materials' },
               { key: 'tasks',    label: 'Task Submissions' },
@@ -325,6 +327,11 @@ export default function InstructorCourseDetail() {
                               <ClipboardCheck size={11} /> Task
                             </span>
                           )}
+                          {topic.task_config?.enabled && topic.task_config?.due_at && (
+                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${isPastDue(topic.task_config.due_at) ? 'bg-gray-100 dark:bg-white/10 text-gray-500' : 'bg-[#F5F3FF] dark:bg-indigo-500/10 text-[#4A3AFF] dark:text-indigo-300'}`}>
+                              <Clock size={11} /> Due {formatDue(topic.task_config.due_at)}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -344,12 +351,20 @@ export default function InstructorCourseDetail() {
                       </div>
                     ))}
 
-                    <button
-                      onClick={() => { setSelectedSprint(sprint); setAddTopicOpen(true); }}
-                      className="w-full py-2 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 transition-colors"
-                    >
-                      <Plus size={15} /> Add Topic
-                    </button>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <button
+                        onClick={() => { setSelectedSprint(sprint); setAddTopicOpen(true); }}
+                        className="w-full py-2 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 transition-colors"
+                      >
+                        <Plus size={15} /> Add Topic
+                      </button>
+                      <button
+                        onClick={() => setNewTaskSprint(sprint)}
+                        className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-[#4A3AFF] dark:text-indigo-300 hover:bg-[#F5F3FF] dark:hover:bg-indigo-500/10 rounded-lg border-2 border-dashed border-[#4A3AFF]/30 hover:border-[#4A3AFF]/60 transition-colors"
+                      >
+                        <ClipboardCheck size={15} /> New Task
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -372,6 +387,18 @@ export default function InstructorCourseDetail() {
             onClose={() => setTaskTopic(null)}
             onSave={async (cfg) => {
               await instructorApi.tasks.saveConfig(courseId, taskTopic.id, cfg);
+              await fetchData();
+            }}
+          />
+
+          <TaskSettingsModal
+            open={!!newTaskSprint}
+            createMode
+            itemTitle={newTaskSprint ? `Sprint ${newTaskSprint.number} · ${newTaskSprint.title}` : ''}
+            initial={null}
+            onClose={() => setNewTaskSprint(null)}
+            onSave={async (cfg, title) => {
+              await instructorApi.tasks.create(courseId, newTaskSprint.id, title || '', cfg);
               await fetchData();
             }}
           />

@@ -46,6 +46,14 @@ class InstructorCourseController extends Controller
         }
     }
 
+    /** A material item that really belongs to this course (stops editing other courses' items by id). */
+    private function itemInCourse(string $courseId, int $itemId): MaterialItem
+    {
+        return MaterialItem::whereKey($itemId)
+            ->whereIn('course_material_id', CourseMaterial::where('course_id', $courseId)->select('id'))
+            ->firstOrFail();
+    }
+
     // ── Courses ────────────────────────────────────────────────────────────────
 
     /**
@@ -161,6 +169,11 @@ class InstructorCourseController extends Controller
         $this->assertCourseAccess($courseId);
 
         $sprint = CourseMaterial::where('course_id', $courseId)->findOrFail($sprintId);
+        $request->validate([
+            'sprint_name'   => 'sometimes|required|string|max:255',
+            'sprint_number' => 'sometimes|required|integer|min:1|max:1000',
+            'order'         => 'sometimes|integer|min:0|max:100000',
+        ]);
         $sprint->update($request->only('sprint_name', 'sprint_number', 'order'));
 
         return response()->json(['message' => 'Sprint updated', 'sprint' => $sprint]);
@@ -208,7 +221,14 @@ class InstructorCourseController extends Controller
     {
         $this->assertCourseAccess($courseId);
 
-        $item = MaterialItem::findOrFail($itemId);
+        $item = $this->itemInCourse($courseId, $itemId);
+        $request->validate([
+            'title'        => 'sometimes|required|string|max:255',
+            'type'         => 'sometimes|required|in:text,pdf,document,video,link',
+            'text_content' => 'nullable|string|max:200000',
+            'file_url'     => 'nullable|url|max:2000',
+            'order'        => 'sometimes|integer|min:0|max:100000',
+        ]);
         $item->update($request->only('title', 'type', 'text_content', 'file_url', 'order'));
 
         return response()->json(['message' => 'Topic updated', 'item' => $item]);
@@ -218,7 +238,7 @@ class InstructorCourseController extends Controller
     {
         $this->assertCourseAccess($courseId);
 
-        $item = MaterialItem::findOrFail($itemId);
+        $item = $this->itemInCourse($courseId, $itemId);
         if ($item->file_path && Storage::disk('public')->exists($item->file_path)) {
             Storage::disk('public')->delete($item->file_path);
         }
@@ -231,12 +251,22 @@ class InstructorCourseController extends Controller
     {
         $this->assertCourseAccess($courseId);
 
-        $request->validate(['file' => 'required|file|max:51200']);
+        // Documents, images and videos only — never anything a web server could run.
+        $request->validate(['file' => 'required|file|max:51200|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,csv,png,jpg,jpeg,webp,mp4,webm,mov,m4v']);
 
-        $item     = MaterialItem::findOrFail($itemId);
+        $item     = $this->itemInCourse($courseId, $itemId);
         $sprint   = CourseMaterial::findOrFail($item->course_material_id);
         $file     = $request->file('file');
-        $path     = $file->storeAs("courses/{$courseId}/sprint{$sprint->sprint_number}", $file->getClientOriginalName(), 'public');
+        $ext      = strtolower($file->getClientOriginalExtension());
+        $allowed  = ['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','csv','png','jpg','jpeg','webp','mp4','webm','mov','m4v'];
+        if (!in_array($ext, $allowed, true)) {
+            return response()->json(['message' => 'That file type is not allowed.'], 422);
+        }
+        $base     = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $base     = trim(preg_replace('/[^A-Za-z0-9._-]+/', '_', $base) ?? '', '._-') ?: 'file';
+        $name     = mb_substr($base, 0, 80) . '_' . \Illuminate\Support\Str::random(6) . '.' . $ext;
+        $safeCourse = preg_replace('/[^A-Za-z0-9_-]/', '_', $courseId);
+        $path     = $file->storeAs("courses/{$safeCourse}/sprint" . (int) $sprint->sprint_number, $name, 'public');
 
         $item->update([
             'file_path' => $path,
@@ -279,6 +309,9 @@ class InstructorCourseController extends Controller
             'deadline'         => 'nullable|date',
             'sprint_id'        => 'nullable|exists:course_materials,id',
         ]);
+        if (!empty($validated['sprint_id']) && !CourseMaterial::where('course_id', $courseId)->whereKey($validated['sprint_id'])->exists()) {
+            return response()->json(['message' => 'That sprint is not part of this course.'], 422);
+        }
 
         $project = Project::create([
             ...$validated,

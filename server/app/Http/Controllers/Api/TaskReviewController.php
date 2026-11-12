@@ -41,6 +41,54 @@ class TaskReviewController extends Controller
         $this->assertInstructorCourse($courseId);
         return $this->saveConfig($r, $courseId, $itemId);
     }
+    /**
+     * POST /api/instructor/courses/{courseId}/sprints/{sprintId}/tasks
+     * A brand-new task item in a sprint of a course assigned to the instructor.
+     */
+    public function instructorCreateTask(Request $r, string $courseId, int $sprintId): JsonResponse
+    {
+        $this->assertInstructorCourse($courseId);
+        $sprint = CourseMaterial::where('course_id', $courseId)->findOrFail($sprintId);
+
+        $r->validate([
+            'title'                            => 'required|string|max:255',
+            'task_config'                      => 'required|array',
+            'task_config.instructions'         => 'nullable|string|max:5000',
+            'task_config.text'                 => 'nullable|array',
+            'task_config.text.keywords'        => 'nullable|array|max:30',
+            'task_config.text.keywords.*'      => 'nullable|string|max:60',
+            'task_config.link'                 => 'nullable|array',
+            'task_config.link.allowed_domains' => 'nullable|array|max:10',
+            'task_config.link.allowed_domains.*' => 'nullable|string|max:100',
+            'task_config.file'                 => 'nullable|array',
+            'task_config.file.allowed_types'   => 'nullable|array|max:12',
+            'task_config.file.allowed_types.*' => 'string|max:10',
+            'task_config.pass_mark'            => 'nullable|numeric|min:0|max:100',
+            'task_config.max_attempts'         => 'nullable|integer|min:1|max:20',
+            'task_config.due_at'               => 'nullable|date',
+        ]);
+
+        $cfg = $this->tasks->normalizeConfig(array_merge($r->input('task_config', []), ['enabled' => true]));
+        $title = $this->tasks->cleanText((string) $r->input('title'), 255, false);
+        if ($title === '') {
+            throw \Illuminate\Validation\ValidationException::withMessages(['title' => ['Give the task a title.']]);
+        }
+
+        $item = MaterialItem::create([
+            'course_material_id' => $sprint->id,
+            'title'              => $title,
+            'type'               => 'text',
+            'text_content'       => null,
+            'order'              => (int) MaterialItem::where('course_material_id', $sprint->id)->max('order') + 1,
+        ]);
+        $item->task_config = $cfg;
+        $item->save();
+
+        return response()->json(['message' => 'Task created', 'item' => [
+            'id' => $item->id, 'title' => $item->title, 'type' => $item->type, 'order' => $item->order, 'task_config' => $item->task_config,
+        ]], 201);
+    }
+
     public function instructorList(Request $r, string $courseId): JsonResponse
     {
         $this->assertInstructorCourse($courseId);
@@ -80,6 +128,7 @@ class TaskReviewController extends Controller
             'task_config.file.allowed_types.*' => 'string|max:10',
             'task_config.pass_mark'            => 'nullable|numeric|min:0|max:100',
             'task_config.max_attempts'         => 'nullable|integer|min:1|max:20',
+            'task_config.due_at'               => 'nullable|date',
         ]);
 
         $cfg = $this->tasks->normalizeConfig($request->input('task_config', []));

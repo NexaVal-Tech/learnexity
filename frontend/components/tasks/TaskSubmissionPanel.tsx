@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import {
-  STATUS_LABEL, formatBytes, formatScore, safeHref, saveBlob,
+  STATUS_LABEL, formatBytes, formatScore, safeHref, saveBlob, formatDue, isPastDue,
   type StudentTask, type TaskSubmission, type SubmissionStatus,
 } from "./types";
 
@@ -57,6 +57,7 @@ function SubmissionView({ s, compact = false }: { s: TaskSubmission; compact?: b
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
+        {s.late && <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border bg-gray-100 text-gray-700 border-gray-300"><Clock size={11} /> Late</span>}
         <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${statusStyle(s.status)}`}>
           {STATUS_LABEL[s.status]}
         </span>
@@ -240,6 +241,13 @@ export default function TaskSubmissionPanel({
           </p>
         </div>
       </div>
+
+      {cfg.due_at && (
+        <p className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${isPastDue(cfg.due_at) ? "bg-gray-100 text-gray-600 border-gray-200" : "bg-[#4A3AFF]/10 text-[#4A3AFF] border-[#4A3AFF]/20"}`}>
+          <Clock size={12} />
+          {isPastDue(cfg.due_at) ? `Deadline passed (${formatDue(cfg.due_at)}) — you can still submit; it will be marked late` : `Due ${formatDue(cfg.due_at)}`}
+        </p>
+      )}
 
       {cfg.instructions && <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{cfg.instructions}</p>}
 

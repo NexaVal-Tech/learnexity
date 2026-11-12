@@ -213,6 +213,11 @@ export const instructorApi = {
 
   // ── Sprint tasks (own courses only) ──
   tasks: {
+    /** New task item in a sprint (own courses only). */
+    create: async (courseId: string, sprintId: number, title: string, task_config: TaskConfig) => {
+      const res = await instructorApiClient.post(`/api/instructor/courses/${courseId}/sprints/${sprintId}/tasks`, { title, task_config });
+      return res.data as { message: string; item: { id: number; title: string; task_config: TaskConfig } };
+    },
     saveConfig: async (courseId: string, itemId: number, task_config: TaskConfig) => {
       const res = await instructorApiClient.put(`/api/instructor/courses/${courseId}/topics/${itemId}/task`, { task_config });
       return res.data as { message: string; task_config: TaskConfig };

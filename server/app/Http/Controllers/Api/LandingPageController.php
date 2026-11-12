@@ -71,6 +71,9 @@ class LandingPageController extends Controller
             })
             ->values();
 
+        // Never expose the notification address publicly.
+        unset($content['webinar_form']['notify_email']);
+
         return response()->json([
             'content'       => $content,
             'currency'      => $currency,

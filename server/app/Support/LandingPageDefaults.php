@@ -92,6 +92,10 @@ class LandingPageDefaults
                 'text'          => 'For a limited time, pay only the discounted registration fee to access selected programs.',
                 'ends_at'       => '2026-11-15T23:59:59-05:00',
                 'ends_label'    => 'Offer ends November 15, 2026.',
+                // Webinar line under the table; the button opens the
+                // registration form (Webinar form section). Empty text = hidden.
+                'webinar_text'  => 'Join our free webinar',
+                'webinar_label' => 'Register free',
                 'ended_heading' => 'Offer ended',
                 'ended_text'    => 'Our Black Friday offer has ended. Stay tuned — new offers are coming soon. You can still explore our programs today.',
                 'col_program'   => 'Program',
@@ -124,6 +128,27 @@ class LandingPageDefaults
                     ['badge' => 'December 14', 'title' => 'Free Launch Webinar', 'text' => 'Explore opportunities in the evolving digital economy and learn how to position yourself to take advantage of them.', 'button' => 'Learn more', 'href' => '', 'image' => 'assets/webinar.jpg'],
                     ['badge' => 'November 14', 'title' => 'Learnexity TV', 'text' => 'Discover emerging opportunities in technology and the global digital economy.', 'button' => 'Register', 'href' => 'https://tv.learnexity.org', 'image' => 'assets/tv.jpg'],
                 ],
+            ],
+
+            // Registration form opened by "Register free" (saved to the database).
+            'webinar_form' => [
+                'webinar_title'   => 'Learnexity Free Webinar',
+                'webinar_when'    => '',
+                'join_href'       => '',
+                'heading'         => 'Register for our free webinar',
+                'text'            => 'Tell us a little about yourself and we will send you the webinar details.',
+                'label_name'      => 'Full name',
+                'label_email'     => 'Email address',
+                'label_country'   => 'Location (country)',
+                'label_learn'     => 'What would you like to learn?',
+                'label_heard'     => 'How did you hear about us?',
+                'submit_label'    => 'Register free',
+                'success_heading' => "You're registered!",
+                'success_text'    => 'Thank you for registering. We have sent the webinar details to your email. Want help choosing the right program? Chat with our team.',
+                'whatsapp_label'  => 'Get Expert Guidance',
+                'whatsapp_number' => '12762528415',
+                'whatsapp_message'=> 'Hi Learnexity, I just registered for the free webinar and I would like expert guidance.',
+                'notify_email'    => '',
             ],
 
             'instructors' => [
@@ -216,6 +241,14 @@ class LandingPageDefaults
                 return null;
             }
         }
+        if ($key === 'whatsapp_number') {
+            $digits = preg_replace('/\D+/', '', (string) ($value ?? '')) ?? '';
+            return strlen($digits) >= 7 && strlen($digits) <= 15 ? $digits : (string) $default;
+        }
+        if ($key === 'notify_email') {
+            $v = trim((string) ($value ?? ''));
+            return $v !== '' && filter_var($v, FILTER_VALIDATE_EMAIL) ? mb_substr($v, 0, 190) : '';
+        }
         if (str_ends_with($key, 'href')) {
             return self::cleanUrl((string) ($value ?? ''));
         }
@@ -223,7 +256,7 @@ class LandingPageDefaults
             return self::cleanImage((string) ($value ?? ''));
         }
 
-        $max = in_array($key, ['text', 'description', 'disclaimer', 'subheading', 'ended_text'], true) ? 1200 : 300;
+        $max = in_array($key, ['text', 'description', 'disclaimer', 'subheading', 'ended_text', 'webinar_text', 'success_text', 'whatsapp_message'], true) ? 1200 : 300;
         $s = strip_tags((string) ($value ?? ''));
         $s = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $s) ?? '';
         return mb_substr(trim($s), 0, $max);
