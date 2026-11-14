@@ -152,7 +152,9 @@ function Field({ k, value, def, onChange, team }: { k: string; value: Json; def:
       </div>
     );
   }
-  if (k === 'pathway') {
+  // The offer row's "pathway" value (a string) — not the "Find your pathway"
+  // section, which has the same key but is a whole object of fields.
+  if (k === 'pathway' && typeof def === 'string') {
     return (
       <div><label className={LABEL}>{label}</label>
         <select className={INPUT} value={value} onChange={(e) => onChange(e.target.value)}>
