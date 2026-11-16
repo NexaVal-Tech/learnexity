@@ -176,6 +176,16 @@ function Field({ k, value, def, onChange, team }: { k: string; value: Json; def:
       <div>
         <label className={LABEL}>{label}</label>
         <p className="text-[11px] text-gray-500 mb-2">Tick the people to show, in this order. Leave everyone unticked to show all instructors automatically.</p>
+        {selected.filter((n) => !team.some((m) => m.name === n)).length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {selected.filter((n) => !team.some((m) => m.name === n)).map((n) => (
+              <span key={n} className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[#4A3AFF]/10 text-[#4A3AFF]">
+                {n} <span className="text-gray-500">(matched to the closest team name)</span>
+                <button type="button" onClick={() => onChange(selected.filter((x) => x !== n))} className="font-bold" aria-label={`Remove ${n}`}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="grid sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto pr-1">
           {team.map((m) => {
             const on = selected.includes(m.name);

@@ -497,6 +497,7 @@ Route::middleware(['admin.auth', 'throttle:api'])->prefix('admin')->group(functi
         Route::get('/',              [AdminScholarshipController::class, 'index']);
         Route::get('/stats',         [AdminScholarshipController::class, 'stats']);
         Route::patch('/{id}/review', [AdminScholarshipController::class, 'review']);
+        Route::patch('/{id}/reject', [AdminScholarshipController::class, 'reject']);
         Route::patch('/{id}/revoke', [AdminScholarshipController::class, 'revoke']);
     });
 

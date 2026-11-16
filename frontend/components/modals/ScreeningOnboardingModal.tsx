@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { X, ArrowRight, Check, Info } from 'lucide-react';
+import { X, ArrowRight, Info } from 'lucide-react';
 import { useCmsGlobals } from '@/contexts/CmsGlobalsContext';
 import { fillCopy } from '@/lib/cms/globalDefaults';
-import { CourseIcon } from '@/components/catalog/CourseIcon';
-import { api, Course, OnboardingStatus } from '@/lib/api';
+import ScholarshipCoursePicker from '@/components/Scholarship/ScholarshipCoursePicker';
+import { api, OnboardingStatus } from '@/lib/api';
 
 const BRAND = '#4A3AFF';
 
@@ -19,8 +19,6 @@ interface Props {
 export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
   const router = useRouter();
   const [showPicker, setShowPicker] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
   const [selecting, setSelecting] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
@@ -105,19 +103,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
     }
   };
 
-  const openPicker = async () => {
-    setShowPicker(true);
-    if (courses.length > 0) return;
-    setLoadingCourses(true);
-    try {
-      const data = await api.courses.getAll();
-      setCourses(data);
-    } catch {
-      // picker will just show "no courses found" below
-    } finally {
-      setLoadingCourses(false);
-    }
-  };
+  const openPicker = () => setShowPicker(true);
 
   const startScreeningFor = async (courseId: string) => {
     setSelecting(courseId);
@@ -153,7 +139,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
         }
         @keyframes somFade { from { opacity: 0; } to { opacity: 1; } }
         .som-card {
-          width: 100%; max-width: 30rem;
+          width: 100%; max-width: 34rem; max-height: calc(100dvh - 2rem); overflow-y: auto;
           background: var(--surface-elevated); border: 1px solid var(--border-subtle);
           border-radius: 2rem 0.75rem 2rem 0.75rem;
           box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
@@ -236,7 +222,7 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
 
         {isApproved ? (
           <>
-            <span className="som-badge">🎓 {copy.awardBadge}</span>
+            <span className="som-badge">{copy.awardBadge}</span>
             <h2 id="som-title" className="som-title">
               {userName ? `${userName}, ` : ''}{copy.awardHeading}
             </h2>
@@ -262,49 +248,12 @@ export function ScreeningOnboardingModal({ status, userName, onClose }: Props) {
                 <span>{copy.pickerNote}</span>
               </div>
             )}
-            <div className="som-picker" role="radiogroup" aria-label="Courses">
-              {loadingCourses ? (
-                <p className="som-empty">Loading courses…</p>
-              ) : courses.length === 0 ? (
-                <p className="som-empty">No courses available right now.</p>
-              ) : (
-                courses.map((c) => {
-                  const cid = String(c.course_id ?? c.id);
-                  const isPicked = picked === cid;
-                  const pathway = c.offers_group_mentorship || c.offers_one_on_one
-                    ? 'DeepTech'
-                    : c.offers_intermediate
-                    ? 'Accelerator'
-                    : 'Foundation / Flex';
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={isPicked}
-                      className={`som-course-row ${isPicked ? 'is-picked' : ''}`}
-                      disabled={selecting !== null}
-                      onClick={() => setPicked(cid)}
-                    >
-                      <span className="som-course-icon"><CourseIcon title={c.title} size={16} /></span>
-                      <span className="som-course-name">
-                        {c.title}
-                        <span className="som-course-meta">{pathway}</span>
-                      </span>
-                      <span className="som-radio" aria-hidden="true">{isPicked && <Check size={12} strokeWidth={3} />}</span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            <button
-              type="button"
-              className="som-btn-primary"
-              disabled={!picked || selecting !== null}
-              onClick={() => picked && startScreeningFor(picked)}
-            >
-              {selecting ? 'Opening application…' : copy.pickerContinue}
-            </button>
+            <ScholarshipCoursePicker
+              selectedCourseId={picked}
+              busyCourseId={selecting}
+              onPick={(courseId) => { setPicked(courseId); startScreeningFor(courseId); }}
+            />
+            <div style={{ height: '1rem' }} />
             <button type="button" className="som-btn-ghost" onClick={() => setShowPicker(false)}>
               Back
             </button>

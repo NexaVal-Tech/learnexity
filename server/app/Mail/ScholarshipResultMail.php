@@ -35,7 +35,7 @@ class ScholarshipResultMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = "🎓 You've been awarded a scholarship — {$this->scholarship->course_name}";
+        $subject = "Your scholarship has been approved — {$this->scholarship->course_name}";
 
         return new Envelope(subject: $this->templatedSubject($subject));
     }

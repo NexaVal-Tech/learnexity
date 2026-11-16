@@ -45,10 +45,14 @@ class AdminScholarshipController extends Controller
         }
 
         if ($request->search) {
-            $query->where('course_name', 'like', "%{$request->search}%");
+            $term = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_substr((string) $request->search, 0, 100)) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('course_name', 'like', $term)
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $term)->orWhere('email', 'like', $term));
+            });
         }
 
-        $perPage = $request->per_page ?? 20;
+        $perPage = min(100, max(1, (int) ($request->per_page ?? 20)));
 
         return response()->json(
             $query->paginate($perPage)
@@ -67,11 +71,15 @@ class AdminScholarshipController extends Controller
     {
         $scholarship = Scholarship::findOrFail($id);
 
+        if ($scholarship->is_used) {
+            return response()->json(['message' => 'This scholarship has already been used.'], 422);
+        }
+
         $validated = $request->validate([
             // Single-award model — the percentage is always 100 (registration
             // fee only). Still accepted so older admin clients don't break.
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
-            'review_notes'        => 'nullable|string',
+            'review_notes'        => 'nullable|string|max:2000',
         ]);
 
         $scholarship->update([
@@ -93,8 +101,49 @@ class AdminScholarshipController extends Controller
         }
 
         return response()->json([
-            'message' => 'Scholarship reviewed successfully',
-            'scholarship' => $scholarship
+            'message' => 'Scholarship approved — the student has been emailed with their payment link.',
+            'scholarship' => $scholarship->fresh()
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // PATCH /api/admin/scholarships/{id}/reject
+    // ─────────────────────────────────────────────
+    // Manual rejection of a pending application. The student is emailed
+    // (with the optional note) and may apply again later.
+    public function reject(Request $request, $id)
+    {
+        $scholarship = Scholarship::with('user')->findOrFail($id);
+
+        $validated = $request->validate([
+            'review_notes' => 'nullable|string|max:2000',
+            'send_note'    => 'nullable|boolean',
+        ]);
+
+        if ($scholarship->status !== 'pending') {
+            return response()->json(['message' => 'Only applications waiting for review can be rejected. Use Revoke for an approved scholarship.'], 422);
+        }
+
+        $note = trim(strip_tags((string) ($validated['review_notes'] ?? '')));
+        $scholarship->update([
+            'status'       => 'rejected',
+            'approved_at'  => null,
+            'review_notes' => $note !== '' ? mb_substr($note, 0, 2000) : null,
+        ]);
+
+        if ($scholarship->user) {
+            try {
+                Mail::to($scholarship->user->email)->queue(
+                    (new \App\Mail\ScholarshipRejectedMail($scholarship->user, $scholarship, ($validated['send_note'] ?? false) && $note !== '' ? $note : null))->onQueue('emails')
+                );
+            } catch (\Throwable $e) {
+                Log::error('Scholarship rejection email failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'message'     => 'Application rejected — the student has been emailed and can apply again later.',
+            'scholarship' => $scholarship->fresh(),
         ]);
     }
 

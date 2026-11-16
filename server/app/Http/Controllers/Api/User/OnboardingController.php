@@ -23,7 +23,8 @@ class OnboardingController extends Controller
 
         // Scholarship rule elsewhere in the app is "one per user, ever" —
         // so there is at most one row here.
-        $scholarship     = Scholarship::where('user_id', $user->id)->first();
+        // Reapplying after a rejection is allowed now, so take the latest.
+        $scholarship     = Scholarship::where('user_id', $user->id)->orderByDesc('updated_at')->orderByDesc('id')->first();
         $screeningStatus = $scholarship ? $scholarship->status : 'not_started';
 
         // Which course is this whole flow "about"? A scholarship is

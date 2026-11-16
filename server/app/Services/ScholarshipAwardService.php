@@ -37,7 +37,7 @@ class ScholarshipAwardService
     public static function awardMessage(Course $course): string
     {
         $text = self::cmsText('awardMessage')
-            ?: "Congratulations! You've been awarded a scholarship for {course}. You'll only pay the registration fee to secure your spot.";
+            ?: "Congratulations! Your scholarship application for {course} has been approved. You'll only pay the registration fee to secure your spot.";
 
         return str_replace('{course}', $course->title, $text);
     }
@@ -68,7 +68,7 @@ class ScholarshipAwardService
 
         try {
             Mail::to($user->email)->queue(
-                new ScholarshipResultMail($user, $scholarship, $scholarship->status === 'approved', $paymentUrl, $amountDue, $currency)
+                (new ScholarshipResultMail($user, $scholarship, $scholarship->status === 'approved', $paymentUrl, $amountDue, $currency))->onQueue('emails')
             );
         } catch (\Throwable $e) {
             Log::error('❌ [ScholarshipAward] Failed to send award email', ['user_id' => $user->id, 'error' => $e->getMessage()]);

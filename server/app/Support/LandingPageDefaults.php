@@ -157,7 +157,7 @@ class LandingPageDefaults
                 'heading'    => 'Meet Your Instructors',
                 // Names from Meet Our Team to show (empty = everyone whose
                 // role mentions instructor, tutor, engineer or coach).
-                'names'      => [],
+                'names'      => ['Hannah Francis', 'Adebola Fadairo', 'Mary Jules Mrsick', 'Emmanuel Vincent', 'Daniel Adeboye'],
                 'link_label' => 'Meet the full team',
                 'link_href'  => $main . '/our-team',
             ],

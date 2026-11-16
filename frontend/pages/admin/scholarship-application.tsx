@@ -41,31 +41,74 @@ interface ScholarshipStats {
   used: number;
 }
 
+const ANSWER_ORDER: [string, string][] = [
+  ['why_scholarship', 'Why should we give you this scholarship?'],
+  ['long_term_goal', 'Long-term goal after graduation'],
+  ['weekly_hours', 'Hours per week'],
+  ['is_student', 'Student'],
+  ['is_employed', 'Employed'],
+  ['salary_range', 'Monthly income'],
+  ['current_location', 'Current location (chosen by applicant)'],
+  ['detected_location', 'Location from their connection'],
+  ['country', 'Country'],
+];
+const ANSWER_LABEL: Record<string, string> = {
+  '1_3': '1–3 hrs/week', '4_6': '4–6 hrs/week', '7_10': '7–10 hrs/week', '10_plus': '10+ hrs/week',
+  under_100: 'Under ₦100k / $100 per month', '100_200': '₦100k–₦200k / $100–$200 per month', above_200: 'Above ₦200k / $200 per month',
+  not_employed: 'Not employed', yes: 'Yes', no: 'No',
+};
+const wordCount = (t: string) => (t.match(new RegExp("[\\p{L}][\\p{L}\\p{M}'’-]*", 'gu')) || []).length;
+
 // ── Detail Modal ─────────────────────────────────────────────────────────────
 const DetailModal: React.FC<{
   application: ScholarshipApplication | null;
   onClose: () => void;
   onUpdateStatus: (id: number, discountPercentage: number, notes: string) => Promise<void>;
   onRevoke: (id: number) => Promise<void>;
-}> = ({ application, onClose, onUpdateStatus, onRevoke }) => {
+  onReject: (id: number, notes: string, sendNote: boolean) => Promise<void>;
+}> = ({ application, onClose, onUpdateStatus, onRevoke, onReject }) => {
   const [notes, setNotes] = useState('');
+  const [sendNote, setSendNote] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [action, setAction] = useState<'full' | 'partial' | 'revoke' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [action, setAction] = useState<'full' | 'partial' | 'revoke' | 'reject' | null>(null);
 
   useEffect(() => {
     if (application) {
       setNotes(application.review_notes ?? '');
+      setSendNote(false);
+      setError(null);
     }
   }, [application]);
 
   if (!application) return null;
 
   const handleSubmit = async (discountPercentage: number) => {
+    if (!confirm(`Approve ${application.user?.name ?? 'this applicant'}'s scholarship for ${application.course_name}? They will be emailed their payment link.`)) return;
     setAction(discountPercentage >= 100 ? 'full' : 'partial');
     setSaving(true);
+    setError(null);
     try {
       await onUpdateStatus(application.id, discountPercentage, notes);
       onClose();
+    } catch (e) {
+      setError(handleAdminApiError(e));
+    } finally {
+      setSaving(false);
+      setAction(null);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!confirm(`Reject ${application.user?.name ?? 'this applicant'}'s application? They will be emailed and can apply again later.`)) return;
+    setAction('reject');
+    setSaving(true);
+    setError(null);
+    try {
+      await onReject(application.id, notes, sendNote);
+      onClose();
+    } catch (e) {
+      setError(handleAdminApiError(e));
     } finally {
       setSaving(false);
       setAction(null);
@@ -84,7 +127,6 @@ const DetailModal: React.FC<{
     }
   };
 
-  const scoreColor = application.total_score >= 70 ? 'text-green-600 dark:text-green-400' : application.total_score >= 40 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -102,22 +144,6 @@ const DetailModal: React.FC<{
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-6 space-y-6">
-          {/* Score Summary */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Base Score</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{application.score}</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Location Bonus</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">+{application.location_bonus}</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Score</p>
-              <p className={`text-2xl font-bold ${scoreColor}`}>{application.total_score}</p>
-            </div>
-          </div>
-
           {/* Applicant Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -133,27 +159,31 @@ const DetailModal: React.FC<{
 
           {/* Answers */}
           <div>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Application Answers</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Application answers</p>
             <div className="space-y-3">
-              {Object.entries(application.answers ?? {}).map(([question, answer]) => (
-                <div key={question} className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 capitalize">{question.replace(/_/g, ' ')}</p>
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {typeof answer === 'object' ? JSON.stringify(answer) : String(answer)}
-                  </p>
-                </div>
-              ))}
+              {ANSWER_ORDER.filter(([k]) => application.answers?.[k] !== undefined && application.answers?.[k] !== null && application.answers?.[k] !== '').map(([k, label]) => {
+                const raw = application.answers[k];
+                const text = typeof raw === 'string' ? (ANSWER_LABEL[raw] ?? raw) : JSON.stringify(raw);
+                const long = k === 'why_scholarship' || k === 'long_term_goal';
+                return (
+                  <div key={k} className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{label}</p>
+                    <p className={`text-sm text-gray-900 dark:text-white break-words ${long ? 'whitespace-pre-wrap leading-relaxed' : ''}`}>{text}</p>
+                    {long && <p className="text-[11px] text-gray-400 mt-1">{wordCount(String(raw))} words</p>}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Review Section */}
           {application.status === 'pending' && (
             <div className="border-t border-gray-100 dark:border-white/10 pt-4 space-y-4">
-              <div className="bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/30 rounded-lg px-4 py-3">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-400">One award for everyone</p>
-                <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
-                  Every awarded student pays only the registration fee set under Settings — the rest of
-                  the course price is covered.
+              <div className="bg-[#F5F3FF] dark:bg-indigo-500/10 border border-[#E0D9FE] dark:border-indigo-500/25 rounded-lg px-4 py-3">
+                <p className="text-sm font-semibold text-[#4A3AFF] dark:text-indigo-300">Your decision</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                  Approve: the student is emailed a payment link and only pays the registration fee.
+                  Reject: the student is emailed that it wasn’t successful this time and can apply again later.
                 </p>
               </div>
               <div>
@@ -164,10 +194,16 @@ const DetailModal: React.FC<{
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   rows={3}
-                  placeholder="Optional notes for this decision..."
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={2000}
+                  placeholder="Optional notes for this decision (private unless you tick the box below)…"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-white/20 dark:bg-white/5 dark:text-white rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4A3AFF]/30"
                 />
+                <label className="mt-2 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <input type="checkbox" checked={sendNote} onChange={(e) => setSendNote(e.target.checked)} className="accent-[#4A3AFF]" />
+                  If rejecting, include this note in the email to the student
+                </label>
               </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
             </div>
           )}
 
@@ -182,14 +218,22 @@ const DetailModal: React.FC<{
 
         {/* Footer */}
         {application.status === 'pending' && (
-          <div className="p-6 border-t border-gray-100 dark:border-white/10 flex items-center justify-end gap-3">
+          <div className="p-6 border-t border-gray-100 dark:border-white/10 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+            <button
+              onClick={handleReject}
+              disabled={saving}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 rounded-lg text-sm font-semibold hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-60"
+            >
+              {saving && action === 'reject' ? <Loader2 size={14} className="animate-spin" /> : null}
+              Reject
+            </button>
             <button
               onClick={() => handleSubmit(100)}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-60"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#4A3AFF] text-white rounded-lg text-sm font-semibold hover:bg-[#3b2de0] disabled:opacity-60"
             >
-              {saving && action === 'full' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              Award scholarship
+              {saving && action === 'full' ? <Loader2 size={14} className="animate-spin" /> : null}
+              Approve scholarship
             </button>
           </div>
         )}
@@ -252,7 +296,7 @@ function ScholarshipApplicationsPage() {
       if (statusFilter) params.status = statusFilter;
       const data = await adminApi.get('/api/admin/scholarships', { params });
       setApplications(data.data ?? data);
-      setTotalPages(data.meta?.last_page ?? 1);
+      setTotalPages(data.last_page ?? data.meta?.last_page ?? 1);
     } catch (err) {
       console.error('Failed to fetch applications:', err);
     } finally {
@@ -266,6 +310,12 @@ function ScholarshipApplicationsPage() {
     notes: string
   ) => {
     await adminApi.patch(`/api/admin/scholarships/${id}/review`, { discount_percentage: discountPercentage, review_notes: notes });
+    fetchApplications();
+    fetchStats();
+  };
+
+  const handleReject = async (id: number, notes: string, sendNote: boolean) => {
+    await adminApi.patch(`/api/admin/scholarships/${id}/reject`, { review_notes: notes, send_note: sendNote });
     fetchApplications();
     fetchStats();
   };
@@ -357,7 +407,7 @@ function ScholarshipApplicationsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
-                      {['Applicant', 'Course', 'Score', 'Location', 'Award', 'Status', 'Used', 'Applied', 'Action'].map(h => (
+                      {['Applicant', 'Course', 'Why (preview)', 'Location', 'Award', 'Status', 'Used', 'Applied', 'Action'].map(h => (
                         <th key={h} className="py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -372,7 +422,6 @@ function ScholarshipApplicationsPage() {
                       </tr>
                     ) : applications.map(app => {
                       const sc = statusConfig[app.status];
-                      const scoreColor = app.total_score >= 70 ? 'text-green-600 dark:text-green-400' : app.total_score >= 40 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400';
                       return (
                         <tr key={app.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                           <td className="py-3 px-4">
@@ -380,14 +429,13 @@ function ScholarshipApplicationsPage() {
                             <p className="text-xs text-gray-500 dark:text-gray-400">{app.user?.email}</p>
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{app.course_name}</td>
-                          <td className="py-3 px-4">
-                            <span className={`text-sm font-bold ${scoreColor}`}>{app.total_score}</span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">/100</span>
+                          <td className="py-3 px-4 max-w-[260px]">
+                            <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{app.answers?.why_scholarship ? String(app.answers.why_scholarship) : '—'}</p>
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{app.applicant_country ?? '—'}</td>
                           <td className="py-3 px-4">
                             {app.status === 'approved' ? (
-                              <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+                              <span className="text-sm font-semibold text-[#4A3AFF] dark:text-indigo-300">
                                 {'Registration fee only'}
                               </span>
                             ) : (
@@ -414,7 +462,7 @@ function ScholarshipApplicationsPage() {
                                 className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/5"
                               >
                                 <Eye size={12} />
-                                {app.status === 'pending' ? 'Review' : 'View'}
+                                {app.status === 'pending' ? 'Review & decide' : 'View'}
                               </button>
                               {app.status === 'approved' && !app.is_used && (
                                 <button
@@ -455,6 +503,7 @@ function ScholarshipApplicationsPage() {
           onClose={() => setSelectedApp(null)}
           onUpdateStatus={handleUpdateStatus}
           onRevoke={handleRevoke}
+          onReject={handleReject}
         />
       </AdminLayout>
     </AdminRouteGuard>

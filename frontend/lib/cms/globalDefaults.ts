@@ -84,24 +84,24 @@ export const FOOTER_DEFAULTS: FooterData = {
 
 export const SCHOLARSHIP_DEFAULTS: ScholarshipCopy = {
   welcomeTitle: 'One quick step first.',
-  welcomeText: 'Before you pay for {course}, take a two-minute application for a scholarship. Awarded students only pay the registration fee.',
+  welcomeText: 'Before you pay for {course}, you can apply for a scholarship. Every application is reviewed by our team, and approved students only pay the registration fee.',
   applyButton: 'Apply for a Scholarship',
   skipButton: 'Skip — pay full price',
-  pickerTitle: 'Choose your scholarship course',
-  pickerSubtitle: 'Select the course you want to apply for. Your scholarship will be tied to this course.',
-  pickerNote: 'One scholarship per user across all courses.',
+  pickerTitle: 'Apply for a scholarship',
+  pickerSubtitle: 'First choose a pathway, then the course you want the scholarship for. Your application will be tied to this course.',
+  pickerNote: 'Every application is reviewed by our team. You can have one application open at a time.',
   pickerContinue: 'Continue to Application',
   applicationLabel: 'Scholarship Application',
   submitButton: 'Submit Application',
-  awardBadge: 'Scholarship Awarded',
-  awardHeading: 'Congratulations — your scholarship has been awarded!',
-  awardMessage: "You've been awarded a scholarship for {course}. You only pay the registration fee to secure your spot.",
+  awardBadge: 'Scholarship approved',
+  awardHeading: 'Congratulations — your scholarship has been approved',
+  awardMessage: 'Your scholarship for {course} has been approved. You only pay the registration fee to secure your spot.',
   awardButton: 'Proceed to Payment',
   paymentBanner: "You've been awarded a scholarship for {course} — you only pay the registration fee.",
   paymentDiscountLabel: 'Scholarship',
   paymentFeeLabel: 'Registration fee',
-  alreadyAppliedMessage: 'You have already submitted a scholarship application. Each user may only apply for one scholarship across all courses.',
-  alreadyUsedMessage: 'You have already used your scholarship on another course. Scholarships are single-use and non-transferable.',
+  alreadyAppliedMessage: 'You already have a scholarship application open. Please wait for our response by email before applying again.',
+  alreadyUsedMessage: 'You have already used a scholarship on this course.',
 };
 
 export const GLOBAL_DEFAULTS: CmsGlobals = {

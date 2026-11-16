@@ -255,7 +255,7 @@ class EmailTemplateRegistry
                     'fee' => ['Registration fee', '₦25,000.00'],
                 ],
                 'defaults' => [
-                    'subject' => "🎓 You've been awarded a scholarship — {course}",
+                    'subject' => 'Your scholarship has been approved — {course}',
                     'heading' => 'Scholarship Awarded!',
                     'body' => "Hi {first_name},\n\nCongratulations! You've been awarded a **scholarship** for **{course}**. You only need to pay the registration fee of **{fee}** to secure your spot — your tuition is covered.",
                     'button' => 'Proceed to Payment',

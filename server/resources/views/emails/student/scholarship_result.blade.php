@@ -42,7 +42,7 @@
   <div class="wrapper">
 
     <div class="header header-approved">
-      <span class="header-emoji">🎓</span>
+
       <h1>Scholarship Awarded!</h1>
       <p>{{ $scholarship->course_name }}</p>
     </div>

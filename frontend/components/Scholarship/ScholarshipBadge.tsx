@@ -14,7 +14,7 @@ const BRAND = '#4A3AFF';
 
 interface Scholarship {
   id: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'revoked';
   discount_percentage: number;
   is_used: boolean;
   course_id: string;
@@ -52,8 +52,11 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
       // schData is already { scholarship: ... }
       if (schData.scholarship) {
         setScholarship(schData.scholarship);
-        setLoading(false);
-        return;
+        // Rejected / revoked applications may apply again — check if they can.
+        if (!['rejected', 'revoked'].includes(schData.scholarship.status)) {
+          setLoading(false);
+          return;
+        }
       }
 
       const elData = await api.get(`/api/scholarships/eligibility/${courseId}`);
@@ -68,6 +71,19 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
 
   if (loading) return null;
 
+  // ── Waiting for review ────────────────────────────────────────────────────
+  if (scholarship?.status === 'pending') {
+    return (
+      <div
+        className="px-4 py-4 text-sm border border-[var(--border-strong)] bg-[var(--surface-alt)]"
+        style={{ borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem' }}
+      >
+        <p className="font-bold text-[var(--text-primary)]">Scholarship application under review</p>
+        <p className="text-[var(--text-secondary)] text-xs mt-1">We’ll email you our decision. You can still enroll at the normal price if you don’t want to wait.</p>
+      </div>
+    );
+  }
+
   // ── Active approved scholarship (not yet used) ────────────────────────────
   if (scholarship?.status === 'approved' && !scholarship.is_used) {
     return (
@@ -76,7 +92,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
         style={{ borderRadius: '1.5rem 0.5rem 1.5rem 0.5rem' }}
       >
         <div>
-          <p className="font-bold text-[var(--text-primary)]">🎓 {copy.awardBadge}</p>
+          <p className="font-bold text-[var(--text-primary)]">{copy.awardBadge}</p>
           <p className="text-[var(--text-secondary)] text-xs">Pay only the registration fee at checkout</p>
           {typeof scholarship.days_remaining === 'number' && (
             <p className={`text-xs font-semibold mt-2 ${scholarship.days_remaining <= 7 ? 'text-red-500' : 'text-[var(--text-secondary)]'}`}>
@@ -107,7 +123,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
   }
 
   // ── Rejected application ──────────────────────────────────────────────────
-  if (scholarship?.status === 'rejected') {
+  if (scholarship?.status === 'rejected' && !(showCta && eligibility?.eligible)) {
     return (
       <div
         className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
@@ -138,7 +154,7 @@ export function ScholarshipBadge({ courseId, isLoggedIn, showCta = true }: Props
       >
         <div className="w-full text-center">
           <p className="font-bold text-sm">
-            {copy.applyButton}
+            {scholarship?.status === 'rejected' ? 'Apply for a scholarship again' : copy.applyButton}
           </p>
         </div>
       </button>

@@ -48,14 +48,24 @@ class LandingPageController extends Controller
             return $r;
         }, $rows);
 
-        // Instructors from Meet Our Team.
-        $wanted = array_map(fn ($n) => TeamDirectory::key((string) $n), $content['instructors']['names'] ?? []);
-        $members = collect(TeamDirectory::members())
-            ->filter(function ($m) use ($wanted) {
-                if ($wanted) return in_array(TeamDirectory::key($m['name']), $wanted, true);
-                return (bool) preg_match('/instructor|tutor|engineer|coach|mentor/i', (string) ($m['role'] ?? ''));
-            })
-            ->when($wanted, fn ($c) => $c->sortBy(fn ($m) => array_search(TeamDirectory::key($m['name']), $wanted, true)))
+        // Instructors from Meet Our Team — the names picked in the admin
+        // (in that order), matched tolerantly ("Mary-Jules" = "Mary Jules",
+        // extra middle names / titles are fine); otherwise everyone whose
+        // role says instructor / tutor / engineer / coach / mentor.
+        $all = collect(TeamDirectory::members());
+        $wantedNames = array_values(array_filter(array_map('strval', $content['instructors']['names'] ?? [])));
+        if ($wantedNames) {
+            $picked = [];
+            foreach ($wantedNames as $wanted) {
+                $hit = $all->first(fn ($m) => self::sameName($wanted, (string) $m['name']) && !in_array($m['name'], array_column($picked, 'name'), true));
+                if ($hit) $picked[] = $hit;
+            }
+            $selected = collect($picked);
+        }
+        if (!$wantedNames || $selected->isEmpty()) {
+            $selected = $all->filter(fn ($m) => (bool) preg_match('/instructor|tutor|engineer|coach|mentor/i', (string) ($m['role'] ?? '')));
+        }
+        $members = $selected
             ->map(function ($m) {
                 $img = (string) ($m['image'] ?? '');
                 if ($img !== '' && str_starts_with($img, '/')) {
@@ -81,5 +91,25 @@ class LandingPageController extends Controller
             'meta_pixel_id' => $setting->meta_pixel_id,
             'server_time'   => now()->toIso8601String(),
         ]);
+    }
+
+    /** Same person? Words compared without case, punctuation or accents. */
+    private static function sameName(string $a, string $b): bool
+    {
+        $words = function (string $n): array {
+            $n = mb_strtolower($n);
+            $n = preg_replace('/\b(mr|mrs|ms|miss|dr|prof|engr|mba|phd|msc|bsc)\b\.?/u', ' ', $n) ?? $n;
+            $n = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $n) ?? $n;
+            return array_values(array_unique(array_filter(explode(' ', trim($n)))));
+        };
+        $wa = $words($a);
+        $wb = $words($b);
+        if (!$wa || !$wb) return false;
+        if ($wa === $wb) return true;
+        $common = count(array_intersect($wa, $wb));
+        $shorter = min(count($wa), count($wb));
+        // Every word of the shorter name appears in the longer one, and at
+        // least two words match (so "Mary" alone never matches "Mary Eze").
+        return $common === $shorter && $common >= min(2, max(count($wa), count($wb)));
     }
 }

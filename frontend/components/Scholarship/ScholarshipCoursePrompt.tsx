@@ -222,9 +222,6 @@ export default function ScholarshipCoursePrompt() {
           <div className="schprompt-glow" />
 
           <div className="schprompt-body">
-            {/* Icon */}
-            <div className="schprompt-icon-ring">🎓</div>
-
             {/* Headline */}
             <h2 className="schprompt-title">
               Select Your Scholarship Course
@@ -237,13 +234,13 @@ export default function ScholarshipCoursePrompt() {
               <strong style={{ color: 'var(--text-primary)' }}>
                 "Apply for a Scholarship"
               </strong>{' '}
-              to begin your 2-minute application.
+              to begin your application. Every application is reviewed by our team.
             </p>
 
             {/* One-time warning */}
             <div className="schprompt-warning">
               <span className="schprompt-warning-dot" />
-              You can only apply once — choose wisely
+              One open application at a time — choose carefully
             </div>
 
             {/* CTA */}
