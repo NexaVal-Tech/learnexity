@@ -62,6 +62,6 @@ class PerformanceMail extends Mailable
 
     protected function emailTemplateButtonUrl(): ?string
     {
-        return $this->actionUrl ?: rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/user/dashboard';
+        return $this->actionUrl ?: rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/user/dashboard';
     }
 }

@@ -304,7 +304,7 @@ class PaystackWebhookController extends Controller
 
             // ── Notify admin of the payment ────────────────────────────────
             try {
-                $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                $adminEmail = config('app.admin_notification_email');
                 if ($adminEmail) {
                     $isFullyPaid = $enrollment->payment_status === 'completed';
                     if ($effectiveType === 'onetime') {

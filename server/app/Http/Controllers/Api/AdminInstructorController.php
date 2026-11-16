@@ -246,6 +246,6 @@ class AdminInstructorController extends Controller
 
     private function loginUrl(): string
     {
-        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/instructors/auth/login';
+        return rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/instructors/auth/login';
     }
 }

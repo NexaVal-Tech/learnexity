@@ -129,7 +129,7 @@ class PayoutController extends Controller
     private function notifyAdmin(PayoutRequest $payout, string $type, $payee): void
     {
         try {
-            $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+            $adminEmail = config('app.admin_notification_email');
             if ($adminEmail) {
                 Mail::to($adminEmail)->queue(new AdminPayoutRequestedMail($payout, $type, $payee));
             } else {

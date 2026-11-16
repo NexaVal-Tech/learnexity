@@ -232,7 +232,7 @@ class PublicReferralController extends Controller
 
     private function referralLink(string $code): string
     {
-        $base = config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org'));
+        $base = (config('app.frontend_url') ?: 'https://learnexity.org');
         return $base . '/ref/' . $code;
     }
 

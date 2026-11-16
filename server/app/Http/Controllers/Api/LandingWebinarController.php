@@ -65,7 +65,7 @@ class LandingWebinarController extends Controller
         if (!$existing) {
             try {
                 Mail::to($reg->email)->queue((new LandingWebinarMail($reg, $form))->onQueue('emails'));
-                $notify = ($form['notify_email'] ?? '') ?: env('ADMIN_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS'));
+                $notify = ($form['notify_email'] ?? '') ?: config('app.admin_notification_email');
                 if ($notify && filter_var($notify, FILTER_VALIDATE_EMAIL)) {
                     Mail::to($notify)->queue((new LandingWebinarMail($reg, $form, true))->onQueue('emails'));
                 }

@@ -46,11 +46,11 @@ class InstructorWelcomeMail extends Mailable
 
     protected function emailTemplateVars(): array
     {
-        return ['name' => $this->instructor->name, 'email' => $this->instructor->email, 'password' => $this->plainPassword, 'login_url' => rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/instructors/auth/login'];
+        return ['name' => $this->instructor->name, 'email' => $this->instructor->email, 'password' => $this->plainPassword, 'login_url' => rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/instructors/auth/login'];
     }
 
     protected function emailTemplateButtonUrl(): ?string
     {
-        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/instructors/auth/login';
+        return rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/instructors/auth/login';
     }
 }

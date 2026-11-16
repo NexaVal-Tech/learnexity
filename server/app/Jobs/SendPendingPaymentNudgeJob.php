@@ -112,7 +112,7 @@ class SendPendingPaymentNudgeJob implements ShouldQueue
             // i.e. '/user/payment/{id}'), so every nudge email's CTA button
             // was a dead link. Matches the URL used by InstallmentPaymentReminder
             // and the Stripe checkout success/cancel URLs.
-            $paymentUrl = rtrim(env('FRONTEND_URL', 'https://learnexity.org'), '/')
+            $paymentUrl = rtrim((rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')), '/')
                 . '/user/payment/' . $enrollment->id;
 
             try {

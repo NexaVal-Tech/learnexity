@@ -701,7 +701,7 @@ class CourseEnrollmentController extends Controller
                 CURLOPT_URL => "https://api.paystack.co/transaction/verify/{$reference}",
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER => [
-                    "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
+                    "Authorization: Bearer " . config('services.paystack.secret'),
                     "Cache-Control: no-cache",
                 ],
             ]);

@@ -190,7 +190,7 @@ class ScholarshipController extends Controller
 
         // Tell the team there's an application to review.
         try {
-            $to = env('ADMIN_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS'));
+            $to = config('app.admin_notification_email');
             if ($to && filter_var($to, FILTER_VALIDATE_EMAIL)) {
                 Mail::to($to)->queue((new ScholarshipApplicationAdminMail($user, $scholarship->fresh()))->onQueue('emails'));
             }

@@ -108,7 +108,7 @@ class AuthController extends Controller
             ]
         );
 
-        $url = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/')
+        $url = rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')
             . '/user/auth/verify-email?' . http_build_query(['email' => $email, 'token' => $token]);
 
         try {
@@ -387,7 +387,7 @@ class AuthController extends Controller
         // ── Notify admin of new registration (unchanged behavior) ──────────
         dispatch(function () use ($user, $referralCode) {
             try {
-                $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                $adminEmail = config('app.admin_notification_email');
                 if (!$adminEmail) {
                     Log::warning('⚠️ [REGISTER-COMPLETE] ADMIN_NOTIFICATION_EMAIL not set');
                     return;
@@ -760,7 +760,7 @@ class AuthController extends Controller
     {
         Log::info('🔵 [GOOGLE CALLBACK] Callback received');
 
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendUrl = (rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/'));
         $isProduction = app()->environment('production');
 
         try {
@@ -812,7 +812,7 @@ class AuthController extends Controller
             $capturedReferralCode = $referralCode;
             dispatch(function () use ($user, $capturedReferralCode) {
                 try {
-                    $adminEmail = env('ADMIN_NOTIFICATION_EMAIL');
+                    $adminEmail = config('app.admin_notification_email');
                     if (!$adminEmail) {
                         Log::warning('⚠️ [GOOGLE] ADMIN_NOTIFICATION_EMAIL not set');
                         return;

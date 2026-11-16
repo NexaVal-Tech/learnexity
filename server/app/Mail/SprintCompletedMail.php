@@ -50,6 +50,6 @@ class SprintCompletedMail extends Mailable
 
     protected function emailTemplateButtonUrl(): ?string
     {
-        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/user/dashboard';
+        return rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/user/dashboard';
     }
 }

@@ -39,7 +39,7 @@ class TvWebinarService
 
         self::send($updated, 'registered_premium');
 
-        $adminEmail = env('ADMIN_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS'));
+        $adminEmail = config('app.admin_notification_email');
         if ($adminEmail) {
             try {
                 Mail::to($adminEmail)->queue(new TvAdminPremiumMail($updated));

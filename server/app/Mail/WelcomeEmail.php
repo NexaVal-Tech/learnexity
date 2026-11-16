@@ -33,8 +33,8 @@ class WelcomeEmail extends Mailable
             view: 'emails.welcome',
             with: [
                 'user' => $this->user,
-                'coursesUrl' => env('FRONTEND_URL', 'http://localhost:3000') . '/courses/courses',
-                'dashboardUrl' => env('FRONTEND_URL', 'http://localhost:3000') . '/user/dashboard',
+                'coursesUrl' => (rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')) . '/courses/courses',
+                'dashboardUrl' => (rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')) . '/user/dashboard',
                 'whatsappCommunityUrl' => 'https://chat.whatsapp.com/GNMAOp0663AAlNOkJYbiCR?s=cl&p=i&mlu=3&amv=2',
             ]
         ));
@@ -53,6 +53,6 @@ class WelcomeEmail extends Mailable
 
     protected function emailTemplateButtonUrl(): ?string
     {
-        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/') . '/courses';
+        return rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/') . '/courses';
     }
 }

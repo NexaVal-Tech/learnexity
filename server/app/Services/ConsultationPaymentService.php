@@ -38,7 +38,7 @@ class ConsultationPaymentService
             Log::error('Consultation confirmation email failed: ' . $e->getMessage());
         }
 
-        $adminEmail = env('ADMIN_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS'));
+        $adminEmail = config('app.admin_notification_email');
         try {
             Mail::to($adminEmail)->send(new ConsultationBookedAdmin($consultation));
         } catch (\Throwable $e) {

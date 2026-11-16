@@ -58,7 +58,7 @@ class CourseAccessGrantedMail extends Mailable
 
     protected function emailTemplateButtonUrl(): ?string
     {
-        return rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'https://learnexity.org')), '/')
+        return rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')
             . '/user/resource?courseId=' . urlencode((string) $this->enrollment->course_id);
     }
 }

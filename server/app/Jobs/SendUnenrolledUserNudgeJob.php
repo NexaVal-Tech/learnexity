@@ -89,7 +89,7 @@ class SendUnenrolledUserNudgeJob implements ShouldQueue
                 continue;   // Already sent all 3 variants
             }
 
-            $coursesUrl = rtrim(env('FRONTEND_URL', 'https://learnexity.org'), '/') . '/courses/courses';
+            $coursesUrl = rtrim((rtrim((string) (config('app.frontend_url') ?: 'https://learnexity.org'), '/')), '/') . '/courses/courses';
 
             try {
                 Mail::to($user->email)->queue(

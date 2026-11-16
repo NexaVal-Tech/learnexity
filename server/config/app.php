@@ -35,7 +35,11 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'frontend_url' => env('FRONTEND_URL', env('APP_URL')),
+    'frontend_url' => env('FRONTEND_URL', 'https://learnexity.org'),
+
+    // Where "new student / payment / application" notices go. Read through
+    // config (not env()) so it still works after `php artisan config:cache`.
+    'admin_notification_email' => env('ADMIN_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
 
     // Standalone Learnexity TV webinar page (tv/tv.html).
     'tv_url' => env('TV_URL', 'https://tv.learnexity.org'),
